@@ -197,7 +197,9 @@ export function createApp() {
         return;
       }
       const expected = process.env.BOOKING_WEBHOOK_SECRET || '';
-      if (!expected || req.get('x-booking-webhook-secret') !== expected) {
+      const hostSession = getHostSession(req);
+      const hasWebhookSecret = Boolean(expected && req.get('x-booking-webhook-secret') === expected);
+      if (!hostSession && !hasWebhookSecret) {
         res.status(401).json({ success: false, error: 'Webhook non autorizzato.' });
         return;
       }
