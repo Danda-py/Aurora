@@ -16,7 +16,6 @@ interface LoginBucket {
   resetAt: number;
 }
 
-const sessions = new Map<string, HostSession>();
 const loginBuckets = new Map<string, LoginBucket>();
 
 function configuredEmail(): string {
@@ -51,6 +50,37 @@ function parseCookies(header: string | undefined): Record<string, string> {
   }));
 }
 
+function sessionSecret(): string {
+  return process.env.HOST_SESSION_SECRET || process.env.HOST_PASSWORD_HASH || process.env.HOST_PASSWORD || 'aurora-host-session';
+}
+
+function signSession(payload: string): string {
+  return crypto.createHmac('sha256', sessionSecret()).update(payload).digest('base64url');
+}
+
+function createSession(email: string, expiresAt: number): string {
+  const payload = Buffer.from(JSON.stringify({ email, expiresAt })).toString('base64url');
+  return `${payload}.${signSession(payload)}`;
+}
+
+function readSession(token: string | undefined): HostSession | null {
+  if (!token) return null;
+  const separator = token.lastIndexOf('.');
+  if (separator <= 0) return null;
+  const payload = token.slice(0, separator);
+  const signature = token.slice(separator + 1);
+  const expected = signSession(payload);
+  if (signature.length !== expected.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  try {
+    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as HostSession;
+    if (!session.email || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
 export function loginHost(req: Request, res: Response): void {
   const email = (req.body?.email || '').toString().trim().toLowerCase();
   const password = (req.body?.password || '').toString();
@@ -73,29 +103,19 @@ export function loginHost(req: Request, res: Response): void {
   }
 
   loginBuckets.delete(key);
-  const token = crypto.randomBytes(32).toString('base64url');
-  sessions.set(token, { email, expiresAt: now + SESSION_TTL_MS });
+  const token = createSession(email, now + SESSION_TTL_MS);
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_TTL_MS / 1000}${secure}`);
   res.json({ success: true, email, expiresAt: now + SESSION_TTL_MS });
 }
 
 export function logoutHost(req: Request, res: Response): void {
-  const token = parseCookies(req.headers.cookie)[SESSION_COOKIE];
-  if (token) sessions.delete(token);
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
   res.json({ success: true });
 }
 
 export function getHostSession(req: Request): HostSession | null {
-  const token = parseCookies(req.headers.cookie)[SESSION_COOKIE];
-  if (!token) return null;
-  const session = sessions.get(token);
-  if (!session || session.expiresAt <= Date.now()) {
-    sessions.delete(token);
-    return null;
-  }
-  return session;
+  return readSession(parseCookies(req.headers.cookie)[SESSION_COOKIE]);
 }
 
 export function requireHost(req: Request, res: Response, next: NextFunction): void {
