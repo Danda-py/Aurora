@@ -1599,8 +1599,8 @@ async function uploadPhotoFile(photoKey, file) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           photoKey,
-          fileData: dataUrl,
-          fileName: file.name
+          base64DataUrl: dataUrl,
+          filename: file.name
         })
       });
 
