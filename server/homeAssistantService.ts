@@ -10,7 +10,7 @@
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { safeReadJsonSync, safeWriteFileSync } from './storageUtils';
+import { safeReadJsonSync, safeWriteFileSync } from './storageUtils.js';
 
 export interface HomeAssistantConfig {
   mode: 'webhook' | 'rest_api';

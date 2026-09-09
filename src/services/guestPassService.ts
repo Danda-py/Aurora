@@ -1,4 +1,4 @@
-import { GuestPass, SmartLockConfig } from '../types';
+import { GuestPass, SmartLockConfig } from '../types.js';
 
 const STORAGE_KEY_PASSES = 'aurora_host_passes_v1';
 const STORAGE_KEY_ACTIVE_PASS = 'aurora_current_vip_pass_v1';

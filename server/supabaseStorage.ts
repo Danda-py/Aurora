@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import type { GuestPass } from '../src/types';
+import type { GuestPass } from '../src/types.js';
 
 const baseUrl = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';

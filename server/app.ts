@@ -7,13 +7,13 @@ import {
   parseBedAndBreakfastBooking, 
   generateRandomPin, 
   formatInvitationMessage 
-} from '../src/services/guestPassService';
-import { GuestPass } from '../src/types';
+} from '../src/services/guestPassService.js';
+import { GuestPass } from '../src/types.js';
 import {
   getHomeAssistantConfig,
   updateHomeAssistantConfig,
   triggerHomeAssistantOn
-} from './homeAssistantService';
+} from './homeAssistantService.js';
 import {
   getCmsData,
   getCmsDataAsync,
@@ -27,10 +27,10 @@ import {
   resetCmsPhoto,
   saveCmsMedia,
   saveCmsMediaAsync
-} from './cmsService';
-import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils';
-import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage';
+} from './cmsService.js';
+import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
+import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 

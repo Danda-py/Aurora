@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { BOOK_DATA } from '../src/data/multilingualBookData';
-import { Language } from '../src/types';
-import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils';
-import { loadDocument, saveDocument } from './supabaseStorage';
+import { BOOK_DATA } from '../src/data/multilingualBookData.js';
+import { Language } from '../src/types.js';
+import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
+import { loadDocument, saveDocument } from './supabaseStorage.js';
 
 const CMS_REL_PATH = path.join('data', 'cms_content.json');
 const CMS_MEDIA_REL_PATH = path.join('data', 'cms_media.json');
