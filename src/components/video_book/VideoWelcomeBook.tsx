@@ -4,6 +4,7 @@ import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken } from '../../services/guestPassService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { GridMenuScreen } from './GridMenuScreen';
+import { ConciergeHome } from './ConciergeHome';
 import { BenvenutoPage } from './pages/BenvenutoPage';
 import { CheckinPage } from './pages/CheckinPage';
 import { WifiPage } from './pages/WifiPage';
@@ -152,9 +153,8 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         )}
 
         {currentPage === 'grid_menu' && (
-          <GridMenuScreen
+          <ConciergeHome
             language={language}
-            onSelectLanguage={setLanguage}
             onNavigate={(page) => setCurrentPage(page)}
             pass={pass}
             onOpenSmartLock={() => setIsSmartLockOpen(true)}
