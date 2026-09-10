@@ -12,6 +12,8 @@ import { GuestPass } from '../src/types.js';
 import {
   getHomeAssistantConfig,
   updateHomeAssistantConfig,
+  updateHomeAssistantConfigAsync,
+  hydrateHomeAssistantConfig,
   triggerHomeAssistantOn
 } from './homeAssistantService.js';
 import {
@@ -144,6 +146,7 @@ export function createApp() {
   const app = express();
 
   void hydratePassesFromSupabase();
+  void hydrateHomeAssistantConfig();
 
   // Middlewares for JSON and form-urlencoded webhooks (up to 25mb for high-res photo uploads)
   app.use(express.json({ limit: '25mb' }));
@@ -344,7 +347,7 @@ export function createApp() {
   });
 
   // Set Home IP
-  apiRouter.post('/wifi/set-home-ip', (req, res) => {
+  apiRouter.post('/wifi/set-home-ip', async (req, res) => {
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
     const { ip } = req.body || {};
     const targetIp = ip || clientIp;
@@ -354,7 +357,7 @@ export function createApp() {
       return;
     }
 
-    updateHomeAssistantConfig({ homePublicIp: targetIp });
+    await updateHomeAssistantConfigAsync({ homePublicIp: targetIp });
     res.json({
       success: true,
       message: `IP pubblico di Casa_Aurora impostato a: ${targetIp}`,
@@ -484,7 +487,8 @@ export function createApp() {
     res.json({ success: true, parsed });
   });
 
-  apiRouter.get('/hass/config', (req, res) => {
+  apiRouter.get('/hass/config', async (req, res) => {
+    await hydrateHomeAssistantConfig();
     const config = getHomeAssistantConfig();
     const token = config.accessToken;
     const maskedToken = token ? `${token.slice(0, 4)}••••••••${token.slice(-4)}` : '';
@@ -518,7 +522,7 @@ export function createApp() {
     });
   });
 
-  apiRouter.post('/hass/config', (req, res) => {
+  apiRouter.post('/hass/config', async (req, res) => {
     const { mode, webhookUrl, haUrl, accessToken, entityId, service, deviceName, wifiSsidRequired, homePublicIp, lanGatewayIp, localWebhookUrl, enabled } = req.body;
     const currentConfig = getHomeAssistantConfig();
     
@@ -527,7 +531,7 @@ export function createApp() {
       resolvedToken = accessToken.trim();
     }
 
-    const updated = updateHomeAssistantConfig({
+    const updated = await updateHomeAssistantConfigAsync({
       ...(mode && { mode }),
       ...(webhookUrl !== undefined && { webhookUrl }),
       ...(haUrl !== undefined && { haUrl }),
@@ -565,9 +569,9 @@ export function createApp() {
     });
   });
 
-  apiRouter.post('/ewelink/config', (req, res) => {
+  apiRouter.post('/ewelink/config', async (req, res) => {
     const { webhookUrl, entityId, deviceName, enabled } = req.body;
-    const updated = updateHomeAssistantConfig({
+    const updated = await updateHomeAssistantConfigAsync({
       ...(webhookUrl !== undefined && { webhookUrl }),
       ...(entityId && { entityId }),
       ...(deviceName && { deviceName }),

@@ -11,6 +11,7 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { safeReadJsonSync, safeWriteFileSync } from './storageUtils.js';
+import { isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 
 export interface HomeAssistantConfig {
   mode: 'webhook' | 'rest_api';
@@ -32,6 +33,7 @@ export interface HomeAssistantConfig {
 }
 
 const HASS_CONFIG_REL_PATH = path.join('data', 'hass_config.json');
+const HASS_CONFIG_DOCUMENT_KEY = 'home_assistant_config';
 
 function loadSavedHassConfig(): Partial<HomeAssistantConfig> {
   return safeReadJsonSync<Partial<HomeAssistantConfig>>(HASS_CONFIG_REL_PATH, {});
@@ -66,6 +68,23 @@ let currentHassConfig: HomeAssistantConfig = {
     )
 };
 
+let configHydration: Promise<void> | null = null;
+
+export function hydrateHomeAssistantConfig(): Promise<void> {
+  if (configHydration) return configHydration;
+  configHydration = (async () => {
+    if (!isSupabaseConfigured()) return;
+    const remoteConfig = await loadDocument<Partial<HomeAssistantConfig>>(HASS_CONFIG_DOCUMENT_KEY);
+    if (remoteConfig) {
+      currentHassConfig = { ...currentHassConfig, ...remoteConfig };
+    }
+  })().catch(error => {
+    configHydration = null;
+    console.warn('[homeAssistantService] Unable to hydrate config from Supabase:', error);
+  });
+  return configHydration;
+}
+
 export function getHomeAssistantConfig(): HomeAssistantConfig {
   return { ...currentHassConfig };
 }
@@ -88,6 +107,14 @@ export function updateHomeAssistantConfig(newConfig: Partial<HomeAssistantConfig
   
   saveHassConfigToFile(currentHassConfig);
   return { ...currentHassConfig };
+}
+
+export async function updateHomeAssistantConfigAsync(newConfig: Partial<HomeAssistantConfig>): Promise<HomeAssistantConfig> {
+  const updated = updateHomeAssistantConfig(newConfig);
+  if (isSupabaseConfigured()) {
+    await saveDocument(HASS_CONFIG_DOCUMENT_KEY, updated);
+  }
+  return updated;
 }
 
 /**
