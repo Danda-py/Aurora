@@ -36,6 +36,13 @@ interface CmsContextType {
 const CmsContext = createContext<CmsContextType | undefined>(undefined);
 
 const LANGUAGE_STORAGE_KEY = 'aurora_selected_language';
+const SUPPORTED_LANGUAGES: Language[] = ['it', 'en', 'de', 'fr', 'es'];
+
+function detectSystemLanguage(): Language {
+  if (typeof navigator === 'undefined') return 'it';
+  const candidate = (navigator.language || navigator.languages?.[0] || 'it').slice(0, 2).toLowerCase() as Language;
+  return SUPPORTED_LANGUAGES.includes(candidate) ? candidate : 'it';
+}
 
 export const CmsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Determine initial language: URL query ?lang= -> localStorage -> navigator -> 'it'
@@ -51,7 +58,7 @@ export const CmsProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return saved;
       }
     }
-    return 'it';
+    return detectSystemLanguage();
   });
 
   const [cmsData, setCmsData] = useState<Record<Language, any>>(getActiveCmsContent);

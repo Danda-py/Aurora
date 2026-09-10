@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GuestPass } from '../../types';
 import { ShieldCheck, X, CheckCircle2, Unlock, Loader2, AlertCircle, Wifi, Lock, RotateCcw } from 'lucide-react';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
@@ -15,6 +15,9 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
   const [wifiChecking, setWifiChecking] = useState<boolean>(true);
   const [wifiVerified, setWifiVerified] = useState<boolean>(false);
   const [wifiMessage, setWifiMessage] = useState<string>('');
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdStartedAt = useRef(0);
 
   const runWifiCheck = async () => {
     setWifiChecking(true);
@@ -58,6 +61,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
     }
 
     setOpeningState('opening');
+    if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     setStatusMessage('Invio comando a Home Assistant...');
 
     try {
@@ -75,6 +79,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        if ('vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         triggerHaptic();
         setOpeningState('success');
         setStatusMessage(data.message || 'Portone sbloccato. Spingi la porta per entrare.');
@@ -94,6 +99,28 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
       }, 5000);
     }
   };
+
+  const cancelHold = () => {
+    if (holdTimer.current) clearInterval(holdTimer.current);
+    holdTimer.current = null;
+    holdStartedAt.current = 0;
+    setHoldProgress(0);
+  };
+
+  const startHold = () => {
+    if (openingState !== 'idle' || wifiChecking || !wifiVerified) return;
+    holdStartedAt.current = Date.now();
+    holdTimer.current = setInterval(() => {
+      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1500);
+      setHoldProgress(progress);
+      if (progress >= 1) {
+        cancelHold();
+        void handleOpenDoor();
+      }
+    }, 30);
+  };
+
+  useEffect(() => cancelHold, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-2xl animate-fade-in font-sans">
@@ -192,7 +219,10 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
           {/* Apple Action Button Card */}
           <div className="pt-2 pb-2">
             <button
-              onClick={handleOpenDoor}
+              onPointerDown={startHold}
+              onPointerUp={cancelHold}
+              onPointerCancel={cancelHold}
+              onPointerLeave={cancelHold}
               disabled={openingState === 'opening' || wifiChecking || !wifiVerified}
               className={`group relative w-full py-5 px-5 rounded-2xl font-bold tracking-tight transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 select-none active:scale-[0.98] ${
                 openingState === 'opening'
@@ -231,16 +261,17 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
 
               {openingState === 'idle' && (
                 <>
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-transform duration-200 ${
+                  <div className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-transform duration-200 ${
                     wifiVerified ? 'bg-neutral-950/10 text-neutral-950 group-hover:scale-110' : 'bg-white/5 text-neutral-500'
                   }`}>
+                    <span className="absolute inset-[-5px] rounded-full border-2 border-emerald-300/70" style={{ clipPath: `inset(${100 - holdProgress * 100}% 0 0 0)` }} />
                     {wifiVerified ? <Unlock className="w-5 h-5 text-neutral-950" /> : <Lock className="w-5 h-5" />}
                   </div>
                   <span className={`text-lg font-bold tracking-tight ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
-                    {wifiVerified ? 'APRI PORTONE' : 'RICHIEDE WI-FI'}
+                    {wifiVerified ? 'TIENI PREMUTO PER APRIRE' : 'RICHIEDE WI-FI'}
                   </span>
                   <span className={`text-[11px] font-normal tracking-tight ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
-                    {wifiVerified ? 'Tocca per azionare la serratura' : 'Connettiti a Casa_Aurora'}
+                    {wifiVerified ? 'Rilascia per annullare' : 'Connettiti a Casa_Aurora'}
                   </span>
                 </>
               )}
