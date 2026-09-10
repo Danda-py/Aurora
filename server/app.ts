@@ -618,20 +618,23 @@ export function createApp() {
   apiRouter.post('/webhook/booking', async (req, res) => {
     try {
       const payload = req.body;
-      const rawText = typeof payload === 'string' 
-        ? payload 
-        : (payload.text || payload.body || payload.message || JSON.stringify(payload));
+      const isStructuredPayload = payload && typeof payload === 'object' && !Array.isArray(payload);
+      const rawText = typeof payload === 'string'
+        ? payload
+        : (payload.text || payload.body || payload.message || '');
       
-      const parsed = parseBedAndBreakfastBooking(rawText);
-      
-      const guestName = parsed.guestName || payload.guestName || payload.name || '';
-      const guestSurname = parsed.guestSurname || payload.guestSurname || payload.surname || '';
-      const checkInDate = parsed.checkInDate || payload.checkInDate || payload.checkIn || '';
-      const checkOutDate = parsed.checkOutDate || payload.checkOutDate || payload.checkOut || '';
-      const phone = parsed.phone || payload.phone || payload.tel || '';
-      const bookingRef = parsed.bookingRef || payload.bookingRef || payload.ref || `BB-${Math.floor(10000 + Math.random() * 90000)}`;
-      const guestsCount = parsed.guestsCount || payload.guestsCount || 2;
-      const bookingSource = parsed.bookingSource || payload.bookingSource || 'bed-and-breakfast.it (webhook)';
+      const parsed = isStructuredPayload && !rawText
+        ? { guestName: '', guestSurname: '', checkInDate: '', checkOutDate: '', phone: '', bookingRef: '', guestsCount: 2, bookingSource: '' }
+        : parseBedAndBreakfastBooking(rawText);
+
+      const guestName = (isStructuredPayload ? payload.guestName || payload.name : parsed.guestName) || '';
+      const guestSurname = (isStructuredPayload ? payload.guestSurname || payload.surname : parsed.guestSurname) || '';
+      const checkInDate = (isStructuredPayload ? payload.checkInDate || payload.checkIn : parsed.checkInDate) || '';
+      const checkOutDate = (isStructuredPayload ? payload.checkOutDate || payload.checkOut : parsed.checkOutDate) || '';
+      const phone = (isStructuredPayload ? payload.phone || payload.tel : parsed.phone) || '';
+      const bookingRef = (isStructuredPayload ? payload.bookingRef || payload.ref : parsed.bookingRef) || `BB-${Math.floor(10000 + Math.random() * 90000)}`;
+      const guestsCount = (isStructuredPayload ? payload.guestsCount : parsed.guestsCount) || 2;
+      const bookingSource = (isStructuredPayload ? payload.bookingSource : parsed.bookingSource) || 'bed-and-breakfast.it (webhook)';
       const pinCode = generateRandomPin();
 
       if (!guestName || !checkInDate || !checkOutDate) {
