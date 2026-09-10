@@ -60,16 +60,23 @@ const defaultPasses: GuestPass[] = [
 // Persistent list of passes on server
 const serverPasses: GuestPass[] = safeReadJsonSync<GuestPass[]>(PASSES_REL_PATH, defaultPasses);
 
+let passesHydration: Promise<void> | null = null;
+
 async function hydratePassesFromSupabase() {
-  if (!isSupabaseConfigured()) return;
-  try {
-    const remotePasses = await loadPasses();
-    if (remotePasses) {
-      serverPasses.splice(0, serverPasses.length, ...remotePasses);
+  if (passesHydration) return passesHydration;
+  passesHydration = (async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const remotePasses = await loadPasses();
+      if (remotePasses) {
+        serverPasses.splice(0, serverPasses.length, ...remotePasses);
+      }
+    } catch (error) {
+      passesHydration = null;
+      console.error('Supabase passes load failed; keeping local fallback:', error);
     }
-  } catch (error) {
-    console.error('Supabase passes load failed; keeping local fallback:', error);
-  }
+  })();
+  return passesHydration;
 }
 
 function persistPasses() {
@@ -182,7 +189,8 @@ export function createApp() {
   // Create API router for modular routing
   const apiRouter = express.Router();
 
-  apiRouter.use((req, res, next) => {
+  apiRouter.use(async (req, res, next) => {
+    await hydratePassesFromSupabase();
     if (req.path === '/health' || req.path === '/wifi/verify' || req.path.startsWith('/auth/') || req.path === '/guest/pass') {
       next();
       return;
