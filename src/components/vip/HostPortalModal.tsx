@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GuestPass, SmartLockConfig } from '../../types';
 import { 
-  generateRandomPin, 
   encodePassToToken, 
   parseBedAndBreakfastBooking, 
   buildPassUrl, 
@@ -28,6 +27,7 @@ import {
   ExternalLink, 
   Sliders, 
   X, 
+  RefreshCw,
   Calendar, 
   User, 
   Phone, 
@@ -57,8 +57,6 @@ interface Props {
 export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPassToView }) => {
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
 
   // Tabs: 'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip'
   const [activeTab, setActiveTab] = useState<'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip'>('create');
@@ -73,7 +71,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   const [checkInTime, setCheckInTime] = useState('15:00');
   const [checkOutDate, setCheckOutDate] = useState('');
   const [checkOutTime, setCheckOutTime] = useState('10:00');
-  const [pinCode, setPinCode] = useState(generateRandomPin());
   const [bookingRef, setBookingRef] = useState('');
   const [guestsCount, setGuestsCount] = useState(2);
   const [notes, setNotes] = useState('');
@@ -203,7 +200,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       checkInTime,
       checkOutDate,
       checkOutTime,
-      pinCode,
+      pinCode: '',
       bookingRef: bookingRef.trim() || `BB-${Math.floor(10000 + Math.random() * 90000)}`,
       guestsCount,
       notes: notes.trim(),
@@ -232,7 +229,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
         checkInTime: fullPass.checkInTime,
         checkOutDate: fullPass.checkOutDate,
         checkOutTime: fullPass.checkOutTime,
-        pinCode: fullPass.pinCode,
         bookingRef: fullPass.bookingRef,
         bookingSource: fullPass.bookingSource,
         guestsCount: fullPass.guestsCount,
@@ -256,20 +252,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       })
       .catch(err => console.warn('Server pass save notice:', err));
 
-    // Automatically synchronize PIN to physical keypad via server API
-    fetch('/api/keypad/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pin: fullPass.pinCode,
-        guest: `${fullPass.guestName} ${fullPass.guestSurname}`.trim()
-      })
-    }).catch(err => console.warn('Keypad sync API notice:', err));
-
-    // If Smart Lock webhook sync is active, also trigger direct webhook
-    if (lockConfig.enabled && lockConfig.webhookUrl) {
-      triggerSmartLockAPI(fullPass.pinCode, `${fullPass.guestName} ${fullPass.guestSurname}`, 'sync_pin');
-    }
   };
 
   // Handle Delete Pass
@@ -905,7 +887,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed">
-                        L'applicazione include un motore webhook integrato (<code>/api/webhook/booking</code>) in grado di ricevere notifiche da <strong>Bed-and-Breakfast.it</strong>, Zapier, Make.com o email di prenotazione. Calcola le date e genera il link temporizzato.
+                      L'applicazione include un motore webhook integrato (<code>/api/webhook/booking</code>) in grado di ricevere notifiche da <strong>Bed-and-Breakfast.it</strong>, Zapier, Make.com o email di prenotazione. Calcola le date e genera un link temporaneo.
                     </p>
 
                     {/* Simulator Button */}
@@ -1024,7 +1006,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                       </label>
                     </div>
                     <p className="text-xs text-slate-400">
-                        Collega la serratura smart dell'appartamento tramite <strong>Home Assistant Webhook</strong> o <strong>eWeLink Webhook</strong>. Quando l'ospite preme "Sblocca Porta", il sistema invia la richiesta HTTP POST all'URL configurato.
+                      Collega la serratura smart dell'appartamento tramite <strong>Home Assistant Webhook</strong> o <strong>eWeLink Webhook</strong>. Quando l'ospite preme "Sblocca Porta", il sistema invia la richiesta HTTP POST all'URL configurato.
                     </p>
                   </div>
 
@@ -1170,7 +1152,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">POST /api/webhook/booking</span>
-                        <span>Riceve prenotazioni bed-and-breakfast.it e imposta la durata del soggiorno.</span>
+                        <span>Riceve prenotazioni bed-and-breakfast.it, crea un link temporaneo e imposta la durata del soggiorno.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-mono text-white font-bold bg-white/10 px-1.5 py-0.5 rounded shrink-0">POST /api/hass/unlock</span>

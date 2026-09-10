@@ -29,30 +29,9 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background:
-        radial-gradient(circle at 12% 0%, rgba(137, 177, 183, 0.13), transparent 32rem),
-        radial-gradient(circle at 92% 88%, rgba(60, 88, 125, 0.2), transparent 34rem),
-        linear-gradient(135deg, #0a1018, #111b2a);
-    }
-    [class*="bg-[#12141f]"], [class*="bg-[#0e151e]"] {
-      background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035)), rgba(20,30,43,.68) !important;
-      border-color: rgba(220,231,238,.16) !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 24px 70px rgba(0,0,0,.22);
-      backdrop-filter: blur(26px) saturate(165%);
-      -webkit-backdrop-filter: blur(26px) saturate(165%);
-    }
-    .host-flow-nav {
-      position: sticky;
-      bottom: 1rem;
-      z-index: 30;
-      background: rgba(13,22,32,.86) !important;
-      border-color: rgba(231,239,241,.2) !important;
-      box-shadow: 0 18px 45px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.12);
-      backdrop-filter: blur(28px) saturate(175%);
-      -webkit-backdrop-filter: blur(28px) saturate(175%);
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -61,6 +40,19 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    :root { color-scheme: dark; }
+    body { background: #070b10 !important; background-image: radial-gradient(circle at 8% 0%, rgba(66, 139, 119, .22), transparent 30rem), radial-gradient(circle at 92% 14%, rgba(188, 208, 91, .1), transparent 26rem); }
+    header { background: rgba(11, 17, 23, .72) !important; border-color: rgba(255,255,255,.12) !important; box-shadow: 0 10px 40px rgba(0,0,0,.12); }
+    header > div, body > div { max-width: 1180px; }
+    .tab-btn, .tab-content > div, .tab-content > form, #tab-create > div, #tab-passes > div, #tab-hass > div, #tab-cms > div, #tab-media > div { border-radius: 22px !important; border-color: rgba(255,255,255,.12) !important; background: rgba(18, 27, 34, .68) !important; box-shadow: 0 16px 50px rgba(0,0,0,.14), inset 0 1px rgba(255,255,255,.04); backdrop-filter: blur(18px); }
+    .tab-btn { background: rgba(255,255,255,.045) !important; }
+    .tab-btn.active { color: #07110d !important; background: #62e6bd !important; box-shadow: 0 8px 24px rgba(98,230,189,.18); }
+    input, textarea, select { border-radius: 14px !important; background: rgba(0,0,0,.25) !important; border-color: rgba(255,255,255,.14) !important; }
+    button, a { transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease; }
+    button:hover, a:hover { transform: translateY(-1px); }
+    #btnSubmitGenerate, #btnTestSonoffPulse { background: #62e6bd !important; color: #07110d !important; box-shadow: 0 12px 30px rgba(98,230,189,.18); }
+    #connectionBadge { color: #62e6bd !important; background: rgba(98,230,189,.1) !important; border-color: rgba(98,230,189,.28) !important; }
+    @media (max-width: 640px) { body > div { padding-inline: .7rem !important; } }
   </style>
 </head>
 <body class="bg-[#08090d] text-neutral-100 min-h-screen flex flex-col selection:bg-white/20 selection:text-white">
@@ -118,7 +110,7 @@
   <!-- Main Container -->
   <div class="flex-1 max-w-6xl w-full mx-auto p-3.5 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
 
-    <!-- Overview Bar: Keypad Status & Autonomous Webhook State -->
+    <!-- Overview Bar: Home Assistant & Autonomous Webhook State -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <!-- Card 1: Home Assistant Door Opener status -->
       <div class="p-4 rounded-2xl bg-[#12141f] border border-white/[0.08] shadow-sm flex items-center justify-between gap-3">
@@ -128,13 +120,13 @@
           </div>
           <div class="min-w-0">
             <span class="text-[10px] uppercase font-bold text-neutral-400 tracking-wider block">Home Assistant</span>
-            <span id="statKeypadPin" class="text-sm sm:text-base font-bold text-white block truncate">HA Online</span>
-            <span id="statKeypadStatus" class="text-[11px] text-emerald-400 block font-medium truncate">● Pronto per input ON</span>
+            <span id="statHassStatus" class="text-sm sm:text-base font-bold text-white block truncate">Home Assistant online</span>
+            <span id="statHassLastAction" class="text-[11px] text-emerald-400 block font-medium truncate">● Pronto per il comando porta</span>
           </div>
         </div>
-        <button id="btnForceKeypadSync" class="px-3 py-2 rounded-xl bg-white text-neutral-950 hover:bg-neutral-200 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 shadow-sm">
+        <button id="btnForceDoorOpen" class="px-3 py-2 rounded-xl bg-white text-neutral-950 hover:bg-neutral-200 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 shadow-sm">
           <i data-lucide="power" class="w-3.5 h-3.5"></i>
-          <span>Apri (ON)</span>
+          <span>Apri porta</span>
         </button>
       </div>
 
@@ -177,7 +169,7 @@
     </div>
 
     <!-- Main Navigation Tabs: Apple Segmented Pill Style -->
-    <div class="host-flow-nav flex items-center gap-1.5 bg-[#12141f] p-1.5 rounded-2xl border border-white/[0.08] overflow-x-auto no-scrollbar">
+    <div class="flex items-center gap-1.5 bg-[#12141f] p-1.5 rounded-2xl border border-white/[0.08] overflow-x-auto no-scrollbar">
       <button class="tab-btn active px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 bg-white text-neutral-950 shadow-sm shrink-0 whitespace-nowrap" data-tab="create">
         <i data-lucide="plus-circle" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         <span>Genera Link Univoco</span>
@@ -186,7 +178,7 @@
         <i data-lucide="clipboard-list" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         <span>Gestione Pass (<span id="tabCount">0</span>)</span>
       </button>
-      <button class="tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 transition cursor-pointer flex items-center gap-2 shrink-0 whitespace-nowrap" data-tab="keypad">
+      <button class="tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 transition cursor-pointer flex items-center gap-2 shrink-0 whitespace-nowrap" data-tab="hass">
         <i data-lucide="home" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400"></i>
         <span>Home Assistant (Apriporta)</span>
       </button>
@@ -281,7 +273,7 @@
 
         </div>
 
-        <!-- Automatic Keypad Program Note -->
+        <!-- Automatic door access note -->
         <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs text-emerald-300">
           <div class="flex items-center gap-2">
             <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
@@ -362,7 +354,7 @@
     </section>
 
     <!-- TAB 3: HOME ASSISTANT (APRIPORTA) -->
-    <section id="tab-keypad" class="tab-content hidden space-y-5">
+    <section id="tab-hass" class="tab-content hidden space-y-5">
       
       <!-- Primary Instant Door Trigger Card -->
       <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#12141f] border border-white/[0.08] space-y-5">
@@ -579,7 +571,7 @@ mode: single</pre>
             </p>
             <ul class="list-disc list-inside space-y-1.5 text-[11px] text-neutral-300">
               <li>L'ospite riceve il link con un unico pulsante <strong>"APRI PORTA"</strong>.</li>
-              <li>L'ospite usa il link personale e il pulsante diretto.</li>
+              <li>Nessun codice da ricordare: l’accesso avviene dal link personale.</li>
               <li>Il server contatta Home Assistant via Webhook o REST API.</li>
               <li>L'elettroserratura scatta all'istante per permettere l'ingresso.</li>
             </ul>
@@ -590,7 +582,7 @@ mode: single</pre>
       <!-- Home Assistant Hardware Logs -->
       <div class="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#12141f] border border-white/[0.08] space-y-3">
         <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-400">Log Azionamenti e Aperture Home Assistant</h4>
-        <div id="keypadLogsContainer" class="space-y-2 text-xs font-mono">
+        <div id="hassLogsContainer" class="space-y-2 text-xs font-mono">
           <!-- Logs dynamically populated -->
         </div>
       </div>

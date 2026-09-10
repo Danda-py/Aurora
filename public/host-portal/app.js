@@ -79,12 +79,11 @@ let cmsFullData = {};
 // DOM Elements
 const connectionBadge = document.getElementById('connectionBadge');
 const connectionText = document.getElementById('connectionText');
-const statKeypadPin = document.getElementById('statKeypadPin');
-const statKeypadStatus = document.getElementById('statKeypadStatus');
+const statHassStatus = document.getElementById('statHassStatus');
+const statHassLastAction = document.getElementById('statHassLastAction');
 const statActiveCount = document.getElementById('statActiveCount');
 const tabCount = document.getElementById('tabCount');
 const passesContainer = document.getElementById('passesContainer');
-const keypadLogsContainer = document.getElementById('keypadLogsContainer');
 
 // Form elements
 const formCreatePass = document.getElementById('formCreatePass');
@@ -135,7 +134,7 @@ const sectionHassRest = document.getElementById('sectionHassRest');
 const btnTestSonoffPulse = document.getElementById('btnTestSonoffPulse');
 const btnSaveSonoffConfig = document.getElementById('btnSaveSonoffConfig');
 const sonoffFeedbackBox = document.getElementById('sonoffFeedbackBox');
-const btnForceKeypadSync = document.getElementById('btnForceKeypadSync');
+const btnForceDoorOpen = document.getElementById('btnForceDoorOpen');
 const inputHomePublicIp = document.getElementById('inputHomePublicIp');
 const currentDetectedIp = document.getElementById('currentDetectedIp');
 const btnDetectHomeIp = document.getElementById('btnDetectHomeIp');
@@ -168,10 +167,6 @@ let cmsMediaData = {};
 // Initialize App
 async function init() {
   if (!(await ensureHostSession())) return;
-  document.addEventListener('pointerdown', (event) => {
-    const target = event.target;
-    if (target?.closest?.('button, a') && 'vibrate' in navigator) navigator.vibrate(8);
-  });
   if (inputApiBaseUrl) inputApiBaseUrl.value = API_BASE_URL;
 
   // Set default dates
@@ -343,7 +338,7 @@ function setupEventListeners() {
         if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
         alert('Configurazione Home Assistant e Rete Casa_Aurora salvata con successo!');
         await fetchSonoffConfig();
-        await fetchKeypadStatus();
+        await fetchHassStatus();
       } catch (err) {
         alert('Errore salvataggio Home Assistant: ' + err.message);
       } finally {
@@ -378,7 +373,7 @@ function setupEventListeners() {
             <div>${data.message}</div>
             <div class="mt-1 text-[11px] text-slate-400">Il relè/interruttore hardware è stato azionato correttamente.</div>
           `;
-          await fetchKeypadStatus();
+          await fetchHassStatus();
         } else {
           throw new Error(data.error || 'Impossibile azionare il dispositivo');
         }
@@ -397,10 +392,10 @@ function setupEventListeners() {
   }
 
   // Top Bar Quick Unlock Action
-  if (btnForceKeypadSync) {
-    btnForceKeypadSync.addEventListener('click', async () => {
-      btnForceKeypadSync.disabled = true;
-      btnForceKeypadSync.innerHTML = '<span>Invio ON...</span>';
+  if (btnForceDoorOpen) {
+    btnForceDoorOpen.addEventListener('click', async () => {
+      btnForceDoorOpen.disabled = true;
+      btnForceDoorOpen.innerHTML = '<span>Invio comando...</span>';
       try {
         const res = await fetch(`${API_BASE_URL}/api/hass/unlock`, {
           method: 'POST',
@@ -418,12 +413,12 @@ function setupEventListeners() {
         } else {
           alert(`✖ Home Assistant: ${data.error || 'Errore di attivazione'}`);
         }
-        await fetchKeypadStatus();
+        await fetchHassStatus();
       } catch (err) {
         alert('Errore invio comando a Home Assistant: ' + err.message);
       } finally {
-        btnForceKeypadSync.disabled = false;
-        btnForceKeypadSync.innerHTML = '<i data-lucide="power" class="w-3.5 h-3.5"></i><span>Apri (ON)</span>';
+        btnForceDoorOpen.disabled = false;
+        btnForceDoorOpen.innerHTML = '<i data-lucide="power" class="w-3.5 h-3.5"></i><span>Apri porta</span>';
         if (window.lucide) window.lucide.createIcons();
       }
     });
@@ -646,7 +641,7 @@ async function checkHealthAndFetchData() {
     if (res.ok) {
       connectionBadge.className = 'flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-medium';
       connectionText.textContent = 'API Connessa';
-      await Promise.all([fetchPasses(), fetchKeypadStatus(), fetchSonoffConfig(), loadCmsData()]);
+      await Promise.all([fetchPasses(), fetchHassStatus(), fetchSonoffConfig(), loadCmsData()]);
     } else {
       throw new Error(`Status ${res.status}`);
     }
@@ -803,7 +798,7 @@ window.triggerPassDoorUnlock = async function(guestName) {
     } else {
       alert(`✖ Errore Home Assistant: ${data.error || 'Apertura fallita'}`);
     }
-    await fetchKeypadStatus();
+    await fetchHassStatus();
   } catch (err) {
     alert('Errore chiamata apertura: ' + err.message);
   }
@@ -852,7 +847,7 @@ window.deletePass = async function(id) {
     });
     if (res.ok) {
       await fetchPasses();
-      await fetchKeypadStatus();
+      await fetchHassStatus();
     }
   } catch (err) {
     alert('Errore eliminazione: ' + err.message);
@@ -900,7 +895,7 @@ async function handleCreatePass() {
 
     // Refresh state
     await fetchPasses();
-    await fetchKeypadStatus();
+    await fetchHassStatus();
 
     showParseFeedback('✔ Pass VIP generato e salvato correttamente! Lo trovi anche nella scheda "Gestione Pass".', 'success');
 
@@ -913,35 +908,18 @@ async function handleCreatePass() {
   }
 }
 
-// Fetch Keypad Status & Logs
-async function fetchKeypadStatus() {
+// Fetch Home Assistant status
+async function fetchHassStatus() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/keypad/status`);
     if (!res.ok) return;
     const data = await res.json();
 
-    if (statKeypadPin) statKeypadPin.textContent = 'HA Connesso';
-    if (statKeypadStatus) {
-      statKeypadStatus.textContent = data.lastPulseSent 
+    if (statHassStatus) statHassStatus.textContent = 'Home Assistant online';
+    if (statHassLastAction) {
+      statHassLastAction.textContent = data.lastPulseSent
         ? `● Ultimo sblocco: ${new Date(data.lastPulseSent).toLocaleTimeString()}`
-        : '● Pronto per input ON';
-    }
-
-    if (keypadLogsContainer && data.logs) {
-      if (data.logs.length === 0) {
-        keypadLogsContainer.innerHTML = '<p class="text-slate-500 text-xs">Nessun azionamento registrato di recente.</p>';
-      } else {
-        keypadLogsContainer.innerHTML = data.logs.slice(0, 8).map(l => `
-          <div class="p-2.5 rounded-lg bg-[#0b0e14] border border-white/[0.06] flex items-center justify-between text-[11px]">
-            <div>
-              <span class="text-emerald-400 font-bold">[INPUT ON]</span>
-              <span class="text-white ml-1 font-medium">${l.guest || 'Ospite'}</span>
-              <span class="text-slate-400 block text-[10px] mt-0.5">${l.detail || 'Impulso inviato a Home Assistant'}</span>
-            </div>
-            <span class="text-slate-400 text-[10px] font-mono">${new Date(l.timestamp).toLocaleTimeString()}</span>
-          </div>
-        `).join('');
-      }
+        : '● Pronto per il comando porta';
     }
   } catch (err) {
     console.warn('Home Assistant status check failed:', err);

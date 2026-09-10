@@ -3,7 +3,7 @@ import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken } from '../../services/guestPassService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
-import { GridMenuScreen } from './GridMenuScreen';
+import { ConciergeHome } from './ConciergeHome';
 import { BenvenutoPage } from './pages/BenvenutoPage';
 import { CheckinPage } from './pages/CheckinPage';
 import { WifiPage } from './pages/WifiPage';
@@ -64,15 +64,6 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  useEffect(() => {
-    const handleTouch = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('button, a') && 'vibrate' in navigator) navigator.vibrate(8);
-    };
-    document.addEventListener('pointerdown', handleTouch);
-    return () => document.removeEventListener('pointerdown', handleTouch);
-  }, []);
-
   const handleLanguageSelect = (lang: Language) => {
     setLanguage(lang);
     setCurrentPage('grid_menu');
@@ -108,11 +99,11 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   const isSubpage = currentPage !== 'language_select' && currentPage !== 'grid_menu';
 
   return (
-    <div className="w-full max-w-lg mx-auto min-h-screen relative flex flex-col justify-between overflow-hidden font-sans bg-transparent text-slate-100 selection:bg-emerald-500/25 selection:text-emerald-200">
+    <div className="w-full max-w-lg mx-auto min-h-screen relative flex flex-col justify-between overflow-hidden shadow-2xl font-sans bg-[#070a0e] text-slate-100 selection:bg-emerald-500/25 selection:text-emerald-200">
       
       {/* Top App Bar Header (Only when inside subpages) */}
       {isSubpage && (
-        <header className="sticky top-3 z-30 mx-3 aurora-liquid-card rounded-2xl px-3.5 sm:px-4 py-2 flex items-center justify-between text-slate-100">
+        <header className="sticky top-0 z-30 bg-[#090d13]/90 backdrop-blur-xl border-b border-emerald-500/15 px-3.5 sm:px-4 py-2 flex items-center justify-between text-slate-100">
           <button
             onClick={handleBackToMenu}
             className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-semibold py-1 px-2 -ml-2 rounded-xl active:bg-white/10 transition cursor-pointer"
@@ -133,7 +124,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setCurrentPage('language_select')}
-              className="aurora-liquid-button px-2 py-1 rounded-full text-slate-300 font-semibold text-[10px] uppercase transition cursor-pointer"
+              className="px-2 py-1 rounded-full bg-[#0e151e] hover:bg-[#131d27] text-slate-300 font-semibold text-[10px] uppercase border border-emerald-500/20 transition cursor-pointer"
               title="Lingua"
             >
               {language.toUpperCase()}
@@ -149,11 +140,11 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         )}
 
         {currentPage === 'grid_menu' && (
-          <GridMenuScreen
+          <ConciergeHome
             language={language}
             onSelectLanguage={setLanguage}
             onNavigate={(page) => setCurrentPage(page)}
-            pass={pass}
+            pass={pass!}
             onOpenSmartLock={() => setIsSmartLockOpen(true)}
           />
         )}

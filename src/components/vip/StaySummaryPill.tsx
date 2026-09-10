@@ -20,7 +20,7 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock }) => {
       <div className="w-full px-3 sm:px-4 py-1.5 animate-fade-in">
         <div
           onClick={() => setIsDetailsOpen(true)}
-          className="aurora-liquid-card w-full rounded-full px-3.5 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 active:scale-[0.99] group"
+          className="w-full rounded-full bg-neutral-950/85 border border-white/[0.12] hover:border-white/[0.2] shadow-[0_8px_30px_rgb(0,0,0,0.4)] px-3.5 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 active:scale-[0.99] group backdrop-blur-2xl"
         >
           {/* Left: Apple Dynamic Island user greeting & live status */}
           <div className="flex items-center gap-2.5 min-w-0">
