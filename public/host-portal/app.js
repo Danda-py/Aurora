@@ -93,14 +93,12 @@ const fieldGuestSurname = document.getElementById('fieldGuestSurname');
 const fieldPhone = document.getElementById('fieldPhone');
 const fieldCheckInDate = document.getElementById('fieldCheckInDate');
 const fieldCheckOutDate = document.getElementById('fieldCheckOutDate');
-const fieldPinCode = document.getElementById('fieldPinCode');
 const fieldSource = document.getElementById('fieldSource');
 const fieldBookingRef = document.getElementById('fieldBookingRef');
 const fieldGuestsCount = document.getElementById('fieldGuestsCount');
 const inputRawText = document.getElementById('inputRawText');
 const btnParseText = document.getElementById('btnParseText');
 const parseFeedback = document.getElementById('parseFeedback');
-const btnRegeneratePin = document.getElementById('btnRegeneratePin');
 
 // Result box
 const resultBox = document.getElementById('resultBox');
@@ -170,6 +168,10 @@ let cmsMediaData = {};
 // Initialize App
 async function init() {
   if (!(await ensureHostSession())) return;
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (target?.closest?.('button, a') && 'vibrate' in navigator) navigator.vibrate(8);
+  });
   if (inputApiBaseUrl) inputApiBaseUrl.value = API_BASE_URL;
 
   // Set default dates
@@ -180,7 +182,6 @@ async function init() {
   const formatD = (d) => d.toISOString().split('T')[0];
   if (fieldCheckInDate) fieldCheckInDate.value = formatD(today);
   if (fieldCheckOutDate) fieldCheckOutDate.value = formatD(next3);
-  if (fieldPinCode) fieldPinCode.value = generatePin();
 
   setupTabs();
   setupEventListeners();
@@ -191,10 +192,6 @@ async function init() {
   if (window.lucide) {
     window.lucide.createIcons();
   }
-}
-
-function generatePin() {
-  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 function setupTabs() {
@@ -227,13 +224,6 @@ function setupTabs() {
 }
 
 function setupEventListeners() {
-  // Regenerate PIN
-  if (btnRegeneratePin) {
-    btnRegeneratePin.addEventListener('click', () => {
-      fieldPinCode.value = generatePin();
-    });
-  }
-
   // Analizza e Compila Button
   if (btnParseText) {
     btnParseText.addEventListener('click', async () => {
@@ -881,7 +871,6 @@ async function handleCreatePass() {
       phone: fieldPhone.value.trim(),
       checkInDate: fieldCheckInDate.value,
       checkOutDate: fieldCheckOutDate.value,
-      pinCode: fieldPinCode.value.trim(),
       bookingSource: fieldSource.value,
       bookingRef: fieldBookingRef.value.trim(),
       guestsCount: parseInt(fieldGuestsCount.value || '2', 10)

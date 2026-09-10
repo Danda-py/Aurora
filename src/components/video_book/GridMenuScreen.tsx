@@ -310,7 +310,7 @@ export const GridMenuScreen: React.FC<Props> = ({
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#070a0e] text-slate-100 flex flex-col justify-between select-none pb-8 relative selection:bg-emerald-500/25 selection:text-emerald-200">
+    <div className="min-h-screen w-full bg-transparent text-slate-100 flex flex-col justify-between select-none pb-28 relative selection:bg-emerald-500/25 selection:text-emerald-200">
       
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -319,7 +319,7 @@ export const GridMenuScreen: React.FC<Props> = ({
       </div>
 
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-20 bg-[#090d13]/85 backdrop-blur-xl border-b border-emerald-500/15 px-3.5 sm:px-5 py-2.5">
+      <header className="sticky top-3 z-20 mx-3 aurora-liquid-card rounded-2xl px-3.5 sm:px-5 py-2.5">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           
           {/* Location pill */}
@@ -382,7 +382,7 @@ export const GridMenuScreen: React.FC<Props> = ({
         )}
 
         {/* PAMPERING CARD */}
-        <div className="rounded-2xl bg-[#0e151e] border border-emerald-500/20 p-3.5 shadow-sm space-y-2.5">
+        <div className="relative aurora-liquid-card rounded-3xl p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
@@ -423,12 +423,12 @@ export const GridMenuScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* 4 QUICK ACTION BUTTONS */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Flow navigation: key actions stay one tap away. */}
+        <div className="aurora-flow-pill fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full p-1.5">
           {/* Wi-Fi Quick */}
           <button
             onClick={() => onNavigate('wifi')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+            className="aurora-liquid-button flex flex-col items-center justify-center p-2.5 rounded-full transition cursor-pointer group"
           >
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Wifi className="w-5 h-5 text-emerald-400" />
@@ -440,19 +440,19 @@ export const GridMenuScreen: React.FC<Props> = ({
           {/* Accesso Porta */}
           <button
             onClick={() => onNavigate('check_in')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+            className="aurora-liquid-button flex flex-col items-center justify-center p-2.5 rounded-full transition cursor-pointer group"
           >
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Key className="w-5 h-5 text-emerald-400" />
             </div>
             <span className="text-[11px] font-semibold text-slate-100">Chiavi</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">Tastierino</span>
+            <span className="text-[9px] text-emerald-400/80 font-mono">Accesso diretto</span>
           </button>
 
           {/* Parcheggio */}
           <button
             onClick={() => onNavigate('posizione')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+            className="aurora-liquid-button flex flex-col items-center justify-center p-2.5 rounded-full transition cursor-pointer group"
           >
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Car className="w-5 h-5 text-emerald-400" />
@@ -468,7 +468,7 @@ export const GridMenuScreen: React.FC<Props> = ({
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 border border-emerald-400/40 text-white shadow-lg shadow-emerald-950/50 transition cursor-pointer group text-center"
+            className="aurora-liquid-button flex flex-col items-center justify-center p-2.5 rounded-full text-white transition cursor-pointer group text-center"
           >
             <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <MessageSquare className="w-5 h-5 fill-white" />

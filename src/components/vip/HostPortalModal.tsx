@@ -28,7 +28,6 @@ import {
   ExternalLink, 
   Sliders, 
   X, 
-  RefreshCw, 
   Calendar, 
   User, 
   Phone, 
@@ -185,11 +184,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
     if (parsed.checkOutDate) setCheckOutDate(parsed.checkOutDate);
     if (parsed.guestsCount) setGuestsCount(parsed.guestsCount);
     if (parsed.bookingRef) setBookingRef(parsed.bookingRef);
-  };
-
-  // Generate new 4-digit PIN
-  const handleRollPin = () => {
-    setPinCode(generateRandomPin());
   };
 
   // Create & Save Guest Pass
@@ -677,36 +671,8 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                       </div>
                     </div>
 
-                    {/* Smart Lock PIN Code & Number of Guests */}
+                    {/* Guest count */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="text-xs font-mono text-slate-400">
-                            Codice Smart Lock / Tastierino *
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleRollPin}
-                            className="text-[11px] text-neutral-400 hover:text-white font-mono flex items-center gap-1 cursor-pointer"
-                          >
-                            <RefreshCw className="w-3 h-3" />
-                            <span>Genera nuovo PIN</span>
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <KeyRound className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
-                          <input
-                            type="text"
-                            maxLength={6}
-                            required
-                            value={pinCode}
-                            onChange={(e) => setPinCode(e.target.value)}
-                            placeholder="Es. 2741"
-                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-black/40 border border-white/20 text-white font-mono font-bold text-lg tracking-widest focus:outline-none focus:border-white/40"
-                          />
-                        </div>
-                      </div>
-
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-1">
                           Numero Ospiti
@@ -746,9 +712,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                             VIP Pass Generato per {generatedPass.guestName} {generatedPass.guestSurname}!
                           </span>
                         </div>
-                        <span className="font-mono text-xs text-white bg-white/10 px-2.5 py-1 rounded-full border border-white/15 shrink-0">
-                          PIN: {generatedPass.pinCode}
-                        </span>
                       </div>
 
                       {/* Generated URL field */}
@@ -871,14 +834,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                               </span>
                             </div>
 
-                            <div className="text-right shrink-0">
-                              <span className="text-[10px] uppercase font-mono text-slate-400 block">
-                                Smart Lock
-                              </span>
-                              <span className="font-mono font-bold text-sm sm:text-base text-white">
-                                {pass.pinCode}
-                              </span>
-                            </div>
                           </div>
 
                           <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs flex-wrap">
@@ -950,7 +905,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed">
-                      L'applicazione include un motore webhook integrato (<code>/api/webhook/booking</code>) in grado di ricevere notifiche da <strong>Bed-and-Breakfast.it</strong>, Zapier, Make.com o email di prenotazione. Assegna istantaneamente un codice PIN univoco (es. 2741), calcola le date e genera il link temporizzato.
+                        L'applicazione include un motore webhook integrato (<code>/api/webhook/booking</code>) in grado di ricevere notifiche da <strong>Bed-and-Breakfast.it</strong>, Zapier, Make.com o email di prenotazione. Calcola le date e genera il link temporizzato.
                     </p>
 
                     {/* Simulator Button */}
@@ -1042,7 +997,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                         <strong>Inoltro Automatico:</strong> Con una semplice regola Gmail o Zapier/Make gratuita, l'email viene inoltrata al webhook dell'app.
                       </li>
                       <li>
-                        <strong>Invio del Link Univoco:</strong> L'app genera il PIN, crea il link personalizzato e prepara il messaggio WhatsApp o SMS già pronto per essere spedito in un click!
+                        <strong>Invio del Link Univoco:</strong> L'app crea il link personalizzato e prepara il messaggio WhatsApp o SMS già pronto per essere spedito in un click!
                       </li>
                     </ol>
                   </div>
@@ -1069,7 +1024,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                       </label>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Collega la serratura smart dell'appartamento tramite <strong>Home Assistant Webhook</strong> o <strong>eWeLink Webhook</strong>. Quando l'ospite preme "Sblocca Porta" o riceve il PIN, il sistema invia la richiesta HTTP POST all'URL configurato.
+                        Collega la serratura smart dell'appartamento tramite <strong>Home Assistant Webhook</strong> o <strong>eWeLink Webhook</strong>. Quando l'ospite preme "Sblocca Porta", il sistema invia la richiesta HTTP POST all'URL configurato.
                     </p>
                   </div>
 
@@ -1147,7 +1102,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                   <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 text-[11px] font-mono text-slate-400 space-y-1">
                     <span className="text-white block font-bold">Formato Payload POST inviato:</span>
                     <code>
-                      {`{ "action": "unlock"|"sync_pin", "pin": "2741", "guest": "Marco Rossi", "device": "lock.aurora_portone" }`}
+                      {`{ "action": "unlock", "guest": "Marco Rossi", "device": "lock.aurora_portone" }`}
                     </code>
                   </div>
 
@@ -1215,7 +1170,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">POST /api/webhook/booking</span>
-                        <span>Riceve prenotazioni bed-and-breakfast.it, assegna un PIN a 4 cifre e imposta la durata del soggiorno.</span>
+                        <span>Riceve prenotazioni bed-and-breakfast.it e imposta la durata del soggiorno.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-mono text-white font-bold bg-white/10 px-1.5 py-0.5 rounded shrink-0">POST /api/hass/unlock</span>
