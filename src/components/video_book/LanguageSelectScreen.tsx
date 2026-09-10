@@ -1,7 +1,6 @@
 import React from 'react';
 import { Language } from '../../types';
 import { FlagIcon } from './FlagIcon';
-import { PWAInstallButton } from '../pwa/PWAInstallButton';
 import { Sparkles, ChevronRight, ShieldCheck, Mountain } from 'lucide-react';
 
 interface Props {
@@ -34,13 +33,12 @@ export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#070a0e] via-[#070a0e]/90 to-[#070a0e]" />
       </div>
 
-      {/* Top Bar with PWA install pill */}
+      {/* Minimal location marker */}
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-medium">
           <Mountain className="w-3.5 h-3.5 text-emerald-400" />
           <span>Morbegno • Valtellina</span>
         </div>
-        <PWAInstallButton language="it" compact />
       </div>
 
       {/* Top Branding: Aurora in Valtellina */}

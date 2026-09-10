@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUpRight, BedDouble, Check, CarFront, ChevronRight, Clock3, Coffee, Copy, ExternalLink, MapPin, MessageCircle, Navigation, Sparkles, Utensils, Wifi, X } from 'lucide-react';
+import { ArrowUpRight, BedDouble, Check, CarFront, ChevronRight, Clock3, Coffee, Copy, ExternalLink, Home, MapPin, MessageCircle, Navigation, Utensils, Wifi, X } from 'lucide-react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
-import { PWAInstallButton } from '../pwa/PWAInstallButton';
 import { FlagIcon } from './FlagIcon';
 
 interface Props {
@@ -88,32 +87,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   return (
     <div className={`aurora-concierge min-h-screen text-white ${isNight ? 'aurora-night' : ''}`}>
-      <header className="aurora-topbar">
-        <div className="aurora-shell flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="aurora-mark"><Sparkles className="h-4 w-4" /></div>
-            <div className="min-w-0">
-              <p className="aurora-eyebrow">Aurora / Morbegno</p>
-              <p className="truncate text-sm font-semibold text-white">La tua casa in Valtellina</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <PWAInstallButton language={language} compact />
-            <button className="aurora-language-trigger" onClick={() => setLanguageOpen(true)} aria-label="Cambia lingua">
-              <FlagIcon language={language} className="h-full w-full object-cover" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <button className="aurora-floating-language" onClick={() => setLanguageOpen(true)} aria-label="Cambia lingua">
+        <FlagIcon language={language} className="h-full w-full object-cover" />
+      </button>
 
       <main className="aurora-shell space-y-5 pb-12 pt-6">
-        <section className="aurora-welcome flex items-end justify-between gap-4">
-          <div>
-            <p className="aurora-eyebrow text-emerald-300">Benvenuto, {firstName}</p>
-            <h1>{copy.home}</h1>
-            <p className="mt-2 max-w-md text-sm text-slate-400">{copy.subtitle}</p>
-          </div>
-          <div className="hidden text-right sm:block"><p className="aurora-eyebrow">Oggi</p><p className="text-sm font-medium text-white">{pass.checkInDate} - {pass.checkOutDate}</p></div>
+        <section className="aurora-brand-space" aria-label="Aurora in Valtellina">
+          <div className="aurora-house-logo"><Home className="h-5 w-5" /></div>
+          <div><p className="aurora-eyebrow">Aurora in Valtellina</p><p className="aurora-brand-name">{firstName}, benvenuto.</p></div>
         </section>
 
         {isCheckoutDay && <button className="stay-nudge" onClick={() => setSheet('luggage')}><Clock3 className="h-4 w-4 text-amber-300" /><span><strong>Check-out entro le {APARTMENT_INFO.checkOutLimit}.</strong><small>Vuoi lasciare i bagagli o prenotare un taxi?</small></span><ChevronRight className="ml-auto h-4 w-4" /></button>}
@@ -133,7 +114,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         <section className="space-y-3"><div className="flex items-end justify-between"><div><p className="aurora-eyebrow">Idee per oggi</p><h2>{copy.experiences}</h2></div><button onClick={() => onNavigate('attivita')} className="text-xs font-semibold text-emerald-300">{copy.all} <ChevronRight className="inline h-3.5 w-3.5" /></button></div><div className="story-scroller">{localStories.map((story) => <button key={story.title} onClick={() => onNavigate('attivita')} className="story-card"><img src={story.image} alt="" /><span><strong>{story.title}</strong><small>{story.meta}</small></span></button>)}</div></section>
 
-        <section className="feature-grid"><button onClick={() => setSheet('food')} className="feature-card feature-food"><div><p className="aurora-eyebrow text-white/70">Taste of Valtellina</p><h3>Locali consigliati</h3><p>Tre indirizzi scelti per una cena senza pensieri.</p></div><ArrowUpRight /></button><button onClick={() => onNavigate('wifi')} className="feature-card feature-home"><div><p className="aurora-eyebrow text-emerald-200">Casa Aurora</p><h3>La tua guida</h3><p>Wi-Fi, servizi, check-in e ogni dettaglio utile.</p></div><ArrowUpRight /></button></section>
       </main>
 
       {languageOpen && <div className="sheet-backdrop" onClick={() => setLanguageOpen(false)}><section className="aurora-sheet language-sheet" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setLanguageOpen(false)}><X className="h-4 w-4" /></button><p className="aurora-eyebrow">Preferenza lingua</p><h2>{copy.chooseLanguage}</h2><div className="language-options">{languages.map((item) => <button key={item.id} className={language === item.id ? 'active' : ''} onClick={() => { onSelectLanguage(item.id); setLanguageOpen(false); }}><FlagIcon language={item.id} /><span>{item.label}</span>{language === item.id && <Check className="ml-auto h-4 w-4" />}</button>)}</div></section></div>}

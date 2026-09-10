@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { FlagIcon } from './FlagIcon';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
-import { PWAInstallButton } from '../pwa/PWAInstallButton';
 import { StaySummaryPill } from '../vip/StaySummaryPill';
 import { 
   Home, 
@@ -330,7 +329,6 @@ export const GridMenuScreen: React.FC<Props> = ({
 
           {/* Right: PWA & Language pills */}
           <div className="flex items-center gap-2">
-            <PWAInstallButton language={language} compact />
             
             {/* Language dropdown / pill */}
             <div className="flex items-center gap-1 bg-[#0e151e] p-0.5 rounded-full border border-emerald-500/20">

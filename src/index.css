@@ -27,6 +27,8 @@ body { margin: 0; background: var(--aurora-ink); }
 .aurora-languages button.active { opacity: 1; outline: 2px solid var(--aurora-mint); outline-offset: 1px; }
 .aurora-language-trigger { width: 2.05rem; height: 2.05rem; padding: .18rem; overflow: hidden; border: 1px solid rgba(255,255,255,.24); border-radius: 50%; background: rgba(255,255,255,.1); box-shadow: inset 0 1px rgba(255,255,255,.25), 0 8px 20px rgba(0,0,0,.2); cursor: pointer; transition: transform .35s ease; }
 .aurora-language-trigger:hover { transform: rotate(12deg) scale(1.06); }
+.aurora-floating-language { position: fixed; z-index: 45; top: 1.1rem; right: max(1rem, calc((100vw - 760px) / 2)); width: 2.25rem; height: 2.25rem; padding: .2rem; overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; background: rgba(4, 8, 11, .82); box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.15); backdrop-filter: blur(20px); cursor: pointer; transition: transform .35s ease, border-color .2s ease; }
+.aurora-floating-language:hover { transform: rotate(12deg) scale(1.08); border-color: var(--aurora-mint); }
 .language-options { display: grid; gap: .5rem; margin-top: 1.2rem; }
 .language-options button { display: flex; align-items: center; gap: .75rem; padding: .8rem .85rem; color: white; text-align: left; background: rgba(255,255,255,.05); border: 1px solid var(--aurora-line); border-radius: 1rem; cursor: pointer; }
 .language-options button.active { color: #07110d; background: var(--aurora-mint); border-color: var(--aurora-mint); }
@@ -34,6 +36,9 @@ body { margin: 0; background: var(--aurora-ink); }
 .aurora-welcome h1, .aurora-concierge h2, .aurora-concierge h3 { font-family: 'Manrope', sans-serif; letter-spacing: -.04em; }
 .aurora-welcome h1 { margin: .35rem 0 0; font-size: clamp(2rem, 8vw, 3.5rem); line-height: .98; }
 .aurora-concierge h2 { margin: .3rem 0 0; font-size: 1.35rem; }
+.aurora-brand-space { display: flex; align-items: center; gap: .8rem; min-height: 5.5rem; padding: 1.1rem 1.2rem; border: 1px solid rgba(255,255,255,.08); border-radius: 1.6rem; background: linear-gradient(135deg, rgba(4,9,12,.96), rgba(11,19,22,.82)); box-shadow: inset 0 1px rgba(255,255,255,.05), 0 18px 42px rgba(0,0,0,.22); }
+.aurora-house-logo { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; color: #07110d; background: var(--aurora-mint); border-radius: 1rem; box-shadow: 0 0 28px rgba(98,230,189,.18); }
+.aurora-brand-name { margin: .18rem 0 0; color: rgba(255,255,255,.9); font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: -.03em; }
 .glass-pass { position: relative; min-height: 320px; overflow: hidden; isolation: isolate; border: 1px solid rgba(255,255,255,.26); border-radius: 2rem; background: linear-gradient(135deg, rgba(255,255,255,.19), rgba(72, 157, 134, .12) 42%, rgba(7, 12, 17, .78)); box-shadow: 0 28px 70px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.35); backdrop-filter: blur(25px) saturate(180%); transform: perspective(1000px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
 .glass-pass::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 15%, rgba(255,255,255,.2) 48%, transparent 67%); opacity: .55; transform: translateX(calc(var(--tilt-x, 0deg) * 2)); transition: transform .5s ease; }
 .glass-pass-shine { position: absolute; z-index: -1; top: -35%; right: -15%; width: 70%; height: 95%; border-radius: 50%; background: rgba(212,243,106,.18); filter: blur(55px); }
