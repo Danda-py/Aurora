@@ -40,287 +40,287 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   };
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={c.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
-
-      {/* Host Profile Avatar & Title */}
-      <div className="text-center space-y-2 pt-1">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-lg ring-4 ring-[#62e6bd]/15">
-          <img
-            src={media?.hostAvatar || hostAvatarPhoto}
-            alt={APARTMENT_INFO.hostName}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-        </div>
-
-        <div>
-          <h3 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-            {APARTMENT_INFO.hostName}
-          </h3>
-          <span className="text-[11px] font-semibold text-[#62e6bd] uppercase tracking-wider block">
-            {c.hostRole}
-          </span>
-        </div>
-
-        <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed italic px-2">
-          "{c.quote}"
-        </p>
-      </div>
-
-      {/* Direct Contact Buttons List */}
-      <div className="space-y-2 max-w-md mx-auto">
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
         
-        {/* WhatsApp direct chat */}
-        <a
-          href={APARTMENT_INFO.hostWhatsAppUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-3.5 rounded-2xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] flex items-center justify-between shadow-md transition group cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#07110d]/10 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <MessageSquare className="w-5 h-5 fill-current text-[#07110d]" />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-bold tracking-wide">
-                {c.chatAction}
-              </div>
-              <div className="text-[10px] text-[#07110d]/80 font-mono font-semibold">
-                {APARTMENT_INFO.hostPhoneDisplay}
-              </div>
-            </div>
-          </div>
-          <span className="text-xs font-bold text-[#07110d] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-            <span>WhatsApp</span>
-            <span>→</span>
-          </span>
-        </a>
+        {/* Top Header */}
+        <PageHeader
+          title={c.title}
+          category="Assistenza Diretta"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-        {/* Phone Call */}
-        <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white">
-              <Phone className="w-4 h-4 text-[#62e6bd]" />
-            </div>
-            <div>
-              <span className="font-mono text-xs font-bold text-white block">
-                {APARTMENT_INFO.hostPhoneDisplay}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                Telefono Diretto
-              </span>
-            </div>
+        {/* Host Profile Avatar & Title */}
+        <div className="aurora-glass-card text-center space-y-3 pt-4 pb-6">
+          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-xl ring-4 ring-[#62e6bd]/15">
+            <img
+              src={media?.hostAvatar || hostAvatarPhoto}
+              alt={APARTMENT_INFO.hostName}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => handleCopy(APARTMENT_INFO.hostPhone, 'phone')}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs transition border border-white/10 cursor-pointer"
-              title={c.copyPhone}
-            >
-              {copiedType === 'phone' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <a
-              href={`tel:${APARTMENT_INFO.hostPhone}`}
-              className="text-xs font-semibold text-teal-300 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 px-3 py-1.5 rounded-xl transition cursor-pointer"
-            >
-              {c.callAction}
-            </a>
-          </div>
-        </div>
 
-        {/* SMS option */}
-        <a
-          href={`sms:${APARTMENT_INFO.hostPhone}`}
-          className="p-3 rounded-2xl bg-[#141824] hover:bg-[#181d2c] border border-white/[0.08] flex items-center justify-between shadow-sm transition group cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white">
-              <MessageCircle className="w-4 h-4 text-blue-300" />
-            </div>
-            <span className="text-xs font-semibold text-white">
-              {c.smsAction}
+          <div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              {APARTMENT_INFO.hostName}
+            </h3>
+            <span className="aurora-eyebrow text-[#62e6bd] block mt-1">
+              {c.hostRole}
             </span>
           </div>
-          <span className="text-[10px] font-semibold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-lg">
-            SMS
-          </span>
-        </a>
 
-        {/* Email */}
-        <div className="p-3 rounded-2xl bg-[#141824] border border-white/[0.08] flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
-              <Mail className="w-4 h-4 text-neutral-300" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-xs font-medium text-white truncate block">
-                {APARTMENT_INFO.hostEmail}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                Email Assistenza
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => handleCopy(APARTMENT_INFO.hostEmail, 'email')}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs transition border border-white/10 cursor-pointer"
-              title={c.copyEmail}
-            >
-              {copiedType === 'email' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <a
-              href={`mailto:${APARTMENT_INFO.hostEmail}`}
-              className="text-xs font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 px-3 py-1.5 rounded-xl transition cursor-pointer"
-            >
-              Email
-            </a>
-          </div>
+          <p className="text-xs text-white/75 max-w-sm mx-auto leading-relaxed italic px-2">
+            "{c.quote}"
+          </p>
         </div>
 
-        {/* Instagram */}
-        <a
-          href="https://instagram.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-3 rounded-2xl bg-[#141824] hover:bg-[#181d2c] border border-white/[0.08] flex items-center justify-between shadow-sm transition group cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-              <Instagram className="w-4 h-4 text-pink-400" />
-            </div>
-            <span className="text-xs font-medium text-slate-300">
-              @aurora_in_valtellina
-            </span>
-          </div>
-          <span className="text-[10px] font-semibold text-slate-400 bg-white/10 px-2.5 py-1 rounded-lg">
-            Instagram
-          </span>
-        </a>
-
-      </div>
-
-      {copiedType && (
-        <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs text-center font-semibold">
-          {c.copied}
-        </div>
-      )}
-
-      {/* Review Section */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm text-center space-y-3 max-w-md mx-auto">
-        
-        {/* 5 Stars */}
-        <div className="flex items-center justify-center gap-1 text-white">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star key={s} className="w-5 h-5 fill-white text-white" />
-          ))}
-        </div>
-
-        <p className="text-xs text-slate-300 leading-relaxed max-w-xs mx-auto">
-          {c.reviewPrompt}
-        </p>
-
-        <div className="grid grid-cols-2 gap-2.5 pt-1">
+        {/* Direct Contact Buttons List */}
+        <div className="space-y-3">
+          
+          {/* WhatsApp direct chat */}
           <a
-            href={APARTMENT_INFO.googleMapsUrl}
+            href={APARTMENT_INFO.hostWhatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs transition border border-white/10 flex items-center justify-center gap-1 cursor-pointer"
+            className="aurora-item-card items-center bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] border-transparent shadow-lg shadow-[#62e6bd]/20 group"
           >
-            <span>{c.rateGoogle}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-[#07110d]/10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                <MessageSquare className="w-5 h-5 fill-current text-[#07110d]" />
+              </div>
+              <div className="text-left min-w-0">
+                <div className="text-xs font-bold tracking-wide text-[#07110d]">
+                  {c.chatAction}
+                </div>
+                <div className="text-xs text-[#07110d]/80 font-mono font-bold truncate">
+                  {APARTMENT_INFO.hostPhoneDisplay}
+                </div>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-[#07110d] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform shrink-0">
+              <span>WhatsApp</span>
+              <span>→</span>
+            </span>
           </a>
 
-          <button
-            onClick={() => setShowReviewModal(true)}
-            className="py-2.5 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-semibold text-xs transition border border-white/10 flex items-center justify-center gap-1 cursor-pointer"
+          {/* Phone Call */}
+          <div className="aurora-item-card items-center">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="aurora-icon-box">
+                <Phone className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-mono text-xs font-bold text-white block">
+                  {APARTMENT_INFO.hostPhoneDisplay}
+                </span>
+                <span className="text-xs text-white/60 block">
+                  Telefono Diretto
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => handleCopy(APARTMENT_INFO.hostPhone, 'phone')}
+                className="aurora-secondary-pill"
+                title={c.copyPhone}
+              >
+                {copiedType === 'phone' ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
+              </button>
+              <a
+                href={`tel:${APARTMENT_INFO.hostPhone}`}
+                className="aurora-action-pill"
+              >
+                {c.callAction}
+              </a>
+            </div>
+          </div>
+
+          {/* SMS option */}
+          <a
+            href={`sms:${APARTMENT_INFO.hostPhone}`}
+            className="aurora-item-card items-center group cursor-pointer"
           >
-            <span>{c.rateWebsite}</span>
-          </button>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="aurora-icon-box">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-white">
+                {c.smsAction}
+              </span>
+            </div>
+            <span className="aurora-secondary-pill">
+              Invia SMS
+            </span>
+          </a>
+
+          {/* Email */}
+          <div className="aurora-item-card items-center">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="aurora-icon-box">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-white truncate block">
+                  {APARTMENT_INFO.hostEmail}
+                </span>
+                <span className="text-xs text-white/60 block">
+                  Email Assistenza
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => handleCopy(APARTMENT_INFO.hostEmail, 'email')}
+                className="aurora-secondary-pill"
+                title={c.copyEmail}
+              >
+                {copiedType === 'email' ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
+              </button>
+              <a
+                href={`mailto:${APARTMENT_INFO.hostEmail}`}
+                className="aurora-action-pill"
+              >
+                Email
+              </a>
+            </div>
+          </div>
+
+          {/* Instagram */}
+          <a
+            href="https://instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="aurora-item-card items-center group cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="aurora-icon-box">
+                <Instagram className="w-5 h-5 text-pink-400" />
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-white">
+                @aurora_in_valtellina
+              </span>
+            </div>
+            <span className="aurora-secondary-pill">
+              Instagram
+            </span>
+          </a>
+
         </div>
 
-      </div>
+        {copiedType && (
+          <div className="p-3 rounded-2xl bg-[#62e6bd]/20 border border-[#62e6bd]/30 text-[#9ef2d3] text-xs text-center font-bold animate-fade-in">
+            {c.copied}
+          </div>
+        )}
 
-      {/* In-app Review Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-sm rounded-3xl bg-[#141824] border border-white/[0.12] p-6 shadow-2xl text-slate-100 space-y-4">
-            {reviewSubmitted ? (
-              <div className="text-center py-6 space-y-3">
-                <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
-                  <Heart className="w-6 h-6 fill-emerald-400 text-emerald-400" />
-                </div>
-                <h4 className="font-bold text-base text-white">
-                  {c.reviewSuccess}
-                </h4>
-              </div>
-            ) : (
-              <form onSubmit={handleReviewSubmit} className="space-y-4">
-                <h4 className="font-semibold text-sm text-white text-center">
-                  {c.reviewDialogTitle}
-                </h4>
-                
-                <div className="text-center space-y-1.5">
-                  <label className="text-xs text-slate-400 block">
-                    {c.ratingPrompt}
-                  </label>
-                  <div className="flex items-center justify-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        type="button"
-                        key={star}
-                        onClick={() => setRating(star)}
-                        className="p-1 text-white hover:scale-125 transition cursor-pointer"
-                      >
-                        <Star className={`w-7 h-7 ${star <= rating ? 'fill-white text-white' : 'text-slate-600'}`} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+        {/* Review Section */}
+        <div className="aurora-glass-card text-center space-y-3 p-6">
+          <div className="flex items-center justify-center gap-1 text-[#62e6bd]">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Star key={s} className="w-5 h-5 fill-current text-[#62e6bd]" />
+            ))}
+          </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-400 block">
-                    {c.commentPrompt}
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    required
-                    placeholder="Il vostro feedback ci aiuta a migliorare costantemente..."
-                    className="w-full text-xs p-3 rounded-xl border border-white/10 bg-[#0d1017] text-white focus:ring-2 focus:ring-white/30 outline-none"
-                  />
-                </div>
+          <p className="text-xs text-white/75 leading-relaxed max-w-sm mx-auto">
+            {c.reviewPrompt}
+          </p>
 
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowReviewModal(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 font-medium text-xs hover:bg-white/10 cursor-pointer"
-                  >
-                    Annulla
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{c.submitReview}</span>
-                  </button>
-                </div>
-              </form>
-            )}
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <a
+              href={APARTMENT_INFO.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="aurora-secondary-pill py-3"
+            >
+              <span>{c.rateGoogle}</span>
+            </a>
+
+            <button
+              onClick={() => setShowReviewModal(true)}
+              className="aurora-action-pill py-3"
+            >
+              <span>{c.rateWebsite}</span>
+            </button>
           </div>
         </div>
-      )}
 
+        {/* In-app Review Modal */}
+        {showReviewModal && (
+          <div className="sheet-backdrop">
+            <div className="w-full max-w-sm rounded-3xl bg-[#0e161c] border border-white/[0.15] p-6 shadow-2xl text-white space-y-4">
+              {reviewSubmitted ? (
+                <div className="text-center py-6 space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-[#62e6bd]/20 text-[#62e6bd] flex items-center justify-center">
+                    <Heart className="w-6 h-6 fill-current" />
+                  </div>
+                  <h4 className="font-bold text-base text-white">
+                    {c.reviewSuccess}
+                  </h4>
+                </div>
+              ) : (
+                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                  <h4 className="font-bold text-base text-white text-center">
+                    {c.reviewDialogTitle}
+                  </h4>
+                  
+                  <div className="text-center space-y-1.5">
+                    <label className="text-xs text-white/60 block">
+                      {c.ratingPrompt}
+                    </label>
+                    <div className="flex items-center justify-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setRating(star)}
+                          className="p-1 text-[#62e6bd] hover:scale-125 transition cursor-pointer"
+                        >
+                          <Star className={`w-7 h-7 ${star <= rating ? 'fill-current' : 'text-white/20'}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-white/60 block">
+                      {c.commentPrompt}
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      required
+                      placeholder="Il vostro feedback ci aiuta a migliorare costantemente..."
+                      className="w-full text-xs p-3 rounded-xl border border-white/10 bg-white/[0.04] text-white focus:ring-2 focus:ring-[#62e6bd]/40 outline-none"
+                    />
+                  </div>
+
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReviewModal(false)}
+                      className="aurora-secondary-pill flex-1 py-2.5"
+                    >
+                      Annulla
+                    </button>
+                    <button
+                      type="submit"
+                      className="aurora-action-pill flex-1 py-2.5"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{c.submitReview}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

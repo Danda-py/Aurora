@@ -97,7 +97,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto min-h-screen relative flex flex-col justify-between overflow-hidden shadow-2xl font-sans bg-[#070a0e] text-slate-100 selection:bg-emerald-500/25 selection:text-emerald-200">
+    <div className="w-full min-h-screen relative flex flex-col justify-between font-sans bg-[#080b10] text-slate-100 selection:bg-emerald-500/25 selection:text-emerald-200">
 
       {/* Main Dynamic View Content */}
       <main className="flex-1 w-full p-0">

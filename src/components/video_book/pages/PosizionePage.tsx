@@ -25,118 +25,125 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   };
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={loc.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
-
-      {/* Map Interactive View */}
-      <div className="relative h-48 sm:h-56 w-full rounded-2xl overflow-hidden shadow-sm border border-white/[0.1] backdrop-blur-xl">
-        <iframe
-          title="Mappa Morbegno"
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          scrolling="no"
-          marginHeight={0}
-          marginWidth={0}
-          src="https://maps.google.com/maps?q=Via+Serta+188D+Morbegno+SO&t=&z=15&ie=UTF8&iwloc=&output=embed"
-          className="w-full h-full grayscale-[40%] contrast-[1.15] invert-[90%] hue-rotate-180"
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={loc.title}
+          category="Indicazioni & Mappa"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
         />
-        <div className="absolute top-2.5 right-2.5">
+
+        {/* Map Interactive View */}
+        <div className="relative h-52 sm:h-64 w-full rounded-3xl overflow-hidden shadow-lg border border-white/[0.1] backdrop-blur-xl">
+          <iframe
+            title="Mappa Morbegno"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            scrolling="no"
+            marginHeight={0}
+            marginWidth={0}
+            src="https://maps.google.com/maps?q=Via+Serta+188D+Morbegno+SO&t=&z=15&ie=UTF8&iwloc=&output=embed"
+            className="w-full h-full grayscale-[30%] contrast-[1.1] invert-[90%] hue-rotate-180"
+          />
+          <div className="absolute top-3 right-3">
+            <a
+              href={APARTMENT_INFO.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-xl bg-[#080b10]/90 hover:bg-[#080b10] text-white text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-md border border-white/20 cursor-pointer transition"
+            >
+              <Navigation className="w-3.5 h-3.5 text-[#62e6bd]" />
+              <span>Apri Google Maps</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Address Card */}
+        <div className="aurora-glass-card space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="aurora-icon-box">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="aurora-eyebrow">Indirizzo Ufficiale</span>
+                <h3 className="font-bold text-sm sm:text-base text-white tracking-tight mt-0.5">
+                  {APARTMENT_INFO.name}
+                </h3>
+                <p className="font-mono text-xs text-white/70 truncate mt-0.5">
+                  {APARTMENT_INFO.fullAddress}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCopyAddress}
+              className="aurora-secondary-pill"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
+              <span>{copied ? 'Copiato!' : 'Copia'}</span>
+            </button>
+          </div>
+
           <a
             href={APARTMENT_INFO.googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-semibold shadow-md flex items-center gap-1.5 backdrop-blur-sm border border-white/20 cursor-pointer"
+            className="aurora-action-pill w-full py-3.5"
           >
-            <Navigation className="w-3.5 h-3.5 text-[#62e6bd]" />
-            <span>Apri Maps</span>
+            <Navigation className="w-4 h-4 text-[#07110d]" />
+            <span>Avvia Navigatore GPS</span>
           </a>
         </div>
-      </div>
 
-      {/* Address Card */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 flex items-center justify-center text-[#62e6bd] shrink-0 mt-0.5">
-              <MapPin className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <h4 className="font-semibold text-xs sm:text-sm text-white">
-                {APARTMENT_INFO.name}
-              </h4>
-              <p className="font-mono text-xs text-slate-400 truncate mt-0.5">
-                {APARTMENT_INFO.fullAddress}
-              </p>
-            </div>
+        {/* How to arrive directions */}
+        <div className="aurora-glass-card space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Come Raggiungerci</p>
+            <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+              {loc.howToArrive}
+            </h4>
           </div>
 
-          <button
-            onClick={handleCopyAddress}
-            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs flex items-center gap-1.5 transition shrink-0 border border-white/10 cursor-pointer"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-slate-300" />}
-            <span>{copied ? 'Copiato!' : 'Copia'}</span>
-          </button>
-        </div>
-
-        <a
-          href={APARTMENT_INFO.googleMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-2.5 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-xs transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Navigation className="w-4 h-4 text-[#07110d]" />
-          <span>Avvia Navigatore GPS</span>
-        </a>
-      </div>
-
-      {/* How to arrive directions */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-3">
-        <h4 className="font-semibold text-xs sm:text-sm text-white uppercase tracking-wider">
-          {loc.howToArrive}
-        </h4>
-
-        <div className="space-y-2.5 text-xs text-slate-300">
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-teal-500/15 border border-teal-500/25 text-teal-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Train className="w-3.5 h-3.5" />
+          <div className="space-y-3 text-xs text-white/80">
+            <div className="aurora-item-card">
+              <div className="aurora-icon-box">
+                <Train className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <strong className="text-white text-xs sm:text-sm font-bold block">{loc.byTrain}</strong>
+                <span className="text-xs text-white/65 leading-relaxed block mt-0.5">{loc.byTrainDesc}</span>
+              </div>
             </div>
-            <div>
-              <strong className="text-white block">{loc.byTrain}</strong>
-              <span className="text-slate-400 leading-relaxed">{loc.byTrainDesc}</span>
-            </div>
-          </div>
 
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/25 text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Car className="w-3.5 h-3.5" />
+            <div className="aurora-item-card">
+              <div className="aurora-icon-box">
+                <Car className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <strong className="text-white text-xs sm:text-sm font-bold block">{loc.byCar}</strong>
+                <span className="text-xs text-white/65 leading-relaxed block mt-0.5">{loc.byCarDesc}</span>
+              </div>
             </div>
-            <div>
-              <strong className="text-white block">{loc.byCar}</strong>
-              <span className="text-slate-400 leading-relaxed">{loc.byCarDesc}</span>
-            </div>
-          </div>
 
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Plane className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <strong className="text-white block">{loc.byPlane}</strong>
-              <span className="text-slate-400 leading-relaxed">{loc.byPlaneDesc}</span>
+            <div className="aurora-item-card">
+              <div className="aurora-icon-box">
+                <Plane className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <strong className="text-white text-xs sm:text-sm font-bold block">{loc.byPlane}</strong>
+                <span className="text-xs text-white/65 leading-relaxed block mt-0.5">{loc.byPlaneDesc}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 };

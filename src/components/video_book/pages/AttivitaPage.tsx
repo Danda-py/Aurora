@@ -17,94 +17,104 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
 
   const categoryIcons = [
-    <Bike key="bike" className="w-4 h-4 text-teal-300 shrink-0" />,
-    <Wine key="wine" className="w-4 h-4 text-rose-300 shrink-0" />,
-    <Mountain key="mountain" className="w-4 h-4 text-blue-300 shrink-0" />,
-    <Compass key="compass" className="w-4 h-4 text-neutral-300 shrink-0" />
+    <Bike key="bike" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
+    <Wine key="wine" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
+    <Mountain key="mountain" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
+    <Compass key="compass" className="w-5 h-5 text-[#62e6bd] shrink-0" />
   ];
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={act.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
-
-      {/* Top Banner Image with Overlay */}
-      <div className="relative h-44 sm:h-52 w-full rounded-2xl overflow-hidden shadow-md border border-white/[0.1]">
-        <img
-          src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"
-          alt="Valtellina Panorama"
-          className="w-full h-full object-cover"
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={act.title}
+          category="Esperienze & Natura"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-black/40 to-transparent flex items-end p-4">
-          <div className="space-y-1">
-            <span className="text-[#9ef2d3] text-[11px] font-semibold tracking-wider flex items-center gap-1.5 uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-[#62e6bd]" /> Valtellina & Alpi
+
+        {/* Top Banner Image with Overlay */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"
+            alt="Valtellina Panorama"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Valtellina & Alpi
             </span>
-            <h3 className="text-white text-base sm:text-lg font-bold leading-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {act.bannerText}
-            </h3>
+            </h1>
           </div>
         </div>
-      </div>
 
-      {/* Highlights List */}
-      <div className="space-y-2.5">
-        {act.highlights.map((item, index) => (
-          <div
-            key={index}
-            className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.1] shadow-sm space-y-2"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md inline-block mb-1 bg-[#62e6bd]/15 border border-[#62e6bd]/30 text-[#9ef2d3]">
-                  {item.tag}
-                </span>
-                <h4 className="font-semibold text-xs sm:text-sm text-white">
-                  {item.title}
-                </h4>
-              </div>
-              <a
-                href={item.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2.5 py-1 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-xs flex items-center gap-1 transition shrink-0 cursor-pointer"
-              >
-                <MapPin className="w-3 h-3" />
-                <span>Maps</span>
-              </a>
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {item.desc}
-            </p>
+        {/* Highlights List */}
+        <div className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Itinerari Imperdibili</p>
+            <h3 className="text-base font-bold text-white tracking-tight">Le migliori esperienze vicino a casa</h3>
           </div>
-        ))}
-      </div>
 
-      {/* Additional categories grid */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.035] backdrop-blur-xl border border-white/[0.1] shadow-sm space-y-3">
-        <h4 className="text-sm font-semibold text-white uppercase tracking-wider text-center">
-          {act.categoryTitle}
-        </h4>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-          {act.categories.map((cat, idx) => (
-            <div key={idx} className="p-3 rounded-xl bg-white/[0.04] flex items-center gap-3 border border-white/[0.08]">
-              {categoryIcons[idx % categoryIcons.length]}
-              <div>
-                <strong className="block text-white text-xs font-semibold">{cat.title}</strong>
-                <span className="text-[11px] text-slate-400 leading-snug block">{cat.desc}</span>
+          {act.highlights.map((item, index) => (
+            <div
+              key={index}
+              className="aurora-glass-card space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="aurora-eyebrow text-[#62e6bd] font-mono">
+                    {item.tag}
+                  </span>
+                  <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
+                    {item.title}
+                  </h4>
+                </div>
+                <a
+                  href={item.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="aurora-action-pill"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
+                  <span>Maps</span>
+                </a>
               </div>
+              <p className="text-xs text-white/70 leading-relaxed">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
-      </div>
 
+        {/* Additional categories grid */}
+        <div className="aurora-glass-card space-y-4">
+          <div className="text-center">
+            <span className="aurora-eyebrow">Per Ogni Passione</span>
+            <h4 className="text-base font-bold text-white tracking-tight mt-0.5">
+              {act.categoryTitle}
+            </h4>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {act.categories.map((cat, idx) => (
+              <div key={idx} className="aurora-item-card items-center">
+                <div className="aurora-icon-box">
+                  {categoryIcons[idx % categoryIcons.length]}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <strong className="block text-white text-xs sm:text-sm font-bold tracking-tight">{cat.title}</strong>
+                  <span className="text-xs text-white/60 leading-snug block mt-0.5">{cat.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

@@ -24,94 +24,104 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   ];
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={em.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={em.title}
+          category="Sicurezza & Pronto Intervento"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-      {/* Red Highlight 112 Banner */}
-      <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-white shadow-sm space-y-2.5 backdrop-blur-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-rose-400" />
-            <span className="font-semibold text-xs uppercase tracking-wider text-rose-200">
-              {em.nationalNumbersTitle}
+        {/* Red Highlight 112 Banner */}
+        <div className="aurora-glass-card border-rose-500/30 bg-gradient-to-br from-rose-950/40 to-black/60 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-400" />
+              <span className="aurora-eyebrow text-rose-200">
+                {em.nationalNumbersTitle}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold bg-rose-500/25 border border-rose-500/40 text-rose-200 px-2.5 py-0.5 rounded-full">
+              {em.freeBadge}
             </span>
           </div>
-          <span className="text-[10px] font-bold bg-rose-500/25 border border-rose-500/40 text-rose-200 px-2 py-0.5 rounded-md">
-            {em.freeBadge}
-          </span>
+
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            {emergencyHots.map((e) => (
+              <a
+                key={e.num}
+                href={`tel:${e.num}`}
+                className="p-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-between transition cursor-pointer shadow-sm"
+              >
+                <div className="min-w-0 pr-1">
+                  <span className="text-[10px] text-white/70 truncate block">{e.label}</span>
+                  <span className="font-mono text-lg font-black text-rose-300">{e.num}</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          {emergencyHots.map((e) => (
-            <a
-              key={e.num}
-              href={`tel:${e.num}`}
-              className="p-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-between transition cursor-pointer"
+        {/* Local emergency locations */}
+        <div className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Presidi Medici & Ospedali</p>
+            <h3 className="text-base font-bold text-white tracking-tight">Strutture di soccorso vicine</h3>
+          </div>
+
+          {em.items.map((item, idx) => (
+            <div
+              key={idx}
+              className="aurora-glass-card space-y-3"
             >
-              <div className="min-w-0 pr-1">
-                <span className="text-[10px] text-slate-300 truncate block">{e.label}</span>
-                <span className="font-mono text-base font-extrabold text-rose-300">{e.num}</span>
-              </div>
-              <Phone className="w-4 h-4 text-white shrink-0" />
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Local emergency locations */}
-      <div className="space-y-2.5">
-        {em.items.map((item, idx) => (
-          <div
-            key={idx}
-            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-1.5"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center shrink-0 mt-0.5 text-rose-300">
-                  <HeartPulse className="w-4 h-4" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center shrink-0 text-rose-300 shadow-inner">
+                    <HeartPulse className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                      {item.title}
+                    </h4>
+                    <span className="text-xs text-white/60 block mt-0.5">
+                      {item.subtitle}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">
-                    {item.title}
-                  </h4>
-                  <span className="text-[11px] text-slate-400 font-medium block">
-                    {item.subtitle}
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                {item.mapsUrl && (
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.mapsUrl && (
+                    <a
+                      href={item.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aurora-secondary-pill"
+                      title="Mappa"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-white/70" />
+                    </a>
+                  )}
                   <a
-                    href={item.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-white transition border border-white/10 cursor-pointer"
-                    title="Mappa"
+                    href={`tel:${item.phone.replace(/\s+/g, '')}`}
+                    className="aurora-action-pill bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                    <Phone className="w-3.5 h-3.5 text-white" />
+                    <span>Chiama</span>
                   </a>
-                )}
-                <a
-                  href={`tel:${item.phone.replace(/\s+/g, '')}`}
-                  className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs flex items-center gap-1 shadow-xs transition cursor-pointer"
-                >
-                  <Phone className="w-3 h-3 text-white" />
-                  <span>Chiama</span>
-                </a>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
+      </div>
     </div>
   );
 };

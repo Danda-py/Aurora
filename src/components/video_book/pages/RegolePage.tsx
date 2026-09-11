@@ -62,46 +62,60 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
   ];
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={r.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={r.title}
+          category="Soggiorno & Quiete"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-      {/* Rules List in modern dark cards */}
-      <div className="space-y-2.5">
-        {rulesList.map((item) => (
-          <div
-            key={item.num}
-            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-start gap-3.5"
-          >
-            {/* Rule icon pill */}
-            <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${item.color}`}>
-              {item.icon}
-            </div>
+        {/* Introduction note */}
+        <div className="aurora-glass-card space-y-2">
+          <span className="aurora-eyebrow">Convivenza & Rispetto</span>
+          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            Piccole attenzioni per un soggiorno perfetto
+          </h3>
+          <p className="text-xs text-white/70 leading-relaxed">
+            Per garantire il massimo comfort a voi e la tranquillità del condominio, vi chiediamo di seguire queste semplici regole di buon vicinato.
+          </p>
+        </div>
 
-            {/* Content */}
-            <div className="space-y-0.5 flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-[#62e6bd]">
-                  REGOLA #{item.num}
-                </span>
-                <span className="text-xs font-semibold text-white truncate">
-                  {item.title}
-                </span>
+        {/* Rules List */}
+        <div className="space-y-3">
+          {rulesList.map((item) => (
+            <div
+              key={item.num}
+              className="aurora-item-card items-start"
+            >
+              {/* Rule icon pill */}
+              <div className="aurora-icon-box mt-0.5">
+                {item.icon}
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
 
+              {/* Content */}
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="aurora-eyebrow text-[#62e6bd] font-mono">
+                    REGOLA #{item.num}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-white truncate">
+                    {item.title}
+                  </span>
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
 };

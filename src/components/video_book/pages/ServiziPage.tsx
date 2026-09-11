@@ -17,42 +17,58 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const am = { ...BOOK_DATA[language].amenities, ...cmsAmenities };
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={am.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={am.title}
+          category="Dotazioni Casa"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-      {/* Grid of amenities */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {am.items.map((item, idx) => (
-          <div
-            key={idx}
-            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3"
-          >
-            <CheckCircle2 className="w-4 h-4 text-[#62e6bd] shrink-0" />
-            <div className="min-w-0">
-              <strong className="block text-xs font-semibold text-white tracking-wide">
-                {item.title}
-              </strong>
-              <span className="text-[11px] text-slate-400 truncate block">
-                {item.desc}
-              </span>
+        {/* Intro */}
+        <div className="aurora-glass-card space-y-2">
+          <span className="aurora-eyebrow">Dotazioni Complete</span>
+          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            Tutti i comfort pensati per te
+          </h3>
+          <p className="text-xs text-white/70 leading-relaxed">
+            Dalla cucina attrezzata al riscaldamento autonomo, ecco tutti i servizi inclusi nel tuo appartamento.
+          </p>
+        </div>
+
+        {/* Grid of amenities */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {am.items.map((item, idx) => (
+            <div
+              key={idx}
+              className="aurora-item-card items-center"
+            >
+              <div className="aurora-icon-box">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <strong className="block text-xs sm:text-sm font-bold text-white tracking-tight">
+                  {item.title}
+                </strong>
+                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">
+                  {item.desc}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Safety / energy notice */}
-      <div className="p-3.5 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-neutral-300 text-xs flex items-start gap-2.5">
-        <Info className="w-4 h-4 text-[#62e6bd] shrink-0 mt-0.5" />
-        <span className="leading-relaxed">{am.notice}</span>
-      </div>
+        {/* Safety / energy notice */}
+        <div className="aurora-glass-card p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-[#62e6bd] shrink-0 mt-0.5" />
+          <span className="text-xs text-white/70 leading-relaxed">{am.notice}</span>
+        </div>
 
+      </div>
     </div>
   );
 };

@@ -18,83 +18,95 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
 
   const infoIcons = [
-    <Pill key="pill" className="w-4 h-4 text-rose-300" />,
-    <Landmark key="bank" className="w-4 h-4 text-teal-300" />,
-    <Fuel key="fuel" className="w-4 h-4 text-neutral-300" />,
-    <Building key="post" className="w-4 h-4 text-blue-300" />,
-    <Info key="info" className="w-4 h-4 text-indigo-300" />
+    <Pill key="pill" className="w-5 h-5 text-[#62e6bd]" />,
+    <Landmark key="bank" className="w-5 h-5 text-[#62e6bd]" />,
+    <Fuel key="fuel" className="w-5 h-5 text-[#62e6bd]" />,
+    <Building key="post" className="w-5 h-5 text-[#62e6bd]" />,
+    <Info key="info" className="w-5 h-5 text-[#62e6bd]" />
   ];
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={inf.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={inf.title}
+          category="Servizi del Territorio"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-      {/* Services List */}
-      <div className="space-y-2.5">
-        {inf.services.map((s, idx) => (
-          <div
-            key={idx}
-            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center justify-between gap-2"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
+        {/* Services List */}
+        <div className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Punti Utili</p>
+            <h3 className="text-base font-bold text-white tracking-tight">Servizi essenziali a Morbegno</h3>
+          </div>
+
+          {inf.services.map((s, idx) => (
+            <div
+              key={idx}
+              className="aurora-item-card items-center"
+            >
+              <div className="aurora-icon-box">
                 {infoIcons[idx % infoIcons.length]}
               </div>
-              <div className="min-w-0">
-                <h4 className="font-semibold text-xs text-white truncate">
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-sm text-white truncate">
                   {s.title}
                 </h4>
-                <p className="text-[11px] text-slate-400 truncate">
+                <p className="text-xs text-white/60 truncate mt-0.5">
                   {s.desc}
                 </p>
               </div>
+
+              <a
+                href={s.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="aurora-action-pill"
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
+                <span>Maps</span>
+              </a>
             </div>
+          ))}
+        </div>
 
-            <a
-              href={s.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2.5 py-1 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-[10px] flex items-center gap-1 border border-transparent shrink-0 cursor-pointer transition"
-            >
-              <MapPin className="w-3 h-3 text-[#07110d]" />
-              <span>Maps</span>
-            </a>
+        {/* Waste recycling card */}
+        <div className="aurora-glass-card space-y-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="aurora-icon-box">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="aurora-eyebrow">Raccolta Differenziata</span>
+              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                {inf.wasteTitle}
+              </h4>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Waste recycling card */}
-      <div className="p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-2">
-        <div className="flex items-center gap-2">
-          <Trash2 className="w-4 h-4 text-[#62e6bd]" />
-          <h4 className="font-semibold text-xs sm:text-sm text-white">
-            {inf.wasteTitle}
-          </h4>
+          <p className="text-xs text-white/70 leading-relaxed pl-13">
+            {inf.wasteDesc}
+          </p>
         </div>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          {inf.wasteDesc}
-        </p>
-      </div>
 
-      {/* Legal CIR/CIN Card */}
-      <div className="p-3.5 rounded-2xl bg-white/[0.035] backdrop-blur-xl border border-white/[0.08] space-y-1.5 text-xs">
-        <div className="flex items-center justify-between">
-          <span className="text-slate-400 font-medium">{inf.cirLabel}</span>
-          <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cirCode}</span>
+        {/* Legal CIR/CIN Card */}
+        <div className="aurora-glass-card space-y-2 text-xs">
+          <span className="aurora-eyebrow">Codici Identificativi di Legge</span>
+          <div className="flex items-center justify-between pt-1 border-t border-white/[0.08]">
+            <span className="text-white/60 font-medium">{inf.cirLabel}</span>
+            <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cirCode}</span>
+          </div>
+          <div className="flex items-center justify-between pt-1 border-t border-white/[0.08]">
+            <span className="text-white/60 font-medium">{inf.cinLabel}</span>
+            <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cinCode}</span>
+          </div>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-slate-400 font-medium">{inf.cinLabel}</span>
-          <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cinCode}</span>
-        </div>
-      </div>
 
+      </div>
     </div>
   );
 };

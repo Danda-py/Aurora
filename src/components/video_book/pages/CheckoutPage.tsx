@@ -26,92 +26,98 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   };
 
   return (
-    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
-      
-      {/* Top Header */}
-      <PageHeader
-        title={co.title}
-        language={language}
-        onBackToMenu={onBackToMenu}
-        onSelectLanguage={onSelectLanguage}
-      />
+    <div className="aurora-concierge min-h-screen text-white">
+      <div className="aurora-subpage-shell">
+        
+        {/* Top Header */}
+        <PageHeader
+          title={co.title}
+          category="Partenza & Check-out"
+          language={language}
+          onBackToMenu={onBackToMenu}
+          onSelectLanguage={onSelectLanguage}
+        />
 
-      {/* Checkout Time Banner */}
-      <div className="text-center py-2 space-y-1.5">
-        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 shadow-xs font-mono font-bold text-xs tracking-wider">
-          <Clock className="w-3.5 h-3.5 text-rose-400" />
-          <span>{co.badge}</span>
+        {/* Checkout Time Banner */}
+        <div className="text-center py-2 space-y-2">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 shadow-xs font-mono font-bold text-xs tracking-wider">
+            <Clock className="w-4 h-4 text-rose-400" />
+            <span>{co.badge}</span>
+          </div>
+          <p className="text-xs text-white/60 max-w-sm mx-auto leading-relaxed">
+            {co.lateNote}
+          </p>
         </div>
-        <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed pt-0.5">
-          {co.lateNote}
-        </p>
+
+        {/* Interactive Checkpoints */}
+        <div className="aurora-glass-card space-y-4">
+          <div>
+            <span className="aurora-eyebrow">Istruzioni di Partenza</span>
+            <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
+              {co.checklistTitle}
+            </h4>
+          </div>
+
+          <div className="space-y-2.5">
+            {co.checklist.map((item, idx) => {
+              const isDone = !!checkedItems[idx];
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => toggleCheck(idx)}
+                  className={`w-full p-3.5 rounded-2xl border transition-all text-left flex items-start gap-3.5 cursor-pointer select-none ${
+                    isDone 
+                      ? 'bg-[#62e6bd]/15 border-[#62e6bd]/40 text-white' 
+                      : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-white/80'
+                  }`}
+                >
+                  <div className="shrink-0 mt-0.5">
+                    {isDone ? (
+                      <CheckSquare className="w-5 h-5 text-[#62e6bd]" />
+                    ) : (
+                      <Square className="w-5 h-5 text-white/40" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className={`block text-xs sm:text-sm font-bold tracking-tight ${isDone ? 'line-through text-white/50' : 'text-white'}`}>
+                      {item.title}
+                    </span>
+                    <span className="text-xs text-white/60 leading-relaxed block mt-0.5">
+                      {item.desc}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Thank you note */}
+        <div className="aurora-glass-card text-center space-y-2 p-6">
+          <Heart className="w-6 h-6 text-rose-400 mx-auto fill-rose-400/20" />
+          <p className="text-xs sm:text-sm italic text-white/80 leading-relaxed max-w-md mx-auto">
+            "{co.thankYou}"
+          </p>
+        </div>
+
+        {/* Leave a review invite */}
+        <a
+          href={APARTMENT_INFO.reviewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="aurora-glass-card flex items-center gap-4 hover:border-[#62e6bd]/40 transition group cursor-pointer"
+        >
+          <div className="aurora-icon-box bg-[#62e6bd] text-[#07110d] group-hover:scale-105 transition-transform">
+            <Star className="w-5 h-5 fill-current" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <strong className="block text-sm sm:text-base text-white font-bold tracking-tight">Ti è piaciuto il soggiorno?</strong>
+            <span className="text-xs text-white/60 leading-snug block mt-0.5">Lasciaci una recensione: ci vuole un solo minuto e conta tantissimo per noi.</span>
+          </div>
+        </a>
+
       </div>
-
-      {/* Interactive Checkpoints */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-3">
-        <h4 className="font-semibold text-xs sm:text-sm text-white uppercase tracking-wider">
-          {co.checklistTitle}
-        </h4>
-
-        <div className="space-y-2">
-          {co.checklist.map((item, idx) => {
-            const isDone = !!checkedItems[idx];
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => toggleCheck(idx)}
-                className={`w-full p-3 rounded-xl border transition-all text-left flex items-start gap-3 cursor-pointer ${
-                  isDone 
-                    ? 'bg-emerald-950/40 border-[#62e6bd]/40 text-slate-200' 
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-slate-300'
-                }`}
-              >
-                <div className="shrink-0 mt-0.5">
-                  {isDone ? (
-                    <CheckSquare className="w-4 h-4 text-[#62e6bd]" />
-                  ) : (
-                    <Square className="w-4 h-4 text-slate-500" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className={`block text-xs font-semibold ${isDone ? 'line-through text-slate-400' : 'text-white'}`}>
-                    {item.title}
-                  </span>
-                  <span className="text-[11px] text-slate-400 leading-snug block">
-                    {item.desc}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Thank you note */}
-      <div className="p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] text-center space-y-1.5">
-        <Heart className="w-5 h-5 text-rose-400 mx-auto fill-rose-400/20" />
-        <p className="text-xs italic text-slate-300 leading-relaxed max-w-sm mx-auto">
-          "{co.thankYou}"
-        </p>
-      </div>
-
-      {/* Leave a review invite */}
-      <a
-        href={APARTMENT_INFO.reviewUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 p-4 rounded-2xl bg-[#62e6bd]/10 border border-[#62e6bd]/30 text-left transition hover:bg-[#62e6bd]/15 cursor-pointer backdrop-blur-xl"
-      >
-        <div className="w-10 h-10 rounded-xl bg-[#62e6bd] text-[#07110d] flex items-center justify-center shrink-0">
-          <Star className="w-5 h-5 fill-current" />
-        </div>
-        <div className="min-w-0">
-          <strong className="block text-sm text-white font-semibold">Ti è piaciuto il soggiorno?</strong>
-          <span className="text-[11px] text-slate-300 leading-snug block">Lasciaci una recensione: ci vuole un minuto e conta moltissimo per noi.</span>
-        </div>
-      </a>
-
     </div>
   );
 };
