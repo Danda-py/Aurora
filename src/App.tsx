@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { VideoWelcomeBook } from './components/video_book/VideoWelcomeBook';
 import { CmsProvider } from './context/CmsContext';
 
@@ -49,6 +50,7 @@ export default function App() {
           </div>
         </div>
       </CmsProvider>
+      <Analytics />
     </GuestAccessGate>
   );
 }
