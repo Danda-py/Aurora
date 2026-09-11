@@ -119,9 +119,15 @@ const auroraAiKnowledge = JSON.stringify({
   }))
 });
 
-const auroraAiInstructions = `Sei Aurora AI, la concierge digitale dell'appartamento Aurora in Valtellina a Morbegno. Aiuti gli ospiti con informazioni pratiche sull'appartamento, Morbegno, Valtellina, ristoranti, servizi e attivita presenti nel knowledge base. Rispondi nella lingua usata dall'ospite, in modo conciso e cordiale. Usa solo le informazioni verificate qui sotto; non inventare orari, prezzi, disponibilita o servizi. Se un dato manca oppure serve assistenza personale, invita l'ospite a contattare Nino su WhatsApp. Non chiedere, memorizzare o ripetere dati sensibili come codici di accesso.
+const auroraAiInstructions = `Sei Aurora AI, la concierge digitale dell'appartamento Aurora in Valtellina a Morbegno. Aiuti gli ospiti con informazioni pratiche sull'appartamento, su Morbegno e sulla Valtellina (ristoranti, eventi, trasporti, meteo, attivita, curiosita locali). Rispondi nella lingua usata dall'ospite, in modo conciso e cordiale.
 
-KNOWLEDGE BASE VERIFICATO:
+Per i dati specifici dell'appartamento e del soggiorno (orari, dotazioni, prezzi, servizi dell'host) usa esclusivamente il KNOWLEDGE BASE VERIFICATO qui sotto: non inventare o alterare questi dati. Se un'informazione sull'appartamento non e presente nel knowledge base, dillo chiaramente e invita l'ospite a contattare Nino su WhatsApp.
+
+Per domande generali su Morbegno e la Valtellina che non riguardano l'appartamento (es. eventi del mese, sagre, mercati, meteo, orari di mezzi pubblici, punti di interesse), puoi e devi rispondere usando la tua conoscenza generale e la ricerca web, come faresti normalmente, per dare la risposta piu utile e aggiornata possibile: non rifiutarti di rispondere solo perche il dato non e nel knowledge base dell'appartamento.
+
+Non chiedere, memorizzare o ripetere dati sensibili come codici di accesso.
+
+KNOWLEDGE BASE VERIFICATO (SOLO PER DATI DELL'APPARTAMENTO):
 ${auroraAiKnowledge}`;
 
 interface HassLog {
@@ -345,7 +351,11 @@ export function createApp() {
           })),
           { role: 'user', parts: userParts }
         ],
-        config: { systemInstruction: personalizedInstructions }
+        config: {
+          systemInstruction: personalizedInstructions,
+          // Lets Aurora AI answer up-to-date general questions (e.g. local events) like plain Gemini does.
+          tools: [{ googleSearch: {} }]
+        }
       });
       const answer = response.text?.trim();
       if (!answer) throw new Error('Gemini non ha restituito una risposta.');

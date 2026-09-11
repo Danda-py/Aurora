@@ -557,7 +557,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}
         >
           <div className="glass-pass-shine" />
-          <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-7">
+          <div className="relative z-10 flex h-full flex-col justify-between p-3.5 sm:p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
@@ -570,25 +570,25 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/20 bg-black/30 p-3 sm:p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-in</p>
-                <p className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-in</p>
+                <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
                   {formatPassDate(pass.checkInDate)}
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-white/70">dalle {pass.checkInTime ?? '15:00'}</p>
+                <p className="text-[11px] font-medium text-white/70">dalle {pass.checkInTime ?? '15:00'}</p>
               </div>
-              <div className="rounded-2xl border border-white/20 bg-black/30 p-3 sm:p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>
-                <p className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
+              <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>
+                <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
                   {formatPassDate(pass.checkOutDate)}
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-white/70">entro le {pass.checkOutTime ?? '10:00'}</p>
+                <p className="text-[11px] font-medium text-white/70">entro le {pass.checkOutTime ?? '10:00'}</p>
               </div>
             </div>
 
             <button
-              className={`glass-key-button mt-5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
+              className={`glass-key-button mt-2.5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
               onPointerDown={startHold}
               onPointerUp={cancelHold}
               onPointerCancel={cancelHold}
@@ -612,7 +612,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <ArrowUpRight className="h-4 w-4 relative z-10" />
             </button>
             {doorMessage && (
-              <p className={`mt-2 text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
+              <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
                 {doorMessage}
               </p>
             )}
