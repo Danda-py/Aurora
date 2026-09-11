@@ -4,7 +4,7 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
-import { Phone, MessageSquare, Mail, Instagram, Copy, Check, MessageCircle } from 'lucide-react';
+import { Phone, MessageSquare, Mail, Copy, Check, MessageCircle } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import hostAvatarPhoto from '../../../assets/images/host_nino_photo_1788354896364.jpg';
 
@@ -73,22 +73,25 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             href={APARTMENT_INFO.hostWhatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="aurora-item-card items-center bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] border-transparent shadow-lg shadow-[#62e6bd]/20 group"
+            className="aurora-item-card items-center border-transparent shadow-lg shadow-[#62e6bd]/20 group"
+            style={{ backgroundColor: '#62e6bd', color: '#07110d' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#93f4d4')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#62e6bd')}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full bg-[#07110d]/10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-                <MessageSquare className="w-5 h-5 fill-current text-[#07110d]" />
+                <MessageSquare className="w-5 h-5 fill-current" style={{ color: '#07110d' }} />
               </div>
               <div className="text-left min-w-0">
-                <div className="text-xs font-bold tracking-wide text-[#07110d]">
+                <div className="text-xs font-bold tracking-wide" style={{ color: '#07110d' }}>
                   {c.chatAction}
                 </div>
-                <div className="text-xs text-[#07110d]/80 font-mono font-bold truncate">
+                <div className="text-xs font-mono font-bold truncate" style={{ color: 'rgba(7,17,13,0.8)' }}>
                   {APARTMENT_INFO.hostPhoneDisplay}
                 </div>
               </div>
             </div>
-            <span className="text-xs font-bold text-[#07110d] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform shrink-0">
+            <span className="text-xs font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform shrink-0" style={{ color: '#07110d' }}>
               <span>WhatsApp</span>
               <span>→</span>
             </span>
@@ -175,26 +178,6 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               </a>
             </div>
           </div>
-
-          {/* Instagram */}
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="aurora-item-card items-center group cursor-pointer"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="aurora-icon-box">
-                <Instagram className="w-5 h-5 text-pink-400" />
-              </div>
-              <span className="text-xs sm:text-sm font-bold text-white">
-                @aurora_in_valtellina
-              </span>
-            </div>
-            <span className="aurora-secondary-pill">
-              Instagram
-            </span>
-          </a>
 
         </div>
 
