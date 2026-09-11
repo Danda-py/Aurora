@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsRestaurants = getPageData('restaurants') || {};
   const res = { ...BOOK_DATA[language].restaurants, ...cmsRestaurants };
 
@@ -32,7 +32,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+            src={media?.restaurantsCover || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"}
             alt="Valtellina Food & Wine"
           />
           <div className="aurora-hero-banner-overlay">

@@ -37,6 +37,90 @@ const MEDIA_ITEMS: MediaItemMeta[] = [
     badge: 'Living'
   },
   {
+    key: 'locationCover',
+    title: 'Copertina Come Arrivare & Mappa',
+    desc: 'Foto per la scheda di orientamento, GPS e arrivo a Morbegno.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Arrivo'
+  },
+  {
+    key: 'checkInCover',
+    title: 'Copertina Check-in & Smart Lock',
+    desc: 'Foto per la procedura di accesso e chiave smart.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Check-in'
+  },
+  {
+    key: 'servicesCover',
+    title: 'Copertina Servizi Casa & Comfort',
+    desc: 'Foto per dotazioni, riscaldamento ed elettrodomestici.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Servizi'
+  },
+  {
+    key: 'rulesCover',
+    title: 'Copertina Regole della Casa',
+    desc: 'Foto per orari di quiete e norme di rispetto.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Regole'
+  },
+  {
+    key: 'restaurantsCover',
+    title: 'Copertina Crotti & Ristoranti',
+    desc: 'Immagine per la scheda enogastronomia tipica e pizzoccheri.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Ristoranti'
+  },
+  {
+    key: 'barsCover',
+    title: 'Copertina Bar & Colazioni',
+    desc: 'Immagine per caffetterie, aperitivi e colazioni a Morbegno.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Bar'
+  },
+  {
+    key: 'shoppingCover',
+    title: 'Copertina Botteghe del Bitto & Spesa',
+    desc: 'Immagine per formaggi tipici, botteghe storiche e alimentari.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Shopping'
+  },
+  {
+    key: 'activitiesCover',
+    title: 'Copertina Escursioni & Sentieri',
+    desc: 'Immagine della scheda escursioni, Val di Mello e trekking alpino.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Attività'
+  },
+  {
+    key: 'transportCover',
+    title: 'Copertina Mezzi di Trasporto & Bici',
+    desc: 'Immagine per treni FS, orari bus e taxi.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Trasporti'
+  },
+  {
+    key: 'infoCover',
+    title: 'Copertina Informazioni Utili',
+    desc: 'Immagine per farmacie, banche e raccolta differenziata.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Info'
+  },
+  {
+    key: 'emergencyCover',
+    title: 'Copertina Emergenze & Soccorso',
+    desc: 'Immagine per numero unico 112 e guardia medica.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Emergenze'
+  },
+  {
+    key: 'checkOutCover',
+    title: 'Copertina Check-out & Riconsegna',
+    desc: 'Immagine per checklist di partenza e recensioni.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Check-out'
+  },
+  {
     key: 'bedroom',
     title: 'Camera da Letto Matrimoniale',
     desc: 'Foto per i dettagli della camera matrimoniale e letti.',
@@ -56,41 +140,6 @@ const MEDIA_ITEMS: MediaItemMeta[] = [
     desc: 'Foto del bagno con doccia rilassante a led cromoterapici.',
     aspect: 'Orizzontale (16:9)',
     badge: 'Bagno'
-  },
-  {
-    key: 'balcony',
-    title: 'Balcone & Terrazzo Panoramico',
-    desc: 'Affaccio panoramico e aria aperta.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Esterno'
-  },
-  {
-    key: 'view',
-    title: 'Panorama Alpi & Morbegno',
-    desc: 'Vista sulle vette delle Alpi Orobie e sulla Valtellina.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Panorama'
-  },
-  {
-    key: 'restaurantsCover',
-    title: 'Copertina Crotti & Ristoranti',
-    desc: 'Immagine per la scheda enogastronomia tipica e pizzoccheri.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Ristoranti'
-  },
-  {
-    key: 'barsCover',
-    title: 'Copertina Bar & Colazioni',
-    desc: 'Immagine per caffetterie, aperitivi e colazioni a Morbegno.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Bar'
-  },
-  {
-    key: 'activitiesCover',
-    title: 'Copertina Escursioni & Sentieri',
-    desc: 'Immagine della scheda escursioni, Val di Mello e trekking alpino.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Attività'
   },
   {
     key: 'wifiQr',

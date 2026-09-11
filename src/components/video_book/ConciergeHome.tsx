@@ -25,6 +25,7 @@ import {
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
+import { useCms } from '../../context/CmsContext';
 
 interface Props {
   language: Language;
@@ -71,7 +72,7 @@ interface GuideTileItem {
   bgImage?: string;
 }
 
-const getLocalizedGuideSections = (lang: Language): {
+const getLocalizedGuideSections = (lang: Language, media?: Record<string, string>): {
   houseEssentials: { title: string; subtitle: string; items: GuideTileItem[] };
   exploreValtellina: { title: string; subtitle: string; items: GuideTileItem[] };
   supportSecurity: { title: string; subtitle: string; items: GuideTileItem[] };
@@ -93,7 +94,7 @@ const getLocalizedGuideSections = (lang: Language): {
           tag: isIt ? 'Priorità Arrivo' : isEn ? 'Arrival Priority' : isDe ? 'Anreise-Info' : isFr ? 'Priorité Arrivée' : 'Prioridad Llegada',
           desc: isIt ? 'Indirizzo esatto, navigatore GPS, parcheggio e treni' : isEn ? 'Exact address, GPS navigation, parking & trains' : isDe ? 'Genaue Adresse, GPS, Parkplatz & Züge' : isFr ? 'Adresse exacte, GPS, parking et trains' : 'Dirección exacta, GPS, parking y trenes',
           icon: <MapPin className="h-5 w-5" />,
-          bgImage: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.locationCover || 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80'
         },
         {
           page: 'check_in',
@@ -101,21 +102,23 @@ const getLocalizedGuideSections = (lang: Language): {
           tag: isIt ? 'Accesso Casa' : isEn ? 'Home Access' : isDe ? 'Hauszugang' : isFr ? 'Accès Maison' : 'Acceso Casa',
           desc: isIt ? 'Codice apriporta, keybox e ingresso autonomo' : isEn ? 'Door opener, keybox code & self check-in' : isDe ? 'Türöffner, Keybox & Self-Check-in' : isFr ? 'Ouvre-porte, boîte à clés & arrivée autonome' : 'Abrepuertas, keybox y llegada autónoma',
           icon: <KeyRound className="h-5 w-5" />,
-          bgImage: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.checkInCover || 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=900&q=80'
         },
         {
           page: 'servizi',
           label: isIt ? 'Servizi casa & Comfort' : isEn ? 'Home Amenities' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Équipements maison' : 'Servicios de la casa',
           tag: isIt ? 'Dotazioni' : isEn ? 'Amenities' : isDe ? 'Ausstattung' : isFr ? 'Équipements' : 'Equipamiento',
           desc: isIt ? 'Riscaldamento, elettrodomestici, cucina e comfort' : isEn ? 'Heating, appliances, kitchen and comforts' : isDe ? 'Heizung, Geräte, Küche & Komfort' : isFr ? 'Chauffage, appareils, cuisine et confort' : 'Calefacción, electrodomésticos y cocina',
-          icon: <Wrench className="h-5 w-5" />
+          icon: <Wrench className="h-5 w-5" />,
+          bgImage: media?.servicesCover || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=900&q=80'
         },
         {
           page: 'regole',
           label: isIt ? 'Regole della casa' : isEn ? 'House Rules' : isDe ? 'Hausregeln' : isFr ? 'Règles de la maison' : 'Normas de la casa',
           tag: isIt ? 'Orari & Quiete' : isEn ? 'Hours & Quiet' : isDe ? 'Ruhezeiten' : isFr ? 'Horaires & Calme' : 'Horarios y Silencio',
           desc: isIt ? 'Orari di rispetto, rifiuti e divieto di fumo' : isEn ? 'Quiet hours, waste sorting & no smoking' : isDe ? 'Ruhezeiten, Mülltrennung & Rauchverbot' : isFr ? 'Heures de calme, tri des déchets & non fumeur' : 'Horas de silencio y normas',
-          icon: <ShieldAlert className="h-5 w-5" />
+          icon: <ShieldAlert className="h-5 w-5" />,
+          bgImage: media?.rulesCover || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=900&q=80'
         }
       ]
     },
@@ -171,7 +174,7 @@ const getLocalizedGuideSections = (lang: Language): {
           tag: isIt ? 'Soccorso 24/7' : isEn ? '24/7 Emergency' : isDe ? '24/7 Notdienst' : isFr ? 'Urgence 24/7' : 'Urgencias 24/7',
           desc: isIt ? '112 Numero Unico, guardia medica e pronto soccorso' : isEn ? '112 European emergency, medical guard & hospital' : isDe ? '112 Euro-Notruf, Notarzt & Krankenhaus' : isFr ? '112 Numéro d’urgence, médecin de garde & hôpital' : '112 Número de emergencias y médicos',
           icon: <ShieldAlert className="h-5 w-5" />,
-          bgImage: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.emergencyCover || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80'
         }
       ]
     },
@@ -184,7 +187,8 @@ const getLocalizedGuideSections = (lang: Language): {
           label: isIt ? 'Checklist check-out' : isEn ? 'Check-out Checklist' : isDe ? 'Check-out Checkliste' : isFr ? 'Check-list de départ' : 'Checklist de check-out',
           tag: isIt ? `Entro le ${APARTMENT_INFO.checkOutLimit}` : isEn ? `By ${APARTMENT_INFO.checkOutLimit}` : isDe ? `Bis ${APARTMENT_INFO.checkOutLimit}` : isFr ? `Avant ${APARTMENT_INFO.checkOutLimit}` : `Antes de las ${APARTMENT_INFO.checkOutLimit}`,
           desc: isIt ? 'Riconsegna chiavi, orari e recensione del soggiorno' : isEn ? 'Key drop-off, hours and leaving a review' : isDe ? 'Schlüsselrückgabe, Zeiten & Bewertung' : isFr ? 'Remise des clés, horaires et avis' : 'Entrega de llaves y reseña del alojamiento',
-          icon: <LogOut className="h-5 w-5" />
+          icon: <LogOut className="h-5 w-5" />,
+          bgImage: media?.checkOutCover || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80'
         }
       ]
     }
@@ -284,6 +288,7 @@ const uiCopy: Record<Language, {
 };
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
+  const { media } = useCms();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [wifiCopied, setWifiCopied] = useState(false);
@@ -296,7 +301,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const holdStartedAt = React.useRef(0);
   const firstName = pass.guestName || 'Ospite';
   const copy = uiCopy[language] || uiCopy.it;
-  const guideSections = getLocalizedGuideSections(language);
+  const guideSections = getLocalizedGuideSections(language, media);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
   const isCheckoutDay = new Date().toISOString().slice(0, 10) === pass.checkOutDate;
 

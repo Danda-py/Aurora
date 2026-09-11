@@ -24,42 +24,44 @@ export const PageHeader: React.FC<Props> = ({ title, category, language, onBackT
   };
 
   return (
-    <header className="sticky top-3 z-40 flex items-center justify-between px-3.5 sm:px-4 py-2.5 bg-[#080b10]/85 backdrop-blur-2xl rounded-2xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.36)] text-white">
+    <nav className="sticky top-2 z-40 flex items-center justify-between gap-3 w-full py-1">
       
-      {/* Apple-style Back Button */}
+      {/* Apple Circular Frosted Glass Back Button */}
       <button
         onClick={onBackToMenu}
         id="btn-back-to-grid"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] active:bg-white/[0.18] text-white text-xs font-bold tracking-tight border border-white/[0.1] active:scale-[0.96] transition-all cursor-pointer group shadow-sm"
+        className="flex items-center gap-2 pl-2.5 pr-4 py-2 rounded-full bg-[#080b10]/80 hover:bg-[#080b10] active:bg-black/90 backdrop-blur-2xl border border-white/15 text-white text-xs font-bold tracking-tight shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all active:scale-95 cursor-pointer group"
+        aria-label="Torna alla guida principale"
       >
-        <ChevronLeft className="w-4 h-4 text-[#62e6bd] group-hover:-translate-x-0.5 transition-transform" />
-        <span className="hidden sm:inline">{t.actions?.backToMenu || 'Tutto Aurora'}</span>
-        <span className="sm:hidden">Guida</span>
+        <div className="w-6 h-6 rounded-full bg-white/10 group-hover:bg-[#62e6bd] group-hover:text-[#07110d] flex items-center justify-center transition-colors">
+          <ChevronLeft className="w-4 h-4 text-white group-hover:text-[#07110d] group-hover:-translate-x-0.5 transition-all" />
+        </div>
+        <span>{t.actions?.backToMenu || 'Tutto Aurora'}</span>
       </button>
 
-      {/* Center Title Indicator */}
-      <div className="flex flex-col items-center justify-center px-2 min-w-0 max-w-[200px] sm:max-w-xs">
-        {category && (
-          <span className="text-[9px] font-bold tracking-widest text-[#62e6bd] uppercase truncate font-mono">
+      {/* Floating Center Breadcrumb Badge */}
+      {category && (
+        <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#080b10]/70 backdrop-blur-2xl border border-white/10 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#62e6bd]" />
+          <span className="text-[11px] font-bold text-white/80 tracking-wide uppercase font-mono">
             {category}
           </span>
-        )}
-        <h2 className="text-xs sm:text-sm font-bold text-white tracking-tight uppercase truncate">
-          {title}
-        </h2>
-      </div>
+        </div>
+      )}
 
-      {/* Active Language Flag Trigger */}
+      {/* Apple Circular Frosted Glass Language Trigger */}
       <button
         onClick={cycleLanguage}
         id="btn-cycle-lang"
-        className="w-8 h-8 rounded-full overflow-hidden shadow-md ring-1 ring-white/20 hover:ring-[#62e6bd] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 border border-white/10"
+        className="w-10 h-10 rounded-full p-1 bg-[#080b10]/80 hover:bg-[#080b10] active:bg-black/90 backdrop-blur-2xl border border-white/15 shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
         title="Cambia lingua"
         aria-label="Cambia lingua"
       >
-        <FlagIcon language={language} className="w-full h-full object-cover" />
+        <div className="w-full h-full rounded-full overflow-hidden ring-1 ring-white/20">
+          <FlagIcon language={language} className="w-full h-full object-cover" />
+        </div>
       </button>
 
-    </header>
+    </nav>
   );
 };

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsEmergency = getPageData('emergency') || {};
   const em = { ...BOOK_DATA[language].emergency, ...cmsEmergency };
 
@@ -39,7 +39,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
+            src={media?.emergencyCover || "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"}
             alt="Soccorso e Sicurezza"
           />
           <div className="aurora-hero-banner-overlay">

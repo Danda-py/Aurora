@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsInfo = getPageData('info') || {};
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
 
@@ -41,7 +41,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"
+            src={media?.infoCover || "https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"}
             alt="Morbegno e Servizi Utili"
           />
           <div className="aurora-hero-banner-overlay">

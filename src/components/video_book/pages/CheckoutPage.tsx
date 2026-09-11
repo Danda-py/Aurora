@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsCheckOut = getPageData('checkOut') || {};
   const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
@@ -41,7 +41,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
+            src={media?.checkOutCover || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"}
             alt="Check-out e Fine Soggiorno"
           />
           <div className="aurora-hero-banner-overlay">

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsBars = getPageData('bars') || {};
   const bars = { ...BOOK_DATA[language].bars, ...cmsBars };
 
@@ -32,7 +32,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {/* Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+            src={media?.barsCover || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"}
             alt="Café & Wine Bar"
           />
           <div className="aurora-hero-banner-overlay">

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsActivities = getPageData('activities') || {};
   const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
 
@@ -39,7 +39,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Top Banner Image with Overlay */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"
+            src={media?.activitiesCover || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"}
             alt="Valtellina Panorama"
           />
           <div className="aurora-hero-banner-overlay">

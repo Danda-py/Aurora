@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsShopping = getPageData('shopping') || {};
   const sh = { ...BOOK_DATA[language].shopping, ...cmsShopping };
 
@@ -32,7 +32,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"
+            src={media?.shoppingCover || "https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"}
             alt="Botteghe e Sapori Tipici"
           />
           <div className="aurora-hero-banner-overlay">

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsRules = getPageData('rules') || {};
   const r = { ...BOOK_DATA[language].rules, ...cmsRules };
 
@@ -77,7 +77,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
+            src={media?.rulesCover || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"}
             alt="Regole e Quiete della Casa"
           />
           <div className="aurora-hero-banner-overlay">

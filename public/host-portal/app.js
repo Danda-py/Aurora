@@ -1324,9 +1324,81 @@ const MEDIA_CATALOG = [
   },
   {
     key: 'heroLiving',
-    title: 'Soggiorno & Living Aurora',
+    title: 'Copertina Benvenuto & Living',
     desc: 'Foto principale del soggiorno per la copertina di Benvenuto e schede.',
     aspectRatio: 'Orizzontale (16:9 / 4:3)'
+  },
+  {
+    key: 'locationCover',
+    title: 'Copertina Come Arrivare & Mappa',
+    desc: 'Foto per la scheda di orientamento, GPS e arrivo a Morbegno.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'checkInCover',
+    title: 'Copertina Check-in & Smart Lock',
+    desc: 'Foto per la procedura di accesso e chiave smart.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'servicesCover',
+    title: 'Copertina Servizi Casa & Comfort',
+    desc: 'Foto per dotazioni, riscaldamento ed elettrodomestici.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'rulesCover',
+    title: 'Copertina Regole della Casa',
+    desc: 'Foto per orari di quiete e norme di rispetto.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'restaurantsCover',
+    title: 'Copertina Crotti & Ristoranti',
+    desc: 'Immagine della scheda per enogastronomia tipica e pizzoccheri.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'barsCover',
+    title: 'Copertina Bar & Colazioni',
+    desc: 'Immagine della scheda per colazioni, caffetterie e aperitivi serali.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'shoppingCover',
+    title: 'Copertina Botteghe del Bitto & Spesa',
+    desc: 'Immagine della scheda per formaggi tipici e alimentari.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'activitiesCover',
+    title: 'Copertina Escursioni & Sentieri',
+    desc: 'Immagine della scheda per escursioni in montagna, Val di Mello e trekking.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'transportCover',
+    title: 'Copertina Mezzi di Trasporto & Bici',
+    desc: 'Immagine per treni FS, orari bus e noleggio bici.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'infoCover',
+    title: 'Copertina Informazioni Utili',
+    desc: 'Immagine per farmacie, banche e raccolta differenziata.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'emergencyCover',
+    title: 'Copertina Emergenze & Soccorso',
+    desc: 'Immagine per numero unico 112 e guardia medica.',
+    aspectRatio: 'Orizzontale (16:9)'
+  },
+  {
+    key: 'checkOutCover',
+    title: 'Copertina Check-out & Riconsegna',
+    desc: 'Immagine per checklist di partenza e recensioni.',
+    aspectRatio: 'Orizzontale (16:9)'
   },
   {
     key: 'bedroom',
@@ -1344,36 +1416,6 @@ const MEDIA_CATALOG = [
     key: 'bathroom',
     title: 'Bagno & Doccia Cromoterapia',
     desc: 'Foto del bagno con doccia rilassante a led cromoterapici.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'balcony',
-    title: 'Balcone & Terrazzo Panoramico',
-    desc: 'Spazio esterno per colazioni e affaccio.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'view',
-    title: 'Panorama Alpi & Morbegno',
-    desc: 'Vista sulle vette delle Alpi Orobie e sul borgo di Morbegno.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'restaurantsCover',
-    title: 'Copertina Crotti & Ristoranti',
-    desc: 'Immagine della scheda per enogastronomia tipica e pizzoccheri.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'barsCover',
-    title: 'Copertina Bar & Colazioni',
-    desc: 'Immagine della scheda per colazioni, caffetterie e aperitivi serali.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'activitiesCover',
-    title: 'Copertina Escursioni & Sentieri',
-    desc: 'Immagine della scheda per escursioni in montagna, Val di Mello e trekking.',
     aspectRatio: 'Orizzontale (16:9)'
   },
   {

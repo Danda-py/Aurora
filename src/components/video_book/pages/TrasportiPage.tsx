@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsTransport = getPageData('transport') || {};
   const tr = { ...BOOK_DATA[language].transport, ...cmsTransport };
 
@@ -39,7 +39,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src="https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"
+            src={media?.transportCover || "https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"}
             alt="Treni e Trasporti in Valtellina"
           />
           <div className="aurora-hero-banner-overlay">
