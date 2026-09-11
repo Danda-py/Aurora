@@ -50,19 +50,19 @@ const localStories = [
   { 
     title: 'Sentiero Valtellina', 
     meta: 'Percorso panoramico',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313902_0912859.jpg?rfh=1&size=xl',
+    image: '/uploads/sentiero.jpg',
     mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sentiero+Valtellina+Morbegno'
   },
   { 
     title: 'Centro storico', 
     meta: 'Morbegno',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313749_8967242.jpg?rfh=1&size=xl',
+    image: '/uploads/centro.jpg',
     mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+storico+di+Morbegno'
   },
   { 
     title: 'Costiera dei Cèch', 
     meta: 'Panorama valtellinese',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313853_6691445.jpg?rfh=1&size=xl',
+    image: '/uploads/costiera.jpg',
     mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Costiera+dei+Cech+Morbegno'
   }
 ];
@@ -98,7 +98,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Priorità Arrivo' : isEn ? 'Arrival Priority' : isDe ? 'Anreise-Info' : isFr ? 'Priorité Arrivée' : 'Prioridad Llegada',
           desc: isIt ? 'Indirizzo esatto, navigatore GPS, parcheggio e treni' : isEn ? 'Exact address, GPS navigation, parking & trains' : isDe ? 'Genaue Adresse, GPS, Parkplatz & Züge' : isFr ? 'Adresse exacte, GPS, parking et trains' : 'Dirección exacta, GPS, parking y trenes',
           icon: <MapPin className="h-5 w-5" />,
-          bgImage: media?.locationCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313449_4618214.jpg?rfh=1&size=xl'
+          bgImage: media?.locationCover || '/uploads/location.jpg'
         },
         {
           page: 'check_in',
@@ -106,7 +106,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Accesso Casa' : isEn ? 'Home Access' : isDe ? 'Hauszugang' : isFr ? 'Accès Maison' : 'Acceso Casa',
           desc: isIt ? 'Codice apriporta, keybox e ingresso autonomo' : isEn ? 'Door opener, keybox code & self check-in' : isDe ? 'Türöffner, Keybox & Self-Check-in' : isFr ? 'Ouvre-porte, boîte à clés & arrivée autonome' : 'Abrepuertas, keybox y llegada autónoma',
           icon: <KeyRound className="h-5 w-5" />,
-          bgImage: media?.checkInCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313615_0410423.jpg?rfh=1&size=xl'
+          bgImage: media?.checkInCover || '/uploads/lock.jpg'
         },
         {
           page: 'servizi',
@@ -114,7 +114,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Dotazioni' : isEn ? 'Amenities' : isDe ? 'Ausstattung' : isFr ? 'Équipements' : 'Equipamiento',
           desc: isIt ? 'Riscaldamento, elettrodomestici, cucina e comfort' : isEn ? 'Heating, appliances, kitchen and comforts' : isDe ? 'Heizung, Geräte, Küche & Komfort' : isFr ? 'Chauffage, appareils, cuisine et confort' : 'Calefacción, electrodomésticos y cocina',
           icon: <Wrench className="h-5 w-5" />,
-          bgImage: media?.servicesCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093117472_0195454.jpg?rfh=1&size=xl'
+          bgImage: media?.servicesCover || '/uploads/services.jpg'
         },
         {
           page: 'regole',
@@ -122,7 +122,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Orari & Quiete' : isEn ? 'Hours & Quiet' : isDe ? 'Ruhezeiten' : isFr ? 'Horaires & Calme' : 'Horarios y Silencio',
           desc: isIt ? 'Orari di rispetto, rifiuti e divieto di fumo' : isEn ? 'Quiet hours, waste sorting & no smoking' : isDe ? 'Ruhezeiten, Mülltrennung & Rauchverbot' : isFr ? 'Heures de calme, tri des déchets & non fumeur' : 'Horas de silencio y normas',
           icon: <ShieldAlert className="h-5 w-5" />,
-          bgImage: media?.rulesCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313712_8723602.jpg?rfh=1&size=xl'
+          bgImage: media?.rulesCover || 'https://media.istockphoto.com/id/2235883229/it/vettoriale/regolamento-prenota.webp?a=1&b=1&s=612x612&w=0&k=20&c=qjJ-peYXP2tDDXUHH8pNKRx3JxtUvklW6HBjml8EIkg='
         }
       ]
     },
@@ -136,7 +136,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Enogastronomia' : isEn ? 'Food & Wine' : isDe ? 'Kulinarik' : isFr ? 'Gastronomie' : 'Gastronomía',
           desc: isIt ? 'Crotto tipico, pizzoccheri, ristoranti e asporto' : isEn ? 'Local crotti, traditional food & delivery' : isDe ? 'Traditionelle Crotti, regionale Küche' : isFr ? 'Crotti typiques, spécialités locales' : 'Crotti típicos y restaurantes',
           icon: <Utensils className="h-5 w-5" />,
-          bgImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.restaurantsCover || '/uploads/restaurant.jpg'
         },
         {
           page: 'shopping',
@@ -144,7 +144,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Prodotti Tipici' : isEn ? 'Local Products' : isDe ? 'Lokale Produkte' : isFr ? 'Produits locaux' : 'Productos locales',
           desc: isIt ? 'Botteghe storiche del Bitto, alimentari e market' : isEn ? 'Historic Bitto cheese shops & supermarkets' : isDe ? 'Historische Käseläden & Supermärkte' : isFr ? 'Boutiques de fromage Bitto & supermarchés' : 'Tiendas de queso Bitto y mercados',
           icon: <ShoppingBag className="h-5 w-5" />,
-          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313376_2938998.jpg?rfh=1&size=xl'
+          bgImage: media?.shoppingCover || '/uploads/bottega.jpg'
         },
         {
           page: 'trasporti',
@@ -152,7 +152,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Treni & Bus' : isEn ? 'Trains & Buses' : isDe ? 'Bahn & Bus' : isFr ? 'Trains & Bus' : 'Trenes y autobuses',
           desc: isIt ? 'Stazione FS Morbegno, orari bus e taxi' : isEn ? 'Morbegno train station, bus lines & taxis' : isDe ? 'Bahnhof Morbegno, Buslinien & Taxi' : isFr ? 'Gare de Morbegno, bus et taxis' : 'Estación de tren y autobuses',
           icon: <Train className="h-5 w-5" />,
-          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313449_4618214.jpg?rfh=1&size=xl'
+          bgImage: media?.transportCover || '/uploads/train.jpg'
         },
         {
           page: 'informazioni',
@@ -160,7 +160,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Info Pratiche' : isEn ? 'Practical Info' : isDe ? 'Praktische Infos' : isFr ? 'Infos pratiques' : 'Información práctica',
           desc: isIt ? 'Farmacie, banche, raccolta rifiuti e CIR/CIN' : isEn ? 'Pharmacies, ATMs, recycling and legal CIR' : isDe ? 'Apotheken, Geldautomaten & Müllabfuhr' : isFr ? 'Pharmacies, banques, tri et codes légaux' : 'Farmacias, cajeros y recogida de basuras',
           icon: <Info className="h-5 w-5" />,
-          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313661_4120823.jpg?rfh=1&size=xl'
+          bgImage: media?.infoCover || '/uploads/info.jpg'
         }
       ]
     },
@@ -174,7 +174,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Host Dedicato' : isEn ? 'Dedicated Host' : isDe ? 'Ihr Gastgeber' : isFr ? 'Hôte dédié' : 'Anfitrión dedicado',
           desc: isIt ? 'Assistenza diretta via WhatsApp e telefonica' : isEn ? 'Direct WhatsApp chat and phone assistance' : isDe ? 'Direkter WhatsApp- & Telefonkontakt' : isFr ? 'WhatsApp direct et assistance téléphonique' : 'WhatsApp directo y asistencia telefónica',
           icon: <Phone className="h-5 w-5" />,
-          bgImage: media?.hostAvatar || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/3/67807_gestore.jpg?rfh=18595'
+          bgImage: media?.hostAvatar || '/uploads/host.jpg'
         },
         {
           page: 'emergenza',
@@ -182,7 +182,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Soccorso 24/7' : isEn ? '24/7 Emergency' : isDe ? '24/7 Notdienst' : isFr ? 'Urgence 24/7' : 'Urgencias 24/7',
           desc: isIt ? '112 Numero Unico, guardia medica e pronto soccorso' : isEn ? '112 European emergency, medical guard & hospital' : isDe ? '112 Euro-Notruf, Notarzt & Krankenhaus' : isFr ? '112 Numéro d’urgence, médecin de garde & hôpital' : '112 Número de emergencias y médicos',
           icon: <ShieldAlert className="h-5 w-5" />,
-          bgImage: media?.emergencyCover || 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.emergencyCover || '/uploads/emergency.jpg'
         }
       ]
     },
@@ -196,7 +196,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? `Entro le ${APARTMENT_INFO.checkOutLimit}` : isEn ? `By ${APARTMENT_INFO.checkOutLimit}` : isDe ? `Bis ${APARTMENT_INFO.checkOutLimit}` : isFr ? `Avant ${APARTMENT_INFO.checkOutLimit}` : `Antes de las ${APARTMENT_INFO.checkOutLimit}`,
           desc: isIt ? 'Riconsegna chiavi, orari e recensione del soggiorno' : isEn ? 'Key drop-off, hours and leaving a review' : isDe ? 'Schlüsselrückgabe, Zeiten & Bewertung' : isFr ? 'Remise des clés, horaires et avis' : 'Entrega de llaves y reseña del alojamiento',
           icon: <LogOut className="h-5 w-5" />,
-          bgImage: media?.checkOutCover || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.checkOutCover || 'https://media.istockphoto.com/id/2219309082/it/foto/persona-che-esce-di-casa-con-la-valigia-porta-esistente-del-viaggiatore-con-bagagli.webp?a=1&b=1&s=612x612&w=0&k=20&c=dzLdna5DxchqxEUdEZApP6xKCVUfsBbhVQfEI5u0nB8='
         }
       ]
     }
