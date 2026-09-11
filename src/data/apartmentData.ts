@@ -18,6 +18,7 @@ export const APARTMENT_INFO = {
   hostWhatsApp: "393917784042",
   hostWhatsAppUrl: "https://wa.me/393917784042?text=Messaggio%20a%20Appartamento%20Aurora%20in%20Valtellina%20%2D%20Morbegno%20https%3A%2F%2Fbeb%2Eit%2Fp%2Ecfm%3Fs%3D9%2D67807%0D%0A",
   hostEmail: "antonino.andaloro@gmail.com",
+  reviewUrl: "https://beb.it/p.cfm?s=9-67807",
   
   // Legal codes
   cirCode: "014045-CNI-00033",

@@ -3,7 +3,8 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { useCms } from '../../../context/CmsContext';
-import { Clock, CheckSquare, Square, Heart } from 'lucide-react';
+import { APARTMENT_INFO } from '../../../data/apartmentData';
+import { Clock, CheckSquare, Square, Heart, Star } from 'lucide-react';
 
 interface Props {
   language: Language;
@@ -94,6 +95,22 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           "{co.thankYou}"
         </p>
       </div>
+
+      {/* Leave a review invite */}
+      <a
+        href={APARTMENT_INFO.reviewUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 p-4 rounded-2xl bg-[#62e6bd]/10 border border-[#62e6bd]/30 text-left transition hover:bg-[#62e6bd]/15 cursor-pointer"
+      >
+        <div className="w-10 h-10 rounded-xl bg-[#62e6bd] text-[#07110d] flex items-center justify-center shrink-0">
+          <Star className="w-5 h-5 fill-current" />
+        </div>
+        <div className="min-w-0">
+          <strong className="block text-sm text-white font-semibold">Ti è piaciuto il soggiorno?</strong>
+          <span className="text-[11px] text-slate-300 leading-snug block">Lasciaci una recensione: ci vuole un minuto e conta moltissimo per noi.</span>
+        </div>
+      </a>
 
     </div>
   );

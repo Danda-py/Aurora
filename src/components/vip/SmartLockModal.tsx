@@ -54,12 +54,6 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
   };
 
   const handleOpenDoor = async () => {
-    if (!wifiVerified) {
-      setOpeningState('error');
-      setStatusMessage('Accesso negato: Devi essere connesso al Wi-Fi di casa (Casa_Aurora).');
-      return;
-    }
-
     setOpeningState('opening');
     if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     setStatusMessage('Invio comando a Home Assistant...');
@@ -108,7 +102,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
   };
 
   const startHold = () => {
-    if (openingState !== 'idle' || wifiChecking || !wifiVerified) return;
+    if (openingState !== 'idle' || wifiChecking) return;
     holdStartedAt.current = Date.now();
     holdTimer.current = setInterval(() => {
       const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1500);
@@ -223,7 +217,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               onPointerUp={cancelHold}
               onPointerCancel={cancelHold}
               onPointerLeave={cancelHold}
-              disabled={openingState === 'opening' || wifiChecking || !wifiVerified}
+              disabled={openingState === 'opening' || wifiChecking}
               className={`group relative w-full py-5 px-5 rounded-2xl font-bold tracking-tight transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 select-none active:scale-[0.98] ${
                 openingState === 'opening'
                   ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner'
@@ -231,7 +225,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
                   ? 'bg-[#30d158] text-neutral-950 shadow-[0_8px_25px_rgba(48,209,88,0.4)]'
                   : openingState === 'error'
                   ? 'bg-rose-500 text-white shadow-[0_8px_25px_rgba(244,63,94,0.3)]'
-                  : wifiVerified
+                  : !wifiChecking
                   ? 'bg-white text-neutral-950 hover:bg-neutral-100 shadow-[0_10px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_12px_35px_rgba(255,255,255,0.22)]'
                   : 'bg-neutral-800/80 text-neutral-500 border border-white/5 cursor-not-allowed'
               }`}
@@ -268,10 +262,10 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
                     {wifiVerified ? <Unlock className="w-5 h-5 text-neutral-950" /> : <Lock className="w-5 h-5" />}
                   </div>
                   <span className={`text-lg font-bold tracking-tight ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
-                    {wifiVerified ? 'TIENI PREMUTO PER APRIRE' : 'RICHIEDE WI-FI'}
+                    {wifiChecking ? 'VERIFICA CONNESSIONE' : 'TIENI PREMUTO PER APRIRE'}
                   </span>
                   <span className={`text-[11px] font-normal tracking-tight ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
-                    {wifiVerified ? 'Rilascia per annullare' : 'Connettiti a Casa_Aurora'}
+                    {wifiChecking ? 'Attendi un momento' : 'La sicurezza viene verificata dal server'}
                   </span>
                 </>
               )}

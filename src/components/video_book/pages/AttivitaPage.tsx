@@ -24,7 +24,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   ];
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -35,16 +35,16 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
       />
 
       {/* Top Banner Image with Overlay */}
-      <div className="relative h-44 sm:h-52 w-full rounded-2xl overflow-hidden shadow-md border border-white/[0.08]">
+      <div className="relative h-44 sm:h-52 w-full rounded-2xl overflow-hidden shadow-md border border-white/[0.1]">
         <img
           src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"
           alt="Valtellina Panorama"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-black/40 to-transparent flex items-end p-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-black/40 to-transparent flex items-end p-4">
           <div className="space-y-1">
-            <span className="text-neutral-300 text-[11px] font-semibold tracking-wider flex items-center gap-1.5 uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-neutral-300" /> Valtellina & Alpi
+            <span className="text-[#9ef2d3] text-[11px] font-semibold tracking-wider flex items-center gap-1.5 uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-[#62e6bd]" /> Valtellina & Alpi
             </span>
             <h3 className="text-white text-base sm:text-lg font-bold leading-tight">
               {act.bannerText}
@@ -58,11 +58,11 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {act.highlights.map((item, index) => (
           <div
             key={index}
-            className="p-3.5 sm:p-4 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-2"
+            className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.1] shadow-sm space-y-2"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md inline-block mb-1 bg-white/[0.08] border border-white/[0.1] text-neutral-200">
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md inline-block mb-1 bg-[#62e6bd]/15 border border-[#62e6bd]/30 text-[#9ef2d3]">
                   {item.tag}
                 </span>
                 <h4 className="font-semibold text-xs sm:text-sm text-white">
@@ -73,9 +73,9 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                 href={item.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs flex items-center gap-1 transition border border-white/10 shrink-0 cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-xs flex items-center gap-1 transition shrink-0 cursor-pointer"
               >
-                <MapPin className="w-3 h-3 text-neutral-400" />
+                <MapPin className="w-3 h-3" />
                 <span>Maps</span>
               </a>
             </div>
@@ -87,14 +87,14 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
       </div>
 
       {/* Additional categories grid */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-3">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.035] backdrop-blur-xl border border-white/[0.1] shadow-sm space-y-3">
         <h4 className="text-sm font-semibold text-white uppercase tracking-wider text-center">
           {act.categoryTitle}
         </h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
           {act.categories.map((cat, idx) => (
-            <div key={idx} className="p-3 rounded-xl bg-[#1b2030] flex items-center gap-3 border border-white/[0.06]">
+            <div key={idx} className="p-3 rounded-xl bg-white/[0.04] flex items-center gap-3 border border-white/[0.08]">
               {categoryIcons[idx % categoryIcons.length]}
               <div>
                 <strong className="block text-white text-xs font-semibold">{cat.title}</strong>

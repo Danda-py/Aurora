@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUpRight, BedDouble, Check, CarFront, ChevronRight, Clock3, Coffee, Copy, ExternalLink, Home, MapPin, MessageCircle, Navigation, Utensils, Wifi, X } from 'lucide-react';
+import { ArrowUpRight, BedDouble, Check, CarFront, ChevronRight, Clock3, Coffee, Copy, ExternalLink, Home, MapPin, MessageCircle, Navigation, Utensils, Wifi, X, ShieldAlert, Train, Wrench, LogOut, Phone, ShoppingBag } from 'lucide-react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
@@ -42,6 +42,18 @@ const nearbyPlaces = [
   { type: 'pharmacy', name: 'Farmacia di turno', meta: 'Essenziali - 6 min a piedi', benefit: '', url: 'https://maps.google.com/?q=farmacia+Morbegno' }
 ];
 
+const guideItems: { page: WelcomePage; label: string; icon: React.ReactNode }[] = [
+  { page: 'emergenza', label: 'Emergenze', icon: <ShieldAlert /> },
+  { page: 'posizione', label: 'Come arrivare', icon: <MapPin /> },
+  { page: 'servizi', label: 'Servizi casa', icon: <Wrench /> },
+  { page: 'regole', label: 'Regole casa', icon: <ShieldAlert /> },
+  { page: 'check_out', label: 'Checklist check-out', icon: <LogOut /> },
+  { page: 'trasporti', label: 'Come muoversi', icon: <Train /> },
+  { page: 'ristoranti', label: 'Dove mangiare', icon: <Utensils /> },
+  { page: 'contatti', label: 'Contatta Nino', icon: <Phone /> },
+  { page: 'shopping', label: 'Spesa e botteghe', icon: <ShoppingBag /> }
+];
+
 const uiCopy: Record<Language, { home: string; subtitle: string; quick: string; wifi: string; host: string; rules: string; bags: string; nearby: string; map: string; experiences: string; all: string; chooseLanguage: string }> = {
   it: { home: 'Fai come fossi a casa.', subtitle: 'Tutto il soggiorno, in un solo gesto. Apri, esplora, rilassati.', quick: 'Azioni rapide', wifi: 'Wi-Fi rapido', host: 'Contatta host', rules: 'Orari & regole', bags: 'Bagagli', nearby: 'Intorno a te', map: 'Apri mappa', experiences: 'Esperienze vicine', all: 'Vedi tutto', chooseLanguage: 'Scegli la tua lingua' },
   en: { home: 'Feel at home.', subtitle: 'Your whole stay, in one gesture. Open, explore, relax.', quick: 'Quick actions', wifi: 'Quick Wi-Fi', host: 'Contact host', rules: 'Hours & rules', bags: 'Luggage', nearby: 'Around you', map: 'Open map', experiences: 'Nearby experiences', all: 'See all', chooseLanguage: 'Choose your language' },
@@ -57,6 +69,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [showWifiQr, setShowWifiQr] = useState(false);
   const [mapFilter, setMapFilter] = useState('all');
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
+  const [doorMessage, setDoorMessage] = useState('');
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdStartedAt = React.useRef(0);
   const firstName = pass.guestName || 'Ospite';
   const copy = uiCopy[language];
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
@@ -64,9 +81,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   useEffect(() => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      const beta = Math.max(-12, Math.min(12, event.beta || 0));
-      const gamma = Math.max(-12, Math.min(12, event.gamma || 0));
-      setTilt({ x: gamma / 2, y: beta / 2 });
+      const beta = Math.max(-8, Math.min(8, event.beta || 0));
+      const gamma = Math.max(-8, Math.min(8, event.gamma || 0));
+      setTilt({ x: gamma / 3, y: beta / 3 });
     };
     window.addEventListener('deviceorientation', handleOrientation);
     return () => window.removeEventListener('deviceorientation', handleOrientation);
@@ -80,10 +97,61 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     window.setTimeout(() => setWifiCopied(false), 2200);
   };
 
-  const openDoor = () => {
-    if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
-    onOpenSmartLock();
+  const cancelHold = () => {
+    if (holdTimer.current) clearInterval(holdTimer.current);
+    holdTimer.current = null;
+    holdStartedAt.current = 0;
+    setHoldProgress(0);
   };
+
+  const runDoorOpen = async () => {
+    setDoorState('opening');
+    setDoorMessage('Invio comando a Home Assistant...');
+    if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
+    try {
+      const res = await fetch('/api/hass/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guest: `${pass.guestName} ${pass.guestSurname}`.trim(),
+          source: 'Aurora Glass Pass',
+          wifiConnected: true,
+          guestToken: pass.token
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if ('vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
+        setDoorState('success');
+        setDoorMessage(data.message || 'Portone sbloccato. Spingi la porta per entrare.');
+      } else {
+        throw new Error(data.error || 'Impossibile completare lo sblocco');
+      }
+    } catch (err: any) {
+      setDoorState('error');
+      setDoorMessage(err.message || 'Errore di connessione. Riprova.');
+    } finally {
+      window.setTimeout(() => {
+        setDoorState('idle');
+        setDoorMessage('');
+      }, 4500);
+    }
+  };
+
+  const startHold = () => {
+    if (doorState !== 'idle') return;
+    holdStartedAt.current = Date.now();
+    holdTimer.current = setInterval(() => {
+      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1300);
+      setHoldProgress(progress);
+      if (progress >= 1) {
+        cancelHold();
+        void runDoorOpen();
+      }
+    }, 30);
+  };
+
+  useEffect(() => cancelHold, []);
 
   return (
     <div className={`aurora-concierge min-h-screen text-white ${isNight ? 'aurora-night' : ''}`}>
@@ -104,7 +172,22 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4"><div><p className="aurora-eyebrow text-white/60">AURORA IN VALTELLINA</p><p className="mt-1 text-lg font-semibold tracking-tight">Guest Glass Pass</p></div><div className="glass-chip"><BedDouble className="h-4 w-4" /><span>APT. AURORA</span></div></div>
             <div className="mt-10 grid grid-cols-[1fr_auto] items-end gap-4"><div><p className="text-2xl font-semibold tracking-tight sm:text-3xl">{pass.guestName} {pass.guestSurname}</p><div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/60"><span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate}</strong></span><span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate}</strong></span></div></div><div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/10 p-2 shadow-lg"><div className="h-full w-full rounded-xl border border-dashed border-white/50" /></div></div>
-            <button className="glass-key-button mt-5" onClick={openDoor}><span className="flex items-center gap-2"><Navigation className="h-4 w-4" /> Tieni premuto per aprire</span><ArrowUpRight className="h-4 w-4" /></button>
+            <button
+              className={`glass-key-button mt-5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
+              onPointerDown={startHold}
+              onPointerUp={cancelHold}
+              onPointerCancel={cancelHold}
+              onPointerLeave={cancelHold}
+              disabled={doorState === 'opening'}
+            >
+              <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
+              <span className="flex items-center gap-2 relative z-10">
+                <Navigation className="h-4 w-4" />
+                {doorState === 'opening' ? 'Apertura in corso...' : doorState === 'success' ? 'Portone aperto!' : doorState === 'error' ? 'Riprova: tieni premuto' : 'Tieni premuto per aprire'}
+              </span>
+              <ArrowUpRight className="h-4 w-4 relative z-10" />
+            </button>
+            {doorMessage && <p className={`mt-2 text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>{doorMessage}</p>}
           </div>
         </section>
 
@@ -116,7 +199,19 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
       </main>
 
-      {languageOpen && <div className="sheet-backdrop" onClick={() => setLanguageOpen(false)}><section className="aurora-sheet language-sheet" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setLanguageOpen(false)}><X className="h-4 w-4" /></button><p className="aurora-eyebrow">Preferenza lingua</p><h2>{copy.chooseLanguage}</h2><div className="language-options">{languages.map((item) => <button key={item.id} className={language === item.id ? 'active' : ''} onClick={() => { onSelectLanguage(item.id); setLanguageOpen(false); }}><FlagIcon language={item.id} /><span>{item.label}</span>{language === item.id && <Check className="ml-auto h-4 w-4" />}</button>)}</div></section></div>}
+      <section className="guide-dock"><div><p className="aurora-eyebrow">Tutto Aurora</p><h2>La tua guida completa</h2></div><div className="guide-grid">{guideItems.map((item) => <button key={item.page} onClick={() => onNavigate(item.page)}>{item.icon}<span>{item.label}</span><ChevronRight /></button>)}</div></section>
+
+      {languageOpen && (
+        <>
+          <div className="language-popover-backdrop" onClick={() => setLanguageOpen(false)} />
+          <div className="language-popover">
+            <button className="sheet-close" onClick={() => setLanguageOpen(false)}><X className="h-4 w-4" /></button>
+            <p className="aurora-eyebrow">Preferenza lingua</p>
+            <h2>{copy.chooseLanguage}</h2>
+            <div className="language-options">{languages.map((item) => <button key={item.id} className={language === item.id ? 'active' : ''} onClick={() => { onSelectLanguage(item.id); setLanguageOpen(false); }}><FlagIcon language={item.id} /><span>{item.label}</span>{language === item.id && <Check className="ml-auto h-4 w-4" />}</button>)}</div>
+          </div>
+        </>
+      )}
       {sheet && <div className="sheet-backdrop" onClick={() => setSheet(null)}><section className="aurora-sheet" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setSheet(null)}><X className="h-4 w-4" /></button>{sheet === 'wifi' && <><p className="aurora-eyebrow">Connessione</p><h2>Wi-Fi Casa_Aurora</h2><p className="mt-2 text-sm text-slate-400">{wifiCopied ? 'Password copiata negli appunti.' : 'Scansiona il QR o copia la password.'}</p>{showWifiQr ? <img className="wifi-qr" alt="QR Wi-Fi Casa Aurora" src={`https://quickchart.io/qr?size=220&text=${encodeURIComponent(`WIFI:T:WPA;S:${APARTMENT_INFO.wifiSSID};P:${APARTMENT_INFO.wifiPassword};;`)}`} /> : <div className="sheet-value">{APARTMENT_INFO.wifiPassword}<Copy className="h-4 w-4 text-emerald-300" /></div>}<button className="sheet-action mt-3" onClick={() => setShowWifiQr(!showWifiQr)}>{showWifiQr ? 'Copia password' : 'Mostra QR Wi-Fi'} <Wifi className="h-4 w-4" /></button></>}{sheet === 'schedule' && <><p className="aurora-eyebrow">Ritmo del soggiorno</p><h2>Orari & regole essenziali</h2><div className="sheet-list"><span>Check-in <b>{APARTMENT_INFO.checkInStart} - {APARTMENT_INFO.checkInEnd}</b></span><span>Check-out <b>entro le {APARTMENT_INFO.checkOutLimit}</b></span><span>Casa <b>silenzio e rispetto del vicinato</b></span></div></>}{sheet === 'luggage' && <><p className="aurora-eyebrow">Flessibilita</p><h2>Deposito bagagli</h2><p className="mt-2 text-sm leading-6 text-slate-400">Scrivi all'host per concordare il deposito prima del check-in o dopo il check-out.</p><a className="sheet-action" href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}`} target="_blank" rel="noreferrer">Chiedi a Nino <ArrowUpRight className="h-4 w-4" /></a></>}{sheet === 'map' && <><p className="aurora-eyebrow">Mappa & luoghi</p><h2>Morbegno, a un passo</h2><p className="mt-2 text-sm leading-6 text-slate-400">Ristoranti, farmacia e centro storico sono tutti raccolti intorno ad Aurora.</p><a className="sheet-action" href={APARTMENT_INFO.googleMapsUrl} target="_blank" rel="noreferrer">Apri nelle mappe <ExternalLink className="h-4 w-4" /></a></>}{sheet === 'food' && <><p className="aurora-eyebrow">Sapori locali</p><h2>Una tavola fatta bene</h2><p className="mt-2 text-sm leading-6 text-slate-400">Scopri crotti, pizzoccheri e colazioni locali nella guida di Aurora.</p><button className="sheet-action" onClick={() => { setSheet(null); onNavigate('ristoranti'); }}>Esplora ristoranti <ArrowUpRight className="h-4 w-4" /></button></>}</section></div>}
     </div>
   );

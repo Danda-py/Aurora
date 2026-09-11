@@ -23,15 +23,15 @@ export const PageHeader: React.FC<Props> = ({ title, language, onBackToMenu, onS
   };
 
   return (
-    <header className="sticky top-2 z-30 flex items-center justify-between px-3 sm:px-4 py-2 mb-3.5 bg-neutral-900/75 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/[0.08] shadow-sm text-neutral-100">
+    <header className="sticky top-2 z-30 flex items-center justify-between px-3 sm:px-4 py-2 mb-3.5 bg-[#0a0f13]/80 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/[0.1] shadow-lg text-neutral-100">
       
-      {/* Apple iOS Back Button */}
+      {/* Aurora Back Button */}
       <button
         onClick={onBackToMenu}
         id="btn-back-to-grid"
         className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] active:bg-white/[0.15] text-neutral-200 hover:text-white font-medium text-xs tracking-tight border border-white/[0.06] active:scale-[0.96] transition-all cursor-pointer group"
       >
-        <ChevronLeft className="w-4 h-4 text-neutral-400 group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
+        <ChevronLeft className="w-4 h-4 text-[#62e6bd] group-hover:-translate-x-0.5 transition-transform" />
         <span className="hidden sm:inline">{t.actions.backToMenu}</span>
         <span className="sm:hidden">Menu</span>
       </button>
@@ -45,7 +45,7 @@ export const PageHeader: React.FC<Props> = ({ title, language, onBackToMenu, onS
       <button
         onClick={cycleLanguage}
         id="btn-cycle-lang"
-        className="w-7 h-7 rounded-full overflow-hidden shadow-xs ring-1 ring-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+        className="w-7 h-7 rounded-full overflow-hidden shadow-xs ring-1 ring-[#62e6bd]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
         title="Cambia lingua"
       >
         <FlagIcon language={language} className="w-full h-full object-cover" />
@@ -54,5 +54,3 @@ export const PageHeader: React.FC<Props> = ({ title, language, onBackToMenu, onS
     </header>
   );
 };
-
-
