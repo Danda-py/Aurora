@@ -214,6 +214,16 @@ const uiCopy: Record<Language, {
   chooseLanguage: string;
   allAurora: string;
   allAuroraSubtitle: string;
+  handy: string;
+  activeStay: string;
+  directWhatsapp: string;
+  directions: string;
+  ideas: string;
+  experience: string;
+  territory: string;
+  support: string;
+  departure: string;
+  languagePreference: string;
 }> = {
   it: { 
     home: 'Fai come fossi a casa.', 
@@ -228,7 +238,8 @@ const uiCopy: Record<Language, {
     all: 'Vedi tutto', 
     chooseLanguage: 'Scegli la tua lingua',
     allAurora: 'TUTTO AURORA',
-    allAuroraSubtitle: 'La tua guida completa'
+    allAuroraSubtitle: 'La tua guida completa',
+    handy: 'A portata di mano', activeStay: 'Soggiorno attivo', directWhatsapp: 'WhatsApp diretto', directions: 'GPS & indicazioni', ideas: 'Idee per oggi', experience: 'Esperienza', territory: 'Territorio', support: 'Assistenza', departure: 'Fine soggiorno', languagePreference: 'Preferenza lingua'
   },
   en: { 
     home: 'Feel at home.', 
@@ -243,7 +254,8 @@ const uiCopy: Record<Language, {
     all: 'See all', 
     chooseLanguage: 'Choose your language',
     allAurora: 'ALL OF AURORA',
-    allAuroraSubtitle: 'Your complete guide'
+    allAuroraSubtitle: 'Your complete guide',
+    handy: 'At your fingertips', activeStay: 'Stay active', directWhatsapp: 'Direct WhatsApp', directions: 'GPS & directions', ideas: 'Ideas for today', experience: 'Experience', territory: 'Local area', support: 'Support', departure: 'End of stay', languagePreference: 'Language preference'
   },
   de: { 
     home: 'Fühl dich wie zu Hause.', 
@@ -258,7 +270,8 @@ const uiCopy: Record<Language, {
     all: 'Alle ansehen', 
     chooseLanguage: 'Sprache wählen',
     allAurora: 'ALLES ÜBER AURORA',
-    allAuroraSubtitle: 'Ihr kompletter Reiseführer'
+    allAuroraSubtitle: 'Ihr kompletter Reiseführer',
+    handy: 'Direkt zur Hand', activeStay: 'Aufenthalt aktiv', directWhatsapp: 'WhatsApp direkt', directions: 'GPS & Wegbeschreibung', ideas: 'Ideen für heute', experience: 'Erlebnis', territory: 'Region', support: 'Hilfe', departure: 'Ende des Aufenthalts', languagePreference: 'Spracheinstellung'
   },
   fr: { 
     home: 'Comme chez vous.', 
@@ -273,7 +286,8 @@ const uiCopy: Record<Language, {
     all: 'Tout voir', 
     chooseLanguage: 'Choisir la langue',
     allAurora: 'TOUT SUR AURORA',
-    allAuroraSubtitle: 'Votre guide complet'
+    allAuroraSubtitle: 'Votre guide complet',
+    handy: 'À portée de main', activeStay: 'Séjour actif', directWhatsapp: 'WhatsApp direct', directions: 'GPS & itinéraire', ideas: 'Idées du jour', experience: 'Expérience', territory: 'Territoire', support: 'Assistance', departure: 'Fin du séjour', languagePreference: 'Préférence de langue'
   },
   es: { 
     home: 'Siéntete como en casa.', 
@@ -288,7 +302,8 @@ const uiCopy: Record<Language, {
     all: 'Ver todo', 
     chooseLanguage: 'Elegir idioma',
     allAurora: 'TODO SOBRE AURORA',
-    allAuroraSubtitle: 'Tu guía completa'
+    allAuroraSubtitle: 'Tu guía completa',
+    handy: 'A mano', activeStay: 'Estancia activa', directWhatsapp: 'WhatsApp directo', directions: 'GPS e indicaciones', ideas: 'Ideas para hoy', experience: 'Experiencia', territory: 'Territorio', support: 'Asistencia', departure: 'Fin de la estancia', languagePreference: 'Preferencia de idioma'
   }
 };
 
@@ -532,12 +547,12 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         <section>
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="aurora-eyebrow">A portata di mano</p>
+              <p className="aurora-eyebrow">{copy.handy}</p>
               <h2>{copy.quick}</h2>
             </div>
             <span className="status-dot flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-[#62e6bd] animate-pulse" />
-              Soggiorno attivo
+              {copy.activeStay}
             </span>
           </div>
           
@@ -555,13 +570,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             >
               <MessageCircle />
               <span>{copy.host}</span>
-              <small>WhatsApp diretto</small>
+              <small>{copy.directWhatsapp}</small>
             </a>
             
             <button onClick={() => onNavigate('posizione')}>
               <MapPin />
               <span>{copy.location}</span>
-              <small>GPS & indicazioni</small>
+              <small>{copy.directions}</small>
             </button>
             
             <button onClick={() => setSheet('schedule')}>
@@ -588,7 +603,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         <section className="space-y-3">
           <div className="flex items-end justify-between">
             <div>
-              <p className="aurora-eyebrow">Idee per oggi</p>
+              <p className="aurora-eyebrow">{copy.ideas}</p>
               <h2>{copy.experiences}</h2>
             </div>
             <button 
@@ -608,7 +623,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               >
                 <img src={story.image} alt={story.title} loading="lazy" />
                 <div className="aurora-photo-card-info">
-                  <span className="aurora-photo-tag">Esperienza</span>
+                  <span className="aurora-photo-tag">{copy.experience}</span>
                   <strong>{story.title}</strong>
                   <small>{story.meta}</small>
                 </div>
@@ -620,7 +635,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* SECTION 3: Vivere la Valtellina (Gusto, Botteghe, Trasporti, Info) */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Territorio</p>
+            <p className="aurora-eyebrow">{copy.territory}</p>
             <h2>{guideSections.exploreValtellina.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.exploreValtellina.subtitle}</p>
           </div>
@@ -632,7 +647,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* SECTION 4: Supporto & Sicurezza (Contatti & Emergenze) */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Assistenza</p>
+            <p className="aurora-eyebrow">{copy.support}</p>
             <h2>{guideSections.supportSecurity.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
           </div>
@@ -644,7 +659,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* SECTION 5: Partenza & Check-out */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Fine Soggiorno</p>
+            <p className="aurora-eyebrow">{copy.departure}</p>
             <h2>{guideSections.departure.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
           </div>
@@ -663,7 +678,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <button className="sheet-close" onClick={() => setLanguageOpen(false)} aria-label="Chiudi">
               <X className="h-4 w-4" />
             </button>
-            <p className="aurora-eyebrow">Preferenza lingua</p>
+            <p className="aurora-eyebrow">{copy.languagePreference}</p>
             <h2>{copy.chooseLanguage}</h2>
             <div className="language-options">
               {languages.map((item) => (

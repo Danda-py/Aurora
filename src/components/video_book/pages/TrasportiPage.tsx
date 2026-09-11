@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const { getPageData, media } = useCms();
   const cmsTransport = getPageData('transport') || {};
   const tr = { ...BOOK_DATA[language].transport, ...cmsTransport };
+  const t = VIDEO_TRANSLATIONS[language];
 
   const transportIcons = [
     <Train key="train" className="w-5 h-5 text-[#62e6bd]" />,
@@ -30,7 +32,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Top Header */}
         <PageHeader
           title={tr.title}
-          category="Mobilità Locale"
+          category={t.tiles.trasporti}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -47,7 +49,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               Connessioni & Orari
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Come Muoversi a Morbegno
+              {tr.title}
             </h1>
           </div>
         </div>
@@ -80,7 +82,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                     className="aurora-action-pill"
                   >
                     <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                    <span>Mappa</span>
+                    <span>{t.actions.googleMaps}</span>
                   </a>
                 )}
               </div>

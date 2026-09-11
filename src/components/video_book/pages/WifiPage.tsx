@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { Wifi, Copy, Check, QrCode, Zap, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -16,6 +17,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
   const { getPageData } = useCms();
   const cmsWifi = getPageData('wifi') || {};
   const w = { ...BOOK_DATA[language].wifi, ...cmsWifi };
+  const t = VIDEO_TRANSLATIONS[language];
   const [copiedSSID, setCopiedSSID] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
 
@@ -40,7 +42,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
         {/* Top Header */}
         <PageHeader
           title={w.title}
-          category="Connettività Casa"
+          category={t.tiles.wifi}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { CheckCircle2, Info } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const { getPageData, media } = useCms();
   const cmsAmenities = getPageData('amenities') || {};
   const am = { ...BOOK_DATA[language].amenities, ...cmsAmenities };
+  const t = VIDEO_TRANSLATIONS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -23,7 +25,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {/* Top Header */}
         <PageHeader
           title={am.title}
-          category="Dotazioni Casa"
+          category={t.tiles.servizi}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -40,7 +42,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
               Comfort & Tecnologia
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Servizi Inclusi nel Soggiorno
+              {am.title}
             </h1>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -16,6 +17,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const { getPageData, media } = useCms();
   const cmsInfo = getPageData('info') || {};
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
+  const t = VIDEO_TRANSLATIONS[language];
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
   const pharmacyService = {
     it: { title: 'FARMACIA DI TURNO', desc: 'Consulta disponibilità, orari e indicazioni aggiornati in tempo reale' },
@@ -44,7 +46,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         {/* Top Header */}
         <PageHeader
           title={inf.title}
-          category="Servizi del Territorio"
+          category={t.tiles.informazioni}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -61,7 +63,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
               Guida Pratica
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Informazioni & Servizi Essenziali
+              {inf.title}
             </h1>
           </div>
         </div>
@@ -97,7 +99,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
                 className="aurora-action-pill"
               >
                 <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                <span>Maps</span>
+                <span>{t.actions.googleMaps}</span>
               </a>
             </div>
           ))}

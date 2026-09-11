@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const { getPageData, media } = useCms();
   const cmsShopping = getPageData('shopping') || {};
   const sh = { ...BOOK_DATA[language].shopping, ...cmsShopping };
+  const t = VIDEO_TRANSLATIONS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -23,7 +25,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Top Header */}
         <PageHeader
           title={sh.title}
-          category="Spesa & Botteghe Tipiche"
+          category={t.tiles.shopping}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -40,7 +42,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               Eccellenze Artigianali
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Botteghe del Gusto & Market
+              {sh.title}
             </h1>
           </div>
         </div>
@@ -71,7 +73,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                   className="aurora-action-pill"
                 >
                   <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                  <span>Maps</span>
+                  <span>{t.actions.googleMaps}</span>
                 </a>
               </div>
 

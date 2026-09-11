@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, Send } from 'lucide-react';
@@ -17,6 +18,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const cmsCheckOut = getPageData('checkOut') || {};
   const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
   const reviewCopy = BOOK_DATA[language].contacts;
+  const t = VIDEO_TRANSLATIONS[language];
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
@@ -47,7 +49,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Top Header */}
         <PageHeader
           title={co.title}
-          category="Partenza & Check-out"
+          category={t.tiles.checkOut}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -61,10 +63,10 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Grazie per essere stati con noi
+              {co.title}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Check-out & Riconsegna Chiavi
+              {co.title}
             </h1>
           </div>
         </div>

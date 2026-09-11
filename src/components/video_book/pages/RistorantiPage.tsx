@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Bike, Sparkles } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
   const { getPageData, media } = useCms();
   const cmsRestaurants = getPageData('restaurants') || {};
   const res = { ...BOOK_DATA[language].restaurants, ...cmsRestaurants };
+  const t = VIDEO_TRANSLATIONS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -23,7 +25,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
         {/* Top Header */}
         <PageHeader
           title={res.title}
-          category="Enogastronomia & Crotti"
+          category={t.tiles.ristoranti}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -37,7 +39,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Gusto Autentico
+              <Sparkles className="w-3.5 h-3.5" /> {res.title}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {res.bannerText}
@@ -74,7 +76,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                   <a
                     href={`tel:${r.phone}`}
                     className="aurora-secondary-pill"
-                    title="Chiama"
+                    title={t.actions.call}
                   >
                     <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
                   </a>
@@ -85,7 +87,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                     className="aurora-action-pill"
                   >
                     <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                    <span>Maps</span>
+                    <span>{t.actions.googleMaps}</span>
                   </a>
                 </div>
               </div>
@@ -123,7 +125,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                   className="aurora-action-pill"
                 >
                   <Phone className="w-3 h-3 text-[#07110d]" />
-                  <span>Ordina</span>
+                  <span>{t.actions.call}</span>
                 </a>
               </div>
             ))}

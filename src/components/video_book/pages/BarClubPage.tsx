@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Coffee, Sparkles } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const { getPageData, media } = useCms();
   const cmsBars = getPageData('bars') || {};
   const bars = { ...BOOK_DATA[language].bars, ...cmsBars };
+  const t = VIDEO_TRANSLATIONS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -23,7 +25,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {/* Top Header */}
         <PageHeader
           title={bars.title}
-          category="Caffè & Serate"
+          category={t.tiles.barClub}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -37,7 +39,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Colazioni & Aperitivi
+              <Sparkles className="w-3.5 h-3.5" /> {bars.title}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {bars.bannerText}
@@ -71,7 +73,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
                   <a
                     href={`tel:${b.phone}`}
                     className="aurora-secondary-pill"
-                    title="Chiama"
+                    title={t.actions.call}
                   >
                     <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
                   </a>
@@ -82,7 +84,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
                     className="aurora-action-pill"
                   >
                     <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                    <span>Maps</span>
+                    <span>{t.actions.googleMaps}</span>
                   </a>
                 </div>
               </div>

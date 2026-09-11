@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const { getPageData, media } = useCms();
   const cmsActivities = getPageData('activities') || {};
   const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
+  const t = VIDEO_TRANSLATIONS[language];
 
   const categoryIcons = [
     <Bike key="bike" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
@@ -30,7 +32,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Top Header */}
         <PageHeader
           title={act.title}
-          category="Esperienze & Natura"
+          category={t.tiles.attivita}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -44,7 +46,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Valtellina & Alpi
+              <Sparkles className="w-3.5 h-3.5" /> {act.title}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {act.bannerText}

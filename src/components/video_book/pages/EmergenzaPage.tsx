@@ -2,6 +2,7 @@ import React from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { Phone, ShieldAlert, HeartPulse, MapPin } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const { getPageData, media } = useCms();
   const cmsEmergency = getPageData('emergency') || {};
   const em = { ...BOOK_DATA[language].emergency, ...cmsEmergency };
+  const t = VIDEO_TRANSLATIONS[language];
 
   const emergencyHots = [
     { num: '112', label: 'Numero Unico Europeo (112)' },
@@ -30,7 +32,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Top Header */}
         <PageHeader
           title={em.title}
-          category="Sicurezza & Pronto Intervento"
+          category={t.tiles.emergenza}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -47,7 +49,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               Assistenza H24
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              Emergenze & Numeri Utili
+              {em.title}
             </h1>
           </div>
         </div>
@@ -119,7 +121,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                       target="_blank"
                       rel="noopener noreferrer"
                       className="aurora-secondary-pill"
-                      title="Mappa"
+                      title={t.actions.googleMaps}
                     >
                       <MapPin className="w-3.5 h-3.5 text-white/70" />
                     </a>
@@ -129,7 +131,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                     className="aurora-action-pill bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30"
                   >
                     <Phone className="w-3.5 h-3.5 text-white" />
-                    <span>Chiama</span>
+                    <span>{t.actions.call}</span>
                   </a>
                 </div>
               </div>
