@@ -2,6 +2,7 @@ import React from 'react';
 import { Language, GuestPass } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Sparkles, Bed, Utensils, Tv, Mountain, Heart } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -18,6 +19,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const cmsWelcome = getPageData('welcome') || {};
   const w = { ...BOOK_DATA[language].welcome, ...cmsWelcome };
   const guestFullName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : null;
+  const labels = VIDEO_PAGE_LABELS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -53,16 +55,16 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           {guestFullName ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                Benvenuto, {guestFullName}
+                {w.greeting} {guestFullName}
               </h2>
               <span className="text-[11px] font-bold text-[#07110d] bg-[#62e6bd] px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
                 <Heart className="w-3 h-3 fill-current" />
-                <span>Soggiorno Attivo</span>
+                <span>{labels.activeStay}</span>
               </span>
             </div>
           ) : (
             <h2 className="text-lg font-bold text-white tracking-tight">
-              Cari Ospiti, benvenuti ad Aurora!
+              {w.greeting}
             </h2>
           )}
           <p className="text-xs sm:text-sm text-white/75 leading-relaxed font-normal">
@@ -73,7 +75,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Room Spaces Grid */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Gli Ambienti</p>
+            <p className="aurora-eyebrow">{labels.spaces}</p>
             <h3 className="text-base font-bold text-white tracking-tight">{w.roomsTitle}</h3>
           </div>
 

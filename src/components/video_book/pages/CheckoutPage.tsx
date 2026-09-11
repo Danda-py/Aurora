@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, Send } from 'lucide-react';
@@ -19,6 +20,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
   const reviewCopy = BOOK_DATA[language].contacts;
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
@@ -85,7 +87,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Interactive Checkpoints */}
         <div className="aurora-glass-card space-y-4">
           <div>
-            <span className="aurora-eyebrow">Istruzioni di Partenza</span>
+            <span className="aurora-eyebrow">{labels.departure}</span>
             <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
               {co.checklistTitle}
             </h4>
@@ -145,8 +147,8 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             <Star className="w-5 h-5 fill-current" />
           </div>
           <div className="min-w-0 flex-1">
-            <strong className="block text-sm sm:text-base text-white font-bold tracking-tight">Ti è piaciuto il soggiorno?</strong>
-            <span className="text-xs text-white/60 leading-snug block mt-0.5">Lasciaci una recensione: ci vuole un solo minuto e conta tantissimo per noi.</span>
+            <strong className="block text-sm sm:text-base text-white font-bold tracking-tight">{labels.reviewTitle}</strong>
+            <span className="text-xs text-white/60 leading-snug block mt-0.5">{labels.reviewDescription}</span>
           </div>
         </a>
 
@@ -220,7 +222,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                   </div>
                   <div className="flex gap-2.5 pt-2">
                     <button type="button" onClick={() => setShowReviewForm(false)} className="aurora-secondary-pill flex-1 py-2.5">
-                      Annulla
+                      {labels.cancel}
                     </button>
                     <button type="submit" className="aurora-action-pill flex-1 py-2.5">
                       <Send className="w-3.5 h-3.5" />

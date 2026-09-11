@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const cmsShopping = getPageData('shopping') || {};
   const sh = { ...BOOK_DATA[language].shopping, ...cmsShopping };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -39,7 +41,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Eccellenze Artigianali
+              {labels.artisan}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {sh.title}

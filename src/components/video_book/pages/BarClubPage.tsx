@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Coffee, Sparkles } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const cmsBars = getPageData('bars') || {};
   const bars = { ...BOOK_DATA[language].bars, ...cmsBars };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -50,8 +52,8 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {/* Recommended bars list */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">I Nostri Bar Preferiti</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Bar storici ed enoteche a Morbegno</h3>
+            <p className="aurora-eyebrow">{labels.favorites}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.historicBars}</h3>
           </div>
 
           {bars.recommended.filter((bar) => !/poletti/i.test(bar.name)).map((b, idx) => (

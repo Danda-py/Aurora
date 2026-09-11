@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Wifi, Copy, Check, QrCode, Zap, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -18,6 +19,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
   const cmsWifi = getPageData('wifi') || {};
   const w = { ...BOOK_DATA[language].wifi, ...cmsWifi };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
   const [copiedSSID, setCopiedSSID] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
 
@@ -54,7 +56,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
             <Zap className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="aurora-eyebrow">Fibra Ottica Ultraveloce</span>
+            <span className="aurora-eyebrow">{labels.fiber}</span>
             <p className="text-xs sm:text-sm font-semibold text-white mt-0.5 leading-snug">
               {w.speedNotice}
             </p>
@@ -66,7 +68,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
           <div className="flex items-center justify-center gap-2">
             <QrCode className="w-4 h-4 text-[#62e6bd]" />
             <span className="aurora-eyebrow text-white/90">
-              Scansiona per Connetterti Istantaneamente
+              {labels.scanQr}
             </span>
           </div>
 
@@ -78,7 +80,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
             />
           </div>
           <p className="text-xs text-white/60 max-w-xs mx-auto leading-relaxed">
-            Inquadra il codice QR con la fotocamera del tuo smartphone per collegarti in un tocco senza digitare nulla.
+            {labels.qrHelp}
           </p>
         </div>
 

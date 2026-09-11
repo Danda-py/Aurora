@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { CheckCircle2, Info } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const cmsAmenities = getPageData('amenities') || {};
   const am = { ...BOOK_DATA[language].amenities, ...cmsAmenities };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -39,7 +41,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Comfort & Tecnologia
+              {labels.comfort}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {am.title}

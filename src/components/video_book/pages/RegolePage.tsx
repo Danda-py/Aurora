@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
   const cmsRules = getPageData('rules') || {};
   const r = { ...BOOK_DATA[language].rules, ...cmsRules };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   const rulesList = [
     {
@@ -84,7 +86,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Armonia & Rispetto
+              {labels.harmony}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {r.title}

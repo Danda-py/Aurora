@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Navigation, Copy, Check, Train, Car, Plane } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -16,6 +17,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const { getPageData } = useCms();
   const cmsLocation = getPageData('location') || {};
   const loc = { ...BOOK_DATA[language].location, ...cmsLocation };
+  const t = VIDEO_TRANSLATIONS[language];
   const [copied, setCopied] = useState(false);
 
   const handleCopyAddress = () => {
@@ -31,7 +33,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Top Header */}
         <PageHeader
           title={loc.title}
-          category="Indicazioni & Mappa"
+          category={t.tiles.posizione}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -58,7 +60,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               className="px-3.5 py-1.5 rounded-xl bg-[#080b10]/90 hover:bg-[#080b10] text-white text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-md border border-white/20 cursor-pointer transition"
             >
               <Navigation className="w-3.5 h-3.5 text-[#62e6bd]" />
-              <span>Apri Google Maps</span>
+              <span>{t.actions.googleMaps}</span>
             </a>
           </div>
         </div>
@@ -104,7 +106,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* How to arrive directions */}
         <div className="aurora-glass-card space-y-3">
           <div>
-            <p className="aurora-eyebrow">Come Raggiungerci</p>
+            <p className="aurora-eyebrow">{loc.howToArrive}</p>
             <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
               {loc.howToArrive}
             </h4>

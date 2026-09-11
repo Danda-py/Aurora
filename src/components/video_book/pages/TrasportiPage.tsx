@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const cmsTransport = getPageData('transport') || {};
   const tr = { ...BOOK_DATA[language].transport, ...cmsTransport };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   const transportIcons = [
     <Train key="train" className="w-5 h-5 text-[#62e6bd]" />,
@@ -46,7 +48,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Connessioni & Orari
+              {labels.connections}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {tr.title}

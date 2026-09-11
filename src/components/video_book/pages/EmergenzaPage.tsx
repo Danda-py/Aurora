@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Phone, ShieldAlert, HeartPulse, MapPin } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const cmsEmergency = getPageData('emergency') || {};
   const em = { ...BOOK_DATA[language].emergency, ...cmsEmergency };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   const emergencyHots = [
     { num: '112', label: 'Numero Unico Europeo (112)' },
@@ -46,7 +48,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-rose-300 flex items-center gap-1.5">
-              Assistenza H24
+              {labels.emergency}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {em.title}
@@ -90,8 +92,8 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Local emergency locations */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Presidi Medici & Ospedali</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Strutture di soccorso vicine</h3>
+            <p className="aurora-eyebrow">{labels.hospitals}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.emergencyNearby}</h3>
           </div>
 
           {em.items.map((item, idx) => (

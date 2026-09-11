@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Phone, Bike, Sparkles } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
   const cmsRestaurants = getPageData('restaurants') || {};
   const res = { ...BOOK_DATA[language].restaurants, ...cmsRestaurants };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -50,8 +52,8 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
         {/* Recommended Restaurants List */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">I Nostri Consigliati</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Ristoranti e Crotti Selezionati</h3>
+            <p className="aurora-eyebrow">{labels.recommended}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.selected}</h3>
           </div>
 
           {res.recommended.map((r, idx) => (
@@ -62,7 +64,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <span className="aurora-eyebrow text-[#62e6bd] font-mono">
-                    CONSIGLIATO
+                    {labels.recommended}
                   </span>
                   <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                     {r.name}
@@ -106,7 +108,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
               <Bike className="w-5 h-5" />
             </div>
             <div>
-              <span className="aurora-eyebrow">A Domicilio</span>
+              <span className="aurora-eyebrow">{labels.delivery}</span>
               <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
                 {res.deliveryTitle}
               </h4>

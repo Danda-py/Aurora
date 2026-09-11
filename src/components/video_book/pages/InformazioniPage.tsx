@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
@@ -18,6 +19,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const cmsInfo = getPageData('info') || {};
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
   const pharmacyService = {
     it: { title: 'FARMACIA DI TURNO', desc: 'Consulta disponibilità, orari e indicazioni aggiornati in tempo reale' },
@@ -60,7 +62,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
           />
           <div className="aurora-hero-banner-overlay">
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
-              Guida Pratica
+              {labels.practical}
             </span>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
               {inf.title}
@@ -71,8 +73,8 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         {/* Services List */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Punti Utili</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Servizi essenziali a Morbegno</h3>
+            <p className="aurora-eyebrow">{labels.useful}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.essential}</h3>
           </div>
 
           {services.map((s, idx) => (
@@ -125,7 +127,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
 
         {/* Legal CIR/CIN Card */}
         <div className="aurora-glass-card space-y-2 text-xs">
-          <span className="aurora-eyebrow">Codici Identificativi di Legge</span>
+          <span className="aurora-eyebrow">{labels.legal}</span>
           <div className="flex items-center justify-between pt-1 border-t border-white/[0.08]">
             <span className="text-white/60 font-medium">{inf.cirLabel}</span>
             <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cirCode}</span>

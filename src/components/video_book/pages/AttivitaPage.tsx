@@ -3,6 +3,7 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
+import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const cmsActivities = getPageData('activities') || {};
   const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
   const t = VIDEO_TRANSLATIONS[language];
+  const labels = VIDEO_PAGE_LABELS[language];
 
   const categoryIcons = [
     <Bike key="bike" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
@@ -57,8 +59,8 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Highlights List */}
         <div className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">Itinerari Imperdibili</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Le migliori esperienze vicino a casa</h3>
+            <p className="aurora-eyebrow">{labels.highlights}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.nearby}</h3>
           </div>
 
           {act.highlights.map((item, index) => (
@@ -95,7 +97,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Additional categories grid */}
         <div className="aurora-glass-card space-y-4">
           <div className="text-center">
-            <span className="aurora-eyebrow">Per Ogni Passione</span>
+            <span className="aurora-eyebrow">{labels.passions}</span>
             <h4 className="text-base font-bold text-white tracking-tight mt-0.5">
               {act.categoryTitle}
             </h4>
