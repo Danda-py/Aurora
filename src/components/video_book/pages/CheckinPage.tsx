@@ -159,8 +159,11 @@ export const CheckinPage: React.FC<Props> = ({
   };
 
   const handleOpenDoor = async () => {
-    // Enforce Casa_Aurora real Wi-Fi check
-    if (!wifiVerified) {
+    const wifiCheck = await checkCasaAuroraWifi();
+    setWifiVerified(wifiCheck.verified);
+    setWifiMessage(wifiCheck.message);
+
+    if (!wifiCheck.verified) {
       setOpeningState('error');
       setStatusMessage(wifiMessages.notConnectedError);
       return;
@@ -176,7 +179,7 @@ export const CheckinPage: React.FC<Props> = ({
         body: JSON.stringify({
           guest: guestFullName,
           source: 'Check-in App (Wi-Fi Casa_Aurora Verificato)',
-          wifiConnected: true,
+          wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
           guestToken: pass?.token
         })

@@ -54,6 +54,15 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
   };
 
   const handleOpenDoor = async () => {
+    const wifiCheck = await checkCasaAuroraWifi();
+    setWifiVerified(wifiCheck.verified);
+    setWifiMessage(wifiCheck.message);
+    if (!wifiCheck.verified) {
+      setOpeningState('error');
+      setStatusMessage(wifiCheck.message);
+      return;
+    }
+
     setOpeningState('opening');
     if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     setStatusMessage('Invio comando a Home Assistant...');
@@ -65,7 +74,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
         body: JSON.stringify({
           guest: guestFullName,
           source: 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)',
-          wifiConnected: true,
+          wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
           guestToken: pass?.token
         })

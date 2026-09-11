@@ -327,29 +327,21 @@ export function createApp() {
 
   // Wi-Fi Verify
   apiRouter.post('/wifi/verify', (req, res) => {
-    const { ssid, localIp, probeSuccess } = req.body || {};
     const config = getHomeAssistantConfig();
-    const expectedSsid = (config.wifiSsidRequired || 'Casa_Aurora').toLowerCase();
-    const providedSsid = (ssid || '').trim().toLowerCase();
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
-
-    const isMatchSsid = providedSsid === expectedSsid || providedSsid.includes('aurora');
     const isMatchIp = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
-    const isMatchLan = Boolean(probeSuccess);
-
-    const verified = isMatchSsid || isMatchIp || isMatchLan;
+    const verified = isMatchIp;
 
     res.json({
       verified,
       reason: verified 
         ? 'Connessione a Casa_Aurora verificata con successo' 
-        : 'Dispositivo non connesso alla rete Wi-Fi dell\'appartamento (Casa_Aurora)',
+        : config.homePublicIp
+          ? 'Dispositivo non connesso alla rete Wi-Fi dell\'appartamento (Casa_Aurora)'
+          : 'Verifica Wi-Fi non configurata: l\'host deve registrare l\'IP pubblico di Casa_Aurora.',
       details: {
-        ssidProvided: ssid,
         ssidExpected: config.wifiSsidRequired || 'Casa_Aurora',
-        matchedBySsid: isMatchSsid,
-        matchedByPublicIp: isMatchIp,
-        matchedByLanProbe: isMatchLan
+        matchedByPublicIp: isMatchIp
       }
     });
   });

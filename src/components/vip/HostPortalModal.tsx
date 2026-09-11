@@ -85,6 +85,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
   // Smart lock config
   const [lockConfig, setLockConfig] = useState<SmartLockConfig>(getSmartLockConfig());
+  const [homePublicIp, setHomePublicIp] = useState('');
   const [testLockStatus, setTestLockStatus] = useState<string | null>(null);
   const [isTestingLock, setIsTestingLock] = useState(false);
 
@@ -128,6 +129,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               apiBearerToken: data.config.hasAccessToken ? '••••••••' : (prev.apiBearerToken || ''),
               deviceEntityId: data.config.entityId || 'automation.porta_aurora'
             }));
+            setHomePublicIp(data.config.homePublicIp || '');
           }
         })
         .catch(() => {});
@@ -362,6 +364,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
           webhookUrl: lockConfig.webhookUrl,
           ...(lockConfig.apiBearerToken && !lockConfig.apiBearerToken.includes('••••') && { accessToken: lockConfig.apiBearerToken }),
           entityId: lockConfig.deviceEntityId || 'automation.porta_aurora',
+          homePublicIp: homePublicIp.trim(),
           enabled: lockConfig.enabled
         })
       });
@@ -369,6 +372,23 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       // ignore
     }
     alert('Configurazione Smart Lock salvata con successo!');
+  };
+
+  const handleDetectHomePublicIp = async () => {
+    setTestLockStatus(null);
+    try {
+      const response = await fetch('/api/wifi/set-home-ip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Impossibile rilevare l\'IP');
+      setHomePublicIp(data.homePublicIp || '');
+      setTestLockStatus('IP pubblico di Casa_Aurora registrato.');
+    } catch (error: any) {
+      setTestLockStatus(error.message || 'Impossibile registrare l\'IP pubblico.');
+    }
   };
 
   return (
@@ -1049,6 +1069,28 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                           placeholder="lock.aurora_portone"
                           className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-xs focus:outline-none"
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono text-slate-300 mb-1">
+                        IP pubblico rete Casa_Aurora
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={homePublicIp}
+                          onChange={(e) => setHomePublicIp(e.target.value)}
+                          placeholder="Rilevalo mentre sei connesso a Casa_Aurora"
+                          className="min-w-0 flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-xs focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleDetectHomePublicIp}
+                          className="shrink-0 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 text-emerald-200 text-xs font-bold transition"
+                        >
+                          Rileva IP
+                        </button>
                       </div>
                     </div>
                   </div>

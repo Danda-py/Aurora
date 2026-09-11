@@ -26,6 +26,7 @@ import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
 import { useCms } from '../../context/CmsContext';
+import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 
 interface Props {
   language: Language;
@@ -339,6 +340,17 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   };
 
   const runDoorOpen = async () => {
+    const wifiCheck = await checkCasaAuroraWifi();
+    if (!wifiCheck.verified) {
+      setDoorState('error');
+      setDoorMessage(wifiCheck.message);
+      window.setTimeout(() => {
+        setDoorState('idle');
+        setDoorMessage('');
+      }, 4500);
+      return;
+    }
+
     setDoorState('opening');
     setDoorMessage('Invio comando a Home Assistant...');
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
@@ -349,7 +361,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         body: JSON.stringify({
           guest: `${pass.guestName} ${pass.guestSurname}`.trim(),
           source: 'Aurora Glass Pass',
-          wifiConnected: true,
+          wifiConnected: wifiCheck.verified,
           guestToken: pass.token
         })
       });

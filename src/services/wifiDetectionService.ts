@@ -2,8 +2,7 @@
  * Real Wi-Fi Network Detection Service for Casa_Aurora
  * Performs active network validation:
  * 1. Checks Network Information API (blocks cellular 4G/5G mobile data)
- * 2. Probes local LAN subnet gateway (e.g. 192.168.1.1)
- * 3. Server-side verification matching client public IP against the home router public IP
+ * 2. Server-side verification matching client public IP against the home router public IP
  */
 
 export interface WifiVerificationResult {
@@ -25,30 +24,6 @@ export function isCellularNetwork(): boolean {
   return false;
 }
 
-export async function probeLocalSubnet(targetIp: string): Promise<boolean> {
-  if (typeof window === 'undefined') return false;
-  
-  // If definitely on cellular, skip LAN probe
-  if (isCellularNetwork()) return false;
-
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1200);
-
-    // Using mode: 'no-cors' allows receiving opaque responses from local routers/devices
-    await fetch(`http://${targetIp}/favicon.ico`, {
-      mode: 'no-cors',
-      cache: 'no-store',
-      signal: controller.signal
-    });
-
-    clearTimeout(timer);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export async function checkCasaAuroraWifi(): Promise<WifiVerificationResult> {
   const isCellular = isCellularNetwork();
 
@@ -62,10 +37,6 @@ export async function checkCasaAuroraWifi(): Promise<WifiVerificationResult> {
     };
   }
 
-  // Browsers cannot read the SSID. Probe only the configured Casa_Aurora
-  // gateway so another nearby/private network does not count as a match.
-  const probeSuccess = await probeLocalSubnet('192.168.0.1');
-
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);
@@ -74,7 +45,6 @@ export async function checkCasaAuroraWifi(): Promise<WifiVerificationResult> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        probeSuccess,
         isCellular: false
       }),
       signal: controller.signal
@@ -105,17 +75,6 @@ export async function checkCasaAuroraWifi(): Promise<WifiVerificationResult> {
     }
   } catch (err) {
     console.warn('Network verification API check failed:', err);
-  }
-
-  // Fallback if probe succeeded
-  if (probeSuccess) {
-    return {
-      verified: true,
-      status: 'verified',
-      ssid: 'Casa_Aurora',
-      reason: 'lan_probe',
-      message: 'Connesso alla rete locale Wi-Fi Casa_Aurora.'
-    };
   }
 
   return {
