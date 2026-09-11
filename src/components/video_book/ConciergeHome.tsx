@@ -383,6 +383,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   useEffect(() => cancelHold, []);
 
+  useEffect(() => {
+    if (!sheet) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheet]);
+
   const renderPhotoCard = (item: GuideTileItem) => (
     <button
       key={item.page}
