@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken } from '../../services/guestPassService';
@@ -44,6 +44,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   const [isPassChecking, setIsPassChecking] = useState(true);
   const [isSmartLockOpen, setIsSmartLockOpen] = useState(false);
   const [bypassExpired, setBypassExpired] = useState(false);
+  const homeScrollPosition = useRef(0);
 
   // Only server-issued, time-limited guest links can open the guide.
   useEffect(() => {
@@ -59,9 +60,14 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
     });
   }, []);
 
-  // Scroll to top when page changes
+  // Preserve the home position while subpages open at their top.
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (currentPage === 'grid_menu') {
+      window.scrollTo({ top: homeScrollPosition.current, behavior: 'auto' });
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [currentPage]);
 
   const handleLanguageSelect = (lang: Language) => {
@@ -71,6 +77,11 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
 
   const handleBackToMenu = () => {
     setCurrentPage('grid_menu');
+  };
+
+  const handleNavigate = (page: WelcomePage) => {
+    homeScrollPosition.current = window.scrollY;
+    setCurrentPage(page);
   };
 
   // Expiration check: If pass is expired and user hasn't chosen to view public guide
@@ -109,7 +120,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
           <ConciergeHome
             language={language}
             onSelectLanguage={setLanguage}
-            onNavigate={(page) => setCurrentPage(page)}
+            onNavigate={handleNavigate}
             pass={pass!}
             onOpenSmartLock={() => setIsSmartLockOpen(true)}
           />

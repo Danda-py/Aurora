@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language } from '../../types';
 import { FlagIcon } from './FlagIcon';
-import { ChevronLeft } from 'lucide-react';
+import { Check, ChevronLeft } from 'lucide-react';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
@@ -15,13 +15,7 @@ interface Props {
 export const PageHeader: React.FC<Props> = ({ title, category, language, onBackToMenu, onSelectLanguage }) => {
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const languagesList: Language[] = ['it', 'en', 'de', 'fr', 'es'];
-
-  // Cycle language when clicking the top right flag
-  const cycleLanguage = () => {
-    const currentIndex = languagesList.indexOf(language);
-    const nextIndex = (currentIndex + 1) % languagesList.length;
-    onSelectLanguage(languagesList[nextIndex]);
-  };
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
 
   return (
     <nav className="sticky top-2 z-40 flex items-center justify-between gap-3 w-full py-1">
@@ -51,7 +45,7 @@ export const PageHeader: React.FC<Props> = ({ title, category, language, onBackT
 
       {/* Apple Circular Frosted Glass Language Trigger */}
       <button
-        onClick={cycleLanguage}
+        onClick={() => setIsLanguageMenuOpen((isOpen) => !isOpen)}
         id="btn-cycle-lang"
         className="w-10 h-10 rounded-full p-1 bg-[#080b10]/80 hover:bg-[#080b10] active:bg-black/90 backdrop-blur-2xl border border-white/15 shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
         title="Cambia lingua"
@@ -61,6 +55,28 @@ export const PageHeader: React.FC<Props> = ({ title, category, language, onBackT
           <FlagIcon language={language} className="w-full h-full object-cover" />
         </div>
       </button>
+
+      {isLanguageMenuOpen && (
+        <div className="subpage-language-menu" role="menu" aria-label="Seleziona lingua">
+          {languagesList.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className={item === language ? 'active' : ''}
+              onClick={() => {
+                onSelectLanguage(item);
+                setIsLanguageMenuOpen(false);
+              }}
+              role="menuitemradio"
+              aria-checked={item === language}
+            >
+              <FlagIcon language={item} className="h-5 w-5" />
+              <span>{item.toUpperCase()}</span>
+              {item === language && <Check className="ml-auto h-3.5 w-3.5" />}
+            </button>
+          ))}
+        </div>
+      )}
 
     </nav>
   );
