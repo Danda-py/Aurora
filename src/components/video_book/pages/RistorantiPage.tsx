@@ -17,7 +17,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
   const res = { ...BOOK_DATA[language].restaurants, ...cmsRestaurants };
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -34,9 +34,9 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
           alt="Valtellina Food & Wine"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-black/40 to-transparent flex items-end p-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-black/40 to-transparent flex items-end p-4">
           <span className="text-white text-sm sm:text-base font-bold flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-neutral-400" />
+            <Sparkles className="w-4 h-4 text-[#62e6bd]" />
             {res.bannerText}
           </span>
         </div>
@@ -47,11 +47,11 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
         {res.recommended.map((r, idx) => (
           <div
             key={idx}
-            className="p-3.5 sm:p-4 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-2"
+            className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-2"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-semibold text-[#62e6bd] uppercase tracking-wider block">
                   CONSIGLIATO • {r.time}
                 </span>
                 <h4 className="font-semibold text-xs sm:text-sm text-white">
@@ -68,15 +68,15 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                   className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-white transition border border-white/10 cursor-pointer"
                   title="Chiama"
                 >
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
                 </a>
                 <a
                   href={r.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-[10px] flex items-center gap-1 border border-white/10 transition cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-[10px] flex items-center gap-1 border border-transparent transition cursor-pointer"
                 >
-                  <MapPin className="w-3 h-3 text-neutral-400" />
+                  <MapPin className="w-3 h-3 text-[#07110d]" />
                   <span>Maps</span>
                 </a>
               </div>
@@ -90,7 +90,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
       </div>
 
       {/* Delivery takeout section */}
-      <div className="p-4 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-2.5">
+      <div className="p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-2.5">
         <div className="flex items-center gap-2">
           <Bike className="w-4 h-4 text-teal-400" />
           <h4 className="font-semibold text-xs sm:text-sm text-white">
@@ -100,14 +100,14 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           {res.deliveries.map((del, i) => (
-            <div key={i} className="p-2.5 rounded-xl bg-[#1b2030] border border-white/[0.06] flex items-center justify-between">
+            <div key={i} className="p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-between">
               <div>
                 <strong className="block text-white text-xs font-semibold">{del.name}</strong>
                 <span className="text-[10px] text-slate-400">{del.type}</span>
               </div>
               <a
                 href={`tel:${del.phone}`}
-                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 font-medium text-[10px] flex items-center gap-1"
+                className="px-2.5 py-1 rounded-lg bg-[#62e6bd]/20 text-[#9ef2d3] hover:bg-[#62e6bd]/30 border border-[#62e6bd]/30 font-medium text-[10px] flex items-center gap-1"
               >
                 <Phone className="w-2.5 h-2.5" />
                 <span>Ordina</span>

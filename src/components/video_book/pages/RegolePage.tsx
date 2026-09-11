@@ -62,7 +62,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
   ];
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -77,7 +77,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
         {rulesList.map((item) => (
           <div
             key={item.num}
-            className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-start gap-3.5"
+            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-start gap-3.5"
           >
             {/* Rule icon pill */}
             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${item.color}`}>
@@ -87,7 +87,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
             {/* Content */}
             <div className="space-y-0.5 flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-slate-400">
+                <span className="text-[10px] font-mono font-bold text-[#62e6bd]">
                   REGOLA #{item.num}
                 </span>
                 <span className="text-xs font-semibold text-white truncate">

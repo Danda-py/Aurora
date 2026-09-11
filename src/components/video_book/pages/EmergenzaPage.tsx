@@ -24,7 +24,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   ];
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -35,7 +35,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
       />
 
       {/* Red Highlight 112 Banner */}
-      <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/30 text-white shadow-sm space-y-2.5">
+      <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-white shadow-sm space-y-2.5 backdrop-blur-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-rose-400" />
@@ -70,7 +70,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {em.items.map((item, idx) => (
           <div
             key={idx}
-            className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-1.5"
+            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-1.5"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-start gap-2.5">

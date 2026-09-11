@@ -17,7 +17,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const bars = { ...BOOK_DATA[language].bars, ...cmsBars };
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -34,9 +34,9 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
           alt="Café & Wine Bar"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-black/40 to-transparent flex items-end p-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-black/40 to-transparent flex items-end p-4">
           <span className="text-white text-sm sm:text-base font-bold flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-neutral-400" />
+            <Sparkles className="w-4 h-4 text-[#62e6bd]" />
             {bars.bannerText}
           </span>
         </div>
@@ -47,11 +47,11 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {bars.recommended.map((b, idx) => (
           <div
             key={idx}
-            className="p-3.5 sm:p-4 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-2"
+            className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-2"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-semibold text-[#62e6bd] uppercase tracking-wider block">
                   {b.time}
                 </span>
                 <h4 className="font-semibold text-xs sm:text-sm text-white">
@@ -68,15 +68,15 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
                   className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-white transition border border-white/10 cursor-pointer"
                   title="Chiama"
                 >
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
                 </a>
                 <a
                   href={b.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-[10px] flex items-center gap-1 border border-white/10 transition cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] font-bold text-[10px] flex items-center gap-1 border border-transparent transition cursor-pointer"
                 >
-                  <MapPin className="w-3 h-3 text-neutral-400" />
+                  <MapPin className="w-3 h-3 text-[#07110d]" />
                   <span>Maps</span>
                 </a>
               </div>
@@ -90,9 +90,9 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
       </div>
 
       {/* In-house coffee note */}
-      <div className="p-4 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3.5">
+      <div className="p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3.5">
         <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/10 text-neutral-200 flex items-center justify-center shrink-0">
-          <Coffee className="w-5 h-5" />
+          <Coffee className="w-5 h-5 text-[#62e6bd]" />
         </div>
         <div>
           <strong className="block text-xs font-semibold text-white">{bars.coffeeTitle}</strong>

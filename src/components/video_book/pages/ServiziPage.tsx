@@ -17,7 +17,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const am = { ...BOOK_DATA[language].amenities, ...cmsAmenities };
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -32,9 +32,9 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {am.items.map((item, idx) => (
           <div
             key={idx}
-            className="p-3 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3"
+            className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#62e6bd] shrink-0" />
             <div className="min-w-0">
               <strong className="block text-xs font-semibold text-white tracking-wide">
                 {item.title}
@@ -48,8 +48,8 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
       </div>
 
       {/* Safety / energy notice */}
-      <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-neutral-300 text-xs flex items-start gap-2.5">
-        <Info className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+      <div className="p-3.5 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-neutral-300 text-xs flex items-start gap-2.5">
+        <Info className="w-4 h-4 text-[#62e6bd] shrink-0 mt-0.5" />
         <span className="leading-relaxed">{am.notice}</span>
       </div>
 

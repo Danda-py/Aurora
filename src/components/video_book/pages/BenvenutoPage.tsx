@@ -20,7 +20,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const guestFullName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : null;
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -37,10 +37,10 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           alt="Aurora in Valtellina Living"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-black/40 to-transparent flex items-end p-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-black/40 to-transparent flex items-end p-4">
           <div className="space-y-1">
-            <span className="text-neutral-300 text-[11px] font-semibold tracking-wider flex items-center gap-1.5 uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-neutral-300" /> {APARTMENT_INFO.city} • Valtellina
+            <span className="text-[#9ef2d3] text-[11px] font-semibold tracking-wider flex items-center gap-1.5 uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-[#62e6bd]" /> {APARTMENT_INFO.city} • Valtellina
             </span>
             <h3 className="text-white text-base sm:text-lg font-bold leading-tight">
               {w.greeting}
@@ -50,14 +50,14 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
       </div>
 
       {/* Host Welcome Note */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-3">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-3">
         {guestFullName ? (
           <div className="flex items-center justify-between">
             <h4 className="text-xl font-bold text-white">
               Benvenuto, {guestFullName}
             </h4>
-            <span className="text-[11px] font-medium text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-              <Heart className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+            <span className="text-[11px] font-medium text-[#9ef2d3] bg-[#62e6bd]/20 px-2.5 py-0.5 rounded-full border border-[#62e6bd]/30 flex items-center gap-1">
+              <Heart className="w-3 h-3 text-[#62e6bd] fill-[#62e6bd]" />
               <span>Soggiorno Attivo</span>
             </span>
           </div>
@@ -78,7 +78,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         </h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3">
+          <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-teal-500/15 text-teal-300 flex items-center justify-center shrink-0 border border-teal-500/20">
               <Tv className="w-5 h-5" />
             </div>
@@ -88,7 +88,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3">
+          <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/[0.06] text-white flex items-center justify-center shrink-0 border border-white/10">
               <Bed className="w-5 h-5" />
             </div>
@@ -98,8 +98,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-500/20">
+          <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-[#62e6bd] flex items-center justify-center shrink-0 border border-emerald-500/20">
               <Utensils className="w-5 h-5" />
             </div>
             <div>
@@ -108,7 +108,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm flex items-center gap-3">
+          <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-300 flex items-center justify-center shrink-0 border border-blue-500/20">
               <Mountain className="w-5 h-5" />
             </div>

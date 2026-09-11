@@ -1,5 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUpRight, BedDouble, Check, CarFront, ChevronRight, Clock3, Coffee, Copy, ExternalLink, Home, MapPin, MessageCircle, Navigation, Utensils, Wifi, X, ShieldAlert, Train, Wrench, LogOut, Phone, ShoppingBag } from 'lucide-react';
+import { 
+  ArrowUpRight, 
+  BedDouble, 
+  Check, 
+  ChevronRight, 
+  Clock3, 
+  Copy, 
+  Home, 
+  MapPin, 
+  MessageCircle, 
+  Navigation, 
+  Utensils, 
+  Wifi, 
+  X, 
+  ShieldAlert, 
+  Train, 
+  Wrench, 
+  LogOut, 
+  Phone, 
+  ShoppingBag,
+  KeyRound,
+  Info
+} from 'lucide-react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
@@ -12,54 +34,253 @@ interface Props {
   onOpenSmartLock: () => void;
 }
 
-type Sheet = 'wifi' | 'schedule' | 'luggage' | 'map' | 'food' | null;
+type Sheet = 'wifi' | 'schedule' | 'luggage' | null;
 
 const languages: { id: Language; label: string }[] = [
   { id: 'it', label: 'Italiano' },
   { id: 'en', label: 'English' },
   { id: 'de', label: 'Deutsch' },
-  { id: 'fr', label: 'Francais' },
-  { id: 'es', label: 'Espanol' }
+  { id: 'fr', label: 'Français' },
+  { id: 'es', label: 'Español' }
 ];
 
 const localStories = [
-  { title: 'Sentiero Valtellina', meta: '7 min a piedi', image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Centro storico', meta: '9 min a piedi', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Costiera dei Cech', meta: '18 min in auto', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80' }
+  { 
+    title: 'Sentiero Valtellina', 
+    meta: '7 min a piedi', 
+    image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80' 
+  },
+  { 
+    title: 'Centro storico', 
+    meta: '9 min a piedi', 
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80' 
+  },
+  { 
+    title: 'Costiera dei Cèch', 
+    meta: '18 min in auto', 
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80' 
+  }
 ];
 
-const mapFilters = [
-  { id: 'all', label: 'Tutto' },
-  { id: 'coffee', label: 'Colazione' },
-  { id: 'food', label: 'Cena' },
-  { id: 'pharmacy', label: 'Farmacie' },
-  { id: 'shop', label: 'Spesa' }
-];
+interface GuideTileItem {
+  page: WelcomePage;
+  label: string;
+  tag: string;
+  desc: string;
+  icon: React.ReactNode;
+  bgImage?: string;
+}
 
-const nearbyPlaces = [
-  { type: 'coffee', name: 'Bar storico di Morbegno', meta: 'Colazione - 5 min a piedi', benefit: 'Colazione inclusa', url: 'https://maps.google.com/?q=Morbegno+bar' },
-  { type: 'food', name: 'Crotto da Gusto', meta: 'Cena valtellinese - 8 min', benefit: '10% mostrando Aurora', url: 'https://maps.google.com/?q=ristorante+Morbegno' },
-  { type: 'pharmacy', name: 'Farmacia di turno', meta: 'Essenziali - 6 min a piedi', benefit: '', url: 'https://maps.google.com/?q=farmacia+Morbegno' }
-];
+const getLocalizedGuideSections = (lang: Language): {
+  houseEssentials: { title: string; subtitle: string; items: GuideTileItem[] };
+  exploreValtellina: { title: string; subtitle: string; items: GuideTileItem[] };
+  supportSecurity: { title: string; subtitle: string; items: GuideTileItem[] };
+  departure: { title: string; subtitle: string; items: GuideTileItem[] };
+} => {
+  const isIt = lang === 'it';
+  const isEn = lang === 'en';
+  const isDe = lang === 'de';
+  const isFr = lang === 'fr';
 
-const guideItems: { page: WelcomePage; label: string; icon: React.ReactNode }[] = [
-  { page: 'emergenza', label: 'Emergenze', icon: <ShieldAlert /> },
-  { page: 'posizione', label: 'Come arrivare', icon: <MapPin /> },
-  { page: 'servizi', label: 'Servizi casa', icon: <Wrench /> },
-  { page: 'regole', label: 'Regole casa', icon: <ShieldAlert /> },
-  { page: 'check_out', label: 'Checklist check-out', icon: <LogOut /> },
-  { page: 'trasporti', label: 'Come muoversi', icon: <Train /> },
-  { page: 'ristoranti', label: 'Dove mangiare', icon: <Utensils /> },
-  { page: 'contatti', label: 'Contatta Nino', icon: <Phone /> },
-  { page: 'shopping', label: 'Spesa e botteghe', icon: <ShoppingBag /> }
-];
+  return {
+    houseEssentials: {
+      title: isIt ? 'Guida & Arrivo' : isEn ? 'Arrival & Home Guide' : isDe ? 'Anreise & Hausführer' : isFr ? 'Arrivée & Guide' : 'Llegada y Guía',
+      subtitle: isIt ? 'Tutto per iniziare il soggiorno' : isEn ? 'Everything to start your stay' : isDe ? 'Alles für den Start' : isFr ? 'Tout pour commencer' : 'Todo para comenzar',
+      items: [
+        {
+          page: 'posizione',
+          label: isIt ? 'Come arrivare' : isEn ? 'How to Arrive' : isDe ? 'Anreise' : isFr ? 'Comment arriver' : 'Cómo llegar',
+          tag: isIt ? 'Priorità Arrivo' : isEn ? 'Arrival Priority' : isDe ? 'Anreise-Info' : isFr ? 'Priorité Arrivée' : 'Prioridad Llegada',
+          desc: isIt ? 'Indirizzo esatto, navigatore GPS, parcheggio e treni' : isEn ? 'Exact address, GPS navigation, parking & trains' : isDe ? 'Genaue Adresse, GPS, Parkplatz & Züge' : isFr ? 'Adresse exacte, GPS, parking et trains' : 'Dirección exacta, GPS, parking y trenes',
+          icon: <MapPin className="h-5 w-5" />,
+          bgImage: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80'
+        },
+        {
+          page: 'check_in',
+          label: isIt ? 'Check-in & Smart Lock' : isEn ? 'Check-in & Smart Lock' : isDe ? 'Check-in & Smart Lock' : isFr ? 'Check-in & Smart Lock' : 'Check-in & Smart Lock',
+          tag: isIt ? 'Accesso Casa' : isEn ? 'Home Access' : isDe ? 'Hauszugang' : isFr ? 'Accès Maison' : 'Acceso Casa',
+          desc: isIt ? 'Codice apriporta, keybox e ingresso autonomo' : isEn ? 'Door opener, keybox code & self check-in' : isDe ? 'Türöffner, Keybox & Self-Check-in' : isFr ? 'Ouvre-porte, boîte à clés & arrivée autonome' : 'Abrepuertas, keybox y llegada autónoma',
+          icon: <KeyRound className="h-5 w-5" />,
+          bgImage: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=900&q=80'
+        },
+        {
+          page: 'servizi',
+          label: isIt ? 'Servizi casa & Comfort' : isEn ? 'Home Amenities' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Équipements maison' : 'Servicios de la casa',
+          tag: isIt ? 'Dotazioni' : isEn ? 'Amenities' : isDe ? 'Ausstattung' : isFr ? 'Équipements' : 'Equipamiento',
+          desc: isIt ? 'Riscaldamento, elettrodomestici, cucina e comfort' : isEn ? 'Heating, appliances, kitchen and comforts' : isDe ? 'Heizung, Geräte, Küche & Komfort' : isFr ? 'Chauffage, appareils, cuisine et confort' : 'Calefacción, electrodomésticos y cocina',
+          icon: <Wrench className="h-5 w-5" />
+        },
+        {
+          page: 'regole',
+          label: isIt ? 'Regole della casa' : isEn ? 'House Rules' : isDe ? 'Hausregeln' : isFr ? 'Règles de la maison' : 'Normas de la casa',
+          tag: isIt ? 'Orari & Quiete' : isEn ? 'Hours & Quiet' : isDe ? 'Ruhezeiten' : isFr ? 'Horaires & Calme' : 'Horarios y Silencio',
+          desc: isIt ? 'Orari di rispetto, rifiuti e divieto di fumo' : isEn ? 'Quiet hours, waste sorting & no smoking' : isDe ? 'Ruhezeiten, Mülltrennung & Rauchverbot' : isFr ? 'Heures de calme, tri des déchets & non fumeur' : 'Horas de silencio y normas',
+          icon: <ShieldAlert className="h-5 w-5" />
+        }
+      ]
+    },
+    exploreValtellina: {
+      title: isIt ? 'Vivere la Valtellina' : isEn ? 'Explore Valtellina' : isDe ? 'Valtellina erleben' : isFr ? 'Explorer la Valteline' : 'Vivir la Valtelina',
+      subtitle: isIt ? 'Gusto, tradizioni e trasporti locali' : isEn ? 'Taste, traditions and local transport' : isDe ? 'Genuss, Tradition & Mobilität' : isFr ? 'Saveurs, traditions et transports' : 'Sabores, tradiciones y transporte',
+      items: [
+        {
+          page: 'ristoranti',
+          label: isIt ? 'Dove mangiare & Crotto' : isEn ? 'Where to Eat & Crotti' : isDe ? 'Restaurants & Crotti' : isFr ? 'Où manger & Crotti' : 'Dónde comer y Crotti',
+          tag: isIt ? 'Enogastronomia' : isEn ? 'Food & Wine' : isDe ? 'Kulinarik' : isFr ? 'Gastronomie' : 'Gastronomía',
+          desc: isIt ? 'Crotto tipico, pizzoccheri, ristoranti e asporto' : isEn ? 'Local crotti, traditional food & delivery' : isDe ? 'Traditionelle Crotti, regionale Küche' : isFr ? 'Crotti typiques, spécialités locales' : 'Crotti típicos y restaurantes',
+          icon: <Utensils className="h-5 w-5" />,
+          bgImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80'
+        },
+        {
+          page: 'shopping',
+          label: isIt ? 'Spesa e botteghe' : isEn ? 'Shopping & Local Food' : isDe ? 'Einkaufen & Botteghe' : isFr ? 'Courses & Boutiques' : 'Compras y tiendas',
+          tag: isIt ? 'Prodotti Tipici' : isEn ? 'Local Products' : isDe ? 'Lokale Produkte' : isFr ? 'Produits locaux' : 'Productos locales',
+          desc: isIt ? 'Botteghe storiche del Bitto, alimentari e market' : isEn ? 'Historic Bitto cheese shops & supermarkets' : isDe ? 'Historische Käseläden & Supermärkte' : isFr ? 'Boutiques de fromage Bitto & supermarchés' : 'Tiendas de queso Bitto y mercados',
+          icon: <ShoppingBag className="h-5 w-5" />
+        },
+        {
+          page: 'trasporti',
+          label: isIt ? 'Come muoversi' : isEn ? 'Getting Around' : isDe ? 'Mobilität & Verkehr' : isFr ? 'Se déplacer' : 'Cómo moverse',
+          tag: isIt ? 'Treni & Bus' : isEn ? 'Trains & Buses' : isDe ? 'Bahn & Bus' : isFr ? 'Trains & Bus' : 'Trenes y autobuses',
+          desc: isIt ? 'Stazione FS Morbegno, orari bus e taxi' : isEn ? 'Morbegno train station, bus lines & taxis' : isDe ? 'Bahnhof Morbegno, Buslinien & Taxi' : isFr ? 'Gare de Morbegno, bus et taxis' : 'Estación de tren y autobuses',
+          icon: <Train className="h-5 w-5" />
+        },
+        {
+          page: 'informazioni',
+          label: isIt ? 'Informazioni e servizi' : isEn ? 'Useful Information' : isDe ? 'Nützliche Infos' : isFr ? 'Informations utiles' : 'Información útil',
+          tag: isIt ? 'Info Pratiche' : isEn ? 'Practical Info' : isDe ? 'Praktische Infos' : isFr ? 'Infos pratiques' : 'Información práctica',
+          desc: isIt ? 'Farmacie, banche, raccolta rifiuti e CIR/CIN' : isEn ? 'Pharmacies, ATMs, recycling and legal CIR' : isDe ? 'Apotheken, Geldautomaten & Müllabfuhr' : isFr ? 'Pharmacies, banques, tri et codes légaux' : 'Farmacias, cajeros y recogida de basuras',
+          icon: <Info className="h-5 w-5" />
+        }
+      ]
+    },
+    supportSecurity: {
+      title: isIt ? 'Supporto & Sicurezza' : isEn ? 'Support & Safety' : isDe ? 'Support & Sicherheit' : isFr ? 'Support & Sécurité' : 'Soporte y Seguridad',
+      subtitle: isIt ? 'Assistenza sempre a portata di mano' : isEn ? 'Assistance always within reach' : isDe ? 'Hilfe jederzeit griffbereit' : isFr ? 'Une assistance toujours à portée' : 'Asistencia siempre a tu alcance',
+      items: [
+        {
+          page: 'contatti',
+          label: isIt ? 'Contatta Nino' : isEn ? 'Contact Nino (Host)' : isDe ? 'Nino kontaktieren' : isFr ? 'Contacter Nino' : 'Contactar a Nino',
+          tag: isIt ? 'Host Dedicato' : isEn ? 'Dedicated Host' : isDe ? 'Ihr Gastgeber' : isFr ? 'Hôte dédié' : 'Anfitrión dedicado',
+          desc: isIt ? 'Assistenza diretta via WhatsApp e telefonica' : isEn ? 'Direct WhatsApp chat and phone assistance' : isDe ? 'Direkter WhatsApp- & Telefonkontakt' : isFr ? 'WhatsApp direct et assistance téléphonique' : 'WhatsApp directo y asistencia telefónica',
+          icon: <Phone className="h-5 w-5" />
+        },
+        {
+          page: 'emergenza',
+          label: isIt ? 'Emergenze & Numeri utili' : isEn ? 'Emergencies & Numbers' : isDe ? 'Notfall & Notruf' : isFr ? 'Urgences & Numéros' : 'Emergencias y números',
+          tag: isIt ? 'Soccorso 24/7' : isEn ? '24/7 Emergency' : isDe ? '24/7 Notdienst' : isFr ? 'Urgence 24/7' : 'Urgencias 24/7',
+          desc: isIt ? '112 Numero Unico, guardia medica e pronto soccorso' : isEn ? '112 European emergency, medical guard & hospital' : isDe ? '112 Euro-Notruf, Notarzt & Krankenhaus' : isFr ? '112 Numéro d’urgence, médecin de garde & hôpital' : '112 Número de emergencias y médicos',
+          icon: <ShieldAlert className="h-5 w-5" />,
+          bgImage: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80'
+        }
+      ]
+    },
+    departure: {
+      title: isIt ? 'Partenza & Check-out' : isEn ? 'Departure & Check-out' : isDe ? 'Abreise & Check-out' : isFr ? 'Départ & Check-out' : 'Salida y Check-out',
+      subtitle: isIt ? 'Istruzioni per la conclusione del soggiorno' : isEn ? 'Instructions for concluding your stay' : isDe ? 'Hinweise zum Ende Ihres Aufenthalts' : isFr ? 'Instructions pour la fin de séjour' : 'Instrucciones para finalizar la estancia',
+      items: [
+        {
+          page: 'check_out',
+          label: isIt ? 'Checklist check-out' : isEn ? 'Check-out Checklist' : isDe ? 'Check-out Checkliste' : isFr ? 'Check-list de départ' : 'Checklist de check-out',
+          tag: isIt ? `Entro le ${APARTMENT_INFO.checkOutLimit}` : isEn ? `By ${APARTMENT_INFO.checkOutLimit}` : isDe ? `Bis ${APARTMENT_INFO.checkOutLimit}` : isFr ? `Avant ${APARTMENT_INFO.checkOutLimit}` : `Antes de las ${APARTMENT_INFO.checkOutLimit}`,
+          desc: isIt ? 'Riconsegna chiavi, orari e recensione del soggiorno' : isEn ? 'Key drop-off, hours and leaving a review' : isDe ? 'Schlüsselrückgabe, Zeiten & Bewertung' : isFr ? 'Remise des clés, horaires et avis' : 'Entrega de llaves y reseña del alojamiento',
+          icon: <LogOut className="h-5 w-5" />
+        }
+      ]
+    }
+  };
+};
 
-const uiCopy: Record<Language, { home: string; subtitle: string; quick: string; wifi: string; host: string; rules: string; bags: string; nearby: string; map: string; experiences: string; all: string; chooseLanguage: string }> = {
-  it: { home: 'Fai come fossi a casa.', subtitle: 'Tutto il soggiorno, in un solo gesto. Apri, esplora, rilassati.', quick: 'Azioni rapide', wifi: 'Wi-Fi rapido', host: 'Contatta host', rules: 'Orari & regole', bags: 'Bagagli', nearby: 'Intorno a te', map: 'Apri mappa', experiences: 'Esperienze vicine', all: 'Vedi tutto', chooseLanguage: 'Scegli la tua lingua' },
-  en: { home: 'Feel at home.', subtitle: 'Your whole stay, in one gesture. Open, explore, relax.', quick: 'Quick actions', wifi: 'Quick Wi-Fi', host: 'Contact host', rules: 'Hours & rules', bags: 'Luggage', nearby: 'Around you', map: 'Open map', experiences: 'Nearby experiences', all: 'See all', chooseLanguage: 'Choose your language' },
-  de: { home: 'Fühl dich wie zu Hause.', subtitle: 'Der ganze Aufenthalt in einer Geste. Öffnen, entdecken, entspannen.', quick: 'Schnellzugriff', wifi: 'WLAN', host: 'Gastgeber kontaktieren', rules: 'Zeiten & Regeln', bags: 'Gepäck', nearby: 'In deiner Nähe', map: 'Karte öffnen', experiences: 'Erlebnisse in der Nähe', all: 'Alle ansehen', chooseLanguage: 'Sprache wählen' },
-  fr: { home: 'Comme chez vous.', subtitle: 'Tout le séjour en un geste. Ouvrez, explorez, profitez.', quick: 'Accès rapides', wifi: 'Wi-Fi rapide', host: "Contacter l'hôte", rules: 'Horaires & règles', bags: 'Bagages', nearby: 'Autour de vous', map: 'Ouvrir la carte', experiences: 'Expériences proches', all: 'Tout voir', chooseLanguage: 'Choisir la langue' },
-  es: { home: 'Siéntete como en casa.', subtitle: 'Toda tu estancia en un gesto. Abre, descubre y relájate.', quick: 'Acciones rápidas', wifi: 'Wi-Fi rápido', host: 'Contactar al anfitrión', rules: 'Horarios y normas', bags: 'Equipaje', nearby: 'A tu alrededor', map: 'Abrir mapa', experiences: 'Experiencias cercanas', all: 'Ver todo', chooseLanguage: 'Elegir idioma' }
+const uiCopy: Record<Language, { 
+  home: string; 
+  subtitle: string; 
+  quick: string; 
+  wifi: string; 
+  host: string; 
+  rules: string; 
+  location: string;
+  bags: string; 
+  experiences: string; 
+  all: string; 
+  chooseLanguage: string;
+  allAurora: string;
+  allAuroraSubtitle: string;
+}> = {
+  it: { 
+    home: 'Fai come fossi a casa.', 
+    subtitle: 'Tutto il soggiorno, in un solo gesto. Apri, esplora, rilassati.', 
+    quick: 'Azioni rapide', 
+    wifi: 'Wi-Fi rapido', 
+    host: 'Contatta Nino', 
+    location: 'Come arrivare',
+    rules: 'Orari & regole', 
+    bags: 'Bagagli', 
+    experiences: 'Esperienze vicine', 
+    all: 'Vedi tutto', 
+    chooseLanguage: 'Scegli la tua lingua',
+    allAurora: 'TUTTO AURORA',
+    allAuroraSubtitle: 'La tua guida completa'
+  },
+  en: { 
+    home: 'Feel at home.', 
+    subtitle: 'Your whole stay, in one gesture. Open, explore, relax.', 
+    quick: 'Quick actions', 
+    wifi: 'Quick Wi-Fi', 
+    host: 'Contact Nino', 
+    location: 'How to arrive',
+    rules: 'Hours & rules', 
+    bags: 'Luggage', 
+    experiences: 'Nearby experiences', 
+    all: 'See all', 
+    chooseLanguage: 'Choose your language',
+    allAurora: 'ALL OF AURORA',
+    allAuroraSubtitle: 'Your complete guide'
+  },
+  de: { 
+    home: 'Fühl dich wie zu Hause.', 
+    subtitle: 'Der ganze Aufenthalt in einer Geste. Öffnen, entdecken, entspannen.', 
+    quick: 'Schnellzugriff', 
+    wifi: 'WLAN', 
+    host: 'Nino kontaktieren', 
+    location: 'Anreise',
+    rules: 'Zeiten & Regeln', 
+    bags: 'Gepäck', 
+    experiences: 'Erlebnisse in der Nähe', 
+    all: 'Alle ansehen', 
+    chooseLanguage: 'Sprache wählen',
+    allAurora: 'ALLES ÜBER AURORA',
+    allAuroraSubtitle: 'Ihr kompletter Reiseführer'
+  },
+  fr: { 
+    home: 'Comme chez vous.', 
+    subtitle: 'Tout le séjour en un geste. Ouvrez, explorez, profitez.', 
+    quick: 'Accès rapides', 
+    wifi: 'Wi-Fi rapide', 
+    host: 'Contacter Nino', 
+    location: 'Comment arriver',
+    rules: 'Horaires & règles', 
+    bags: 'Bagages', 
+    experiences: 'Expériences proches', 
+    all: 'Tout voir', 
+    chooseLanguage: 'Choisir la langue',
+    allAurora: 'TOUT SUR AURORA',
+    allAuroraSubtitle: 'Votre guide complet'
+  },
+  es: { 
+    home: 'Siéntete como en casa.', 
+    subtitle: 'Toda tu estancia en un gesto. Abre, descubre y relájate.', 
+    quick: 'Acciones rápidas', 
+    wifi: 'Wi-Fi rápido', 
+    host: 'Contactar a Nino', 
+    location: 'Cómo llegar',
+    rules: 'Horarios y normas', 
+    bags: 'Equipaje', 
+    experiences: 'Experiencias cercanas', 
+    all: 'Ver todo', 
+    chooseLanguage: 'Elegir idioma',
+    allAurora: 'TODO SOBRE AURORA',
+    allAuroraSubtitle: 'Tu guía completa'
+  }
 };
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
@@ -67,7 +288,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [languageOpen, setLanguageOpen] = useState(false);
   const [wifiCopied, setWifiCopied] = useState(false);
   const [showWifiQr, setShowWifiQr] = useState(false);
-  const [mapFilter, setMapFilter] = useState('all');
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [doorMessage, setDoorMessage] = useState('');
@@ -75,7 +295,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartedAt = React.useRef(0);
   const firstName = pass.guestName || 'Ospite';
-  const copy = uiCopy[language];
+  const copy = uiCopy[language] || uiCopy.it;
+  const guideSections = getLocalizedGuideSections(language);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
   const isCheckoutDay = new Date().toISOString().slice(0, 10) === pass.checkOutDate;
 
@@ -90,11 +311,15 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   }, []);
 
   const copyWifi = async () => {
-    await navigator.clipboard?.writeText(APARTMENT_INFO.wifiPassword);
-    setWifiCopied(true);
-    setShowWifiQr(false);
-    setSheet('wifi');
-    window.setTimeout(() => setWifiCopied(false), 2200);
+    try {
+      await navigator.clipboard?.writeText(APARTMENT_INFO.wifiPassword);
+      setWifiCopied(true);
+      setShowWifiQr(false);
+      setSheet('wifi');
+      window.setTimeout(() => setWifiCopied(false), 2200);
+    } catch {
+      setSheet('wifi');
+    }
   };
 
   const cancelHold = () => {
@@ -107,7 +332,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const runDoorOpen = async () => {
     setDoorState('opening');
     setDoorMessage('Invio comando a Home Assistant...');
-    if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     try {
       const res = await fetch('/api/hass/unlock', {
         method: 'POST',
@@ -121,7 +346,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        if ('vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         setDoorState('success');
         setDoorMessage(data.message || 'Portone sbloccato. Spingi la porta per entrare.');
       } else {
@@ -153,25 +378,117 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   useEffect(() => cancelHold, []);
 
+  const renderElongatedTile = (item: GuideTileItem) => (
+    <button
+      key={item.page}
+      onClick={() => onNavigate(item.page)}
+      className="guide-hero-tile group"
+      aria-label={item.label}
+    >
+      {item.bgImage && (
+        <>
+          <div 
+            className="guide-hero-tile-bg" 
+            style={{ backgroundImage: `url(${item.bgImage})` }} 
+          />
+          <div className="guide-hero-tile-overlay" />
+        </>
+      )}
+      
+      <div className="guide-hero-tile-content">
+        <div className="guide-hero-tile-icon">
+          {item.icon}
+        </div>
+        
+        <div className="guide-hero-tile-texts">
+          <span className="guide-hero-tile-tag">
+            {item.tag}
+          </span>
+          <h3 className="guide-hero-tile-title">
+            {item.label}
+          </h3>
+          <p className="guide-hero-tile-desc">
+            {item.desc}
+          </p>
+        </div>
+      </div>
+
+      <div className="guide-hero-tile-action">
+        <ChevronRight className="h-4 w-4" />
+      </div>
+    </button>
+  );
+
   return (
     <div className={`aurora-concierge min-h-screen text-white ${isNight ? 'aurora-night' : ''}`}>
-      <button className="aurora-floating-language" onClick={() => setLanguageOpen(true)} aria-label="Cambia lingua">
+      
+      {/* Apple Floating Language Trigger */}
+      <button 
+        className="aurora-floating-language" 
+        onClick={() => setLanguageOpen(true)} 
+        aria-label="Cambia lingua"
+      >
         <FlagIcon language={language} className="h-full w-full object-cover" />
       </button>
 
-      <main className="aurora-shell space-y-5 pb-12 pt-6">
+      <main className="aurora-shell space-y-6 pb-16 pt-6">
+        
+        {/* Apple Brand Space & Guest Greeting */}
         <section className="aurora-brand-space" aria-label="Aurora in Valtellina">
-          <div className="aurora-house-logo"><Home className="h-5 w-5" /></div>
-          <div><p className="aurora-eyebrow">Aurora in Valtellina</p><p className="aurora-brand-name">{firstName}, benvenuto.</p></div>
+          <div className="aurora-house-logo">
+            <Home className="h-5 w-5 text-[#07110d]" />
+          </div>
+          <div>
+            <p className="aurora-eyebrow">Aurora in Valtellina</p>
+            <h1 className="aurora-brand-name">{firstName}, benvenuto.</h1>
+          </div>
         </section>
 
-        {isCheckoutDay && <button className="stay-nudge" onClick={() => setSheet('luggage')}><Clock3 className="h-4 w-4 text-amber-300" /><span><strong>Check-out entro le {APARTMENT_INFO.checkOutLimit}.</strong><small>Vuoi lasciare i bagagli o prenotare un taxi?</small></span><ChevronRight className="ml-auto h-4 w-4" /></button>}
+        {/* Departure Reminder Nudge (if today is checkout) */}
+        {isCheckoutDay && (
+          <button className="stay-nudge" onClick={() => setSheet('luggage')}>
+            <Clock3 className="h-4 w-4 text-amber-300 shrink-0" />
+            <span>
+              <strong>Check-out entro le {APARTMENT_INFO.checkOutLimit}.</strong>
+              <small>Vuoi lasciare i bagagli o richiedere supporto?</small>
+            </span>
+            <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-amber-200" />
+          </button>
+        )}
 
-        <section className="glass-pass" style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}>
+        {/* Apple Wallet-Style 3D Glass Pass */}
+        <section 
+          className="glass-pass" 
+          style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}
+        >
           <div className="glass-pass-shine" />
           <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-7">
-            <div className="flex items-start justify-between gap-4"><div><p className="aurora-eyebrow text-white/60">AURORA IN VALTELLINA</p><p className="mt-1 text-lg font-semibold tracking-tight">Guest Glass Pass</p></div><div className="glass-chip"><BedDouble className="h-4 w-4" /><span>APT. AURORA</span></div></div>
-            <div className="mt-10 grid grid-cols-[1fr_auto] items-end gap-4"><div><p className="text-2xl font-semibold tracking-tight sm:text-3xl">{pass.guestName} {pass.guestSurname}</p><div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/60"><span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate}</strong></span><span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate}</strong></span></div></div><div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/10 p-2 shadow-lg"><div className="h-full w-full rounded-xl border border-dashed border-white/50" /></div></div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="aurora-eyebrow text-white/60">AURORA IN VALTELLINA</p>
+                <p className="mt-1 text-lg font-semibold tracking-tight">Guest Glass Pass</p>
+              </div>
+              <div className="glass-chip">
+                <BedDouble className="h-4 w-4 text-[#62e6bd]" />
+                <span>APT. AURORA</span>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-[1fr_auto] items-end gap-4">
+              <div>
+                <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {pass.guestName} {pass.guestSurname}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/60">
+                  <span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate}</strong></span>
+                  <span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate}</strong></span>
+                </div>
+              </div>
+              <div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/10 p-2 shadow-lg flex items-center justify-center backdrop-blur-md">
+                <KeyRound className="h-7 w-7 text-[#62e6bd]" />
+              </div>
+            </div>
+
             <button
               className={`glass-key-button mt-5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
               onPointerDown={startHold}
@@ -187,32 +504,228 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </span>
               <ArrowUpRight className="h-4 w-4 relative z-10" />
             </button>
-            {doorMessage && <p className={`mt-2 text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>{doorMessage}</p>}
+            {doorMessage && (
+              <p className={`mt-2 text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
+                {doorMessage}
+              </p>
+            )}
           </div>
         </section>
 
-        <section><div className="mb-3 flex items-center justify-between"><div><p className="aurora-eyebrow">A portata di mano</p><h2>{copy.quick}</h2></div><span className="status-dot">Soggiorno attivo</span></div><div className="quick-actions-grid"><button onClick={copyWifi}><Wifi /><span>{copy.wifi}</span><small>{wifiCopied ? 'Password copiata!' : 'Copia password'}</small></button><a href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} target="_blank" rel="noreferrer"><MessageCircle /><span>{copy.host}</span><small>WhatsApp diretto</small></a><button onClick={() => setSheet('schedule')}><Clock3 /><span>{copy.rules}</span><small>Check-out {APARTMENT_INFO.checkOutLimit}</small></button><button onClick={() => setSheet('luggage')}><CarFront /><span>{copy.bags}</span><small>Prima o dopo il soggiorno</small></button></div></section>
+        {/* Apple Quick Action Controls */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="aurora-eyebrow">A portata di mano</p>
+              <h2>{copy.quick}</h2>
+            </div>
+            <span className="status-dot flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#62e6bd] animate-pulse" />
+              Soggiorno attivo
+            </span>
+          </div>
+          
+          <div className="quick-actions-grid">
+            <button onClick={copyWifi}>
+              <Wifi />
+              <span>{copy.wifi}</span>
+              <small>{wifiCopied ? 'Password copiata!' : 'Copia password'}</small>
+            </button>
+            
+            <a 
+              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} 
+              target="_blank" 
+              rel="noreferrer"
+            >
+              <MessageCircle />
+              <span>{copy.host}</span>
+              <small>WhatsApp diretto</small>
+            </a>
+            
+            <button onClick={() => onNavigate('posizione')}>
+              <MapPin />
+              <span>{copy.location}</span>
+              <small>GPS & indicazioni</small>
+            </button>
+            
+            <button onClick={() => setSheet('schedule')}>
+              <Clock3 />
+              <span>{copy.rules}</span>
+              <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
+            </button>
+          </div>
+        </section>
 
-        <section className="space-y-3"><div className="flex items-end justify-between"><div><p className="aurora-eyebrow">Scopri la zona</p><h2>{copy.nearby}</h2></div><button onClick={() => setSheet('map')} className="text-xs font-semibold text-emerald-300">{copy.map} <ChevronRight className="inline h-3.5 w-3.5" /></button></div><button onClick={() => setSheet('map')} className="map-card"><div className="map-grid" /><span className="map-pin pin-one"><MapPin /></span><span className="map-pin pin-two"><Coffee /></span><span className="map-pin pin-three"><Utensils /></span><div className="map-label"><MapPin className="h-4 w-4 text-emerald-300" /><span>Morbegno, Valtellina</span><ArrowUpRight className="ml-auto h-4 w-4" /></div></button><div className="map-filter-row">{mapFilters.map((filter) => <button key={filter.id} className={mapFilter === filter.id ? 'active' : ''} onClick={() => setMapFilter(filter.id)}>{filter.label}</button>)}</div><div className="place-list">{nearbyPlaces.filter((place) => mapFilter === 'all' || place.type === mapFilter).map((place) => <article key={place.name} className="place-card"><div><strong>{place.name}</strong><small>{place.meta}</small>{place.benefit && <em>{place.benefit}</em>}</div><a href={place.url} target="_blank" rel="noreferrer" aria-label={`Apri ${place.name} nelle mappe`}><Navigation className="h-4 w-4" /></a></article>)}</div></section>
+        {/* PRIORITY 1: Arrivo e Casa (Essential Arrival & House Guide) in Elongated Tiles */}
+        <section className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">{copy.allAurora}</p>
+            <h2>{guideSections.houseEssentials.title}</h2>
+            <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
+          </div>
+          <div className="guide-tiles-col">
+            {guideSections.houseEssentials.items.map(renderElongatedTile)}
+          </div>
+        </section>
 
-        <section className="space-y-3"><div className="flex items-end justify-between"><div><p className="aurora-eyebrow">Idee per oggi</p><h2>{copy.experiences}</h2></div><button onClick={() => onNavigate('attivita')} className="text-xs font-semibold text-emerald-300">{copy.all} <ChevronRight className="inline h-3.5 w-3.5" /></button></div><div className="story-scroller">{localStories.map((story) => <button key={story.title} onClick={() => onNavigate('attivita')} className="story-card"><img src={story.image} alt="" /><span><strong>{story.title}</strong><small>{story.meta}</small></span></button>)}</div></section>
+        {/* PRIORITY 2: Esperienze Vicine (Story Scroller) & Territorio Valtellinese */}
+        <section className="space-y-3">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="aurora-eyebrow">Idee per oggi</p>
+              <h2>{copy.experiences}</h2>
+            </div>
+            <button 
+              onClick={() => onNavigate('attivita')} 
+              className="text-xs font-semibold text-[#62e6bd] hover:text-[#93f4d4] flex items-center gap-1 transition"
+            >
+              {copy.all} <ChevronRight className="inline h-3.5 w-3.5" />
+            </button>
+          </div>
+          
+          <div className="story-scroller">
+            {localStories.map((story) => (
+              <button 
+                key={story.title} 
+                onClick={() => onNavigate('attivita')} 
+                className="story-card"
+              >
+                <img src={story.image} alt={story.title} />
+                <span>
+                  <strong>{story.title}</strong>
+                  <small>{story.meta}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Valtellina & Exploration in Elongated Tiles */}
+          <div className="guide-tiles-col pt-1">
+            {guideSections.exploreValtellina.items.map(renderElongatedTile)}
+          </div>
+        </section>
+
+        {/* PRIORITY 3: Supporto & Sicurezza in Elongated Tiles */}
+        <section className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Assistenza</p>
+            <h2>{guideSections.supportSecurity.title}</h2>
+            <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
+          </div>
+          <div className="guide-tiles-col">
+            {guideSections.supportSecurity.items.map(renderElongatedTile)}
+          </div>
+        </section>
+
+        {/* PRIORITY 4: Partenza & Check-out (At the end of the journey) */}
+        <section className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Fine Soggiorno</p>
+            <h2>{guideSections.departure.title}</h2>
+            <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
+          </div>
+          <div className="guide-tiles-col">
+            {guideSections.departure.items.map(renderElongatedTile)}
+          </div>
+        </section>
 
       </main>
 
-      <section className="guide-dock"><div><p className="aurora-eyebrow">Tutto Aurora</p><h2>La tua guida completa</h2></div><div className="guide-grid">{guideItems.map((item) => <button key={item.page} onClick={() => onNavigate(item.page)}>{item.icon}<span>{item.label}</span><ChevronRight /></button>)}</div></section>
-
+      {/* Language Selector Modal */}
       {languageOpen && (
         <>
           <div className="language-popover-backdrop" onClick={() => setLanguageOpen(false)} />
           <div className="language-popover">
-            <button className="sheet-close" onClick={() => setLanguageOpen(false)}><X className="h-4 w-4" /></button>
+            <button className="sheet-close" onClick={() => setLanguageOpen(false)} aria-label="Chiudi">
+              <X className="h-4 w-4" />
+            </button>
             <p className="aurora-eyebrow">Preferenza lingua</p>
             <h2>{copy.chooseLanguage}</h2>
-            <div className="language-options">{languages.map((item) => <button key={item.id} className={language === item.id ? 'active' : ''} onClick={() => { onSelectLanguage(item.id); setLanguageOpen(false); }}><FlagIcon language={item.id} /><span>{item.label}</span>{language === item.id && <Check className="ml-auto h-4 w-4" />}</button>)}</div>
+            <div className="language-options">
+              {languages.map((item) => (
+                <button 
+                  key={item.id} 
+                  className={language === item.id ? 'active' : ''} 
+                  onClick={() => { 
+                    onSelectLanguage(item.id); 
+                    setLanguageOpen(false); 
+                  }}
+                >
+                  <FlagIcon language={item.id} />
+                  <span>{item.label}</span>
+                  {language === item.id && <Check className="ml-auto h-4 w-4" />}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
-      {sheet && <div className="sheet-backdrop" onClick={() => setSheet(null)}><section className="aurora-sheet" onClick={(event) => event.stopPropagation()}><button className="sheet-close" onClick={() => setSheet(null)}><X className="h-4 w-4" /></button>{sheet === 'wifi' && <><p className="aurora-eyebrow">Connessione</p><h2>Wi-Fi Casa_Aurora</h2><p className="mt-2 text-sm text-slate-400">{wifiCopied ? 'Password copiata negli appunti.' : 'Scansiona il QR o copia la password.'}</p>{showWifiQr ? <img className="wifi-qr" alt="QR Wi-Fi Casa Aurora" src={`https://quickchart.io/qr?size=220&text=${encodeURIComponent(`WIFI:T:WPA;S:${APARTMENT_INFO.wifiSSID};P:${APARTMENT_INFO.wifiPassword};;`)}`} /> : <div className="sheet-value">{APARTMENT_INFO.wifiPassword}<Copy className="h-4 w-4 text-emerald-300" /></div>}<button className="sheet-action mt-3" onClick={() => setShowWifiQr(!showWifiQr)}>{showWifiQr ? 'Copia password' : 'Mostra QR Wi-Fi'} <Wifi className="h-4 w-4" /></button></>}{sheet === 'schedule' && <><p className="aurora-eyebrow">Ritmo del soggiorno</p><h2>Orari & regole essenziali</h2><div className="sheet-list"><span>Check-in <b>{APARTMENT_INFO.checkInStart} - {APARTMENT_INFO.checkInEnd}</b></span><span>Check-out <b>entro le {APARTMENT_INFO.checkOutLimit}</b></span><span>Casa <b>silenzio e rispetto del vicinato</b></span></div></>}{sheet === 'luggage' && <><p className="aurora-eyebrow">Flessibilita</p><h2>Deposito bagagli</h2><p className="mt-2 text-sm leading-6 text-slate-400">Scrivi all'host per concordare il deposito prima del check-in o dopo il check-out.</p><a className="sheet-action" href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}`} target="_blank" rel="noreferrer">Chiedi a Nino <ArrowUpRight className="h-4 w-4" /></a></>}{sheet === 'map' && <><p className="aurora-eyebrow">Mappa & luoghi</p><h2>Morbegno, a un passo</h2><p className="mt-2 text-sm leading-6 text-slate-400">Ristoranti, farmacia e centro storico sono tutti raccolti intorno ad Aurora.</p><a className="sheet-action" href={APARTMENT_INFO.googleMapsUrl} target="_blank" rel="noreferrer">Apri nelle mappe <ExternalLink className="h-4 w-4" /></a></>}{sheet === 'food' && <><p className="aurora-eyebrow">Sapori locali</p><h2>Una tavola fatta bene</h2><p className="mt-2 text-sm leading-6 text-slate-400">Scopri crotti, pizzoccheri e colazioni locali nella guida di Aurora.</p><button className="sheet-action" onClick={() => { setSheet(null); onNavigate('ristoranti'); }}>Esplora ristoranti <ArrowUpRight className="h-4 w-4" /></button></>}</section></div>}
+
+      {/* Bottom Sheets (Wi-Fi, Schedule, Luggage) */}
+      {sheet && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <section className="aurora-sheet" onClick={(event) => event.stopPropagation()}>
+            <button className="sheet-close" onClick={() => setSheet(null)} aria-label="Chiudi">
+              <X className="h-4 w-4" />
+            </button>
+            
+            {sheet === 'wifi' && (
+              <>
+                <p className="aurora-eyebrow">Connessione</p>
+                <h2>Wi-Fi Casa_Aurora</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  {wifiCopied ? 'Password copiata negli appunti.' : 'Scansiona il QR o copia la password.'}
+                </p>
+                {showWifiQr ? (
+                  <img 
+                    className="wifi-qr" 
+                    alt="QR Wi-Fi Casa Aurora" 
+                    src={`https://quickchart.io/qr?size=220&text=${encodeURIComponent(`WIFI:T:WPA;S:${APARTMENT_INFO.wifiSSID};P:${APARTMENT_INFO.wifiPassword};;`)}`} 
+                  />
+                ) : (
+                  <div className="sheet-value">
+                    {APARTMENT_INFO.wifiPassword}
+                    <Copy className="h-4 w-4 text-emerald-300" />
+                  </div>
+                )}
+                <button className="sheet-action mt-3" onClick={() => setShowWifiQr(!showWifiQr)}>
+                  {showWifiQr ? 'Copia password' : 'Mostra QR Wi-Fi'} <Wifi className="h-4 w-4" />
+                </button>
+              </>
+            )}
+
+            {sheet === 'schedule' && (
+              <>
+                <p className="aurora-eyebrow">Ritmo del soggiorno</p>
+                <h2>Orari & regole essenziali</h2>
+                <div className="sheet-list">
+                  <span>Check-in <b>{APARTMENT_INFO.checkInStart} - {APARTMENT_INFO.checkInEnd}</b></span>
+                  <span>Check-out <b>entro le {APARTMENT_INFO.checkOutLimit}</b></span>
+                  <span>Casa <b>silenzio e rispetto del vicinato</b></span>
+                </div>
+              </>
+            )}
+
+            {sheet === 'luggage' && (
+              <>
+                <p className="aurora-eyebrow">Flessibilità</p>
+                <h2>Deposito bagagli</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Scrivi all'host per concordare il deposito prima del check-in o dopo il check-out.
+                </p>
+                <a 
+                  className="sheet-action" 
+                  href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                >
+                  Chiedi a Nino <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 };

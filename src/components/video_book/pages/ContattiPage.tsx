@@ -40,7 +40,7 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   };
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -52,7 +52,7 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
 
       {/* Host Profile Avatar & Title */}
       <div className="text-center space-y-2 pt-1">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden border-2 border-white/20 shadow-md ring-2 ring-white/10">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-lg ring-4 ring-[#62e6bd]/15">
           <img
             src={media?.hostAvatar || hostAvatarPhoto}
             alt={APARTMENT_INFO.hostName}
@@ -65,7 +65,7 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           <h3 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
             {APARTMENT_INFO.hostName}
           </h3>
-          <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-[#62e6bd] uppercase tracking-wider block">
             {c.hostRole}
           </span>
         </div>
@@ -83,32 +83,32 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           href={APARTMENT_INFO.hostWhatsAppUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-between shadow-sm transition group cursor-pointer"
+          className="p-3.5 rounded-2xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] flex items-center justify-between shadow-md transition group cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <MessageSquare className="w-5 h-5 fill-white text-emerald-600" />
+            <div className="w-9 h-9 rounded-full bg-[#07110d]/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <MessageSquare className="w-5 h-5 fill-current text-[#07110d]" />
             </div>
             <div className="text-left">
               <div className="text-xs font-bold tracking-wide">
                 {c.chatAction}
               </div>
-              <div className="text-[10px] text-emerald-100 font-mono">
+              <div className="text-[10px] text-[#07110d]/80 font-mono font-semibold">
                 {APARTMENT_INFO.hostPhoneDisplay}
               </div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-emerald-100 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+          <span className="text-xs font-bold text-[#07110d] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
             <span>WhatsApp</span>
             <span>→</span>
           </span>
         </a>
 
         {/* Phone Call */}
-        <div className="p-3 rounded-2xl bg-[#141824] border border-white/[0.08] flex items-center justify-between shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white">
-              <Phone className="w-4 h-4 text-teal-300" />
+              <Phone className="w-4 h-4 text-[#62e6bd]" />
             </div>
             <div>
               <span className="font-mono text-xs font-bold text-white block">

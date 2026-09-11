@@ -26,7 +26,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   };
 
   return (
-    <div className="bg-[#0b0e14] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
+    <div className="bg-[#080b10] min-h-full rounded-none sm:rounded-3xl p-4 sm:p-6 text-slate-100 space-y-4 pb-24">
       
       {/* Top Header */}
       <PageHeader
@@ -48,7 +48,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
       </div>
 
       {/* Interactive Checkpoints */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#141824] border border-white/[0.08] shadow-sm space-y-3">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] shadow-sm space-y-3">
         <h4 className="font-semibold text-xs sm:text-sm text-white uppercase tracking-wider">
           {co.checklistTitle}
         </h4>
@@ -63,13 +63,13 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                 onClick={() => toggleCheck(idx)}
                 className={`w-full p-3 rounded-xl border transition-all text-left flex items-start gap-3 cursor-pointer ${
                   isDone 
-                    ? 'bg-emerald-950/40 border-emerald-500/30 text-slate-200' 
-                    : 'bg-[#1b2030] hover:bg-[#22283c] border-white/[0.06] text-slate-300'
+                    ? 'bg-emerald-950/40 border-[#62e6bd]/40 text-slate-200' 
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-slate-300'
                 }`}
               >
                 <div className="shrink-0 mt-0.5">
                   {isDone ? (
-                    <CheckSquare className="w-4 h-4 text-emerald-400" />
+                    <CheckSquare className="w-4 h-4 text-[#62e6bd]" />
                   ) : (
                     <Square className="w-4 h-4 text-slate-500" />
                   )}
@@ -89,7 +89,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
       </div>
 
       {/* Thank you note */}
-      <div className="p-4 rounded-2xl bg-[#141824] border border-white/[0.08] text-center space-y-1.5">
+      <div className="p-4 rounded-2xl bg-white/[0.045] backdrop-blur-xl border border-white/[0.08] text-center space-y-1.5">
         <Heart className="w-5 h-5 text-rose-400 mx-auto fill-rose-400/20" />
         <p className="text-xs italic text-slate-300 leading-relaxed max-w-sm mx-auto">
           "{co.thankYou}"
@@ -101,7 +101,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         href={APARTMENT_INFO.reviewUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 p-4 rounded-2xl bg-[#62e6bd]/10 border border-[#62e6bd]/30 text-left transition hover:bg-[#62e6bd]/15 cursor-pointer"
+        className="flex items-center gap-3 p-4 rounded-2xl bg-[#62e6bd]/10 border border-[#62e6bd]/30 text-left transition hover:bg-[#62e6bd]/15 cursor-pointer backdrop-blur-xl"
       >
         <div className="w-10 h-10 rounded-xl bg-[#62e6bd] text-[#07110d] flex items-center justify-center shrink-0">
           <Star className="w-5 h-5 fill-current" />
