@@ -279,7 +279,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
       {/* Subtle footer */}
       {currentPage !== 'language_select' && currentPage !== 'grid_menu' && (
         <footer className="p-3 text-center border-t border-emerald-500/15 bg-[#070a0e] flex items-center justify-center text-[10px] text-slate-400 px-4">
-          <span>© Aurora in Valtellina • Via Serta 188D, Morbegno (SO)</span>
+          <span>© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di Andaloro Davide</span>
         </footer>
       )}
 

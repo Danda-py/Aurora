@@ -7,6 +7,7 @@ import {
   Clock3, 
   Copy, 
   Home, 
+  Hand,
   MapPin, 
   MessageCircle, 
   Navigation, 
@@ -75,6 +76,49 @@ interface GuideTileItem {
   icon: React.ReactNode;
   bgImage: string;
 }
+
+interface ScrollableTileRowProps {
+  children: React.ReactNode;
+  hintLabel: string;
+}
+
+const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLabel }) => {
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+
+  const updateScrollState = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    setCanScroll(scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 2);
+  };
+
+  useEffect(() => {
+    updateScrollState();
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(scroller);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  const scrollNext = () => {
+    scrollerRef.current?.scrollBy({ left: scrollerRef.current.clientWidth * 0.78, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="aurora-photo-scroller-wrap">
+      <div ref={scrollerRef} className="aurora-photo-scroller" onScroll={updateScrollState}>
+        {children}
+      </div>
+      {canScroll && (
+        <button className="aurora-scroll-hint" onClick={scrollNext} aria-label={hintLabel}>
+          <Hand className="aurora-scroll-hand" aria-hidden="true" />
+          <ChevronRight aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const getLocalizedGuideSections = (lang: Language, media?: Record<string, string>): {
   houseEssentials: { title: string; subtitle: string; items: GuideTileItem[] };
@@ -227,6 +271,7 @@ const uiCopy: Record<Language, {
   support: string;
   departure: string;
   languagePreference: string;
+  swipeForMore: string;
 }> = {
   it: { 
     home: 'Fai come fossi a casa.', 
@@ -242,7 +287,7 @@ const uiCopy: Record<Language, {
     chooseLanguage: 'Scegli la tua lingua',
     allAurora: 'TUTTO AURORA',
     allAuroraSubtitle: 'La tua guida completa',
-    handy: 'A portata di mano', activeStay: 'Soggiorno attivo', directWhatsapp: 'WhatsApp diretto', directions: 'GPS & indicazioni', ideas: 'Idee per oggi', experience: 'Esperienza', territory: 'Territorio', support: 'Assistenza', departure: 'Fine soggiorno', languagePreference: 'Preferenza lingua'
+    handy: 'A portata di mano', activeStay: 'Soggiorno attivo', directWhatsapp: 'WhatsApp diretto', directions: 'GPS & indicazioni', ideas: 'Idee per oggi', experience: 'Esperienza', territory: 'Territorio', support: 'Assistenza', departure: 'Fine soggiorno', languagePreference: 'Preferenza lingua', swipeForMore: 'Scorri per vedere altro'
   },
   en: { 
     home: 'Feel at home.', 
@@ -258,7 +303,7 @@ const uiCopy: Record<Language, {
     chooseLanguage: 'Choose your language',
     allAurora: 'ALL OF AURORA',
     allAuroraSubtitle: 'Your complete guide',
-    handy: 'At your fingertips', activeStay: 'Stay active', directWhatsapp: 'Direct WhatsApp', directions: 'GPS & directions', ideas: 'Ideas for today', experience: 'Experience', territory: 'Local area', support: 'Support', departure: 'End of stay', languagePreference: 'Language preference'
+    handy: 'At your fingertips', activeStay: 'Stay active', directWhatsapp: 'Direct WhatsApp', directions: 'GPS & directions', ideas: 'Ideas for today', experience: 'Experience', territory: 'Local area', support: 'Support', departure: 'End of stay', languagePreference: 'Language preference', swipeForMore: 'Swipe to see more'
   },
   de: { 
     home: 'Fühl dich wie zu Hause.', 
@@ -274,7 +319,7 @@ const uiCopy: Record<Language, {
     chooseLanguage: 'Sprache wählen',
     allAurora: 'ALLES ÜBER AURORA',
     allAuroraSubtitle: 'Ihr kompletter Reiseführer',
-    handy: 'Direkt zur Hand', activeStay: 'Aufenthalt aktiv', directWhatsapp: 'WhatsApp direkt', directions: 'GPS & Wegbeschreibung', ideas: 'Ideen für heute', experience: 'Erlebnis', territory: 'Region', support: 'Hilfe', departure: 'Ende des Aufenthalts', languagePreference: 'Spracheinstellung'
+    handy: 'Direkt zur Hand', activeStay: 'Aufenthalt aktiv', directWhatsapp: 'WhatsApp direkt', directions: 'GPS & Wegbeschreibung', ideas: 'Ideen für heute', experience: 'Erlebnis', territory: 'Region', support: 'Hilfe', departure: 'Ende des Aufenthalts', languagePreference: 'Spracheinstellung', swipeForMore: 'Wischen für mehr'
   },
   fr: { 
     home: 'Comme chez vous.', 
@@ -290,7 +335,7 @@ const uiCopy: Record<Language, {
     chooseLanguage: 'Choisir la langue',
     allAurora: 'TOUT SUR AURORA',
     allAuroraSubtitle: 'Votre guide complet',
-    handy: 'À portée de main', activeStay: 'Séjour actif', directWhatsapp: 'WhatsApp direct', directions: 'GPS & itinéraire', ideas: 'Idées du jour', experience: 'Expérience', territory: 'Territoire', support: 'Assistance', departure: 'Fin du séjour', languagePreference: 'Préférence de langue'
+    handy: 'À portée de main', activeStay: 'Séjour actif', directWhatsapp: 'WhatsApp direct', directions: 'GPS & itinéraire', ideas: 'Idées du jour', experience: 'Expérience', territory: 'Territoire', support: 'Assistance', departure: 'Fin du séjour', languagePreference: 'Préférence de langue', swipeForMore: 'Faites défiler pour voir plus'
   },
   es: { 
     home: 'Siéntete como en casa.', 
@@ -306,7 +351,7 @@ const uiCopy: Record<Language, {
     chooseLanguage: 'Elegir idioma',
     allAurora: 'TODO SOBRE AURORA',
     allAuroraSubtitle: 'Tu guía completa',
-    handy: 'A mano', activeStay: 'Estancia activa', directWhatsapp: 'WhatsApp directo', directions: 'GPS e indicaciones', ideas: 'Ideas para hoy', experience: 'Experiencia', territory: 'Territorio', support: 'Asistencia', departure: 'Fin de la estancia', languagePreference: 'Preferencia de idioma'
+    handy: 'A mano', activeStay: 'Estancia activa', directWhatsapp: 'WhatsApp directo', directions: 'GPS e indicaciones', ideas: 'Ideas para hoy', experience: 'Experiencia', territory: 'Territorio', support: 'Asistencia', departure: 'Fin de la estancia', languagePreference: 'Preferencia de idioma', swipeForMore: 'Desliza para ver más'
   }
 };
 
@@ -350,7 +395,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     }
   };
 
-  const cancelHold = () => {
+  const cancelHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    if (event && event.currentTarget && event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
     if (holdTimer.current) clearInterval(holdTimer.current);
     holdTimer.current = null;
     holdStartedAt.current = 0;
@@ -387,7 +435,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       if (res.ok && data.success) {
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         setDoorState('success');
-        setDoorMessage(data.message || 'Portone sbloccato. Spingi la porta per entrare.');
+        setDoorMessage('Portone sbloccato. Spingi la porta per entrare.');
       } else {
         throw new Error(data.error || 'Impossibile completare lo sblocco');
       }
@@ -402,8 +450,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     }
   };
 
-  const startHold = () => {
+  const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (doorState !== 'idle') return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     holdStartedAt.current = Date.now();
     holdTimer.current = setInterval(() => {
       const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1300);
@@ -529,6 +579,15 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               onPointerUp={cancelHold}
               onPointerCancel={cancelHold}
               onPointerLeave={cancelHold}
+              onPointerMove={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const inside =
+                  event.clientX >= rect.left &&
+                  event.clientX <= rect.right &&
+                  event.clientY >= rect.top &&
+                  event.clientY <= rect.bottom;
+                if (!inside) cancelHold(event);
+              }}
               disabled={doorState === 'opening'}
             >
               <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
@@ -597,9 +656,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <h2>{guideSections.houseEssentials.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
           </div>
-          <div className="aurora-photo-scroller">
+          <ScrollableTileRow hintLabel={copy.swipeForMore}>
             {guideSections.houseEssentials.items.map(renderPhotoCard)}
-          </div>
+          </ScrollableTileRow>
         </section>
 
         {/* SECTION 2: Idee per oggi (Esperienze Vicine Carousel) */}
@@ -617,7 +676,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </button>
           </div>
           
-          <div className="aurora-photo-scroller">
+          <ScrollableTileRow hintLabel={copy.swipeForMore}>
             {localStories.map((story) => (
               <a
                 key={story.title} 
@@ -634,7 +693,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 </div>
               </a>
             ))}
-          </div>
+          </ScrollableTileRow>
         </section>
 
         {/* SECTION 3: Vivere la Valtellina (Gusto, Botteghe, Trasporti, Info) */}
@@ -644,9 +703,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <h2>{guideSections.exploreValtellina.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.exploreValtellina.subtitle}</p>
           </div>
-          <div className="aurora-photo-scroller">
+          <ScrollableTileRow hintLabel={copy.swipeForMore}>
             {guideSections.exploreValtellina.items.map(renderPhotoCard)}
-          </div>
+          </ScrollableTileRow>
         </section>
 
         {/* SECTION 4: Supporto & Sicurezza (Contatti & Emergenze) */}
@@ -656,9 +715,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <h2>{guideSections.supportSecurity.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
           </div>
-          <div className="aurora-photo-scroller">
+          <ScrollableTileRow hintLabel={copy.swipeForMore}>
             {guideSections.supportSecurity.items.map(renderPhotoCard)}
-          </div>
+          </ScrollableTileRow>
         </section>
 
         {/* SECTION 5: Partenza & Check-out */}
@@ -668,9 +727,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <h2>{guideSections.departure.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
           </div>
-          <div className="aurora-photo-scroller">
+          <ScrollableTileRow hintLabel={copy.swipeForMore}>
             {guideSections.departure.items.map(renderPhotoCard)}
-          </div>
+          </ScrollableTileRow>
         </section>
 
       </main>

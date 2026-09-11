@@ -199,10 +199,10 @@ export const ContactsTab: React.FC<Props> = ({ language }) => {
               </div>
             </div>
             <a
-              href="tel:0342606600"
+              href="tel:0342610210"
               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition"
             >
-              0342 606600
+              0342 610210
             </a>
           </div>
 

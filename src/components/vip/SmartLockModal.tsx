@@ -103,15 +103,20 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
     }
   };
 
-  const cancelHold = () => {
+  const cancelHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    if (event && event.currentTarget && event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
     if (holdTimer.current) clearInterval(holdTimer.current);
     holdTimer.current = null;
     holdStartedAt.current = 0;
     setHoldProgress(0);
   };
 
-  const startHold = () => {
+  const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (openingState !== 'idle' || wifiChecking) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     holdStartedAt.current = Date.now();
     holdTimer.current = setInterval(() => {
       const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1500);
@@ -226,6 +231,15 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               onPointerUp={cancelHold}
               onPointerCancel={cancelHold}
               onPointerLeave={cancelHold}
+              onPointerMove={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const inside =
+                  event.clientX >= rect.left &&
+                  event.clientX <= rect.right &&
+                  event.clientY >= rect.top &&
+                  event.clientY <= rect.bottom;
+                if (!inside) cancelHold(event);
+              }}
               disabled={openingState === 'opening' || wifiChecking}
               className={`group relative w-full py-5 px-5 rounded-2xl font-bold tracking-tight transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 select-none active:scale-[0.98] ${
                 openingState === 'opening'

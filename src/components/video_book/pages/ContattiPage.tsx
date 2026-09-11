@@ -74,24 +74,24 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             target="_blank"
             rel="noopener noreferrer"
             className="aurora-item-card items-center border-transparent shadow-lg shadow-[#62e6bd]/20 group"
-            style={{ backgroundColor: '#62e6bd', color: '#07110d' }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#93f4d4')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#62e6bd')}
+            style={{ backgroundColor: '#128c55', color: '#ffffff' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0f7548')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#128c55')}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-[#07110d]/10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-                <MessageSquare className="w-5 h-5 fill-current" style={{ color: '#07110d' }} />
+              <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                <MessageSquare className="w-5 h-5 fill-current text-white" />
               </div>
               <div className="text-left min-w-0">
-                <div className="text-xs font-bold tracking-wide" style={{ color: '#07110d' }}>
+                <div className="text-xs font-bold tracking-wide text-white">
                   {c.chatAction}
                 </div>
-                <div className="text-xs font-mono font-bold truncate" style={{ color: 'rgba(7,17,13,0.8)' }}>
+                <div className="text-xs font-mono font-bold truncate text-white/85">
                   {APARTMENT_INFO.hostPhoneDisplay}
                 </div>
               </div>
             </div>
-            <span className="text-xs font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform shrink-0" style={{ color: '#07110d' }}>
+            <span className="text-xs font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform shrink-0 text-white">
               <span>WhatsApp</span>
               <span>→</span>
             </span>

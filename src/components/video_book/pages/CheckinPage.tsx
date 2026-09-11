@@ -189,7 +189,7 @@ export const CheckinPage: React.FC<Props> = ({
       if (res.ok && data.success) {
         triggerHaptic();
         setOpeningState('success');
-        setStatusMessage(data.message || (language === 'it' ? 'Portone sbloccato! Spingi la porta per entrare.' : 'Door unlocked! Push the door to enter.'));
+        setStatusMessage(language === 'it' ? 'Portone sbloccato! Spingi la porta per entrare.' : 'Door unlocked! Push the door to enter.');
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');

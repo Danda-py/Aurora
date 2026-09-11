@@ -285,7 +285,7 @@ export function createApp() {
       if (result.success) {
         res.json({
           success: true,
-          message: result.message,
+          message: 'Portone sbloccato. Spingi la porta per entrare.',
           timestamp: new Date().toISOString()
         });
       } else {
