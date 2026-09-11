@@ -21,7 +21,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ContattiPage } from './pages/ContattiPage';
 import { SmartLockModal } from '../vip/SmartLockModal';
 import { ExpiredPassScreen } from '../vip/ExpiredPassScreen';
-import { MessageSquare, Key } from 'lucide-react';
+import { Bot, MessageSquare, Key } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 
 interface Props {
@@ -250,9 +250,9 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         )}
       </main>
 
-      {/* Floating Quick Action Button to Host / WhatsApp (when inside subpages) */}
+      {/* Floating chat actions */}
       {currentPage !== 'language_select' && currentPage !== 'contatti' && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex flex-col gap-2">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2">
           <a
             href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(
               pass 
@@ -266,6 +266,15 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
           >
             <MessageSquare className="w-5 h-5 fill-white" />
           </a>
+          <button
+            type="button"
+            onClick={() => handleNavigate('contatti')}
+            className="w-12 h-12 rounded-full bg-white hover:bg-slate-100 text-slate-900 shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-white/60"
+            title="Chat AI"
+            aria-label="Apri Chat AI"
+          >
+            <Bot className="w-5 h-5" />
+          </button>
         </div>
       )}
 

@@ -549,8 +549,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="aurora-eyebrow text-white/60">AURORA IN VALTELLINA</p>
-                <p className="mt-1 text-lg font-semibold tracking-tight">Guest Glass Pass</p>
+                <p className="text-lg font-semibold tracking-tight">Guest Glass Pass</p>
               </div>
               <div className="glass-chip">
                 <BedDouble className="h-4 w-4 text-[#62e6bd]" />
@@ -558,18 +557,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-[1fr_auto] items-end gap-4">
+            <div className="mt-8">
               <div>
                 <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   {pass.guestName} {pass.guestSurname}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/60">
-                  <span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate}</strong></span>
-                  <span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate}</strong></span>
+                  <span>N. OSPITI <strong className="ml-1 text-white">{pass.guestsCount ?? 1}</strong></span>
+                  <span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate} {pass.checkInTime ?? '15:00'}</strong></span>
+                  <span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate} {pass.checkOutTime ?? '10:00'}</strong></span>
                 </div>
-              </div>
-              <div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/10 p-2 shadow-lg flex items-center justify-center backdrop-blur-md">
-                <KeyRound className="h-7 w-7 text-[#62e6bd]" />
               </div>
             </div>
 
@@ -592,7 +589,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             >
               <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
               <span className="flex items-center gap-2 relative z-10">
-                <Navigation className="h-4 w-4" />
+                <KeyRound className="h-4 w-4" />
                 {doorState === 'opening' ? 'Apertura in corso...' : doorState === 'success' ? 'Portone aperto!' : doorState === 'error' ? 'Riprova: tieni premuto' : 'Tieni premuto per aprire'}
               </span>
               <ArrowUpRight className="h-4 w-4 relative z-10" />
@@ -612,10 +609,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <p className="aurora-eyebrow">{copy.handy}</p>
               <h2>{copy.quick}</h2>
             </div>
-            <span className="status-dot flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#62e6bd] animate-pulse" />
-              {copy.activeStay}
-            </span>
           </div>
           
           <div className="quick-actions-grid">
