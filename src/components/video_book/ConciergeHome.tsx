@@ -50,17 +50,20 @@ const localStories = [
   { 
     title: 'Sentiero Valtellina', 
     meta: 'Percorso panoramico',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313902_0912859.jpg?rfh=1&size=xl'
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313902_0912859.jpg?rfh=1&size=xl',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sentiero+Valtellina+Morbegno'
   },
   { 
     title: 'Centro storico', 
     meta: 'Morbegno',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313749_8967242.jpg?rfh=1&size=xl'
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313749_8967242.jpg?rfh=1&size=xl',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+storico+di+Morbegno'
   },
   { 
     title: 'Costiera dei Cèch', 
     meta: 'Panorama valtellinese',
-    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313853_6691445.jpg?rfh=1&size=xl'
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313853_6691445.jpg?rfh=1&size=xl',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Costiera+dei+Cech+Morbegno'
   }
 ];
 
@@ -616,10 +619,12 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           
           <div className="aurora-photo-scroller">
             {localStories.map((story) => (
-              <button 
+              <a
                 key={story.title} 
-                onClick={() => onNavigate('attivita')} 
                 className="aurora-photo-card group"
+                href={story.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <img src={story.image} alt={story.title} loading="lazy" />
                 <div className="aurora-photo-card-info">
@@ -627,7 +632,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   <strong>{story.title}</strong>
                   <small>{story.meta}</small>
                 </div>
-              </button>
+              </a>
             ))}
           </div>
         </section>
