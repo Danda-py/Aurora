@@ -22,7 +22,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ContattiPage } from './pages/ContattiPage';
 import { SmartLockModal } from '../vip/SmartLockModal';
 import { ExpiredPassScreen } from '../vip/ExpiredPassScreen';
-import { Bot, MessageSquare, Key } from 'lucide-react';
+import { Key } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 
 interface Props {
@@ -276,9 +276,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         )}
       </main>
 
-      {/* Floating chat actions */}
+      {/* Floating dual chat capsule (WhatsApp Nino & Aurora AI) */}
       {currentPage !== 'language_select' && currentPage !== 'contatti' && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center bg-slate-900/85 backdrop-blur-xl border border-white/20 rounded-full p-1.5 shadow-[0_10px_35px_rgba(0,0,0,0.55)] ring-1 ring-white/10 gap-1.5">
+          {/* WhatsApp Host Nino */}
           <a
             href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(
               pass 
@@ -287,19 +288,47 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-white/60"
+            className="w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chatta con l'Host Nino su WhatsApp"
+            aria-label="Chatta con l'Host Nino su WhatsApp"
           >
-            <MessageSquare className="w-5 h-5 fill-white" />
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+              <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.49-1.02-.91-1.708-2.034-1.908-2.379-.2-.345-.021-.531.13-.68.135-.134.3-.349.45-.524.15-.175.2-.299.3-.499.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.584-.492-.505-.675-.514-.175-.009-.375-.01-.575-.01-.2 0-.525.075-.8.375-.275.3-1.05 1.026-1.05 2.5 0 1.474 1.075 2.898 1.225 3.098.15.2 2.115 3.23 5.124 4.529.716.309 1.275.493 1.71.632.718.228 1.372.196 1.888.12.576-.086 1.78-.727 2.03-1.429.25-.702.25-1.303.175-1.429-.075-.126-.275-.201-.575-.351z"/>
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 1.892.524 3.662 1.434 5.176L2.057 22l4.986-1.308A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18.167a8.13 8.13 0 01-4.148-1.134l-.297-.176-3.078.807.822-2.999-.193-.307A8.138 8.138 0 013.833 12c0-4.502 3.665-8.167 8.167-8.167 4.502 0 8.167 3.665 8.167 8.167 0 4.502-3.665 8.167-8.167 8.167z"/>
+            </svg>
           </a>
+
+          {/* Segno centrale */}
+          <div className="w-[1.5px] h-5 bg-white/25 rounded-full mx-0.5" aria-hidden="true" />
+
+          {/* AI Message Chat */}
           <button
             type="button"
             onClick={() => setIsAuroraAiOpen(true)}
-            className="w-12 h-12 rounded-full bg-white hover:bg-slate-100 text-slate-900 shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-white/60"
-            title="Chat AI"
-            aria-label="Apri Chat AI"
+            className="w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-900 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
+            title="Chat AI Concierge"
+            aria-label="Apri Chat AI Concierge"
           >
-            <Bot className="w-5 h-5" />
+            {/* Logo messaggio con scritto AI */}
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path
+                d="M20 12c0 3.866-3.582 7-8 7-1.314 0-2.548-.278-3.623-.772L4 19.5l1.282-3.237C4.485 15.026 4 13.57 4 12c0-3.866 3.582-7 8-7s8 3.134 8 7z"
+                fill="#0f172a"
+              />
+              <text
+                x="12"
+                y="11.8"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize="6.8"
+                fontWeight="900"
+                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                fill="#ffffff"
+                letterSpacing="0.2px"
+              >
+                AI
+              </text>
+            </svg>
           </button>
         </div>
       )}
