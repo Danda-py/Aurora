@@ -16,6 +16,18 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const { getPageData, media } = useCms();
   const cmsInfo = getPageData('info') || {};
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
+  const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
+  const pharmacyService = {
+    it: { title: 'FARMACIA DI TURNO', desc: 'Consulta disponibilità, orari e indicazioni aggiornati in tempo reale' },
+    en: { title: 'ON-DUTY PHARMACY', desc: 'Check live availability, opening hours, and directions' },
+    de: { title: 'NOTDIENST-APOTHEKE', desc: 'Live-Verfügbarkeit, Öffnungszeiten und Wegbeschreibung prüfen' },
+    fr: { title: 'PHARMACIE DE GARDE', desc: 'Consultez la disponibilité, les horaires et l’itinéraire en direct' },
+    es: { title: 'FARMACIA DE GUARDIA', desc: 'Consulta disponibilidad, horarios e indicaciones en tiempo real' }
+  }[language];
+  const services = inf.services.map((service, index) => index === 0
+    ? { ...service, ...pharmacyService, mapsUrl: pharmacyUrl }
+    : service
+  );
 
   const infoIcons = [
     <Pill key="pill" className="w-5 h-5 text-[#62e6bd]" />,
@@ -61,7 +73,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
             <h3 className="text-base font-bold text-white tracking-tight">Servizi essenziali a Morbegno</h3>
           </div>
 
-          {inf.services.map((s, idx) => (
+          {services.map((s, idx) => (
             <div
               key={idx}
               className="aurora-item-card items-center"

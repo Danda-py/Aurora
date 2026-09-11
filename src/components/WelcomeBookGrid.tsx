@@ -588,9 +588,6 @@ export const WelcomeBookGrid: React.FC<Props> = ({
                   <div key={place.id} className="p-3.5 bg-white rounded-2xl border border-[#e8dfcf] space-y-1.5">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-slate-900 text-xs font-serif">{place.name}</h4>
-                      <span className="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded font-semibold">
-                        {place.walkTime}
-                      </span>
                     </div>
                     <p className="text-xs text-slate-600">{place.description[language]}</p>
                     <div className="flex items-center gap-3 pt-1">
@@ -615,9 +612,6 @@ export const WelcomeBookGrid: React.FC<Props> = ({
                   <div key={place.id} className="p-3.5 bg-white rounded-2xl border border-[#e8dfcf] space-y-1.5">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-slate-900 text-xs font-serif">{place.name}</h4>
-                      <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded font-semibold">
-                        {place.walkTime}
-                      </span>
                     </div>
                     <p className="text-xs text-slate-600">{place.description[language]}</p>
                     <a href={place.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-amber-800 hover:underline inline-block pt-1">
@@ -635,9 +629,6 @@ export const WelcomeBookGrid: React.FC<Props> = ({
                   <div key={place.id} className="p-3.5 bg-white rounded-2xl border border-[#e8dfcf] space-y-1.5">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-slate-900 text-xs font-serif">{place.name}</h4>
-                      <span className="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded font-semibold">
-                        {place.walkTime}
-                      </span>
                     </div>
                     <p className="text-xs text-slate-600">{place.description[language]}</p>
                     <a href={place.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-teal-800 hover:underline inline-block pt-1">

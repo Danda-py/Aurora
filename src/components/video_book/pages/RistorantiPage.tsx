@@ -60,7 +60,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <span className="aurora-eyebrow text-[#62e6bd] font-mono">
-                    CONSIGLIATO • {r.time}
+                    CONSIGLIATO
                   </span>
                   <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                     {r.name}
@@ -112,7 +112,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {res.deliveries.map((del, i) => (
+            {res.deliveries.filter((del) => !/poletti/i.test(del.name)).map((del, i) => (
               <div key={i} className="aurora-item-card items-center">
                 <div className="min-w-0 flex-1">
                   <strong className="block text-white text-xs sm:text-sm font-bold">{del.name}</strong>

@@ -48,17 +48,17 @@ const languages: { id: Language; label: string }[] = [
 const localStories = [
   { 
     title: 'Sentiero Valtellina', 
-    meta: '7 min a piedi', 
+    meta: 'Percorso panoramico',
     image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313902_0912859.jpg?rfh=1&size=xl'
   },
   { 
     title: 'Centro storico', 
-    meta: '9 min a piedi', 
+    meta: 'Morbegno',
     image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313749_8967242.jpg?rfh=1&size=xl'
   },
   { 
     title: 'Costiera dei Cèch', 
-    meta: '18 min in auto', 
+    meta: 'Panorama valtellinese',
     image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313853_6691445.jpg?rfh=1&size=xl'
   }
 ];

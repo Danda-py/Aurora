@@ -52,16 +52,13 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
             <h3 className="text-base font-bold text-white tracking-tight">Bar storici ed enoteche a Morbegno</h3>
           </div>
 
-          {bars.recommended.map((b, idx) => (
+          {bars.recommended.filter((bar) => !/poletti/i.test(bar.name)).map((b, idx) => (
             <div
               key={idx}
               className="aurora-glass-card space-y-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <span className="aurora-eyebrow text-[#62e6bd] font-mono">
-                    {b.time}
-                  </span>
                   <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                     {b.name}
                   </h4>

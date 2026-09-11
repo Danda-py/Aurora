@@ -113,7 +113,7 @@ export const PlacesTab: React.FC<Props> = ({ language }) => {
                   <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
                     <span className="flex items-center gap-1 text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200/60">
                       <Footprints className="w-3 h-3" />
-                      {place.walkTime} ({place.distance})
+                      Apri la mappa per il percorso
                     </span>
                     {place.priceRange && (
                       <span className="text-slate-400 font-medium">

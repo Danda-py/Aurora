@@ -65,7 +65,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                     {transportIcons[idx % transportIcons.length]}
                   </div>
                   <div className="min-w-0">
-                    <span className="aurora-eyebrow">{item.subtitle} • {item.time}</span>
+                    <span className="aurora-eyebrow">{item.subtitle}</span>
                     <h3 className="font-bold text-sm sm:text-base text-white tracking-tight mt-0.5">
                       {item.title}
                     </h3>

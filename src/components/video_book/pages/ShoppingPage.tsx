@@ -58,9 +58,6 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                     <ShoppingBag className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="aurora-eyebrow text-[#62e6bd] font-mono">
-                      {shop.time}
-                    </span>
                     <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                       {shop.title}
                     </h4>
