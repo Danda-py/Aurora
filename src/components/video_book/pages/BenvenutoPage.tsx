@@ -4,7 +4,7 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
-import { Sparkles, Bed, Utensils, Tv, Mountain, Heart } from 'lucide-react';
+import { Sparkles, Bed, Utensils, Tv, Mountain, Heart, Key, ShieldCheck, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
 interface Props {
@@ -37,7 +37,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Welcome Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.heroLiving || "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80"}
+            src={media?.heroLiving || "/uploads/living.jpg"}
             alt="Aurora in Valtellina Living"
           />
           <div className="aurora-hero-banner-overlay">
@@ -80,43 +80,149 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="aurora-item-card">
-              <div className="aurora-icon-box">
-                <Tv className="w-5 h-5" />
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.heroLiving || "/uploads/living.jpg"} 
+                  alt={w.livingTitle} 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <strong className="block text-xs sm:text-sm font-bold text-white">{w.livingTitle}</strong>
-                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.livingDesc}</span>
-              </div>
-            </div>
-
-            <div className="aurora-item-card">
-              <div className="aurora-icon-box">
-                <Bed className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <strong className="block text-xs sm:text-sm font-bold text-white">{w.bedroomTitle}</strong>
-                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.bedroomDesc}</span>
-              </div>
-            </div>
-
-            <div className="aurora-item-card">
-              <div className="aurora-icon-box">
-                <Utensils className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <strong className="block text-xs sm:text-sm font-bold text-white">{w.kitchenTitle}</strong>
-                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.kitchenDesc}</span>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Tv className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{w.livingTitle}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.livingDesc}</span>
+                </div>
               </div>
             </div>
 
-            <div className="aurora-item-card">
-              <div className="aurora-icon-box">
-                <Mountain className="w-5 h-5" />
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.bedroom || "/uploads/bedroom.jpg"} 
+                  alt={w.bedroomTitle} 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <strong className="block text-xs sm:text-sm font-bold text-white">{w.viewTitle}</strong>
-                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.viewDesc}</span>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Bed className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{w.bedroomTitle}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.bedroomDesc}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.kitchen || "/uploads/kitchen.jpg"} 
+                  alt={w.kitchenTitle} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Utensils className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{w.kitchenTitle}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.kitchenDesc}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.view || "/uploads/view.jpg"} 
+                  alt={w.viewTitle} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Mountain className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{w.viewTitle}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.viewDesc}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Sections Grid (Check-in, Services, Info) */}
+        <div className="space-y-3 pt-2">
+          <div>
+            <p className="aurora-eyebrow">Guida Soggiorno</p>
+            <h3 className="text-base font-bold text-white tracking-tight">Dettagli Utili</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Check In & Smart Lock */}
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.checkInCover || "/uploads/lock.jpg"} 
+                  alt="Check In & Smart Lock" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">Check In & Smart Lock</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Accesso autonomo e sicuro alla struttura tramite smart lock.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Servizi Casa & Comfort */}
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.servicesCover || "/uploads/services.jpg"} 
+                  alt="Servizi Casa & Comfort" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">Servizi Casa & Comfort</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Tutti i comfort e le comodità pensati per il tuo soggiorno.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Informazioni e Servizi */}
+            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+              <div className="h-32 w-full overflow-hidden relative">
+                <img 
+                  src={media?.infoCover || "/uploads/info.jpg"} 
+                  alt="Informazioni e Servizi" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                <div className="aurora-icon-box shrink-0 mt-0.5">
+                  <Info className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <strong className="block text-xs sm:text-sm font-bold text-white">Informazioni e Servizi</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Guide utili e indicazioni generali per vivere al meglio l'esperienza.</span>
+                </div>
               </div>
             </div>
           </div>
