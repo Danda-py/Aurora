@@ -57,9 +57,23 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
       if (currentPass) {
         setPass(currentPass);
         setCurrentPage('grid_menu');
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({ page: 'grid_menu' }, '');
+        }
       }
       setIsPassChecking(false);
     });
+  }, []);
+
+  // Intercept the browser/gesture back action so it navigates within the app
+  // instead of leaving the site.
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const page = (event.state && event.state.page) as WelcomePage | undefined;
+      setCurrentPage(page || 'grid_menu');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Preserve the home position while subpages open at their top.
@@ -75,14 +89,24 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   const handleLanguageSelect = (lang: Language) => {
     setLanguage(lang);
     setCurrentPage('grid_menu');
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ page: 'grid_menu' }, '');
+    }
   };
 
   const handleBackToMenu = () => {
+    if (typeof window !== 'undefined' && window.history.state?.page && window.history.state.page !== 'grid_menu') {
+      window.history.back();
+      return;
+    }
     setCurrentPage('grid_menu');
   };
 
   const handleNavigate = (page: WelcomePage) => {
     homeScrollPosition.current = window.scrollY;
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ page }, '');
+    }
     setCurrentPage(page);
   };
 

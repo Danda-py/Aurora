@@ -286,8 +286,17 @@ export function createApp() {
 
   apiRouter.post('/aurora-ai/chat', async (req, res) => {
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
-    if (!question || question.length > 1000) {
-      res.status(400).json({ success: false, error: 'Inserisci una domanda valida, fino a 1000 caratteri.' });
+    const rawImage = typeof req.body?.image === 'string' ? req.body.image : '';
+    const imageMimeType = typeof req.body?.imageMimeType === 'string' ? req.body.imageMimeType : '';
+    const hasImage = Boolean(rawImage && /^image\/(png|jpe?g|webp|heic|heif)$/i.test(imageMimeType));
+
+    if ((!question && !hasImage) || question.length > 1000) {
+      res.status(400).json({ success: false, error: 'Inserisci una domanda valida, fino a 1000 caratteri, oppure allega una foto.' });
+      return;
+    }
+    // Base64 images are ~33% larger than the source file; cap around 6MB source (~8MB encoded).
+    if (hasImage && rawImage.length > 8 * 1024 * 1024) {
+      res.status(400).json({ success: false, error: 'La foto e troppo grande. Allega un immagine sotto i 6MB.' });
       return;
     }
     if (!process.env.GEMINI_API_KEY) {
@@ -305,15 +314,38 @@ export function createApp() {
           .slice(-10)
       : [];
 
+    const guestToken = req.get('x-guest-token') || req.body?.guestToken;
+    const guestPass = findValidGuestPass(guestToken);
+    const personalizedInstructions = guestPass
+      ? `${auroraAiInstructions}\n\nDATI DEL SOGGIORNO DI QUESTO OSPITE:\n${JSON.stringify({
+          guestName: guestPass.guestName,
+          checkInDate: guestPass.checkInDate,
+          checkInTime: guestPass.checkInTime,
+          checkOutDate: guestPass.checkOutDate,
+          checkOutTime: guestPass.checkOutTime,
+          guestsCount: guestPass.guestsCount
+        })}`
+      : auroraAiInstructions;
+
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const userParts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
+      if (question) userParts.push({ text: question });
+      if (hasImage) {
+        const base64Data = rawImage.includes(',') ? rawImage.split(',')[1] : rawImage;
+        userParts.push({ inlineData: { data: base64Data, mimeType: imageMimeType } });
+      }
+
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: [...history, { role: 'user', text: question }].map(message => ({
-          role: message.role,
-          parts: [{ text: message.text }]
-        })),
-        config: { systemInstruction: auroraAiInstructions }
+        contents: [
+          ...history.map((message: { role: 'user' | 'model'; text: string }) => ({
+            role: message.role,
+            parts: [{ text: message.text }]
+          })),
+          { role: 'user', parts: userParts }
+        ],
+        config: { systemInstruction: personalizedInstructions }
       });
       const answer = response.text?.trim();
       if (!answer) throw new Error('Gemini non ha restituito una risposta.');

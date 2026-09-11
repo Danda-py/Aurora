@@ -355,6 +355,17 @@ const uiCopy: Record<Language, {
   }
 };
 
+const formatPassDate = (dateStr?: string) => {
+  if (!dateStr) return '';
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+  } catch {
+    return dateStr;
+  }
+};
+
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
   const { media } = useCms();
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -549,7 +560,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-lg font-semibold tracking-tight">Guest Glass Pass</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                  N. Ospiti <strong className="ml-1 text-sm text-white">{pass.guestsCount ?? 1}</strong>
+                </p>
               </div>
               <div className="glass-chip">
                 <BedDouble className="h-4 w-4 text-[#62e6bd]" />
@@ -557,16 +570,20 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
             </div>
 
-            <div className="mt-8">
-              <div>
-                <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                  {pass.guestName} {pass.guestSurname}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/20 bg-black/30 p-3 sm:p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-in</p>
+                <p className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
+                  {formatPassDate(pass.checkInDate)}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/60">
-                  <span>N. OSPITI <strong className="ml-1 text-white">{pass.guestsCount ?? 1}</strong></span>
-                  <span>CHECK-IN <strong className="ml-1 text-white">{pass.checkInDate} {pass.checkInTime ?? '15:00'}</strong></span>
-                  <span>CHECK-OUT <strong className="ml-1 text-white">{pass.checkOutDate} {pass.checkOutTime ?? '10:00'}</strong></span>
-                </div>
+                <p className="mt-0.5 text-xs font-medium text-white/70">dalle {pass.checkInTime ?? '15:00'}</p>
+              </div>
+              <div className="rounded-2xl border border-white/20 bg-black/30 p-3 sm:p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>
+                <p className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
+                  {formatPassDate(pass.checkOutDate)}
+                </p>
+                <p className="mt-0.5 text-xs font-medium text-white/70">entro le {pass.checkOutTime ?? '10:00'}</p>
               </div>
             </div>
 
@@ -628,11 +645,15 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <small>{copy.directWhatsapp}</small>
             </a>
             
-            <button onClick={() => onNavigate('posizione')}>
+            <a
+              href={APARTMENT_INFO.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
               <MapPin />
               <span>{copy.location}</span>
               <small>{copy.directions}</small>
-            </button>
+            </a>
             
             <button onClick={() => setSheet('schedule')}>
               <Clock3 />

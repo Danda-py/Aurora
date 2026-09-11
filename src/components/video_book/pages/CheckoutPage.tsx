@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { Clock, CheckSquare, Square, Heart, Star, Send } from 'lucide-react';
+import { Clock, CheckSquare, Square, Heart, Star } from 'lucide-react';
 
 interface Props {
   language: Language;
@@ -22,26 +22,12 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
-  const [rating, setRating] = useState(5);
-  const [reviewText, setReviewText] = useState('');
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   const toggleCheck = (idx: number) => {
     setCheckedItems(prev => ({
       ...prev,
       [idx]: !prev[idx]
     }));
-  };
-
-  const handleReviewSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setReviewSubmitted(true);
-    window.setTimeout(() => {
-      setShowReviewForm(false);
-      setReviewSubmitted(false);
-      setReviewText('');
-    }, 3000);
   };
 
   return (
@@ -170,70 +156,16 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             >
               <span>{reviewCopy.rateGoogle}</span>
             </a>
-            <button
-              type="button"
-              onClick={() => setShowReviewForm(true)}
+            <a
+              href={APARTMENT_INFO.reviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="aurora-action-pill py-3"
             >
               <span>{reviewCopy.rateWebsite}</span>
-            </button>
+            </a>
           </div>
         </div>
-
-        {showReviewForm && (
-          <div className="sheet-backdrop" onClick={() => setShowReviewForm(false)}>
-            <div className="w-full max-w-sm rounded-3xl bg-[#0e161c] border border-white/[0.15] p-6 shadow-2xl text-white space-y-4" onClick={(event) => event.stopPropagation()}>
-              {reviewSubmitted ? (
-                <div className="text-center py-6 space-y-3">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-[#62e6bd]/20 text-[#62e6bd] flex items-center justify-center">
-                    <Heart className="w-6 h-6 fill-current" />
-                  </div>
-                  <h4 className="font-bold text-base text-white">{reviewCopy.reviewSuccess}</h4>
-                </div>
-              ) : (
-                <form onSubmit={handleReviewSubmit} className="space-y-4">
-                  <h4 className="font-bold text-base text-white text-center">{reviewCopy.reviewDialogTitle}</h4>
-                  <div className="text-center space-y-1.5">
-                    <label className="text-xs text-white/60 block">{reviewCopy.ratingPrompt}</label>
-                    <div className="flex items-center justify-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          type="button"
-                          key={star}
-                          onClick={() => setRating(star)}
-                          className="p-1 text-[#62e6bd] hover:scale-125 transition cursor-pointer"
-                          aria-label={`${star} stelle`}
-                        >
-                          <Star className={`w-7 h-7 ${star <= rating ? 'fill-current' : 'text-white/20'}`} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-white/60 block">{reviewCopy.commentPrompt}</label>
-                    <textarea
-                      rows={3}
-                      value={reviewText}
-                      onChange={(event) => setReviewText(event.target.value)}
-                      required
-                      placeholder="Il vostro feedback ci aiuta a migliorare costantemente..."
-                      className="w-full text-xs p-3 rounded-xl border border-white/10 bg-white/[0.04] text-white focus:ring-2 focus:ring-[#62e6bd]/40 outline-none"
-                    />
-                  </div>
-                  <div className="flex gap-2.5 pt-2">
-                    <button type="button" onClick={() => setShowReviewForm(false)} className="aurora-secondary-pill flex-1 py-2.5">
-                      {labels.cancel}
-                    </button>
-                    <button type="submit" className="aurora-action-pill flex-1 py-2.5">
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{reviewCopy.submitReview}</span>
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
