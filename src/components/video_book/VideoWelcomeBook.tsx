@@ -4,6 +4,7 @@ import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken } from '../../services/guestPassService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { ConciergeHome } from './ConciergeHome';
+import { AuroraAiChat } from './AuroraAiChat';
 import { BenvenutoPage } from './pages/BenvenutoPage';
 import { CheckinPage } from './pages/CheckinPage';
 import { WifiPage } from './pages/WifiPage';
@@ -43,6 +44,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   const [pass, setPass] = useState<GuestPass | null>(null);
   const [isPassChecking, setIsPassChecking] = useState(true);
   const [isSmartLockOpen, setIsSmartLockOpen] = useState(false);
+  const [isAuroraAiOpen, setIsAuroraAiOpen] = useState(false);
   const [bypassExpired, setBypassExpired] = useState(false);
   const homeScrollPosition = useRef(0);
 
@@ -268,7 +270,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
           </a>
           <button
             type="button"
-            onClick={() => handleNavigate('contatti')}
+            onClick={() => setIsAuroraAiOpen(true)}
             className="w-12 h-12 rounded-full bg-white hover:bg-slate-100 text-slate-900 shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-white/60"
             title="Chat AI"
             aria-label="Apri Chat AI"
@@ -284,6 +286,8 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         onClose={() => setIsSmartLockOpen(false)}
         pass={pass}
       />
+
+      <AuroraAiChat isOpen={isAuroraAiOpen} onClose={() => setIsAuroraAiOpen(false)} pass={pass} />
 
       {/* Subtle footer */}
       {currentPage !== 'language_select' && currentPage !== 'grid_menu' && (

@@ -3,12 +3,14 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import JSZip from 'jszip';
+import { GoogleGenAI } from '@google/genai';
 import { 
   parseBedAndBreakfastBooking, 
   generateRandomPin, 
   formatInvitationMessage 
 } from '../src/services/guestPassService.js';
 import { GuestPass } from '../src/types.js';
+import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
 import {
   getHomeAssistantConfig,
   updateHomeAssistantConfig,
@@ -94,6 +96,33 @@ function findValidGuestPass(token: string | undefined): GuestPass | null {
   const pass = serverPasses.find(item => item.token === token);
   return pass && isPassCurrentlyValid(pass) ? pass : null;
 }
+
+const auroraAiKnowledge = JSON.stringify({
+  apartment: APARTMENT_INFO,
+  amenities: AMENITIES.map(({ name, description }) => ({ name: name.it, description: description.it })),
+  experiences: EXPERIENCES.map(({ title, subtitle, duration, driveTime, description, tips }) => ({
+    title: title.it,
+    subtitle: subtitle.it,
+    duration,
+    driveTime,
+    description: description.it,
+    tips: tips.it
+  })),
+  nearbyPlaces: NEARBY_PLACES.map(({ name, category, distance, walkTime, address, description, highlight }) => ({
+    name,
+    category,
+    distance,
+    walkTime,
+    address,
+    description: description.it,
+    highlight: highlight?.it
+  }))
+});
+
+const auroraAiInstructions = `Sei Aurora AI, la concierge digitale dell'appartamento Aurora in Valtellina a Morbegno. Aiuti gli ospiti con informazioni pratiche sull'appartamento, Morbegno, Valtellina, ristoranti, servizi e attivita presenti nel knowledge base. Rispondi nella lingua usata dall'ospite, in modo conciso e cordiale. Usa solo le informazioni verificate qui sotto; non inventare orari, prezzi, disponibilita o servizi. Se un dato manca oppure serve assistenza personale, invita l'ospite a contattare Nino su WhatsApp. Non chiedere, memorizzare o ripetere dati sensibili come codici di accesso.
+
+KNOWLEDGE BASE VERIFICATO:
+${auroraAiKnowledge}`;
 
 interface HassLog {
   timestamp: string;
@@ -227,6 +256,15 @@ export function createApp() {
       res.status(401).json({ success: false, error: 'Link guest valido o autenticazione host richiesta.' });
       return;
     }
+    if (req.path === '/aurora-ai/chat') {
+      const guestToken = req.get('x-guest-token') || req.body?.guestToken;
+      if (findValidGuestPass(guestToken)) {
+        next();
+        return;
+      }
+      res.status(401).json({ success: false, error: 'Link guest valido richiesto.' });
+      return;
+    }
     requireHost(req, res, next);
   });
 
@@ -244,6 +282,46 @@ export function createApp() {
       return;
     }
     res.json({ success: true, pass });
+  });
+
+  apiRouter.post('/aurora-ai/chat', async (req, res) => {
+    const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
+    if (!question || question.length > 1000) {
+      res.status(400).json({ success: false, error: 'Inserisci una domanda valida, fino a 1000 caratteri.' });
+      return;
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      res.status(503).json({ success: false, error: 'Aurora AI non e ancora configurata. Contatta Nino per assistenza.' });
+      return;
+    }
+
+    const history = Array.isArray(req.body?.history)
+      ? req.body.history
+          .filter((message: unknown): message is { role: 'user' | 'model'; text: string } => {
+            if (!message || typeof message !== 'object') return false;
+            const item = message as { role?: unknown; text?: unknown };
+            return (item.role === 'user' || item.role === 'model') && typeof item.text === 'string' && item.text.length <= 1000;
+          })
+          .slice(-10)
+      : [];
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [...history, { role: 'user', text: question }].map(message => ({
+          role: message.role,
+          parts: [{ text: message.text }]
+        })),
+        config: { systemInstruction: auroraAiInstructions }
+      });
+      const answer = response.text?.trim();
+      if (!answer) throw new Error('Gemini non ha restituito una risposta.');
+      res.json({ success: true, answer });
+    } catch (error) {
+      console.error('Aurora AI request failed:', error);
+      res.status(502).json({ success: false, error: 'Aurora AI non e disponibile al momento. Riprova tra poco o contatta Nino.' });
+    }
   });
 
   // Health check
