@@ -49,17 +49,17 @@ const localStories = [
   { 
     title: 'Sentiero Valtellina', 
     meta: '7 min a piedi', 
-    image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80' 
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313902_0912859.jpg?rfh=1&size=xl'
   },
   { 
     title: 'Centro storico', 
     meta: '9 min a piedi', 
-    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80' 
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313749_8967242.jpg?rfh=1&size=xl'
   },
   { 
     title: 'Costiera dei Cèch', 
     meta: '18 min in auto', 
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80' 
+    image: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313853_6691445.jpg?rfh=1&size=xl'
   }
 ];
 
@@ -69,7 +69,7 @@ interface GuideTileItem {
   tag: string;
   desc: string;
   icon: React.ReactNode;
-  bgImage?: string;
+  bgImage: string;
 }
 
 const getLocalizedGuideSections = (lang: Language, media?: Record<string, string>): {
@@ -94,7 +94,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Priorità Arrivo' : isEn ? 'Arrival Priority' : isDe ? 'Anreise-Info' : isFr ? 'Priorité Arrivée' : 'Prioridad Llegada',
           desc: isIt ? 'Indirizzo esatto, navigatore GPS, parcheggio e treni' : isEn ? 'Exact address, GPS navigation, parking & trains' : isDe ? 'Genaue Adresse, GPS, Parkplatz & Züge' : isFr ? 'Adresse exacte, GPS, parking et trains' : 'Dirección exacta, GPS, parking y trenes',
           icon: <MapPin className="h-5 w-5" />,
-          bgImage: media?.locationCover || 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.locationCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313449_4618214.jpg?rfh=1&size=xl'
         },
         {
           page: 'check_in',
@@ -102,7 +102,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Accesso Casa' : isEn ? 'Home Access' : isDe ? 'Hauszugang' : isFr ? 'Accès Maison' : 'Acceso Casa',
           desc: isIt ? 'Codice apriporta, keybox e ingresso autonomo' : isEn ? 'Door opener, keybox code & self check-in' : isDe ? 'Türöffner, Keybox & Self-Check-in' : isFr ? 'Ouvre-porte, boîte à clés & arrivée autonome' : 'Abrepuertas, keybox y llegada autónoma',
           icon: <KeyRound className="h-5 w-5" />,
-          bgImage: media?.checkInCover || 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.checkInCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313615_0410423.jpg?rfh=1&size=xl'
         },
         {
           page: 'servizi',
@@ -110,7 +110,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Dotazioni' : isEn ? 'Amenities' : isDe ? 'Ausstattung' : isFr ? 'Équipements' : 'Equipamiento',
           desc: isIt ? 'Riscaldamento, elettrodomestici, cucina e comfort' : isEn ? 'Heating, appliances, kitchen and comforts' : isDe ? 'Heizung, Geräte, Küche & Komfort' : isFr ? 'Chauffage, appareils, cuisine et confort' : 'Calefacción, electrodomésticos y cocina',
           icon: <Wrench className="h-5 w-5" />,
-          bgImage: media?.servicesCover || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.servicesCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093117472_0195454.jpg?rfh=1&size=xl'
         },
         {
           page: 'regole',
@@ -118,7 +118,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Orari & Quiete' : isEn ? 'Hours & Quiet' : isDe ? 'Ruhezeiten' : isFr ? 'Horaires & Calme' : 'Horarios y Silencio',
           desc: isIt ? 'Orari di rispetto, rifiuti e divieto di fumo' : isEn ? 'Quiet hours, waste sorting & no smoking' : isDe ? 'Ruhezeiten, Mülltrennung & Rauchverbot' : isFr ? 'Heures de calme, tri des déchets & non fumeur' : 'Horas de silencio y normas',
           icon: <ShieldAlert className="h-5 w-5" />,
-          bgImage: media?.rulesCover || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=900&q=80'
+          bgImage: media?.rulesCover || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313712_8723602.jpg?rfh=1&size=xl'
         }
       ]
     },
@@ -139,21 +139,24 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           label: isIt ? 'Spesa e botteghe' : isEn ? 'Shopping & Local Food' : isDe ? 'Einkaufen & Botteghe' : isFr ? 'Courses & Boutiques' : 'Compras y tiendas',
           tag: isIt ? 'Prodotti Tipici' : isEn ? 'Local Products' : isDe ? 'Lokale Produkte' : isFr ? 'Produits locaux' : 'Productos locales',
           desc: isIt ? 'Botteghe storiche del Bitto, alimentari e market' : isEn ? 'Historic Bitto cheese shops & supermarkets' : isDe ? 'Historische Käseläden & Supermärkte' : isFr ? 'Boutiques de fromage Bitto & supermarchés' : 'Tiendas de queso Bitto y mercados',
-          icon: <ShoppingBag className="h-5 w-5" />
+          icon: <ShoppingBag className="h-5 w-5" />,
+          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313376_2938998.jpg?rfh=1&size=xl'
         },
         {
           page: 'trasporti',
           label: isIt ? 'Come muoversi' : isEn ? 'Getting Around' : isDe ? 'Mobilität & Verkehr' : isFr ? 'Se déplacer' : 'Cómo moverse',
           tag: isIt ? 'Treni & Bus' : isEn ? 'Trains & Buses' : isDe ? 'Bahn & Bus' : isFr ? 'Trains & Bus' : 'Trenes y autobuses',
           desc: isIt ? 'Stazione FS Morbegno, orari bus e taxi' : isEn ? 'Morbegno train station, bus lines & taxis' : isDe ? 'Bahnhof Morbegno, Buslinien & Taxi' : isFr ? 'Gare de Morbegno, bus et taxis' : 'Estación de tren y autobuses',
-          icon: <Train className="h-5 w-5" />
+          icon: <Train className="h-5 w-5" />,
+          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313449_4618214.jpg?rfh=1&size=xl'
         },
         {
           page: 'informazioni',
           label: isIt ? 'Informazioni e servizi' : isEn ? 'Useful Information' : isDe ? 'Nützliche Infos' : isFr ? 'Informations utiles' : 'Información útil',
           tag: isIt ? 'Info Pratiche' : isEn ? 'Practical Info' : isDe ? 'Praktische Infos' : isFr ? 'Infos pratiques' : 'Información práctica',
           desc: isIt ? 'Farmacie, banche, raccolta rifiuti e CIR/CIN' : isEn ? 'Pharmacies, ATMs, recycling and legal CIR' : isDe ? 'Apotheken, Geldautomaten & Müllabfuhr' : isFr ? 'Pharmacies, banques, tri et codes légaux' : 'Farmacias, cajeros y recogida de basuras',
-          icon: <Info className="h-5 w-5" />
+          icon: <Info className="h-5 w-5" />,
+          bgImage: 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/4/z_20250822_093313661_4120823.jpg?rfh=1&size=xl'
         }
       ]
     },
@@ -166,7 +169,8 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           label: isIt ? 'Contatta Nino' : isEn ? 'Contact Nino (Host)' : isDe ? 'Nino kontaktieren' : isFr ? 'Contacter Nino' : 'Contactar a Nino',
           tag: isIt ? 'Host Dedicato' : isEn ? 'Dedicated Host' : isDe ? 'Ihr Gastgeber' : isFr ? 'Hôte dédié' : 'Anfitrión dedicado',
           desc: isIt ? 'Assistenza diretta via WhatsApp e telefonica' : isEn ? 'Direct WhatsApp chat and phone assistance' : isDe ? 'Direkter WhatsApp- & Telefonkontakt' : isFr ? 'WhatsApp direct et assistance téléphonique' : 'WhatsApp directo y asistencia telefónica',
-          icon: <Phone className="h-5 w-5" />
+          icon: <Phone className="h-5 w-5" />,
+          bgImage: media?.hostAvatar || 'https://dhqbz5vfue3y3.cloudfront.net/fotobbit/67807/3/67807_gestore.jpg?rfh=18595'
         },
         {
           page: 'emergenza',
