@@ -74,15 +74,20 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
           onSelectLanguage={onSelectLanguage}
         />
 
-        {/* Introduction note */}
-        <div className="aurora-glass-card space-y-2">
-          <span className="aurora-eyebrow">Convivenza & Rispetto</span>
-          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-            Piccole attenzioni per un soggiorno perfetto
-          </h3>
-          <p className="text-xs text-white/70 leading-relaxed">
-            Per garantire il massimo comfort a voi e la tranquillità del condominio, vi chiediamo di seguire queste semplici regole di buon vicinato.
-          </p>
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
+            alt="Regole e Quiete della Casa"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Armonia & Rispetto
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Regole della Casa Aurora
+            </h1>
+          </div>
         </div>
 
         {/* Rules List */}

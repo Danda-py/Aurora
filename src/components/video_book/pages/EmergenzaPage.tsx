@@ -36,6 +36,22 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           onSelectLanguage={onSelectLanguage}
         />
 
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
+            alt="Soccorso e Sicurezza"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-rose-300 flex items-center gap-1.5">
+              Assistenza H24
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Emergenze & Numeri Utili
+            </h1>
+          </div>
+        </div>
+
         {/* Red Highlight 112 Banner */}
         <div className="aurora-glass-card border-rose-500/30 bg-gradient-to-br from-rose-950/40 to-black/60 space-y-3">
           <div className="flex items-center justify-between">

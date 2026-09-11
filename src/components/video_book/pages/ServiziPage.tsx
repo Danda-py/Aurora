@@ -29,15 +29,20 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
           onSelectLanguage={onSelectLanguage}
         />
 
-        {/* Intro */}
-        <div className="aurora-glass-card space-y-2">
-          <span className="aurora-eyebrow">Dotazioni Complete</span>
-          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-            Tutti i comfort pensati per te
-          </h3>
-          <p className="text-xs text-white/70 leading-relaxed">
-            Dalla cucina attrezzata al riscaldamento autonomo, ecco tutti i servizi inclusi nel tuo appartamento.
-          </p>
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
+            alt="Servizi e Comfort Appartamento"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Comfort & Tecnologia
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Servizi Inclusi nel Soggiorno
+            </h1>
+          </div>
         </div>
 
         {/* Grid of amenities */}

@@ -38,6 +38,22 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           onSelectLanguage={onSelectLanguage}
         />
 
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
+            alt="Check-out e Fine Soggiorno"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Grazie per essere stati con noi
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Check-out & Riconsegna Chiavi
+            </h1>
+          </div>
+        </div>
+
         {/* Checkout Time Banner */}
         <div className="text-center py-2 space-y-2">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 shadow-xs font-mono font-bold text-xs tracking-wider">

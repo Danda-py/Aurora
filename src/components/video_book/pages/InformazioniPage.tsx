@@ -38,6 +38,22 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
           onSelectLanguage={onSelectLanguage}
         />
 
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"
+            alt="Morbegno e Servizi Utili"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Guida Pratica
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Informazioni & Servizi Essenziali
+            </h1>
+          </div>
+        </div>
+
         {/* Services List */}
         <div className="space-y-3">
           <div>

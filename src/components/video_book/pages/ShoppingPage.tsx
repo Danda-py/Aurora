@@ -29,15 +29,20 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           onSelectLanguage={onSelectLanguage}
         />
 
-        {/* Intro */}
-        <div className="aurora-glass-card space-y-2">
-          <span className="aurora-eyebrow">Prodotti Tipici & Quotidiani</span>
-          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-            I migliori negozi e botteghe di Morbegno
-          </h3>
-          <p className="text-xs text-white/70 leading-relaxed">
-            Dal Bitto storico DOP ai formaggi d'alpeggio, fino ai supermercati per ogni necessità di soggiorno.
-          </p>
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"
+            alt="Botteghe e Sapori Tipici"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Eccellenze Artigianali
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Botteghe del Gusto & Market
+            </h1>
+          </div>
         </div>
 
         {/* Shopping List */}

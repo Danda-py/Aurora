@@ -36,6 +36,22 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           onSelectLanguage={onSelectLanguage}
         />
 
+        {/* Hero Banner */}
+        <div className="aurora-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"
+            alt="Treni e Trasporti in Valtellina"
+          />
+          <div className="aurora-hero-banner-overlay">
+            <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
+              Connessioni & Orari
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+              Come Muoversi a Morbegno
+            </h1>
+          </div>
+        </div>
+
         {/* Transport options list */}
         <div className="space-y-3">
           {tr.items.map((item, idx) => (

@@ -378,43 +378,28 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   useEffect(() => cancelHold, []);
 
-  const renderElongatedTile = (item: GuideTileItem) => (
+  const renderPhotoCard = (item: GuideTileItem) => (
     <button
       key={item.page}
       onClick={() => onNavigate(item.page)}
-      className="guide-hero-tile group"
+      className="aurora-photo-card group"
       aria-label={item.label}
     >
-      {item.bgImage && (
-        <>
-          <div 
-            className="guide-hero-tile-bg" 
-            style={{ backgroundImage: `url(${item.bgImage})` }} 
-          />
-          <div className="guide-hero-tile-overlay" />
-        </>
-      )}
-      
-      <div className="guide-hero-tile-content">
-        <div className="guide-hero-tile-icon">
-          {item.icon}
-        </div>
-        
-        <div className="guide-hero-tile-texts">
-          <span className="guide-hero-tile-tag">
-            {item.tag}
-          </span>
-          <h3 className="guide-hero-tile-title">
-            {item.label}
-          </h3>
-          <p className="guide-hero-tile-desc">
-            {item.desc}
-          </p>
-        </div>
-      </div>
-
-      <div className="guide-hero-tile-action">
-        <ChevronRight className="h-4 w-4" />
+      <img 
+        src={item.bgImage} 
+        alt={item.label} 
+        loading="lazy" 
+      />
+      <div className="aurora-photo-card-info">
+        <span className="aurora-photo-tag">
+          {item.tag}
+        </span>
+        <strong>
+          {item.label}
+        </strong>
+        <small>
+          {item.desc}
+        </small>
       </div>
     </button>
   );
@@ -431,7 +416,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         <FlagIcon language={language} className="h-full w-full object-cover" />
       </button>
 
-      <main className="aurora-shell space-y-6 pb-16 pt-6">
+      <main className="aurora-shell space-y-7 pb-16 pt-6">
         
         {/* Apple Brand Space & Guest Greeting */}
         <section className="aurora-brand-space" aria-label="Aurora in Valtellina">
@@ -556,19 +541,19 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         </section>
 
-        {/* PRIORITY 1: Arrivo e Casa (Essential Arrival & House Guide) in Elongated Tiles */}
+        {/* SECTION 1: Guida & Arrivo (Photographic Carousel) */}
         <section className="space-y-3">
           <div>
             <p className="aurora-eyebrow">{copy.allAurora}</p>
             <h2>{guideSections.houseEssentials.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
           </div>
-          <div className="guide-tiles-col">
-            {guideSections.houseEssentials.items.map(renderElongatedTile)}
+          <div className="aurora-photo-scroller">
+            {guideSections.houseEssentials.items.map(renderPhotoCard)}
           </div>
         </section>
 
-        {/* PRIORITY 2: Esperienze Vicine (Story Scroller) & Territorio Valtellinese */}
+        {/* SECTION 2: Idee per oggi (Esperienze Vicine Carousel) */}
         <section className="space-y-3">
           <div className="flex items-end justify-between">
             <div>
@@ -583,49 +568,57 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </button>
           </div>
           
-          <div className="story-scroller">
+          <div className="aurora-photo-scroller">
             {localStories.map((story) => (
               <button 
                 key={story.title} 
                 onClick={() => onNavigate('attivita')} 
-                className="story-card"
+                className="aurora-photo-card group"
               >
-                <img src={story.image} alt={story.title} />
-                <span>
+                <img src={story.image} alt={story.title} loading="lazy" />
+                <div className="aurora-photo-card-info">
+                  <span className="aurora-photo-tag">Esperienza</span>
                   <strong>{story.title}</strong>
                   <small>{story.meta}</small>
-                </span>
+                </div>
               </button>
             ))}
           </div>
+        </section>
 
-          {/* Valtellina & Exploration in Elongated Tiles */}
-          <div className="guide-tiles-col pt-1">
-            {guideSections.exploreValtellina.items.map(renderElongatedTile)}
+        {/* SECTION 3: Vivere la Valtellina (Gusto, Botteghe, Trasporti, Info) */}
+        <section className="space-y-3">
+          <div>
+            <p className="aurora-eyebrow">Territorio</p>
+            <h2>{guideSections.exploreValtellina.title}</h2>
+            <p className="text-xs text-white/60 mt-0.5">{guideSections.exploreValtellina.subtitle}</p>
+          </div>
+          <div className="aurora-photo-scroller">
+            {guideSections.exploreValtellina.items.map(renderPhotoCard)}
           </div>
         </section>
 
-        {/* PRIORITY 3: Supporto & Sicurezza in Elongated Tiles */}
+        {/* SECTION 4: Supporto & Sicurezza (Contatti & Emergenze) */}
         <section className="space-y-3">
           <div>
             <p className="aurora-eyebrow">Assistenza</p>
             <h2>{guideSections.supportSecurity.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
           </div>
-          <div className="guide-tiles-col">
-            {guideSections.supportSecurity.items.map(renderElongatedTile)}
+          <div className="aurora-photo-scroller">
+            {guideSections.supportSecurity.items.map(renderPhotoCard)}
           </div>
         </section>
 
-        {/* PRIORITY 4: Partenza & Check-out (At the end of the journey) */}
+        {/* SECTION 5: Partenza & Check-out */}
         <section className="space-y-3">
           <div>
             <p className="aurora-eyebrow">Fine Soggiorno</p>
             <h2>{guideSections.departure.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
           </div>
-          <div className="guide-tiles-col">
-            {guideSections.departure.items.map(renderElongatedTile)}
+          <div className="aurora-photo-scroller">
+            {guideSections.departure.items.map(renderPhotoCard)}
           </div>
         </section>
 
