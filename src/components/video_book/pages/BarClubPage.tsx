@@ -69,19 +69,16 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
                   <span className="text-xs text-white/60 block mt-0.5">
                     {b.address}
                   </span>
-                  <span className="text-xs text-[#62e6bd] block mt-0.5">{b.time}</span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {b.phone && (
-                    <a
-                      href={`tel:${b.phone}`}
-                      className="aurora-secondary-pill"
-                      title={t.actions.call}
-                    >
-                      <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
-                    </a>
-                  )}
+                  <a
+                    href={`tel:${b.phone}`}
+                    className="aurora-secondary-pill"
+                    title={t.actions.call}
+                  >
+                    <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
+                  </a>
                   <a
                     href={b.mapsUrl}
                     target="_blank"

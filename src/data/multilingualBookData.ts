@@ -95,7 +95,7 @@ export const BOOK_DATA: Record<Language, {
   restaurants: {
     title: string;
     bannerText: string;
-    recommended: Array<{ name: string; time: string; address: string; phone?: string; desc: string; mapsUrl: string }>;
+    recommended: Array<{ name: string; time: string; address: string; phone: string; desc: string; mapsUrl: string }>;
     deliveryTitle: string;
     deliveries: Array<{ name: string; type: string; phone: string }>;
   };
@@ -284,7 +284,7 @@ export const BOOK_DATA: Record<Language, {
         {
           tag: "ATTRAZIONE TOP 1",
           title: "Ponte nel Cielo (Val Tartano)",
-          desc: "Ponte tibetano pedonale a 140 metri di quota sospeso sulla vallata (lungo 234m). Panorama mozzafiato fino al Lago di Como. A circa 30 min di auto.",
+          desc: "Spettacolare passerella panoramica e punto di partenza per passeggiate. A circa 30 min in auto.",
           mapsUrl: "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
           tagColor: "bg-amber-100 text-amber-900"
         },
@@ -304,9 +304,9 @@ export const BOOK_DATA: Record<Language, {
         },
         {
           tag: "LAGO & RELAX",
-          title: "Spiagge di Colico & Kitesurf sul Lago di Como",
-          desc: "A 15 min da Morbegno: spiagge balneabili, lungolago, noleggio barche, windsurf/kitesurf e la magnifica Abbazia di Piona.",
-          mapsUrl: "https://maps.google.com/?q=Spiaggia+di+Colico+Lago+di+Como",
+          title: "Lago di Como, Colico",
+          desc: "Paesaggi suggestivi e ottimo riso al pesce persico da provare. A circa 15 min in auto.",
+          mapsUrl: "https://maps.google.com/?q=Colico+Lago+di+Como",
           tagColor: "bg-cyan-100 text-cyan-900"
         },
         {
@@ -327,146 +327,104 @@ export const BOOK_DATA: Record<Language, {
     },
     restaurants: {
       title: "RISTORANTI CONSIGLIATI",
-      bannerText: "I migliori ristoranti e osterie autentiche di Morbegno",
+      bannerText: "I nostri ristoranti, pizzerie e locali consigliati",
       recommended: [
         {
-          name: "ANTICA OSTERIA RAPELLA (DAL 1886)",
-          time: "7 min a piedi (550 m)",
-          address: "Via Margna 36, Morbegno",
-          phone: "+39 0342 610377",
-          desc: "Locale storico dal 1886 nel centro di Morbegno: celebri pizzoccheri della tradizione, sciatt croccanti, carni selezionate e grandi etichette DOCG.",
+          name: "ANTICA OSTERIA RAPELLA",
+          time: "19 min a piedi / 4 min in auto",
+          address: "Morbegno",
+          phone: "",
+          desc: "Cucina tipica valtellinese.",
           mapsUrl: "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
         },
         {
-          name: "OSTERIA DEL ZEP",
-          time: "6 min a piedi (500 m)",
-          address: "Piazza Marconi 16, Morbegno",
-          phone: "+39 0342 610058",
-          desc: "Osteria tipica con suggestiva cantina del '700 e camino: pasta fresca fatta in casa, pizzoccheri, sciatt con cicoria e carni alla griglia.",
-          mapsUrl: "https://maps.google.com/?q=Osteria+del+Zep+Morbegno"
-        },
-        {
-          name: "OSTERIA DEL CROTTO",
-          time: "8 min a piedi (650 m)",
-          address: "Via Don Giovanni Guanella 18, Morbegno",
-          phone: "+39 0342 614800",
-          desc: "Caratteristico crotto naturale in roccia: sciatt filanti, polenta taragna, costine e piatti della genuina cucina valtellinese.",
-          mapsUrl: "https://maps.google.com/?q=Osteria+del+Crotto+Morbegno"
-        },
-        {
-          name: "BRACERIA DEL CROTTO",
-          time: "9 min a piedi (750 m)",
-          address: "Via Crotto Lambertenghi 1, Morbegno",
-          phone: "+39 0342 615000",
-          desc: "Rinomata braceria nel crotto per tagliate di manzo, costate alla brace e specialità della tradizione montana.",
-          mapsUrl: "https://maps.google.com/?q=Braceria+del+Crotto+Morbegno"
-        },
-        {
           name: "BISTRONOMIA",
-          time: "12 min a piedi • 1 min in auto",
+          time: "12 min a piedi / 1 min in auto",
           address: "Morbegno",
-          desc: "Locale moderno e curato.",
+          phone: "",
+          desc: "Moderno e curato.",
           mapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno"
         },
         {
           name: "LA FIORIDA",
           time: "10 min in auto",
           address: "Mantello",
-          desc: "Cucina tipica con prodotti locali, tra cui Bitto e bresaola. Disponibile anche il servizio SPA.",
+          phone: "",
+          desc: "Cucina tipica con prodotti locali (Bitto, bresaola), anche SPA.",
           mapsUrl: "https://maps.google.com/?q=La+Fiorida+Mantello"
         },
         {
           name: "AGRITURISMO ORTESIDA",
           time: "12 min in auto",
           address: "Valtellina",
-          desc: "Agriturismo immerso nella natura.",
+          phone: "",
+          desc: "Immerso nella natura.",
           mapsUrl: "https://maps.google.com/?q=Agriturismo+Ortesida"
         },
         {
           name: "IL BISTECA",
           time: "7 min in auto",
           address: "Morbegno",
-          desc: "Locale tipico consigliato per piatti a base di carne.",
+          phone: "",
+          desc: "Tipico per mangiare piatti a base di carne.",
           mapsUrl: "https://maps.google.com/?q=Il+Bisteca+Morbegno"
         },
         {
           name: "PIZZERIA VENTUNO",
-          time: "23 min a piedi • 4 min in auto",
+          time: "23 min a piedi / 4 min in auto",
           address: "Morbegno",
-          desc: "Ambiente accogliente e moderno, pizze sottili e ben condite, con un ottimo rapporto qualità-prezzo.",
+          phone: "",
+          desc: "Ambiente accogliente e moderno, pizze sottili e ben condite, con ottimo rapporto qualità-prezzo.",
           mapsUrl: "https://maps.google.com/?q=Pizzeria+Ventuno+Morbegno"
         },
         {
           name: "PIZZERIA EDEN",
-          time: "29 min a piedi • 4 min in auto",
+          time: "29 min a piedi / 4 min in auto",
           address: "Morbegno",
-          desc: "Ampia varietà di pizze classiche e speciali, prezzi più alti rispetto alla Pizzeria Ventuno e servizio rapido e cortese.",
+          phone: "",
+          desc: "Ampia varietà di pizze classiche e speciali. Prezzi più alti rispetto a Pizzeria Ventuno, servizio rapido e cortese.",
           mapsUrl: "https://maps.google.com/?q=Pizzeria+Eden+Morbegno"
         },
         {
-          name: "PIZZERIA ANUBIS",
-          time: "25 min a piedi • 7 min in auto",
+          name: "BISTRONOMIA",
+          time: "12 min a piedi / 1 min in auto",
           address: "Morbegno",
+          phone: "",
+          desc: "Moderno e curato.",
+          mapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno"
+        },
+        {
+          name: "PIZZERIA ANUBIS",
+          time: "25 min a piedi / 7 min in auto",
+          address: "Morbegno",
+          phone: "",
           desc: "Consigliata per la consegna a domicilio.",
           mapsUrl: "https://maps.google.com/?q=Pizzeria+Anubis+Morbegno"
         }
       ],
-      deliveryTitle: "Botteghe Storiche & Degustazione",
+      deliveryTitle: "Consegna a domicilio",
       deliveries: [
-        { name: "FRATELLI CIAPPONI (1883)", type: "Bitto DOP, Casera, Bresaola & Grandi Vini", phone: "+39 0342 610012" },
-        { name: "PASTICCERIA POLETTI", type: "Bisciola valtellinese & dolci tipici", phone: "+39 0342 611234" }
+        { name: "PIZZERIA ANUBIS", type: "Consigliata per la consegna a domicilio", phone: "" }
       ]
     },
     bars: {
       title: "BAR, COLAZIONI & APERITIVI",
-      bannerText: "I bar e le caffetterie storiche del centro di Morbegno",
+      bannerText: "Colazioni e pausa pranzo",
       recommended: [
         {
-          name: "WINE BAR LA TAVERNETTA",
-          time: "6 min a piedi (500 m)",
-          address: "Via Ezio Vanoni 64, Morbegno",
-          phone: "+39 0342 611007",
-          desc: "Locale storico dal 1970 con ampio dehor sulla piazza: rinomato per aperitivi con sciatt caldi, birre artigianali e calici di vino.",
-          mapsUrl: "https://maps.google.com/?q=Wine+Bar+La+Tavernetta+Morbegno"
-        },
-        {
-          name: "PANIFICIO & PASTICCERIA POLETTI",
-          time: "5 min a piedi (400 m)",
-          address: "Via Ezio Vanoni 32, Morbegno",
-          phone: "+39 0342 611234",
-          desc: "Pasticceria artigianale di riferimento per colazioni con brioches fresche, ottimo caffè, pane di segale e la tipica Bisciola della Valtellina.",
-          mapsUrl: "https://maps.google.com/?q=Panificio+Pasticceria+Poletti+Morbegno"
-        },
-        {
-          name: "CAFFÈ GALLERY",
-          time: "7 min a piedi (600 m)",
-          address: "Via Garibaldi 42, Morbegno",
-          phone: "+39 0342 615432",
-          desc: "Caffetteria e cocktail bar raffinato nel centro storico, famoso per gli aperitivi gourmet e i cocktail serali.",
-          mapsUrl: "https://maps.google.com/?q=Caffe+Gallery+Morbegno"
-        },
-        {
-          name: "VINERIA BIRRERIA OTTOCENTO",
-          time: "8 min a piedi (650 m)",
-          address: "Via Garibaldi 16, Morbegno",
-          phone: "+39 0342 612500",
-          desc: "Accogliente vineria nel borgo antico con ampia selezione di vini valtellinesi DOCG, birre e taglieri di salumi locali.",
-          mapsUrl: "https://maps.google.com/?q=Ottocento+Morbegno"
-        },
-        {
           name: "BAR TRE",
-          time: "8 min a piedi • 1 min in auto",
+          time: "8 min a piedi / 1 min in auto",
           address: "Morbegno",
           phone: "",
-          desc: "Bar storico con servizio cordiale e colazioni all'italiana.",
+          desc: "Bar storico con servizio cordiale e colazioni all’italiana.",
           mapsUrl: "https://maps.google.com/?q=Bar+Tre+Morbegno"
         },
         {
           name: "DOLCE FORNO",
-          time: "19 min a piedi • 4 min in auto",
+          time: "19 min a piedi / 4 min in auto",
           address: "Morbegno",
           phone: "",
-          desc: "Locale moderno e perfetto per iniziare la giornata, con pasticceria e pausa pranzo.",
+          desc: "Moderno e perfetto per iniziare la giornata, pasticceria e pausa pranzo.",
           mapsUrl: "https://maps.google.com/?q=Dolce+Forno+Morbegno"
         }
       ],
@@ -477,60 +435,32 @@ export const BOOK_DATA: Record<Language, {
       title: "SHOPPING & ALIMENTARI",
       shops: [
         {
-          title: "FRATELLI CIAPPONI - BOTTEGA STORICA",
-          time: "6 min a piedi (Piazza 3 Novembre)",
-          hours: "Tutti i giorni 08:30 - 19:30 (chiuso lunedì pom)",
-          desc: "Autentico tempio enogastronomico dal 1883: formaggi Bitto e Casera stagionati nelle cantine sotterranee, funghi porcini, bresaola e vini.",
-          mapsUrl: "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
-        },
-        {
-          title: "SUPERMERCATO IPERAL / CARREFOUR",
-          time: "4 min a piedi (300 m)",
-          hours: "Aperto 7 giorni su 7: 08:00 - 20:30",
-          desc: "Supermercato completo per la spesa quotidiana: alimentari freschi, panetteria, frutta e prodotti per la casa.",
-          mapsUrl: "https://maps.google.com/?q=Supermercato+Iperal+Morbegno"
-        },
-        {
           title: "SIGMA",
-          time: "6 min a piedi • 1 min in auto",
+          time: "6 min a piedi / 1 min in auto",
           hours: "",
           desc: "Piccolo supermercato comodo per ogni esigenza.",
           mapsUrl: "https://maps.google.com/?q=Sigma+Morbegno"
         },
         {
           title: "IPERAL",
-          time: "17 min a piedi • 3 min in auto",
+          time: "17 min a piedi / 3 min in auto",
           hours: "",
           desc: "Supermercato più grande, completo e conveniente.",
           mapsUrl: "https://maps.google.com/?q=Iperal+Morbegno"
         },
         {
           title: "DROGHERIA CIAPPONI",
-          time: "23 min a piedi • 4 min in auto",
+          time: "23 min a piedi / 4 min in auto",
           hours: "",
           desc: "Bottega storica con vini, formaggi e salumi.",
-          mapsUrl: "https://maps.google.com/?q=Drogheria+Ciapponi+Morbegno"
+          mapsUrl: "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
         },
         {
           title: "MACELLERIA DI FRONTE ALLA DROGHERIA",
-          time: "23 min a piedi • 4 min in auto",
+          time: "23 min a piedi / 4 min in auto",
           hours: "",
           desc: "Ottima carne locale.",
-          mapsUrl: "https://maps.google.com/?q=Macelleria+Piazza+3+Novembre+Morbegno"
-        },
-        {
-          title: "CENTRO COMMERCIALE FUENTES",
-          time: "12 min in auto (Piantedo / Colico)",
-          hours: "Tutti i giorni 09:00 - 20:30",
-          desc: "Grande ipermercato con oltre 60 negozi di abbigliamento, farmacia, elettronica e ristorazione.",
-          mapsUrl: "https://maps.google.com/?q=Centro+Commerciale+Fuentes+Piantedo"
-        },
-        {
-          title: "MERCATO SETTIMANALE DI MORBEGNO",
-          time: "Piazza Sant'Antonio & Centro",
-          hours: "Ogni Sabato mattina: 08:00 - 13:00",
-          desc: "Bancarelle di formaggi d'alpeggio, salumi a km zero, frutta fresca, abbigliamento e artigianato locale.",
-          mapsUrl: "https://maps.google.com/?q=Piazza+Sant+Antonio+Morbegno"
+          mapsUrl: "https://maps.google.com/?q=Macelleria+Morbegno+Drogheria+Ciapponi"
         }
       ]
     },
@@ -538,9 +468,9 @@ export const BOOK_DATA: Record<Language, {
       title: "INFORMAZIONI UTILI",
       services: [
         {
-          title: "ACQUA DEL RUBINETTO",
-          desc: "L'acqua del rubinetto è potabile e di ottima qualità.",
-          mapsUrl: "https://maps.google.com/?q=Morbegno"
+          title: "ACQUA POTABILE",
+          desc: "L’acqua del rubinetto è potabile e di ottima qualità.",
+          mapsUrl: ""
         },
         {
           title: "FARMACIA DI TURNO",
@@ -569,7 +499,7 @@ export const BOOK_DATA: Record<Language, {
         }
       ],
       wasteTitle: "Bidoni della Spazzatura (Raccolta Differenziata)",
-      wasteDesc: "I bidoni della raccolta differenziata si trovano sul retro della casa. Si prega di differenziare: Umido (marrone), Carta (blu), Plastica/Lattine (giallo) e Vetro (verde). Per qualsiasi necessità o consiglio, non esiti a scrivermi: sarò felice di aiutarla.",
+      wasteDesc: "I bidoni della raccolta differenziata si trovano sul retro della casa. Si prega di differenziare: Umido (marrone), Carta (blu), Plastica/Lattine (giallo) e Vetro (verde).",
       cirLabel: "Codice Identificativo Regionale (CIR):",
       cinLabel: "Codice Identificativo Nazionale (CIN):"
     },

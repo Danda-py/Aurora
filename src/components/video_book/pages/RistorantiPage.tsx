@@ -69,8 +69,9 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                   <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                     {r.name}
                   </h4>
-                  <span className="text-xs text-white/60 block mt-0.5">{r.address}</span>
-                  <span className="text-xs text-[#62e6bd] block mt-0.5">{r.time}</span>
+                  <span className="text-xs text-white/60 block mt-0.5">
+                    {r.address}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
