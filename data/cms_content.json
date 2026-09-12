@@ -1,0 +1,2380 @@
+{
+  "de": {
+    "bars": {
+      "title": "BARS, CAFÉS & APERITIFS",
+      "bannerText": "Traditionsbäckereien, Weinbars und Terrassen in Morbegno",
+      "coffeeDesc": "In der Wohnung steht Ihnen die Espresso-Kaffeemaschine mit kostenlosen Willkommenskapseln zur Verfügung.",
+      "coffeeTitle": "Kaffeemaschine im Apartment vorhanden",
+      "recommended": [
+        {
+          "desc": "Historische Weinbar seit 1970 mit Außenterrasse: Aperitifs mit warmen Sciatt, Craft-Bieren und regionalen Weinen.",
+          "name": "WINE BAR LA TAVERNETTA",
+          "time": "6 Min. Fußweg (500 m)",
+          "phone": "+39 0342 611007",
+          "address": "Via Ezio Vanoni 64, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Wine+Bar+La+Tavernetta+Morbegno"
+        },
+        {
+          "desc": "Handwerksbäckerei und Konditorei für das Frühstück mit ofenfrischen Croissants, Espresso, Roggenbrot und Bisciola.",
+          "name": "PANIFICIO & PASTICCERIA POLETTI",
+          "time": "5 Min. Fußweg (400 m)",
+          "phone": "+39 0342 611234",
+          "address": "Via Ezio Vanoni 32, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Panificio+Pasticceria+Poletti+Morbegno"
+        },
+        {
+          "desc": "Stilvolles Café und Cocktailbar in der Altstadt von Morbegno, beliebt für Aperitifs und Drinks am Abend.",
+          "name": "CAFFÈ GALLERY",
+          "time": "7 Min. Fußweg (600 m)",
+          "phone": "+39 0342 615432",
+          "address": "Via Garibaldi 42, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Caffe+Gallery+Morbegno"
+        },
+        {
+          "desc": "Gemütliche Wein- und Bierstube in der Altstadt mit Veltliner DOCG-Weinen und regionalen Wurst- und Käseplatten.",
+          "name": "VINERIA BIRRERIA OTTOCENTO",
+          "time": "8 Min. Fußweg (650 m)",
+          "phone": "+39 0342 612500",
+          "address": "Via Garibaldi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ottocento+Morbegno"
+        }
+      ]
+    },
+    "info": {
+      "title": "NÜTZLICHE INFORMATIONEN",
+      "cinLabel": "Nationaler Identifikationscode (CIN):",
+      "cirLabel": "Regionaler Identifikationscode (CIR):",
+      "services": [
+        {
+          "desc": "Farmacia San Giovanni • Via Garibaldi (5 Min. Fußweg)",
+          "title": "NOTDIENST-APOTHEKE",
+          "mapsUrl": "https://maps.google.com/?q=Farmacia+Morbegno"
+        },
+        {
+          "desc": "Banca Popolare di Sondrio • Piazza Caduti (6 Min. Fußweg)",
+          "title": "BANK & 24H-GELDAUTOMAT",
+          "mapsUrl": "https://maps.google.com/?q=Bancomat+Morbegno"
+        },
+        {
+          "desc": "Eni Station & Enel X Schnellladesäulen (400 m)",
+          "title": "TANKSTELLE & E-LADESÄULEN",
+          "mapsUrl": "https://maps.google.com/?q=Distributore+Morbegno"
+        },
+        {
+          "desc": "Poste Italiane Morbegno • Via Garibaldi (8 Min. Fußweg)",
+          "title": "POSTAMT",
+          "mapsUrl": "https://maps.google.com/?q=Poste+Italiane+Morbegno"
+        },
+        {
+          "desc": "Stiftskirche San Giovanni Battista & Ganda-Brücke (500 m)",
+          "title": "SEHENSWÜRDIGKEITEN & KIRCHEN",
+          "mapsUrl": "https://maps.google.com/?q=Collegiata+San+Giovanni+Morbegno"
+        }
+      ],
+      "wasteDesc": "Die Mülltrennungstonnen befinden sich auf der Rückseite des Hauses: Biomüll (braun), Papier (blau), Plastik/Dosen (gelb), Glas (grün).",
+      "wasteTitle": "Mülltrennung (Tonnen auf der Hausrückseite)"
+    },
+    "wifi": {
+      "title": "WI-FI",
+      "speedNotice": "Schnelles WLAN bis zu 500 Mbit/s • HD-Streaming, Surfen und Homeoffice",
+      "networkLabel": "NETZWERKNAME (SSID)",
+      "passwordLabel": "WLAN-PASSWORT",
+      "troubleshootText": "Schalten Sie bei Verbindungsabbrüchen kurz das WLAN am Gerät aus und wieder ein oder starten Sie die Netzwerkverbindung Ihres Smartphones neu.",
+      "troubleshootTitle": "Verbindungsprobleme?"
+    },
+    "rules": {
+      "title": "HAUSORDNUNG",
+      "r1Desc": "Rauchen ist in der Wohnung strengstens untersagt. Nur im Freien gestattet.",
+      "r2Desc": "Bitte behandeln Sie das Apartment so sorgsam, als wäre es Ihr eigenes Zuhause.",
+      "r3Desc": "Bitte beachten Sie die Nachtruhe von 23:00 bis 08:00 Uhr.",
+      "r4Desc": "Übernachtungsgäste außerhalb der Buchung sind nicht gestattet.",
+      "r5Desc": "Schließen Sie die Eingangstür stets ab und schalten Sie Geräte und Licht beim Verlassen aus.",
+      "r6Desc": "Informieren Sie uns bitte unverzüglich über eventuelle Schäden oder Störungen.",
+      "r1Title": "STRIKTES RAUCHVERBOT",
+      "r2Title": "PFLEGLICHER UMGANG",
+      "r3Title": "RUHEZEITEN",
+      "r4Title": "UNANGEMELDETE GÄSTE",
+      "r5Title": "SICHERHEIT & ENERGIE",
+      "r6Title": "MÄNGELMELDUNG"
+    },
+    "appName": "Aurora in Valtellina",
+    "checkIn": {
+      "badge": "::: 14:00 (2 PM) :::",
+      "step1": "1. Die Wohnungsschlüssel werden Ihnen bei Ihrer Ankunft persönlich direkt vom Gastgeber übergeben.",
+      "step2": "2. Bitte senden Sie uns vorab eine kurze Nachricht per WhatsApp mit Ihrer voraussichtlichen Ankunftszeit.",
+      "step3": "3. Bei Ihrer Ankunft heißen wir Sie herzlich willkommen, zeigen Ihnen das Apartment und übergeben die Schlüssel.",
+      "title": "CHECK-IN",
+      "parkingDesc": "Das Haus verfügt über einen privaten Parkplatz mit einem stets freien und reservierten Stellplatz für Gäste des Appartamento Aurora.",
+      "parkingNote": "Jederzeit ohne Aufpreis für Sie verfügbar.",
+      "parkingTitle": "RESERVIERTER PRIVATPARKPLATZ",
+      "timingNotice": "Der Check-in ist ab 14:00 Uhr (2 PM) möglich. Bei früherer Ankunft oder Sonderwünschen schreiben Sie uns gerne per WhatsApp.",
+      "keyboxCodeLabel": "PERSÖNLICHE ÜBERGABE DURCH DEN GASTGEBER",
+      "houseAccessTitle": "Persönliche Schlüsselübergabe"
+    },
+    "welcome": {
+      "title": "WILLKOMMEN",
+      "message": "Wir freuen uns sehr, Sie in unserem Haus in Morbegno begrüßen zu dürfen. Dieser digitale Guide begleitet Sie durch Ihren erholsamen Aufenthalt im Veltlin.",
+      "greeting": "Herzlich willkommen im Aurora in Valtellina!",
+      "viewDesc": "Reservierter Privatparkplatz und Bergblick",
+      "viewTitle": "INNENHOF & ALPENBLICK",
+      "livingDesc": "Smart-TV, Schlafsofa und Essbereich",
+      "roomsTitle": "Die Räumlichkeiten Des Hauses",
+      "bedroomDesc": "Kingsize-Bett, geräumiger Schrank und frische Bettwäsche",
+      "kitchenDesc": "Kochfeld, Backofen, Spülmaschine & Kaffeemaschine",
+      "livingTitle": "WOHNBEREICH & ENTSPANNUNG",
+      "bedroomTitle": "HAUPTSCHLAFZIMMER",
+      "kitchenTitle": "VOLL AUSGESTATTETE KÜCHE"
+    },
+    "checkOut": {
+      "badge": "::: 10:00 (10 AM) :::",
+      "title": "CHECK-OUT (ABREISE)",
+      "lateNote": "Wenn Sie einen späteren Check-out wünschen, kontaktieren Sie uns bitte rechtzeitig zwecks Verfügbarkeit.",
+      "thankYou": "Wir danken Ihnen herzlich für Ihren Aufenthalt im Aurora in Valtellina. Gute Heimreise und auf ein baldiges Wiedersehen!",
+      "checklist": [
+        {
+          "desc": "Schränke, Schubladen, Steckdosen und Bad überprüfen, um nichts zu vergessen.",
+          "title": "PERSÖNLICHE GEGENSTÄNDE PRÜFEN"
+        },
+        {
+          "desc": "Alle Lichter, Klimaanlage/Heizung und den Fernseher ausschalten.",
+          "title": "GERÄTE AUSSCHALTEN"
+        },
+        {
+          "desc": "Getrennten Müll in den Tonnen im Innenhof deponieren.",
+          "title": "MÜLL ENTSORGEN"
+        },
+        {
+          "desc": "Fenster und Fensterläden wetterfest verriegeln.",
+          "title": "FENSTER & LÄDEN SCHLIESSEN"
+        },
+        {
+          "desc": "Schlüssel im Schlüsseltresor deponieren und Zahlencode verstellen.",
+          "title": "SCHLÜSSEL IN DIE KEYBOX LEGEN"
+        },
+        {
+          "desc": "Benutzte Handtücher in die Duschwanne oder Badewanne legen.",
+          "title": "BENUTZTE HANDTÜCHER"
+        },
+        {
+          "desc": "Geschirr in die Spülmaschine einräumen und ggf. Spülgang starten.",
+          "title": "KÜCHE AUFRÄUMEN"
+        }
+      ],
+      "checklistTitle": "Vor Ihrer Abreise bitten wir Sie um Folgendes:"
+    },
+    "contacts": {
+      "quote": "Liebe Gäste, ich stehe Ihnen während Ihres gesamten Aufenthalts in Morbegno jederzeit gerne mit Rat und Tat zur Seite. Zögern Sie nicht, mich zu kontaktieren!",
+      "title": "KONTAKT & GASTGEBER",
+      "copied": "In die Zwischenablage kopiert!",
+      "hostRole": "Ihr Lokaler Gastgeber • Aurora in Valtellina",
+      "copyEmail": "E-Mail kopieren",
+      "copyPhone": "Nummer kopieren",
+      "smsAction": "SMS senden",
+      "callAction": "Anrufen",
+      "chatAction": "WhatsApp Chat",
+      "rateGoogle": "AUF GOOGLE BEWERTEN",
+      "emailAction": "E-Mail senden",
+      "rateWebsite": "AUF BEDANDBREAKFAST.IT BEWERTEN",
+      "ratingPrompt": "Wie bewerten Sie Ihren Aufenthalt insgesamt?",
+      "reviewPrompt": "Wir hoffen, Sie hatten einen wundervollen Aufenthalt! Ihre Bewertung ist uns sehr wichtig:",
+      "submitReview": "Bewertung absenden",
+      "commentPrompt": "Ihr Kommentar oder Verbesserungsvorschlag:",
+      "reviewSuccess": "Herzlichen Dank für Ihre wertvolle Bewertung!",
+      "reviewDialogTitle": "Bewertung für Aurora in Valtellina abgeben"
+    },
+    "location": {
+      "byCar": "Mit dem Auto:",
+      "title": "STANDORT & ANREISE",
+      "byPlane": "Von den Flughäfen:",
+      "byTrain": "Mit der Bahn:",
+      "heading": "Wegbeschreibung zu unserer Unterkunft",
+      "byCarDesc": "Über die SS38, Ausfahrt Morbegno Centro. Privater Parkplatz des Hauses mit stets reserviertem Stellplatz.",
+      "byPlaneDesc": "Mailand Bergamo (80 km), Mailand Linate (100 km), Mailand Malpensa (125 km).",
+      "byTrainDesc": "Bahnhof Morbegno FS in 600m (8 Min. Fußweg). Stündliche Direktzüge ab Mailand Centrale.",
+      "howToArrive": "Anreisehinweise"
+    },
+    "shopping": {
+      "shops": [
+        {
+          "desc": "Kult-Feinkostladen seit 1883: Unterirdische Gewölbekeller mit gereiftem Bitto- und Casera-Käse, Steinpilzen und Weinen.",
+          "time": "6 Min. Fußweg (Piazza 3 Novembre)",
+          "hours": "Täglich 08:30 - 19:30 (Montagnachmittag geschlossen)",
+          "title": "FRATELLI CIAPPONI - HISTORISCHER FEINKOSTLADEN",
+          "mapsUrl": "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
+        },
+        {
+          "desc": "Gut sortierter Supermarkt für den täglichen Bedarf: Frischetheke, Bäckerei und Haushaltswaren.",
+          "time": "4 Min. Fußweg (300 m)",
+          "hours": "7 Tage die Woche geöffnet: 08:00 - 20:30",
+          "title": "SUPERMARKT IPERAL / CARREFOUR",
+          "mapsUrl": "https://maps.google.com/?q=Supermercato+Iperal+Morbegno"
+        },
+        {
+          "desc": "Großes Einkaufszentrum mit über 60 Modegeschäften, Apotheke, Elektronik und Gastronomie.",
+          "time": "12 Min. mit dem Auto (Piantedo / Colico)",
+          "hours": "Täglich 09:00 - 20:30",
+          "title": "EINKAUFSZENTRUM FUENTES",
+          "mapsUrl": "https://maps.google.com/?q=Centro+Commerciale+Fuentes+Piantedo"
+        },
+        {
+          "desc": "Traditioneller Wochenmarkt mit Almkäse, regionalen Wurstwaren, frischem Obst und Kunsthandwerk.",
+          "time": "Piazza Sant'Antonio & Zentrum",
+          "hours": "Jeden Samstagvormittag: 08:00 - 13:00",
+          "title": "SAMSTAGSMARKT IN MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Piazza+Sant+Antonio+Morbegno"
+        }
+      ],
+      "title": "EINKAUFEN & LEBENSMITTEL"
+    },
+    "amenities": {
+      "items": [
+        {
+          "desc": "Orthopädische Matratze und hochwertige Bettwäsche",
+          "title": "KINGSIZE-BETT"
+        },
+        {
+          "desc": "Bequemer Schlafplatz für 2 weitere Gäste",
+          "title": "DOPPELSCHLAFSOFA"
+        },
+        {
+          "desc": "Schnelles unbegrenztes Highspeed-Internet",
+          "title": "WLAN BIS ZU 500 MBIT/S"
+        },
+        {
+          "desc": "Angenehme Flächenkühlung und -heizung über den Boden",
+          "title": "FUSSBODENHEIZUNG & -KÜHLUNG"
+        },
+        {
+          "desc": "Netflix, Prime Video und Satellitenprogramme",
+          "title": "50\" 4K SMART-TV"
+        },
+        {
+          "desc": "Schreibtisch mit Steckdosen für Telearbeit",
+          "title": "ARBEITSPLATZ"
+        },
+        {
+          "desc": "Kochgeschirr-Set und vollständige Küchenausstattung",
+          "title": "VOLLSTÄNDIGES KOCHFELD"
+        },
+        {
+          "desc": "Spültabs unter der Spüle vorhanden",
+          "title": "GESCHIRRSPÜLER"
+        },
+        {
+          "desc": "Kostenlose Willkommens-Kaffeekapseln",
+          "title": "ESPRESSO-KAFFEEMASCHINE"
+        },
+        {
+          "desc": "Mit Grill-, Auftau- und Backfunktion",
+          "title": "BACKOFEN & MIKROWELLE"
+        },
+        {
+          "desc": "Großer Kühlschrank mit Eisfach",
+          "title": "KÜHLSCHRANK & GEFRIERFACH"
+        },
+        {
+          "desc": "Waschmittel und Wäscheständer vorhanden",
+          "title": "WASCHMASCHINE & WÄSCHESTÄNDER"
+        },
+        {
+          "desc": "Leistungsstarker Föhn, Handtücher und Duschgel vorhanden",
+          "title": "BAD-KOMFORTSET"
+        },
+        {
+          "desc": "Privater Parkplatz des Hauses mit stets reserviertem Stellplatz",
+          "title": "RESERVIERTER PRIVATPARKPLATZ"
+        }
+      ],
+      "title": "AUSSTATTUNG & SERVICE",
+      "notice": "Alle Ausstattungen stehen Ihnen exklusiv zur Verfügung. Bitte schalten Sie beim Verlassen Geräte und Lichter aus."
+    },
+    "emergency": {
+      "items": [
+        {
+          "phone": "0342 610210",
+          "title": "Carabinieri Polizeikommando Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24",
+          "subtitle": "Hauptquartier & Wache • Via Morelli 24, Morbegno"
+        },
+        {
+          "phone": "0342 607111",
+          "title": "Krankenhaus Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1",
+          "subtitle": "Regionales Krankenhaus • Via Morelli 1, Morbegno"
+        },
+        {
+          "title": "Notdienstapotheke (PharmAround)",
+          "webUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          "subtitle": "Aktuell diensthabende Apotheken in Morbegno",
+          "webLabel": "Offene Apotheken"
+        },
+        {
+          "phone": "116 117",
+          "title": "Ärztlicher Bereitschaftsdienst (116 117)",
+          "subtitle": "Nacht- und Wochenendbereitschaft"
+        }
+      ],
+      "title": "NOTFALL & HILFE",
+      "freeBadge": "KOSTENFREI",
+      "nationalNumbersTitle": "24-STUNDEN-NOTRUFNUMMERN"
+    },
+    "transport": {
+      "items": [
+        {
+          "desc": "Direkte Regionalzüge nach Mailand Centrale, Comer See, Sondrio, Tirano und Bernina Express.",
+          "time": "8 Min. Fußweg (600 m)",
+          "title": "BAHNHOF MORBEGNO FS",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Morbegno",
+          "subtitle": "Haltestelle Morbegno"
+        },
+        {
+          "desc": "Linienbusse ins Val Tartano (Hängebrücke Ponte nel Cielo), Val Gerola und Val Masino.",
+          "time": "5 Min. Fußweg",
+          "title": "REGIONALBUSSE",
+          "mapsUrl": "https://maps.google.com/?q=Fermata+Bus+Morbegno",
+          "subtitle": "Haltestelle Via Roma / Piazza S. Antonio"
+        },
+        {
+          "desc": "Direkte Bahnverbindungen ab Morbegno nach Mailand Centrale mit Anschluss-Shuttles.",
+          "time": "1 Std. 15 Min. mit dem Auto / Direktzug",
+          "title": "FLUGHÄFEN MAILAND",
+          "mapsUrl": "https://maps.google.com/?q=Milano+Bergamo+Airport",
+          "subtitle": "Bergamo / Linate / Malpensa"
+        }
+      ],
+      "title": "VERKEHRSVERBINDUNGEN"
+    },
+    "activities": {
+      "title": "AKTIVITÄTEN & AUSFLÜGE",
+      "bannerText": "Unvergessliche Erlebnisse im Veltlin & am Comer See",
+      "categories": [
+        {
+          "desc": "114 km flacher Panoramaradweg entlang des Flusses Adda (E-Bike-Verleih)",
+          "title": "SENTIERO VALTELLINA RADWEG"
+        },
+        {
+          "desc": "Weinproben in historischen Kellern und Nebbiolo-Terrassenweinbergen",
+          "title": "WEINTOUREN & SFORZATO WEINE"
+        },
+        {
+          "desc": "Skigebiete Pescegallo (Valgerola), Aprica, Bormio und Valmalenco",
+          "title": "SKI- & WINTERSPORT"
+        },
+        {
+          "desc": "Spaziergang über die Ganda-Brücke und Besuch traditioneller Käsekeller",
+          "title": "ALTSTADT MORBEGNO & BITTO-KÄSE"
+        }
+      ],
+      "highlights": [
+        {
+          "tag": "UNESCO WELTKULTURERBE",
+          "desc": "UNESCO-Welterbe: Die höchste Alpenbahnstrecke Europas über Gletscher und spektakuläre Pässe bis ins mondäne St. Moritz in der Schweiz.",
+          "title": "Bernina Express Panoramazug (Tirano - St. Moritz)",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Tirano+Trenino+Rosso",
+          "tagColor": "bg-rose-100 text-rose-800"
+        },
+        {
+          "tag": "TOP HIGHLIGHT 1",
+          "desc": "Eine der höchsten Fußgänger-Hängebrücken Europas in 140 m Höhe (234 m Länge) mit atemberaubendem Blick bis zum Comer See. 15 Min. Fahrt.",
+          "title": "Ponte nel Cielo Hängebrücke (Val Tartano)",
+          "mapsUrl": "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
+          "tagColor": "bg-amber-100 text-amber-900"
+        },
+        {
+          "tag": "NATUR & WANDERN",
+          "desc": "Das 'Kleine Yosemite' Italiens: gewaltige Granitwände, smaragdgrüne Bergseen, Wasserfälle und urige Berghütten. 20 Min. Fahrt.",
+          "title": "Naturreservat Val di Mello (Val Masino)",
+          "mapsUrl": "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
+          "tagColor": "bg-emerald-100 text-emerald-900"
+        },
+        {
+          "tag": "ADRENALIN & FLUG",
+          "desc": "Fliegen Sie mit über 100 km/h an einem Stahlseil gesichert über das Alpental zwischen Albaredo und Bema. Ein unvergessliches Erlebnis!",
+          "title": "Fly Emotion Zipline (Albaredo per San Marco)",
+          "mapsUrl": "https://maps.google.com/?q=Fly+Emotion+Albaredo",
+          "tagColor": "bg-blue-100 text-blue-900"
+        },
+        {
+          "tag": "SEE & WASSERSPORT",
+          "desc": "Nur 15 Min. von Morbegno: Badestrände, Uferpromenade, Bootsverleih, Kitesurfen und die historische Abtei Piona.",
+          "title": "Strände in Colico & Kitesurfen am Comer See",
+          "mapsUrl": "https://maps.google.com/?q=Spiaggia+di+Colico+Lago+di+Como",
+          "tagColor": "bg-cyan-100 text-cyan-900"
+        },
+        {
+          "tag": "THERMALBAD & WELLNESS",
+          "desc": "Jahrtausendealte Thermalhöhlen und beheizte Panorama-Außenbecken mit direktem Blick auf die schneebedeckten Alpengipfel.",
+          "title": "QC Terme Bormio (Historische Römische Bäder)",
+          "mapsUrl": "https://maps.google.com/?q=QC+Terme+Bormio",
+          "tagColor": "bg-purple-100 text-purple-900"
+        }
+      ],
+      "categoryTitle": "Weitere Erlebnisse in der Region"
+    },
+    "appSubtitle": "Ihr gemütlicher Rückzugsort in Morbegno zwischen See und Alpengipfeln...",
+    "restaurants": {
+      "title": "EMPFEHLENSWERTE RESTAURANTS",
+      "bannerText": "Authentische Traditionslokale und Osterien in Morbegno",
+      "deliveries": [
+        {
+          "name": "FRATELLI CIAPPONI (1883)",
+          "type": "Bitto DOP, Casera, Bresaola & Spitzenweine",
+          "phone": "+39 0342 610012"
+        },
+        {
+          "name": "PASTICCERIA POLETTI",
+          "type": "Veltliner Bisciola & Feingebäck",
+          "phone": "+39 0342 611234"
+        }
+      ],
+      "recommended": [
+        {
+          "desc": "Traditionshaus seit 1886 im Zentrum: berühmte hausgemachte Pizzoccheri, knusprige Sciatt-Käsebällchen, Fleischgerichte und DOCG-Spitzenweine.",
+          "name": "ANTICA OSTERIA RAPELLA (SEIT 1886)",
+          "time": "7 Min. Fußweg (550 m)",
+          "phone": "+39 0342 610377",
+          "address": "Via Margna 36, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
+        },
+        {
+          "desc": "Uriges Lokal mit Gewölbekeller aus dem 18. Jahrhundert: frische handgemachte Pasta, Pizzoccheri, Sciatt und Grillspezialitäten.",
+          "name": "OSTERIA DEL ZEP",
+          "time": "6 Min. Fußweg (500 m)",
+          "phone": "+39 0342 610058",
+          "address": "Piazza Marconi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Zep+Morbegno"
+        },
+        {
+          "desc": "Traditionelles Crotto im Naturfelsen: geschmolzene Sciatt, Polenta Taragna, Veltliner Spezialitäten und herzhafte alpine Gerichte.",
+          "name": "OSTERIA DEL CROTTO",
+          "time": "8 Min. Fußweg (650 m)",
+          "phone": "+39 0342 614800",
+          "address": "Via Don Giovanni Guanella 18, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Crotto+Morbegno"
+        },
+        {
+          "desc": "Renommierte Steakhouse-Grillstube im Steincrotto für erstklassige Rindersteaks über Holzkohle und Bergküche.",
+          "name": "BRACERIA DEL CROTTO",
+          "time": "9 Min. Fußweg (750 m)",
+          "phone": "+39 0342 615000",
+          "address": "Via Crotto Lambertenghi 1, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Braceria+del+Crotto+Morbegno"
+        }
+      ],
+      "deliveryTitle": "Historische Feinkostläden & Verkostung"
+    },
+    "siteSettings": {
+      "redirects": {
+        "maps": "https://maps.google.com/?q=Morbegno",
+        "email": "",
+        "whatsapp": "https://wa.me/393917784042"
+      },
+      "siteTitle": "Aurora in Valtellina",
+      "textColor": "#f8fafc",
+      "fontFamily": "system-ui",
+      "accentColor": "#f59e0b",
+      "primaryColor": "#10b981",
+      "backgroundColor": "#070a0e"
+    }
+  },
+  "en": {
+    "bars": {
+      "title": "BARS, CAFÉS & APERITIFS",
+      "bannerText": "Historic bakeries, wine bars & aperitivo in Morbegno",
+      "coffeeDesc": "Inside the apartment you will find an espresso coffee machine with complimentary welcome coffee pods.",
+      "coffeeTitle": "Coffee Machine Available in House",
+      "recommended": [
+        {
+          "desc": "Historic wine bar since 1970 with outdoor seating: famous for aperitifs with warm sciatt fritters, craft beers, and local wines.",
+          "name": "WINE BAR LA TAVERNETTA",
+          "time": "6 min walk (500 m)",
+          "phone": "+39 0342 611007",
+          "address": "Via Ezio Vanoni 64, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Wine+Bar+La+Tavernetta+Morbegno"
+        },
+        {
+          "desc": "Artisan bakery and pastry shop for breakfast with fresh croissants, creamy espresso, rye bread, and authentic Valtellina Bisciola.",
+          "name": "PANIFICIO & PASTICCERIA POLETTI",
+          "time": "5 min walk (400 m)",
+          "phone": "+39 0342 611234",
+          "address": "Via Ezio Vanoni 32, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Panificio+Pasticceria+Poletti+Morbegno"
+        },
+        {
+          "desc": "Refined café and cocktail bar in Morbegno's historic center, popular for gourmet aperitivo and evening drinks.",
+          "name": "CAFFÈ GALLERY",
+          "time": "7 min walk (600 m)",
+          "phone": "+39 0342 615432",
+          "address": "Via Garibaldi 42, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Caffe+Gallery+Morbegno"
+        },
+        {
+          "desc": "Cozy wine & beer tavern in the old town featuring Valtellina DOCG wines, local beers, and cured meat platters.",
+          "name": "VINERIA BIRRERIA OTTOCENTO",
+          "time": "8 min walk (650 m)",
+          "phone": "+39 0342 612500",
+          "address": "Via Garibaldi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ottocento+Morbegno"
+        }
+      ]
+    },
+    "info": {
+      "title": "USEFUL INFORMATION",
+      "cinLabel": "National Identification Code (CIN):",
+      "cirLabel": "Regional Identification Code (CIR):",
+      "services": [
+        {
+          "desc": "San Giovanni Pharmacy • Via Garibaldi (5 min walk)",
+          "title": "ON-DUTY PHARMACY",
+          "mapsUrl": "https://maps.google.com/?q=Farmacia+Morbegno"
+        },
+        {
+          "desc": "Banca Popolare di Sondrio • Piazza Caduti (6 min walk)",
+          "title": "BANK / 24/7 ATM",
+          "mapsUrl": "https://maps.google.com/?q=Bancomat+Morbegno"
+        },
+        {
+          "desc": "Eni Station & Enel X fast EV chargers (400 m)",
+          "title": "GAS STATION & EV CHARGERS",
+          "mapsUrl": "https://maps.google.com/?q=Distributore+Morbegno"
+        },
+        {
+          "desc": "Poste Italiane Morbegno • Via Garibaldi (8 min walk)",
+          "title": "POST OFFICE",
+          "mapsUrl": "https://maps.google.com/?q=Poste+Italiane+Morbegno"
+        },
+        {
+          "desc": "St. John the Baptist Collegiate Church & Ganda Bridge (500 m)",
+          "title": "CHURCH & HISTORIC MONUMENTS",
+          "mapsUrl": "https://maps.google.com/?q=Collegiata+San+Giovanni+Morbegno"
+        }
+      ],
+      "wasteDesc": "Recycling bins are located at the back of the house. Please separate: Organic (brown), Paper (blue), Plastic & Cans (yellow), Glass (green).",
+      "wasteTitle": "Waste & Recycling Bins"
+    },
+    "wifi": {
+      "title": "WI-FI",
+      "speedNotice": "Fast Wi-Fi up to 500 Mbps • HD streaming, browsing, and remote work",
+      "networkLabel": "NETWORK NAME (SSID)",
+      "passwordLabel": "WI-FI PASSWORD",
+      "troubleshootText": "If the connection slows down temporarily, try toggling Wi-Fi off and back on on your device or restarting your smartphone network connection.",
+      "troubleshootTitle": "Having Connection Issues?"
+    },
+    "rules": {
+      "title": "HOUSE RULES",
+      "r1Desc": "Smoking is strictly prohibited inside the apartment. Allowed outdoors only.",
+      "r2Desc": "Please treat our home with care and respect, as if it were your own.",
+      "r3Desc": "Please respect peace and quiet during nighttime hours (from 23:00 to 08:00).",
+      "r4Desc": "External visitors not registered in the booking are strictly not allowed.",
+      "r5Desc": "Always lock the entrance door and turn off lights and appliances when leaving.",
+      "r6Desc": "Please notify us right away if anything needs maintenance or attention.",
+      "r1Title": "STRICT NO SMOKING",
+      "r2Title": "CARE FOR THE HOME",
+      "r3Title": "QUIET HOURS",
+      "r4Title": "UNREGISTERED GUESTS",
+      "r5Title": "SAFETY & ENERGY",
+      "r6Title": "PROMPT REPORTING"
+    },
+    "appName": "Aurora in Valtellina",
+    "checkIn": {
+      "badge": "::: 14:00 (2 PM) :::",
+      "step1": "1. The apartment keys will be handed to you in person directly by the host upon your arrival.",
+      "step2": "2. Please send us a quick message on WhatsApp with your estimated arrival time.",
+      "step3": "3. Upon arrival we will welcome you, show you the apartment, and hand you the keys.",
+      "title": "CHECK-IN",
+      "parkingDesc": "The property features private parking with a dedicated space always free and reserved for Aurora Apartment guests throughout your stay.",
+      "parkingNote": "Always available for you at no additional cost.",
+      "parkingTitle": "RESERVED PRIVATE PARKING",
+      "timingNotice": "Please kindly respect our check-in time from 2:00 PM (14:00) onwards. If you arrive earlier or have special requests, feel free to text us on WhatsApp.",
+      "keyboxCodeLabel": "HAND DELIVERED BY HOST",
+      "houseAccessTitle": "In-Person Key Handover"
+    },
+    "welcome": {
+      "title": "WELCOME",
+      "message": "We are thrilled to host you in our home in Morbegno. We have prepared this digital guide to help you enjoy the best of your stay in Valtellina with comfort, relaxation, and breathtaking alpine valleys.",
+      "greeting": "Welcome to Aurora in Valtellina!",
+      "viewDesc": "Reserved private parking and mountain vistas",
+      "viewTitle": "COURTYARD & ALPINE VIEW",
+      "livingDesc": "Smart TV, sofa bed, and dining area",
+      "roomsTitle": "The Spaces of the House",
+      "bedroomDesc": "King size bed, spacious wardrobe & fresh linens",
+      "kitchenDesc": "Cooktop, oven, dishwasher & coffee maker",
+      "livingTitle": "LIVING ROOM & LOUNGE",
+      "bedroomTitle": "MASTER BEDROOM",
+      "kitchenTitle": "FULLY EQUIPPED KITCHEN"
+    },
+    "checkOut": {
+      "badge": "::: 10:00 (10 AM) :::",
+      "title": "CHECK-OUT",
+      "lateNote": "If you require late check-out, please let us know in advance so we can verify availability.",
+      "thankYou": "Thank you wholeheartedly for staying at Aurora in Valtellina. Safe travels home, and we hope to welcome you again soon!",
+      "checklist": [
+        {
+          "desc": "Check closets, drawers, bathroom, and charging plugs to ensure nothing is left behind.",
+          "title": "TAKE ALL PERSONAL BELONGINGS"
+        },
+        {
+          "desc": "Switch off all lights, air conditioning/heating, and TV.",
+          "title": "TURN OFF APPLIANCES"
+        },
+        {
+          "desc": "Dispose of sorted recycling in the courtyard bins.",
+          "title": "EMPTY TRASH BINS"
+        },
+        {
+          "desc": "Ensure all windows and shutters are securely latched against weather.",
+          "title": "CLOSE WINDOWS & SHUTTERS"
+        },
+        {
+          "desc": "Place the house keys back inside the lockbox and scramble the code.",
+          "title": "RETURN KEYS TO KEYBOX"
+        },
+        {
+          "desc": "Leave damp towels inside the shower or bathtub.",
+          "title": "PLACE USED TOWELS IN SHOWER"
+        },
+        {
+          "desc": "Ensure dishes are in the dishwasher and start the final cleaning cycle if needed.",
+          "title": "LEAVE KITCHEN TIDY"
+        }
+      ],
+      "checklistTitle": "Before leaving, please kindly:"
+    },
+    "contacts": {
+      "quote": "Dear guests, I am completely at your service throughout your stay in Morbegno. For any assistance, recommendations, or questions, please don't hesitate to text or call me!",
+      "title": "CONTACT & HOST",
+      "copied": "Copied to clipboard!",
+      "hostRole": "Your Local Host • Aurora in Valtellina",
+      "copyEmail": "Copy Email",
+      "copyPhone": "Copy Number",
+      "smsAction": "Send SMS",
+      "callAction": "Call Host",
+      "chatAction": "WhatsApp Chat",
+      "rateGoogle": "REVIEW ON GOOGLE",
+      "emailAction": "Send Email",
+      "rateWebsite": "REVIEW ON BEDANDBREAKFAST.IT",
+      "ratingPrompt": "How would you rate your overall stay?",
+      "reviewPrompt": "We hope you had a memorable stay! Your feedback means the world to us. Please take a moment to share your review:",
+      "submitReview": "Submit Review",
+      "commentPrompt": "Write your feedback or comments:",
+      "reviewSuccess": "Thank you sincerely for your valuable review!",
+      "reviewDialogTitle": "Leave your review for Aurora in Valtellina"
+    },
+    "location": {
+      "byCar": "By Car:",
+      "title": "LOCATION",
+      "byPlane": "From Airports:",
+      "byTrain": "By Train:",
+      "heading": "Directions to our house",
+      "byCarDesc": "From SS38 Morbegno bypass, take Morbegno Centro exit. Private property parking with space always reserved for guests.",
+      "byPlaneDesc": "Milan Bergamo (80 km), Milan Linate (100 km), Milan Malpensa (125 km).",
+      "byTrainDesc": "Morbegno FS Train Station is 600m away (8 min walk). Direct hourly trains from Milan Central (Milan-Tirano line).",
+      "howToArrive": "How to Arrive"
+    },
+    "shopping": {
+      "shops": [
+        {
+          "desc": "A culinary wonderland since 1883: vintage underground cellars aging Bitto and Casera cheeses, porcini mushrooms, and wines.",
+          "time": "6 min walk (Piazza 3 Novembre)",
+          "hours": "Daily 08:30 - 19:30 (closed Mon afternoon)",
+          "title": "FRATELLI CIAPPONI - HISTORIC BOTTEGA",
+          "mapsUrl": "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
+        },
+        {
+          "desc": "Fully stocked supermarket for daily essentials: fresh produce, bakery, deli, and home products.",
+          "time": "4 min walk (300 m)",
+          "hours": "Open 7 days a week: 08:00 - 20:30",
+          "title": "IPERAL / CARREFOUR SUPERMARKET",
+          "mapsUrl": "https://maps.google.com/?q=Supermercato+Iperal+Morbegno"
+        },
+        {
+          "desc": "Large hypermarket with 60+ stores, fashion, pharmacy, electronics, and dining.",
+          "time": "12 min drive (Piantedo / Colico)",
+          "hours": "Daily 09:00 - 20:30",
+          "title": "FUENTES SHOPPING MALL",
+          "mapsUrl": "https://maps.google.com/?q=Centro+Commerciale+Fuentes+Piantedo"
+        },
+        {
+          "desc": "Local open-air market with regional farm cheeses, cured meats, fresh fruit, apparel, and crafts.",
+          "time": "Piazza Sant'Antonio & Center",
+          "hours": "Every Saturday morning: 08:00 - 13:00",
+          "title": "MORBEGNO SATURDAY MARKET",
+          "mapsUrl": "https://maps.google.com/?q=Piazza+Sant+Antonio+Morbegno"
+        }
+      ],
+      "title": "SHOPPING & GROCERIES"
+    },
+    "amenities": {
+      "items": [
+        {
+          "desc": "Orthopedic mattress and crisp fresh linens",
+          "title": "KING SIZE BED"
+        },
+        {
+          "desc": "Comfortable for 2 additional guests",
+          "title": "DOUBLE SOFA BED"
+        },
+        {
+          "desc": "Fast unlimited wireless connection",
+          "title": "WI-FI UP TO 500 MBPS"
+        },
+        {
+          "desc": "Radiant floor climate control system",
+          "title": "UNDERFLOOR HEATING & COOLING"
+        },
+        {
+          "desc": "Netflix, Prime Video & satellite channels",
+          "title": "50\" 4K SMART TV"
+        },
+        {
+          "desc": "Comfortable table, chair and nearby power outlets",
+          "title": "WORK DESK AREA"
+        },
+        {
+          "desc": "Complete cookware set and burners",
+          "title": "FULL COOKTOP & STOVE"
+        },
+        {
+          "desc": "Detergent pods provided under the sink",
+          "title": "DISHWASHER"
+        },
+        {
+          "desc": "Complimentary welcome coffee pods",
+          "title": "ESPRESSO COFFEE MAKER"
+        },
+        {
+          "desc": "Grill, heating, and baking modes",
+          "title": "OVEN & MICROWAVE"
+        },
+        {
+          "desc": "Spacious fridge with freezer box",
+          "title": "REFRIGERATOR & FREEZER"
+        },
+        {
+          "desc": "Detergent and drying rack provided",
+          "title": "WASHING MACHINE & DRYING RACK"
+        },
+        {
+          "desc": "Hair dryer, soap, body wash and fresh towels",
+          "title": "BATHROOM COURTESY SET"
+        },
+        {
+          "desc": "Dedicated space always free and reserved on the property",
+          "title": "RESERVED PRIVATE PARKING"
+        }
+      ],
+      "title": "AMENITIES & COMFORTS",
+      "notice": "All amenities are for your exclusive use. Please help us conserve energy by turning off appliances and lights when leaving the house."
+    },
+    "emergency": {
+      "items": [
+        {
+          "phone": "0342 610210",
+          "title": "Carabinieri Police Command - Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24",
+          "subtitle": "Headquarters & Station • Via Morelli 24, Morbegno"
+        },
+        {
+          "phone": "0342 607111",
+          "title": "Morbegno Hospital (Ospedale)",
+          "mapsUrl": "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1",
+          "subtitle": "Territorial Healthcare Center • Via Morelli 1, Morbegno"
+        },
+        {
+          "title": "On-Duty Pharmacy (PharmAround)",
+          "webUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          "subtitle": "Check open pharmacies in real time (within 5 km)",
+          "webLabel": "Open Pharmacies"
+        },
+        {
+          "phone": "116 117",
+          "title": "Medical Guard (116 117)",
+          "subtitle": "Night & weekend non-urgent medical service"
+        }
+      ],
+      "title": "EMERGENCY CONTACTS",
+      "freeBadge": "FREE CALL",
+      "nationalNumbersTitle": "24/7 EMERGENCY HOTLINES"
+    },
+    "transport": {
+      "items": [
+        {
+          "desc": "Direct regional trains to Milan Central, Lake Como (Lecco, Colico), Sondrio, Tirano, and Bernina Express.",
+          "time": "8 min walk (600 m)",
+          "title": "MORBEGNO TRAIN STATION",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Morbegno",
+          "subtitle": "Stop Morbegno FS"
+        },
+        {
+          "desc": "Buses to Val Tartano (Bridge in the Sky), Val Gerola, Val Masino, and surrounding valleys.",
+          "time": "5 min walk",
+          "title": "LOCAL BUS LINES",
+          "mapsUrl": "https://maps.google.com/?q=Fermata+Bus+Morbegno",
+          "subtitle": "Via Roma / Piazza S. Antonio Stop"
+        },
+        {
+          "desc": "Convenient rail connections from Morbegno to Milan Central followed by express airport shuttles.",
+          "time": "1h 15m by car / Direct train",
+          "title": "MILAN AIRPORTS",
+          "mapsUrl": "https://maps.google.com/?q=Milano+Bergamo+Airport",
+          "subtitle": "Bergamo (BGY) / Linate / Malpensa"
+        }
+      ],
+      "title": "TRANSPORT"
+    },
+    "activities": {
+      "title": "ACTIVITIES & EXCURSIONS",
+      "bannerText": "Unforgettable alpine experiences in Valtellina & Lake Como",
+      "categories": [
+        {
+          "desc": "114 km flat scenic cycling path along Adda River (E-bike rentals available)",
+          "title": "VALTELLINA BIKE TRAIL"
+        },
+        {
+          "desc": "Tasting tours across ancient terraced vineyards and historic wine cellars",
+          "title": "NEBBIOLO & SFORZATO WINE TOURS"
+        },
+        {
+          "desc": "Pescegallo (Valgerola), Aprica, Bormio, and Chiesa Valmalenco slopes",
+          "title": "SKI & WINTER SPORTS"
+        },
+        {
+          "desc": "Stroll through antique alleyways, Ganda Bridge, and century-old artisan shops",
+          "title": "HISTORIC MORBEGNO & BITTO CHEESE"
+        }
+      ],
+      "highlights": [
+        {
+          "tag": "UNESCO WORLD HERITAGE",
+          "desc": "UNESCO World Heritage: Europe's highest alpine railway. A breathtaking journey across glaciers, alpine lakes, and passes all the way to St. Moritz in Switzerland.",
+          "title": "Bernina Red Train Express (Tirano - St. Moritz)",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Tirano+Trenino+Rosso",
+          "tagColor": "bg-rose-100 text-rose-800"
+        },
+        {
+          "tag": "TOP HIGHLIGHT 1",
+          "desc": "One of Europe's highest pedestrian suspension bridges at 140m altitude (234m long) with stunning vistas over Orobie Alps and Lake Como. 15 min drive.",
+          "title": "Bridge in the Sky / Ponte nel Cielo (Val Tartano)",
+          "mapsUrl": "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
+          "tagColor": "bg-amber-100 text-amber-900"
+        },
+        {
+          "tag": "NATURE & HIKING",
+          "desc": "Known as Italy's 'Little Yosemite': towering granite cliffs, crystal-clear emerald pools, waterfalls, and alpine huts serving polenta taragna. 20 min drive.",
+          "title": "Val di Mello Nature Reserve (Val Masino)",
+          "mapsUrl": "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
+          "tagColor": "bg-emerald-100 text-emerald-900"
+        },
+        {
+          "tag": "LAKE & WATERSPORTS",
+          "desc": "Only 15 min from Morbegno: pebble beaches, lakeside promenade, boat rentals, windsurfing, kitesurfing, and historic Piona Abbey.",
+          "title": "Lake Como Beaches & Kitesurfing in Colico",
+          "mapsUrl": "https://maps.google.com/?q=Spiaggia+di+Colico+Lago+di+Como",
+          "tagColor": "bg-cyan-100 text-cyan-900"
+        },
+        {
+          "tag": "THERMAL SPA & WELLNESS",
+          "desc": "Millenary Roman thermal caves and outdoor panoramic infinity pools overlooking snow-capped alpine peaks.",
+          "title": "QC Terme Bormio Thermal Baths",
+          "mapsUrl": "https://maps.google.com/?q=QC+Terme+Bormio",
+          "tagColor": "bg-purple-100 text-purple-900"
+        }
+      ],
+      "categoryTitle": "More Things To Do"
+    },
+    "appSubtitle": "Your cozy mountain and lake retreat in Morbegno, Italian Alps...",
+    "restaurants": {
+      "title": "RECOMMENDED DINING",
+      "bannerText": "Authentic restaurants & historic taverns in Morbegno",
+      "deliveries": [
+        {
+          "name": "FRATELLI CIAPPONI (1883)",
+          "type": "Bitto DOP, Casera, Bresaola & Fine Wines",
+          "phone": "+39 0342 610012"
+        },
+        {
+          "name": "PASTICCERIA POLETTI",
+          "type": "Valtellina Bisciola & Traditional Pastries",
+          "phone": "+39 0342 611234"
+        }
+      ],
+      "recommended": [
+        {
+          "desc": "Historic tavern since 1886 in Morbegno center: famous traditional pizzoccheri, crispy sciatt fritters, choice meats, and premier DOCG wines.",
+          "name": "ANTICA OSTERIA RAPELLA (SINCE 1886)",
+          "time": "7 min walk (550 m)",
+          "phone": "+39 0342 610377",
+          "address": "Via Margna 36, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
+        },
+        {
+          "desc": "Authentic tavern with 18th-century cellar and fireplace: handmade fresh pasta, pizzoccheri, sciatt on chicory, and grilled meats.",
+          "name": "OSTERIA DEL ZEP",
+          "time": "6 min walk (500 m)",
+          "phone": "+39 0342 610058",
+          "address": "Piazza Marconi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Zep+Morbegno"
+        },
+        {
+          "desc": "Traditional alpine crotto tavern set in natural rock: gooey cheese sciatt, polenta taragna, ribs, and wholesome Valtellina specialties.",
+          "name": "OSTERIA DEL CROTTO",
+          "time": "8 min walk (650 m)",
+          "phone": "+39 0342 614800",
+          "address": "Via Don Giovanni Guanella 18, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Crotto+Morbegno"
+        },
+        {
+          "desc": "Renowned grill house in a stone crotto setting for prime beef cuts, flame-grilled steaks, and mountain dishes.",
+          "name": "BRACERIA DEL CROTTO",
+          "time": "9 min walk (750 m)",
+          "phone": "+39 0342 615000",
+          "address": "Via Crotto Lambertenghi 1, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Braceria+del+Crotto+Morbegno"
+        }
+      ],
+      "deliveryTitle": "Historic Bottegas & Tasting"
+    },
+    "siteSettings": {
+      "redirects": {
+        "maps": "https://maps.google.com/?q=Morbegno",
+        "email": "",
+        "whatsapp": "https://wa.me/393917784042"
+      },
+      "siteTitle": "Aurora in Valtellina",
+      "textColor": "#f8fafc",
+      "fontFamily": "system-ui",
+      "accentColor": "#f59e0b",
+      "primaryColor": "#10b981",
+      "backgroundColor": "#070a0e"
+    }
+  },
+  "es": {
+    "bars": {
+      "title": "BARES, CAFÉS Y APERITIVOS",
+      "bannerText": "Pastelerías de época, bares de vinos y terrazas en Morbegno",
+      "coffeeDesc": "En el apartamento tenéis a vuestra disposición la cafetera espresso con cápsulas de bienvenida incluidas.",
+      "coffeeTitle": "Cafetera disponible en el apartamento",
+      "recommended": [
+        {
+          "desc": "Bar de vinos histórico desde 1970 con terraza: aperitivos con sciatt calientes, cervezas artesanales y vinos locales.",
+          "name": "WINE BAR LA TAVERNETTA",
+          "time": "6 min a pie (500 m)",
+          "phone": "+39 0342 611007",
+          "address": "Via Ezio Vanoni 64, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Wine+Bar+La+Tavernetta+Morbegno"
+        },
+        {
+          "desc": "Pastelería artesanal para el desayuno con croissants recién hechos, café espresso, pan de centeno y auténtica Bisciola.",
+          "name": "PANIFICIO & PASTICCERIA POLETTI",
+          "time": "5 min a pie (400 m)",
+          "phone": "+39 0342 611234",
+          "address": "Via Ezio Vanoni 32, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Panificio+Pasticceria+Poletti+Morbegno"
+        },
+        {
+          "desc": "Elegante cafetería y bar de copas en el casco histórico, ideal para el aperitivo y copas por la noche.",
+          "name": "CAFFÈ GALLERY",
+          "time": "7 min a pie (600 m)",
+          "phone": "+39 0342 615432",
+          "address": "Via Garibaldi 42, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Caffe+Gallery+Morbegno"
+        },
+        {
+          "desc": "Acogedor bar de vinos y cervezas en el casco antiguo con vinos DOCG y tablas de embutidos y quesos locales.",
+          "name": "VINERIA BIRRERIA OTTOCENTO",
+          "time": "8 min a pie (650 m)",
+          "phone": "+39 0342 612500",
+          "address": "Via Garibaldi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ottocento+Morbegno"
+        }
+      ]
+    },
+    "info": {
+      "title": "INFORMACIÓN ÚTIL",
+      "cinLabel": "Código de Identificación Nacional (CIN):",
+      "cirLabel": "Código de Identificación Regional (CIR):",
+      "services": [
+        {
+          "desc": "Farmacia San Giovanni • Via Garibaldi (5 min a pie)",
+          "title": "FARMACIA DE GUARDIA",
+          "mapsUrl": "https://maps.google.com/?q=Farmacia+Morbegno"
+        },
+        {
+          "desc": "Banca Popolare di Sondrio • Piazza Caduti (6 min a pie)",
+          "title": "BANCO Y CAJERO 24H",
+          "mapsUrl": "https://maps.google.com/?q=Bancomat+Morbegno"
+        },
+        {
+          "desc": "Estación Eni y cargadores rápidos Enel X (400 m)",
+          "title": "GASOLINERA Y CARGA ELÉCTRICA EV",
+          "mapsUrl": "https://maps.google.com/?q=Distributore+Morbegno"
+        },
+        {
+          "desc": "Poste Italiane Morbegno • Via Garibaldi (8 min a pie)",
+          "title": "OFICINA DE CORREOS",
+          "mapsUrl": "https://maps.google.com/?q=Poste+Italiane+Morbegno"
+        },
+        {
+          "desc": "Colegiata San Giovanni Battista y Puente Ganda (500 m)",
+          "title": "IGLESIAS Y MONUMENTOS",
+          "mapsUrl": "https://maps.google.com/?q=Collegiata+San+Giovanni+Morbegno"
+        }
+      ],
+      "wasteDesc": "Los contenedores de reciclaje se encuentran en la parte trasera de la casa: Orgánico (marrón), Papel (azul), Plástico/Latas (amarillo), Vidrio (verde).",
+      "wasteTitle": "Recogida Selectiva (Cubos en la Parte Trasera)"
+    },
+    "wifi": {
+      "title": "WI-FI",
+      "speedNotice": "Wi-Fi rápido hasta 500 Mbps • Streaming en HD, navegación y teletrabajo",
+      "networkLabel": "NOMBRE DE LA RED (SSID)",
+      "passwordLabel": "CONTRASEÑA WI-FI",
+      "troubleshootText": "En caso de lentitud, probad a desactivar y reactivar el Wi-Fi en vuestro dispositivo o reiniciad la conexión de red del móvil.",
+      "troubleshootTitle": "¿Problemas de conexión?"
+    },
+    "rules": {
+      "title": "NORMAS DE LA CASA",
+      "r1Desc": "Está terminantemente prohibido fumar dentro del apartamento. Solo al aire libre.",
+      "r2Desc": "Os rogamos cuidar la casa con cariño y respeto, como si fuera la vuestra.",
+      "r3Desc": "Por favor, respetad el descanso durante las horas nocturnas (de 23:00 a 08:00).",
+      "r4Desc": "No se permite el acceso a personas ajenas a la reserva.",
+      "r5Desc": "Cerrad bien con llave al salir y apagad electrodomésticos y luces.",
+      "r6Desc": "Avisadnos de inmediato si algo necesita reparación o asistencia.",
+      "r1Title": "PROHIBIDO FUMAR",
+      "r2Title": "CUIDADO DEL HOGAR",
+      "r3Title": "HORAS DE DESCANSO",
+      "r4Title": "HUÉSPEDES NO REGISTRADOS",
+      "r5Title": "SEGURIDAD Y ENERGÍA",
+      "r6Title": "AVISO DE INCIDENCIAS"
+    },
+    "appName": "Aurora in Valtellina",
+    "checkIn": {
+      "badge": "::: 14:00 (2 PM) :::",
+      "step1": "1. Las llaves del apartamento os serán entregadas en mano directamente por el anfitrión a vuestra llegada.",
+      "step2": "2. Os rogamos enviarnos un mensaje por WhatsApp con vuestra hora estimada de llegada.",
+      "step3": "3. A vuestra llegada os recibiremos para mostraros la casa y entregaros las llaves.",
+      "title": "LLEGADA (CHECK-IN)",
+      "parkingDesc": "La propiedad cuenta con aparcamiento privado con una plaza siempre libre y reservada para los huéspedes del Apartamento Aurora.",
+      "parkingNote": "Siempre a vuestra disposición sin costes adicionales.",
+      "parkingTitle": "APARCAMIENTO PRIVADO RESERVADO",
+      "timingNotice": "La entrada es a partir de las 14:00 h en adelante (2 PM). Si necesitáis llegar antes o tenéis peticiones especiales, avisadnos por WhatsApp.",
+      "keyboxCodeLabel": "ENTREGA EN PERSONA POR EL ANFITRIÓN",
+      "houseAccessTitle": "Entrega de Llaves en Mano"
+    },
+    "welcome": {
+      "title": "BIENVENIDA",
+      "message": "Estamos encantados de recibiros en nuestra casa de Morbegno. Hemos preparado esta guía digital para que disfrutéis al máximo de vuestra estancia en Valtellina con total comodidad.",
+      "greeting": "¡Bienvenidos a Aurora in Valtellina!",
+      "viewDesc": "Aparcamiento privado reservado y vistas a las montañas",
+      "viewTitle": "PATIO Y VISTAS A LOS ALPES",
+      "livingDesc": "Smart TV, sofá cama y zona de comedor",
+      "roomsTitle": "Los Espacios De La Casa",
+      "bedroomDesc": "Cama king size, amplio armario y sábanas suaves",
+      "kitchenDesc": "Placa de cocción, horno, lavavajillas y cafetera",
+      "livingTitle": "SALÓN Y RELAX",
+      "bedroomTitle": "DORMITORIO PRINCIPAL",
+      "kitchenTitle": "COCINA EQUIPADA"
+    },
+    "checkOut": {
+      "badge": "::: 10:00 (10 AM) :::",
+      "title": "SALIDA (CHECK-OUT)",
+      "lateNote": "Si necesitáis salir más tarde, avisadnos con tiempo para consultar la disponibilidad.",
+      "thankYou": "¡Muchas gracias por elegir Aurora in Valtellina! ¡Buen viaje de vuelta y hasta pronto!",
+      "checklist": [
+        {
+          "desc": "Comprobad armarios, cajones, enchufes y baño para no olvidar nada.",
+          "title": "REVISAD VUESTROS OBJETOS PERSONALES"
+        },
+        {
+          "desc": "Apagad todas las luces, el aire acondicionado/calefacción y la televisión.",
+          "title": "APAGAD LOS ELECTRODOMÉSTICOS"
+        },
+        {
+          "desc": "Llevad las bolsas de reciclaje a los cubos del patio.",
+          "title": "VACIAD LAS PAPELERAS"
+        },
+        {
+          "desc": "Asegurad que ventanas y persianas quedan bien cerradas.",
+          "title": "CERRAD PUERTAS Y VENTANAS"
+        },
+        {
+          "desc": "Colocad las llaves dentro de la caja de seguridad y cambiad la combinación.",
+          "title": "DEJAD LAS LLAVES EN LA KEYBOX"
+        },
+        {
+          "desc": "Dejad las toallas usadas dentro de la ducha o bañera.",
+          "title": "TOALLAS USADAS"
+        },
+        {
+          "desc": "Dejad la vajilla en el lavavajillas y ponedlo en marcha si es necesario.",
+          "title": "COCINA RECOGIDA"
+        }
+      ],
+      "checklistTitle": "Antes de marcharos, por favor:"
+    },
+    "contacts": {
+      "quote": "Estimados huéspedes, estoy a vuestra completa disposición durante toda vuestra estancia en Morbegno. ¡Para cualquier duda, recomendación o consulta, escribidme o llamadme sin dudar!",
+      "title": "CONTACTO Y ANFITRIÓN",
+      "copied": "¡Copiado al portapapeles!",
+      "hostRole": "Tu Anfitrión Local • Aurora in Valtellina",
+      "copyEmail": "Copiar email",
+      "copyPhone": "Copiar teléfono",
+      "smsAction": "Enviar SMS",
+      "callAction": "Llamar",
+      "chatAction": "Chat WhatsApp",
+      "rateGoogle": "VALORAR EN GOOGLE",
+      "emailAction": "Enviar Email",
+      "rateWebsite": "VALORAR EN BEDANDBREAKFAST.IT",
+      "ratingPrompt": "¿Cómo valoras tu experiencia global?",
+      "reviewPrompt": "¡Esperamos que hayáis disfrutado de la estancia! Vuestra opinión es muy importante para nosotros:",
+      "submitReview": "Enviar Valoración",
+      "commentPrompt": "Escribe un comentario o sugerencia:",
+      "reviewSuccess": "¡Muchas gracias por tu valiosa valoración!",
+      "reviewDialogTitle": "Deja tu valoración para Aurora in Valtellina"
+    },
+    "location": {
+      "byCar": "En Coche:",
+      "title": "UBICACIÓN",
+      "byPlane": "Desde Aeropuertos:",
+      "byTrain": "En Tren:",
+      "heading": "Cómo llegar a nuestra casa",
+      "byCarDesc": "Por la SS38, salida Morbegno Centro. Aparcamiento privado de la vivienda con plaza siempre reservada.",
+      "byPlaneDesc": "Milán Bérgamo (80 km), Milán Linate (100 km), Milán Malpensa (125 km).",
+      "byTrainDesc": "Estación FS de Morbegno a 600m (8 min a pie). Trenes directos cada hora desde Milán Central.",
+      "howToArrive": "Cómo Llegar"
+    },
+    "shopping": {
+      "shops": [
+        {
+          "desc": "Templo gastronómico desde 1883: bodegas subterráneas con quesos Bitto y Casera curados, setas porcini y vinos.",
+          "time": "6 min a pie (Piazza 3 Novembre)",
+          "hours": "Todos los días 08:30 - 19:30 (cerrado lunes tarde)",
+          "title": "FRATELLI CIAPPONI - TIENDA HISTÓRICA",
+          "mapsUrl": "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
+        },
+        {
+          "desc": "Supermercado completo para la compra diaria: productos frescos, panadería y bazar.",
+          "time": "4 min a pie (300 m)",
+          "hours": "Abierto los 7 días: 08:00 - 20:30",
+          "title": "SUPERMERCADO IPERAL / CARREFOUR",
+          "mapsUrl": "https://maps.google.com/?q=Supermercato+Iperal+Morbegno"
+        },
+        {
+          "desc": "Gran hipermercado con más de 60 tiendas de moda, farmacia, electrónica y restaurantes.",
+          "time": "12 min en coche (Piantedo / Colico)",
+          "hours": "Todos los días 09:00 - 20:30",
+          "title": "CENTRO COMERCIAL FUENTES",
+          "mapsUrl": "https://maps.google.com/?q=Centro+Commerciale+Fuentes+Piantedo"
+        },
+        {
+          "desc": "Puestos de quesos de montaña, embutidos locales, fruta fresca y artesanía.",
+          "time": "Piazza Sant'Antonio y centro",
+          "hours": "Cada sábado por la mañana: 08:00 - 13:00",
+          "title": "MERCADILLO DE LOS SÁBADOS EN MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Piazza+Sant+Antonio+Morbegno"
+        }
+      ],
+      "title": "COMPRAS Y SUPERMERCADOS"
+    },
+    "amenities": {
+      "items": [
+        {
+          "desc": "Colchón ortopédico y ropa de cama limpia",
+          "title": "CAMA KING SIZE"
+        },
+        {
+          "desc": "Cómodo para 2 huéspedes adicionales",
+          "title": "SOFÁ CAMA DOBLE"
+        },
+        {
+          "desc": "Conexión inalámbrica rápida e ilimitada",
+          "title": "WI-FI HASTA 500 MBPS"
+        },
+        {
+          "desc": "Climatización integral por suelo radiante",
+          "title": "CALEFACCIÓN Y REFRIGERACIÓN POR SUELO RADIANTE"
+        },
+        {
+          "desc": "Netflix, Prime Video y canales vía satélite",
+          "title": "SMART TV 50\" 4K"
+        },
+        {
+          "desc": "Escritorio con enchufes para teletrabajo",
+          "title": "ESPACIO DE TRABAJO"
+        },
+        {
+          "desc": "Cocina equipada con sartenes y cazuelas",
+          "title": "PLACA DE COCCIÓN COMPLETA"
+        },
+        {
+          "desc": "Pastillas de detergente incluidas bajo el fregadero",
+          "title": "LAVAVAJILLAS"
+        },
+        {
+          "desc": "Cápsulas de café de bienvenida incluidas",
+          "title": "CAFETERA ESPRESSO"
+        },
+        {
+          "desc": "Modo grill, horneado y descongelación",
+          "title": "HORNO Y MICROONDAS"
+        },
+        {
+          "desc": "Nevera espaciosa con congelador",
+          "title": "FRIGORÍFICO Y CONGELADOR"
+        },
+        {
+          "desc": "Detergente y tendedero disponibles",
+          "title": "LAVADORA Y TENDEDERO"
+        },
+        {
+          "desc": "Secador de pelo potente, toallas y gel de ducha",
+          "title": "KIT DE BAÑO DE CORTESÍA"
+        },
+        {
+          "desc": "Aparcamiento privado de la vivienda con plaza reservada",
+          "title": "APARCAMIENTO PRIVADO RESERVADO"
+        }
+      ],
+      "title": "SERVICIOS Y EQUIPAMIENTO",
+      "notice": "Todos los servicios son de uso exclusivo. Ayúdanos a cuidar el entorno apagando electrodomésticos y luces al salir."
+    },
+    "emergency": {
+      "items": [
+        {
+          "phone": "0342 610210",
+          "title": "Centro de Mando Carabinieri Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24",
+          "subtitle": "Compañía y Cuartel • Via Morelli 24, Morbegno"
+        },
+        {
+          "phone": "0342 607111",
+          "title": "Hospital de Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1",
+          "subtitle": "Centro Hospitalario Territorial • Via Morelli 1, Morbegno"
+        },
+        {
+          "title": "Farmacia de Guardia (PharmAround)",
+          "webUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          "subtitle": "Consulta farmacias de guardia en tiempo real",
+          "webLabel": "Farmacias Abiertas"
+        },
+        {
+          "phone": "116 117",
+          "title": "Guardia Médica (116 117)",
+          "subtitle": "Asistencia médica nocturna y días festivos"
+        }
+      ],
+      "title": "EMERGENCIAS Y ASISTENCIA",
+      "freeBadge": "GRATUITO",
+      "nationalNumbersTitle": "NÚMEROS DE EMERGENCIA 24H"
+    },
+    "transport": {
+      "items": [
+        {
+          "desc": "Trenes directos a Milán Central, Lago de Como, Sondrio, Tirano y el Bernina Express.",
+          "time": "8 min a pie (600 m)",
+          "title": "ESTACIÓN DE TREN DE MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Morbegno",
+          "subtitle": "Parada Morbegno FS"
+        },
+        {
+          "desc": "Conexiones a Val Tartano (Puente en el Cielo), Val Gerola y Val Masino.",
+          "time": "5 min a pie",
+          "title": "AUTOBUSES LOCALES",
+          "mapsUrl": "https://maps.google.com/?q=Fermata+Bus+Morbegno",
+          "subtitle": "Parada Via Roma / Piazza S. Antonio"
+        },
+        {
+          "desc": "Conexiones frecuentes en tren hasta Milán Central y lanzaderas de autobús.",
+          "time": "1h 15m en coche / Tren directo",
+          "title": "AEROPUERTOS DE MILÁN",
+          "mapsUrl": "https://maps.google.com/?q=Milano+Bergamo+Airport",
+          "subtitle": "Bérgamo / Linate / Malpensa"
+        }
+      ],
+      "title": "TRANSPORTE"
+    },
+    "activities": {
+      "title": "ACTIVIDADES Y RUTAS",
+      "bannerText": "Experiencias alpinas inolvidables en Valtellina y Lago de Como",
+      "categories": [
+        {
+          "desc": "114 km llanos junto al río Adda (alquiler de bicicletas eléctricas)",
+          "title": "CARRIL BICI VALTELLINA"
+        },
+        {
+          "desc": "Visitas a bodegas históricas y viñedos en terrazas de Nebbiolo",
+          "title": "CATAS DE VINO SFORZATO"
+        },
+        {
+          "desc": "Estaciones de Pescegallo (Valgerola), Aprica y Bormio",
+          "title": "ESQUÍ Y MONTAÑA"
+        },
+        {
+          "desc": "Paseo por calles antiguas, Puente Ganda y bodegas centenarias de queso Bitto",
+          "title": "CASCO HISTÓRICO DE MORBEGNO"
+        }
+      ],
+      "highlights": [
+        {
+          "tag": "PATRIMONIO UNESCO",
+          "desc": "Patrimonio de la Humanidad UNESCO: el ferrocarril alpino más alto de Europa que atraviesa glaciares hasta St. Moritz en Suiza.",
+          "title": "Tren Rojo del Bernina (Tirano - St. Moritz)",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Tirano+Trenino+Rosso",
+          "tagColor": "bg-rose-100 text-rose-800"
+        },
+        {
+          "tag": "IMPRESCINDIBLE 1",
+          "desc": "Puente tibetano peatonal suspendido a 140 m de altura (234 m de largo) con vistas impresionantes de los Alpes y el Lago de Como. A 15 min.",
+          "title": "Ponte nel Cielo (Val Tartano)",
+          "mapsUrl": "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
+          "tagColor": "bg-amber-100 text-amber-900"
+        },
+        {
+          "tag": "NATURALEZA Y SENDERISMO",
+          "desc": "El 'Pequeño Yosemite' italiano: paredes de granito, lagunas de agua esmeralda y refugios con polenta taragna. A 20 min.",
+          "title": "Reserva Natural Val di Mello",
+          "mapsUrl": "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
+          "tagColor": "bg-emerald-100 text-emerald-900"
+        },
+        {
+          "tag": "LAGO Y DEPORTES",
+          "desc": "A 15 min de Morbegno: playas de baño, paseo marítimo, alquiler de barcos, windsurf y la Abadía de Piona.",
+          "title": "Playas de Colico y Kitesurf en el Lago de Como",
+          "mapsUrl": "https://maps.google.com/?q=Spiaggia+di+Colico+Lago+di+Como",
+          "tagColor": "bg-cyan-100 text-cyan-900"
+        },
+        {
+          "tag": "TERMAS Y RELAX",
+          "desc": "Cuevas termales romanas milenarias y piscinas panorámicas al aire libre con vistas a los picos nevados.",
+          "title": "QC Terme Bormio (Baños Romanos)",
+          "mapsUrl": "https://maps.google.com/?q=QC+Terme+Bormio",
+          "tagColor": "bg-purple-100 text-purple-900"
+        }
+      ],
+      "categoryTitle": "Más experiencias locales"
+    },
+    "appSubtitle": "Tu acogedor refugio alpino en Morbegno, entre lagos y montañas...",
+    "restaurants": {
+      "title": "RESTAURANTES RECOMENDADOS",
+      "bannerText": "Las mejores tabernas y osterias auténticas de Morbegno",
+      "deliveries": [
+        {
+          "name": "FRATELLI CIAPPONI (1883)",
+          "type": "Bitto DOP, Casera, Bresaola y Grandes Vinos",
+          "phone": "+39 0342 610012"
+        },
+        {
+          "name": "PASTICCERIA POLETTI",
+          "type": "Bisciola de Valtellina y Dulces Tradicionales",
+          "phone": "+39 0342 611234"
+        }
+      ],
+      "recommended": [
+        {
+          "desc": "Taberna histórica desde 1886 en el centro: famosos pizzoccheri tradicionales, crujientes sciatt de queso, carnes selectas y vinos DOCG.",
+          "name": "ANTICA OSTERIA RAPELLA (DESDE 1886)",
+          "time": "7 min a pie (550 m)",
+          "phone": "+39 0342 610377",
+          "address": "Via Margna 36, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
+        },
+        {
+          "desc": "Osteria típica con bodega del siglo XVIII y chimenea: pasta fresca casera, pizzoccheri, sciatt con achicoria y carnes a la parrilla.",
+          "name": "OSTERIA DEL ZEP",
+          "time": "6 min a pie (500 m)",
+          "phone": "+39 0342 610058",
+          "address": "Piazza Marconi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Zep+Morbegno"
+        },
+        {
+          "desc": "Crotto tradicional en roca natural: sciatt fundentes, polenta taragna, costillas y cocina auténtica de montaña.",
+          "name": "OSTERIA DEL CROTTO",
+          "time": "8 min a pie (650 m)",
+          "phone": "+39 0342 614800",
+          "address": "Via Don Giovanni Guanella 18, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Crotto+Morbegno"
+        },
+        {
+          "desc": "Reconocida brasería en un crotto de piedra para cortes de carne a la brasa y platos alpinos.",
+          "name": "BRACERIA DEL CROTTO",
+          "time": "9 min a pie (750 m)",
+          "phone": "+39 0342 615000",
+          "address": "Via Crotto Lambertenghi 1, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Braceria+del+Crotto+Morbegno"
+        }
+      ],
+      "deliveryTitle": "Tiendas Históricas y Degustación"
+    },
+    "siteSettings": {
+      "redirects": {
+        "maps": "https://maps.google.com/?q=Morbegno",
+        "email": "",
+        "whatsapp": "https://wa.me/393917784042"
+      },
+      "siteTitle": "Aurora in Valtellina",
+      "textColor": "#f8fafc",
+      "fontFamily": "system-ui",
+      "accentColor": "#f59e0b",
+      "primaryColor": "#10b981",
+      "backgroundColor": "#070a0e"
+    }
+  },
+  "fr": {
+    "bars": {
+      "title": "BARS, CAFÉS & APÉRITIFS",
+      "bannerText": "Pâtisseries d'époque, bars à vin et terrasses à Morbegno",
+      "coffeeDesc": "La machine à café espresso de l'appartement est à votre disposition avec capsules de bienvenue offertes.",
+      "coffeeTitle": "Machine à café à disposition",
+      "recommended": [
+        {
+          "desc": "Bar à vin historique depuis 1970 avec terrasse : apéritifs avec sciatt chauds, bières artisanales et sélection de vins.",
+          "name": "WINE BAR LA TAVERNETTA",
+          "time": "6 min à pied (500 m)",
+          "phone": "+39 0342 611007",
+          "address": "Via Ezio Vanoni 64, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Wine+Bar+La+Tavernetta+Morbegno"
+        },
+        {
+          "desc": "Pâtisserie artisanale incontournable pour le petit-déjeuner avec viennoiseries, café expresso, pain de seigle et Bisciola.",
+          "name": "PANIFICIO & PASTICCERIA POLETTI",
+          "time": "5 min à pied (400 m)",
+          "phone": "+39 0342 611234",
+          "address": "Via Ezio Vanoni 32, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Panificio+Pasticceria+Poletti+Morbegno"
+        },
+        {
+          "desc": "Café et bar à cocktails élégant au cœur du centre historique, prisé pour ses apéritifs et verres en soirée.",
+          "name": "CAFFÈ GALLERY",
+          "time": "7 min à pied (600 m)",
+          "phone": "+39 0342 615432",
+          "address": "Via Garibaldi 42, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Caffe+Gallery+Morbegno"
+        },
+        {
+          "desc": "Bar à vin et bières chaleureux dans le vieux bourg avec vins valtellinais DOCG et planches de charcuteries locales.",
+          "name": "VINERIA BIRRERIA OTTOCENTO",
+          "time": "8 min à pied (650 m)",
+          "phone": "+39 0342 612500",
+          "address": "Via Garibaldi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ottocento+Morbegno"
+        }
+      ]
+    },
+    "info": {
+      "title": "INFORMATIONS PRATIQUES",
+      "cinLabel": "Code d'identification national (CIN) :",
+      "cirLabel": "Code d'identification régional (CIR) :",
+      "services": [
+        {
+          "desc": "Pharmacie San Giovanni • Via Garibaldi (5 min à pied)",
+          "title": "PHARMACIE DE GARDE",
+          "mapsUrl": "https://maps.google.com/?q=Farmacia+Morbegno"
+        },
+        {
+          "desc": "Banca Popolare di Sondrio • Piazza Caduti (6 min à pied)",
+          "title": "BANQUE & DISTRIBUTEUR 24H",
+          "mapsUrl": "https://maps.google.com/?q=Bancomat+Morbegno"
+        },
+        {
+          "desc": "Eni Station & recharge rapide Enel X (400 m)",
+          "title": "STATION SERVICE & BORNES VE",
+          "mapsUrl": "https://maps.google.com/?q=Distributore+Morbegno"
+        },
+        {
+          "desc": "Poste Italiane Morbegno • Via Garibaldi (8 min à pied)",
+          "title": "BUREAU DE POSTE",
+          "mapsUrl": "https://maps.google.com/?q=Poste+Italiane+Morbegno"
+        },
+        {
+          "desc": "Collégiale San Giovanni Battista & Pont Ganda (500 m)",
+          "title": "ÉGLISES & MONUMENTS",
+          "mapsUrl": "https://maps.google.com/?q=Collegiata+San+Giovanni+Morbegno"
+        }
+      ],
+      "wasteDesc": "Les bacs de tri sélectif se trouvent sur le côté arrière de la maison : Déchets organiques (marron), Papier (bleu), Plastique/Métal (jaune), Verre (vert).",
+      "wasteTitle": "Tri des Déchets (Bacs à l'Arrière)"
+    },
+    "wifi": {
+      "title": "WI-FI",
+      "speedNotice": "Wi-Fi rapide jusqu'à 500 Mbps • Streaming HD, navigation et télétravail",
+      "networkLabel": "NOM DU RÉSEAU (SSID)",
+      "passwordLabel": "MOT DE PASSE WI-FI",
+      "troubleshootText": "En cas de ralentissement, désactivez puis réactivez le Wi-Fi sur votre appareil ou redémarrez la connexion de votre smartphone.",
+      "troubleshootTitle": "Problème de connexion ?"
+    },
+    "rules": {
+      "title": "RÈGLEMENT INTÉRIEUR",
+      "r1Desc": "Il est strictement interdit de fumer à l'intérieur. Autorisé uniquement dehors.",
+      "r2Desc": "Merci de prendre soin de la maison comme s'il s'agissait de la vôtre.",
+      "r3Desc": "Merci de respecter le calme pendant les heures de nuit (de 23h00 à 08h00).",
+      "r4Desc": "Les personnes extérieures non mentionnées dans la réservation ne sont pas admises.",
+      "r5Desc": "Verrouillez la porte et éteignez les appareils et lumières en partant.",
+      "r6Desc": "Prévenez-nous immédiatement en cas de panne ou de besoin particulier.",
+      "r1Title": "STRICTEMENT NON-FUMEUR",
+      "r2Title": "SOIN DU LOGEMENT",
+      "r3Title": "HEURES DE CALME",
+      "r4Title": "INVITÉS NON ENREGISTRÉS",
+      "r5Title": "SÉCURITÉ & ÉNERGIE",
+      "r6Title": "SIGNALEMENT"
+    },
+    "appName": "Aurora in Valtellina",
+    "checkIn": {
+      "badge": "::: 14:00 (2 PM) :::",
+      "step1": "1. Les clés de l'appartement vous seront remises en main propre par votre hôte à votre arrivée.",
+      "step2": "2. Merci de nous envoyer un message sur WhatsApp pour nous indiquer votre heure d'arrivée estimée.",
+      "step3": "3. À votre arrivée, nous vous accueillerons chaleureusement pour vous présenter l'appartement et vous remettre les clés.",
+      "title": "ARRIVÉE (CHECK-IN)",
+      "parkingDesc": "La propriété dispose d'un parking privé avec une place toujours libre et réservée pour les hôtes de l'Appartement Aurora.",
+      "parkingNote": "Toujours à votre disposition sans frais supplémentaires.",
+      "parkingTitle": "PARKING PRIVÉ RÉSERVÉ",
+      "timingNotice": "L'accès au logement est possible dès 14h00 (2 PM). Pour toute demande d'arrivée anticipée, écrivez-nous sur WhatsApp.",
+      "keyboxCodeLabel": "REMISE EN PERSONNE PAR L'HÔTE",
+      "houseAccessTitle": "Remise des Clés en Main Propre"
+    },
+    "welcome": {
+      "title": "BIENVENUE",
+      "message": "Nous sommes ravis de vous accueillir dans notre maison à Morbegno. Ce livret digital est conçu pour vous offrir un séjour parfait en Valtelline entre confort, nature et détente.",
+      "greeting": "Bienvenue à Aurora in Valtellina !",
+      "viewDesc": "Parking privé réservé et panorama sur les sommets",
+      "viewTitle": "COUR & VUE SUR LES ALPES",
+      "livingDesc": "Smart TV, canapé-lit et coin repas",
+      "roomsTitle": "Les Espaces De La Maison",
+      "bedroomDesc": "Lit King Size, grande armoire et draps frais",
+      "kitchenDesc": "Plaque de cuisson, four, lave-vaisselle & machine à café",
+      "livingTitle": "SALON & DÉTENTE",
+      "bedroomTitle": "CHAMBRE PRINCIPALE",
+      "kitchenTitle": "CUISINE ÉQUIPÉE"
+    },
+    "checkOut": {
+      "badge": "::: 10:00 (10 AM) :::",
+      "title": "DÉPART (CHECK-OUT)",
+      "lateNote": "Si vous souhaitez un départ tardif, prévenez-nous à l'avance pour vérifier la faisabilité.",
+      "thankYou": "Nous vous remercions chaleureusement pour votre séjour à Aurora in Valtellina. Bon retour et à très bientôt !",
+      "checklist": [
+        {
+          "desc": "Regardez dans les placards, tiroirs, prises et salle de bain pour ne rien oublier.",
+          "title": "VÉRIFIER VOS AFFAIRES PERSONNELLES"
+        },
+        {
+          "desc": "Éteignez toutes les lumières, le chauffage/climatiseur et le téléviseur.",
+          "title": "ÉTEINDRE LES APPAREILS"
+        },
+        {
+          "desc": "Déposez les sacs poubelles triés dans les bacs de la cour.",
+          "title": "VIDER LES POUBELLES"
+        },
+        {
+          "desc": "Assurez-vous que les fenêtres et volets sont bien verrouillés.",
+          "title": "FERMER PORTES ET FENÊTRES"
+        },
+        {
+          "desc": "Replacez les clés dans la boîte à clés sécurisée et brouillez la combinaison.",
+          "title": "REMETTRE LES CLÉS DANS LA BOÎTE"
+        },
+        {
+          "desc": "Déposez les serviettes utilisées dans la douche ou la baignoire.",
+          "title": "SERVIETTES USAGÉES"
+        },
+        {
+          "desc": "Laissez la vaisselle dans le lave-vaisselle et lancez un cycle si nécessaire.",
+          "title": "CUISINE PROPRE"
+        }
+      ],
+      "checklistTitle": "Avant de partir, merci de :"
+    },
+    "contacts": {
+      "quote": "Chers voyageurs, je suis à votre entière disposition pendant tout votre séjour à Morbegno. Pour toute question, conseil ou besoin, n'hésitez pas à me contacter !",
+      "title": "CONTACT & HÔTE",
+      "copied": "Copié dans le presse-papiers !",
+      "hostRole": "Votre Hôte Local • Aurora in Valtellina",
+      "copyEmail": "Copier l'email",
+      "copyPhone": "Copier le numéro",
+      "smsAction": "Envoyer un SMS",
+      "callAction": "Appeler",
+      "chatAction": "Chat WhatsApp",
+      "rateGoogle": "NOTER SUR GOOGLE",
+      "emailAction": "Envoyer un Email",
+      "rateWebsite": "NOTER SUR BEDANDBREAKFAST.IT",
+      "ratingPrompt": "Quelle note donnez-vous à votre séjour ?",
+      "reviewPrompt": "Nous espérons que votre séjour s'est déroulé à merveille ! Votre avis nous aide énormément :",
+      "submitReview": "Envoyer l'Avis",
+      "commentPrompt": "Votre commentaire ou suggestion :",
+      "reviewSuccess": "Merci infiniment pour votre précieux commentaire !",
+      "reviewDialogTitle": "Laissez votre avis pour Aurora in Valtellina"
+    },
+    "location": {
+      "byCar": "En Voiture :",
+      "title": "EMPLACEMENT",
+      "byPlane": "Depuis les Aéroports :",
+      "byTrain": "En Train :",
+      "heading": "Itinéraire vers notre maison",
+      "byCarDesc": "Via la SS38, sortie Morbegno Centro. Parking privé de l'habitation avec place toujours réservée.",
+      "byPlaneDesc": "Milan Bergame (80 km), Milan Linate (100 km), Milan Malpensa (125 km).",
+      "byTrainDesc": "Gare FS de Morbegno à 600m (8 min à pied). Trains directs depuis Milan-Centrale chaque heure.",
+      "howToArrive": "Comment Venir"
+    },
+    "shopping": {
+      "shops": [
+        {
+          "desc": "Temple de la gastronomie depuis 1883 : caves souterraines d'affinage de Bitto et Casera, cèpes séchés, bresaola et vins rares.",
+          "time": "6 min à pied (Piazza 3 Novembre)",
+          "hours": "Tous les jours 08h30 - 19h30 (fermé lun. après-midi)",
+          "title": "FRATELLI CIAPPONI - ÉPICERIE HISTORIQUE",
+          "mapsUrl": "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
+        },
+        {
+          "desc": "Supermarché complet pour vos courses quotidiennes : produits frais, boulangerie et épicerie.",
+          "time": "4 min à pied (300 m)",
+          "hours": "Ouvert 7j/7 : 08h00 - 20h30",
+          "title": "SUPERMARCHÉ IPERAL / CARREFOUR",
+          "mapsUrl": "https://maps.google.com/?q=Supermercato+Iperal+Morbegno"
+        },
+        {
+          "desc": "Hypermarché et plus de 60 boutiques de mode, pharmacie, électronique et restaurants.",
+          "time": "12 min en voiture (Piantedo / Colico)",
+          "hours": "Tous les jours 09h00 - 20h30",
+          "title": "CENTRE COMMERCIAL FUENTES",
+          "mapsUrl": "https://maps.google.com/?q=Centro+Commerciale+Fuentes+Piantedo"
+        },
+        {
+          "desc": "Marché traditionnel de producteurs locaux, fromages d'alpage, charcuterie et artisanat.",
+          "time": "Piazza Sant'Antonio & Centre",
+          "hours": "Chaque samedi matin : 08h00 - 13h00",
+          "title": "MARCHÉ DU SAMEDI DE MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Piazza+Sant+Antonio+Morbegno"
+        }
+      ],
+      "title": "COMMERCES & ALIMENTATION"
+    },
+    "amenities": {
+      "items": [
+        {
+          "desc": "Matelas orthopédique et literie soignée",
+          "title": "LIT KING SIZE"
+        },
+        {
+          "desc": "Confortable pour 2 personnes",
+          "title": "CANAPÉ-LIT DOUBLE"
+        },
+        {
+          "desc": "Connexion sans fil rapide et illimitée",
+          "title": "WI-FI JUSQU'À 500 MBPS"
+        },
+        {
+          "desc": "Climatisation par plancher rayonnant",
+          "title": "CHAUFFAGE & RAFRAÎCHISSEMENT AU SOL"
+        },
+        {
+          "desc": "Netflix, Prime Video et chaînes streaming",
+          "title": "SMART TV 50\" 4K"
+        },
+        {
+          "desc": "Table de travail et prises électriques",
+          "title": "ESPACE BUREAU"
+        },
+        {
+          "desc": "Cuisine équipée avec casseroles et poêles",
+          "title": "PLAQUE DE CUISSON COMPLÈTE"
+        },
+        {
+          "desc": "Pastilles fournies sous l'évier",
+          "title": "LAVE-VAISSELLE"
+        },
+        {
+          "desc": "Capsules de café de bienvenue offertes",
+          "title": "MACHINE À CAFÉ ESPRESSO"
+        },
+        {
+          "desc": "Cuisson, réchauffage et décongélation",
+          "title": "FOUR & MICRO-ONDES"
+        },
+        {
+          "desc": "Grand modèle avec compartiment congélateur",
+          "title": "RÉFRIGÉRATEUR & CONGÉLATEUR"
+        },
+        {
+          "desc": "Lessive et étendoir fournis",
+          "title": "LAVE-LINGE & ÉTENDOIR"
+        },
+        {
+          "desc": "Sèche-cheveux puissant, serviettes et gel douche",
+          "title": "ARTICLES DE TOILETTE"
+        },
+        {
+          "desc": "Parking privé de l'habitation avec place toujours réservée",
+          "title": "PARKING PRIVÉ RÉSERVÉ"
+        }
+      ],
+      "title": "ÉQUIPEMENTS & SERVICES",
+      "notice": "Tous les équipements sont réservés à votre usage exclusif. Merci d'éteindre les appareils et lumières en quittant les lieux."
+    },
+    "emergency": {
+      "items": [
+        {
+          "phone": "0342 610210",
+          "title": "Poste de Commandement Carabinieri Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24",
+          "subtitle": "Gendarmerie • Via Morelli 24, Morbegno"
+        },
+        {
+          "phone": "0342 607111",
+          "title": "Hôpital de Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1",
+          "subtitle": "Pôle Hospitalier Territorial • Via Morelli 1, Morbegno"
+        },
+        {
+          "title": "Pharmacie de Garde (PharmAround)",
+          "webUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          "subtitle": "Pharmacies ouvertes en temps réel à Morbegno",
+          "webLabel": "Pharmacies Ouvertes"
+        },
+        {
+          "phone": "116 117",
+          "title": "Permanence Médicale (116 117)",
+          "subtitle": "Assistance médicale non urgente de nuit et jours fériés"
+        }
+      ],
+      "title": "URGENCES & SECOURS",
+      "freeBadge": "GRATUIT",
+      "nationalNumbersTitle": "NUMÉROS D'URGENCE 24H/24"
+    },
+    "transport": {
+      "items": [
+        {
+          "desc": "Trains directs vers Milan Centrale, Lac de Côme, Sondrio, Tirano et le Bernina Express.",
+          "time": "8 min à pied (600 m)",
+          "title": "GARE FERROVIAIRE DE MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Morbegno",
+          "subtitle": "Arrêt Morbegno FS"
+        },
+        {
+          "desc": "Lignes pour le Val Tartano (Ponte nel Cielo), Val Gerola et Val Masino.",
+          "time": "5 min à pied",
+          "title": "BUS LOCAUX",
+          "mapsUrl": "https://maps.google.com/?q=Fermata+Bus+Morbegno",
+          "subtitle": "Arrêt Via Roma / Piazza S. Antonio"
+        },
+        {
+          "desc": "Liaisons ferroviaires fréquentes vers Milan Centrale puis navettes express.",
+          "time": "1h 15m en voiture / Train direct",
+          "title": "AÉROPORTS DE MILAN",
+          "mapsUrl": "https://maps.google.com/?q=Milano+Bergamo+Airport",
+          "subtitle": "Bergame / Linate / Malpensa"
+        }
+      ],
+      "title": "TRANSPORTS"
+    },
+    "activities": {
+      "title": "ACTIVITÉS & NATURE",
+      "bannerText": "Expériences inoubliables en Valtelline & Lac de Côme",
+      "categories": [
+        {
+          "desc": "114 km le long de la rivière Adda (location de vélos électriques)",
+          "title": "PISTE CYCLABLE VALTELLINA"
+        },
+        {
+          "desc": "Visite des vignobles en terrasses de Nebbiolo et caves historiques",
+          "title": "DÉGUSTATION DE VINS SFORZATO"
+        },
+        {
+          "desc": "Stations de Pescegallo (Valgerola), Aprica et Bormio",
+          "title": "SKI & MONTAGNE"
+        },
+        {
+          "desc": "Ruelles pavées, Pont Ganda et caves à fromage Bitto séculaires",
+          "title": "CENTRE HISTORIQUE DE MORBEGNO"
+        }
+      ],
+      "highlights": [
+        {
+          "tag": "PATRIMOINE UNESCO",
+          "desc": "Patrimoine mondial UNESCO : le train panoramique alpin le plus haut d'Europe traversant glaciers et cols jusqu'en Suisse à Saint-Moritz.",
+          "title": "Train Rouge du Bernina (Tirano - Saint-Moritz)",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Tirano+Trenino+Rosso",
+          "tagColor": "bg-rose-100 text-rose-800"
+        },
+        {
+          "tag": "INCONTOURNABLE 1",
+          "desc": "Pont suspendu piétonnier à 140 m au-dessus du vide (234 m de long) avec une vue panoramique grandiose jusqu'au lac de Côme. À 15 min.",
+          "title": "Ponte nel Cielo (Val Tartano)",
+          "mapsUrl": "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
+          "tagColor": "bg-amber-100 text-amber-900"
+        },
+        {
+          "tag": "NATURE & RANDONNÉE",
+          "desc": "Le 'Petit Yosemite' italien : falaises granitiques grandioses, vasques d'eau turquoise et auberges d'alpage. À 20 min.",
+          "title": "Réserve Naturelle du Val di Mello",
+          "mapsUrl": "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
+          "tagColor": "bg-emerald-100 text-emerald-900"
+        },
+        {
+          "tag": "LAC & NAUTISME",
+          "desc": "À 15 min de Morbegno : plages de baignade, voile, kitesurf et l'abbaye historique de Piona.",
+          "title": "Plages de Colico & Kitesurf au Lac de Côme",
+          "mapsUrl": "https://maps.google.com/?q=Spiaggia+di+Colico+Lago+di+Como",
+          "tagColor": "bg-cyan-100 text-cyan-900"
+        },
+        {
+          "tag": "THERMES & DÉTENTE",
+          "desc": "Bains thermaux historiques et bassins extérieurs chauds face aux sommets enneigés.",
+          "title": "QC Terme Bormio (Bains Romains)",
+          "mapsUrl": "https://maps.google.com/?q=QC+Terme+Bormio",
+          "tagColor": "bg-purple-100 text-purple-900"
+        }
+      ],
+      "categoryTitle": "Autres découvertes locales"
+    },
+    "appSubtitle": "Votre havre de paix alpin à Morbegno, entre lac et montagnes...",
+    "restaurants": {
+      "title": "RESTAURANTS RECOMMANDÉS",
+      "bannerText": "Les meilleures tables et osterias authentiques de Morbegno",
+      "deliveries": [
+        {
+          "name": "FRATELLI CIAPPONI (1883)",
+          "type": "Bitto DOP, Casera, Bresaola & Grands Vins",
+          "phone": "+39 0342 610012"
+        },
+        {
+          "name": "PASTICCERIA POLETTI",
+          "type": "Bisciola de Valtelline & Pâtisseries",
+          "phone": "+39 0342 611234"
+        }
+      ],
+      "recommended": [
+        {
+          "desc": "Établissement historique depuis 1886 : pizzoccheri traditionnels réputés, sciatt croustillants, viandes sélectionnées et vins DOCG.",
+          "name": "ANTICA OSTERIA RAPELLA (DEPUIS 1886)",
+          "time": "7 min à pied (550 m)",
+          "phone": "+39 0342 610377",
+          "address": "Via Margna 36, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
+        },
+        {
+          "desc": "Osteria typique avec cave voûtée du XVIIIe siècle : pâtes fraîches maison, pizzoccheri, sciatt et viandes grillées.",
+          "name": "OSTERIA DEL ZEP",
+          "time": "6 min à pied (500 m)",
+          "phone": "+39 0342 610058",
+          "address": "Piazza Marconi 16, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Zep+Morbegno"
+        },
+        {
+          "desc": "Crotto traditionnel en roche naturelle : sciatt fondants, polenta taragna, travers de porc et cuisine valtellinaise généreuse.",
+          "name": "OSTERIA DEL CROTTO",
+          "time": "8 min à pied (650 m)",
+          "phone": "+39 0342 614800",
+          "address": "Via Don Giovanni Guanella 18, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Osteria+del+Crotto+Morbegno"
+        },
+        {
+          "desc": "Brasserie et grillade réputée pour ses viandes de bœuf maturées au feu de bois et ses plats d'alpage.",
+          "name": "BRACERIA DEL CROTTO",
+          "time": "9 min à pied (750 m)",
+          "phone": "+39 0342 615000",
+          "address": "Via Crotto Lambertenghi 1, Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Braceria+del+Crotto+Morbegno"
+        }
+      ],
+      "deliveryTitle": "Épiceries Historiques & Dégustation"
+    },
+    "siteSettings": {
+      "redirects": {
+        "maps": "https://maps.google.com/?q=Morbegno",
+        "email": "",
+        "whatsapp": "https://wa.me/393917784042"
+      },
+      "siteTitle": "Aurora in Valtellina",
+      "textColor": "#f8fafc",
+      "fontFamily": "system-ui",
+      "accentColor": "#f59e0b",
+      "primaryColor": "#10b981",
+      "backgroundColor": "#070a0e"
+    }
+  },
+  "it": {
+    "bars": {
+      "title": "BAR, COLAZIONI & APERITIVI",
+      "bannerText": "Colazioni e pausa pranzo",
+      "coffeeDesc": "All'interno dell'appartamento troverete a vostra disposizione la macchina da caffè espresso con cialde di benvenuto in omaggio.",
+      "coffeeTitle": "Macchina del caffè a disposizione",
+      "recommended": [
+        {
+          "desc": "Bar storico con servizio cordiale e colazioni all’italiana.",
+          "name": "BAR TRE",
+          "time": "8 min a piedi / 1 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Bar+Tre+Morbegno"
+        },
+        {
+          "desc": "Moderno e perfetto per iniziare la giornata, pasticceria e pausa pranzo.",
+          "name": "DOLCE FORNO",
+          "time": "19 min a piedi / 4 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Dolce+Forno+Morbegno"
+        }
+      ]
+    },
+    "info": {
+      "title": "INFORMAZIONI UTILI",
+      "cinLabel": "Codice Identificativo Nazionale (CIN):",
+      "cirLabel": "Codice Identificativo Regionale (CIR):",
+      "services": [
+        {
+          "desc": "L’acqua del rubinetto è potabile e di ottima qualità.",
+          "title": "ACQUA POTABILE",
+          "mapsUrl": ""
+        },
+        {
+          "desc": "Disponibilità, orari e indicazioni aggiornati in tempo reale",
+          "title": "FARMACIA DI TURNO",
+          "mapsUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5"
+        },
+        {
+          "desc": "Banca Popolare di Sondrio • Piazza Caduti (6 min a piedi)",
+          "title": "BANCA / SPORTELLO BANCOMAT",
+          "mapsUrl": "https://maps.google.com/?q=Bancomat+Morbegno"
+        },
+        {
+          "desc": "Stazione Eni Station & Colonne ricarica rapida Enel X (400 m)",
+          "title": "DISTRIBUTORE CARBURANTE & RICARICA EV",
+          "mapsUrl": "https://maps.google.com/?q=Distributore+Morbegno"
+        },
+        {
+          "desc": "Poste Italiane Morbegno • Via Garibaldi (8 min a piedi)",
+          "title": "UFFICIO POSTALE",
+          "mapsUrl": "https://maps.google.com/?q=Poste+Italiane+Morbegno"
+        },
+        {
+          "desc": "Collegiata San Giovanni Battista (sec. XVI) & Ponte Ganda (500 m)",
+          "title": "CHIESA & MONUMENTI STORICI",
+          "mapsUrl": "https://maps.google.com/?q=Collegiata+San+Giovanni+Morbegno"
+        }
+      ],
+      "wasteDesc": "I bidoni della raccolta differenziata si trovano sul retro della casa. Si prega di differenziare: Umido (marrone), Carta (blu), Plastica/Lattine (giallo) e Vetro (verde).",
+      "wasteTitle": "Bidoni della Spazzatura (Raccolta Differenziata)"
+    },
+    "wifi": {
+      "title": "WIFI",
+      "speedNotice": "Connessione Wi-Fi veloce fino a 500 Mbps • Streaming HD, navigazione e smart working",
+      "networkLabel": "NOME DELLA RETE (SSID)",
+      "passwordLabel": "PASSWORD WI-FI",
+      "troubleshootText": "In caso di rallentamenti temporanei, provate a disattivare e riattivare il Wi-Fi sul vostro dispositivo o a riavviare la connessione dello smartphone.",
+      "troubleshootTitle": "Problemi di Connessione?"
+    },
+    "rules": {
+      "title": "REGOLE DELLA CASA",
+      "r1Desc": "È severamente vietato fumare all'interno dell'appartamento. Consentito solo all'aperto.",
+      "r2Desc": "Vi preghiamo di trattare la casa con cura e rispetto, come fosse la vostra.",
+      "r3Desc": "Rispettare la quiete e il riposo durante le ore notturne (dalle 23:00 alle 08:00).",
+      "r4Desc": "Non è consentito far pernottare o accedere a persone esterne non registrate.",
+      "r5Desc": "Chiudere sempre a chiave la porta e spegnere luci ed elettrodomestici quando uscite.",
+      "r6Desc": "Informateci tempestivamente in caso di guasti accidentali o necessità di assistenza.",
+      "r1Title": "DIVIETO DI FUMO",
+      "r2Title": "CURA DEGLI ARREDI",
+      "r3Title": "ORARI DEL SILENZIO",
+      "r4Title": "OSPITI NON REGISTRATI",
+      "r5Title": "SICUREZZA & RISPARMIO",
+      "r6Title": "SEGNALAZIONI GUASTI"
+    },
+    "appName": "Aurora in Valtellina",
+    "checkIn": {
+      "badge": "::: 14:00 (2 PM) :::",
+      "step1": "1. Le chiavi dell'appartamento vi verranno consegnate a mano direttamente dall'host al vostro arrivo.",
+      "step2": "2. Vi preghiamo di comunicarci con un messaggio su WhatsApp il vostro orario stimato di arrivo.",
+      "step3": "3. Al vostro arrivo vi accoglieremo per mostrarvi l'appartamento, rispondere a ogni domanda e darvi le chiavi.",
+      "title": "CHECK-IN",
+      "parkingDesc": "L'abitazione dispone di parcheggio privato con un posto auto sempre libero e riservato per gli ospiti dell'Appartamento Aurora per tutta la durata del soggiorno.",
+      "parkingNote": "Sempre a vostra disposizione senza costi aggiuntivi.",
+      "parkingTitle": "PARCHEGGIO PRIVATO RISERVATO",
+      "timingNotice": "Vi chiediamo gentilmente di rispettare l'orario di check-in dalle ore 14:00 in poi (2 PM). Se arrivate prima o avete esigenze particolari, scriveteci su WhatsApp.",
+      "keyboxCodeLabel": "CONSEGNA A MANO DALL'HOST",
+      "houseAccessTitle": "Consegna Chiavi di Persona"
+    },
+    "welcome": {
+      "title": "BENVENUTO",
+      "message": "Siamo felici di ospitarvi nella nostra casa a Morbegno. Abbiamo preparato questa guida digitale per aiutarvi a vivere al meglio il vostro soggiorno in Valtellina tra comfort, relax e splendide valli alpine.",
+      "greeting": "Benvenuti ad Aurora in Valtellina!",
+      "viewDesc": "Parcheggio privato riservato e vista sulle Orobie",
+      "viewTitle": "CORTE & VISTA ALPI",
+      "livingDesc": "Smart TV, divano letto e zona pranzo",
+      "roomsTitle": "Gli Ambienti Della Casa",
+      "bedroomDesc": "Letto king size, armadio e biancheria",
+      "kitchenDesc": "Piano cottura, forno, lavastoviglie & caffè",
+      "livingTitle": "SOGGIORNO & RELAX",
+      "bedroomTitle": "CAMERA MATRIMONIALE",
+      "kitchenTitle": "CUCINA ATTREZZATA"
+    },
+    "checkOut": {
+      "badge": "::: 10:00 (10 AM) :::",
+      "title": "CHECK-OUT",
+      "lateNote": "Se avete bisogno di un check-out posticipato, vi preghiamo di informarci in anticipo per verificare la disponibilità.",
+      "thankYou": "Vi ringraziamo di cuore per aver soggiornato ad Aurora in Valtellina. Buon rientro a casa e a presto!",
+      "checklist": [
+        {
+          "desc": "Controlla armadi, cassetti, prese elettriche e bagno per non dimenticare nulla.",
+          "title": "PORTA VIA I TUOI OGGETTI PERSONALI"
+        },
+        {
+          "desc": "Spegni tutte le luci, il climatizzatore/riscaldamento e la TV.",
+          "title": "CONTROLLA GLI ELETTRODOMESTICI"
+        },
+        {
+          "desc": "Porta i rifiuti differenziati nei bidoni condominiali nel cortile.",
+          "title": "SVUOTA I CESTINI DELLA SPAZZATURA"
+        },
+        {
+          "desc": "Assicurati che finestre e persiane siano ben chiuse a prova di maltempo.",
+          "title": "CHIUDI FINESTRE E IMPOSTE"
+        },
+        {
+          "desc": "Riponi le chiavi nella cassetta di sicurezza e blocca la combinazione.",
+          "title": "RESTITUISCI LE CHIAVI NELLA KEYBOX"
+        },
+        {
+          "desc": "Lascia gli asciugamani usati all'interno della doccia o vasca da bagno.",
+          "title": "GESTISCI GLI ASCIUGAMANI USATI"
+        },
+        {
+          "desc": "Lascia la cucina in ordine e attiva l'ultimo lavaggio della lavastoviglie se necessario.",
+          "title": "CUCINA IN ORDINE"
+        }
+      ],
+      "checklistTitle": "Prima di partire, per favore:"
+    },
+    "contacts": {
+      "quote": "Cari ospiti, sono a vostra completa disposizione durante tutto il vostro soggiorno a Morbegno. Per qualsiasi necessità, consiglio o informazione, non esitate a scrivermi o chiamarmi!",
+      "title": "CONTATTI & HOST",
+      "copied": "Copiato negli appunti!",
+      "hostRole": "Il Tuo Host Locale • Aurora in Valtellina",
+      "copyEmail": "Copia Email",
+      "copyPhone": "Copia Numero",
+      "smsAction": "Invia SMS",
+      "callAction": "Chiama",
+      "chatAction": "Chat WhatsApp",
+      "rateGoogle": "VALUTA SU GOOGLE",
+      "emailAction": "Invia Email",
+      "rateWebsite": "VALUTA SU BEDANDBREAKFAST.IT",
+      "ratingPrompt": "Come valuti la tua esperienza complessiva?",
+      "reviewPrompt": "Speriamo che il vostro soggiorno sia stato piacevole! Il vostro feedback è prezioso per noi. Se vi fa piacere, lasciateci una recensione:",
+      "submitReview": "Invia Recensione",
+      "commentPrompt": "Scrivi un commento o suggerimento:",
+      "reviewSuccess": "Grazie di cuore per la tua preziosa recensione!",
+      "reviewDialogTitle": "Lascia la tua recensione per Aurora in Valtellina"
+    },
+    "location": {
+      "byCar": "In Auto:",
+      "title": "POSIZIONE",
+      "byPlane": "Dagli Aeroporti:",
+      "byTrain": "In Treno:",
+      "heading": "Indicazioni per la nostra casa",
+      "byCarDesc": "Dalla SS38 Nuova Variante di Morbegno, prendere uscita Morbegno Centro. Parcheggio privato dell'abitazione con posto auto sempre riservato.",
+      "byPlaneDesc": "Milano Bergamo Orio al Serio (80 km), Milano Linate (100 km), Milano Malpensa (125 km).",
+      "byTrainDesc": "Stazione FS Morbegno a 600m (8 min a piedi). Treni diretti ogni ora da Milano Centrale (linea Milano-Tirano/Bernina).",
+      "howToArrive": "Come Arrivare"
+    },
+    "shopping": {
+      "shops": [
+        {
+          "desc": "Supermercato di quartiere per prodotti freschi, pane e generi alimentari.",
+          "time": "6 min a piedi / 1 min in auto",
+          "hours": "08:00 - 20:00",
+          "title": "SIGMA",
+          "mapsUrl": "https://maps.google.com/?q=Sigma+Morbegno"
+        },
+        {
+          "desc": "Supermercato più grande con reparti freschi, panetteria e macelleria.",
+          "time": "17 min a piedi / 3 min in auto",
+          "hours": "08:00 - 20:30",
+          "title": "IPERAL",
+          "mapsUrl": "https://maps.google.com/?q=Iperal+Morbegno"
+        },
+        {
+          "desc": "Bottega storica con vini, formaggi, salumi e selezioni locali.",
+          "time": "23 min a piedi / 4 min in auto",
+          "hours": "08:30 - 19:30",
+          "title": "DROGHERIA CIAPPONI",
+          "mapsUrl": "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
+        },
+        {
+          "desc": "Macelleria Mazzoleni — rinomata per carni locali e salumi artigianali.",
+          "time": "23 min a piedi / 4 min in auto",
+          "hours": "Aperta: Lun-Sab 08:00 - 13:00, 16:00 - 19:00",
+          "title": "MACELLERIA MAZZOLENI (DI FRONTE ALLA DROGHERIA)",
+          "mapsUrl": "https://maps.google.com/?q=Macelleria+Mazzoleni+Morbegno"
+        }
+      ],
+      "title": "SHOPPING & ALIMENTARI"
+    },
+    "amenities": {
+      "items": [
+        {
+          "desc": "Materasso ortopedico e lenzuola fresche",
+          "title": "LETTO MATRIMONIALE KING"
+        },
+        {
+          "desc": "Comodo per 2 adulti o bambini",
+          "title": "DIVANO LETTO MATRIMONIALE"
+        },
+        {
+          "desc": "Connessione veloce senza limiti",
+          "title": "WI-FI FINO A 500 MBPS"
+        },
+        {
+          "desc": "Climatizzazione radiante autonoma a pavimento",
+          "title": "RISCALDAMENTO & RAFFRESCAMENTO A PAVIMENTO"
+        },
+        {
+          "desc": "Netflix, Prime Video & Canali satellitari",
+          "title": "SMART TV 50\" 4K"
+        },
+        {
+          "desc": "Tavolo, sedia confortevole e prese vicine",
+          "title": "POSTAZIONE SMART WORKING"
+        },
+        {
+          "desc": "Fornelli e set completo di pentole",
+          "title": "PIANO COTTURA COMPLETO"
+        },
+        {
+          "desc": "Pastiglie incluse sotto il lavello",
+          "title": "LAVASTOVIGLIE"
+        },
+        {
+          "desc": "Cialde di caffè offerte di benvenuto",
+          "title": "MACCHINA CAFFÈ ESPRESSO"
+        },
+        {
+          "desc": "Funzione grill, riscaldamento e cottura",
+          "title": "FORNO & MICROONDE"
+        },
+        {
+          "desc": "Capiente con scomparto freezer",
+          "title": "FRIGORIFERO & CONGELATORE"
+        },
+        {
+          "desc": "Detersivo e stendibiancheria forniti",
+          "title": "LAVATRICE & STENDIBIANCHERIA"
+        },
+        {
+          "desc": "Asciugacapelli potente, sapone e docciaschiuma",
+          "title": "KIT CORTESIA BAGNO"
+        },
+        {
+          "desc": "Posto auto privato dell'abitazione sempre libero e riservato",
+          "title": "PARCHEGGIO PRIVATO RISERVATO"
+        }
+      ],
+      "title": "SERVIZI & DOTAZIONI",
+      "notice": "Tutti i servizi sono a vostro uso esclusivo. Vi chiediamo di spegnere luci ed elettrodomestici quando uscite per rispettare l'ambiente."
+    },
+    "emergency": {
+      "items": [
+        {
+          "phone": "0342 610210",
+          "title": "Centro di Comando Carabinieri Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24",
+          "subtitle": "Compagnia e Stazione • Via Morelli 24, Morbegno (SO)"
+        },
+        {
+          "phone": "0342 607111",
+          "title": "Ospedale di Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1",
+          "subtitle": "Presidio Ospedaliero Territoriale • Via Morelli 1, Morbegno (SO)"
+        },
+        {
+          "title": "Farmacia di Turno (Morbegno)",
+          "webUrl": "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          "subtitle": "Verifica turni e farmacie aperte in tempo reale su PharmAround",
+          "webLabel": "Farmacie di Turno"
+        },
+        {
+          "phone": "116 117",
+          "title": "Guardia Medica (Continuità Assistenziale)",
+          "subtitle": "Assistenza sanitaria notturna e festiva"
+        }
+      ],
+      "title": "EMERGENZA & SOCCORSO",
+      "freeBadge": "GRATUITO",
+      "nationalNumbersTitle": "NUMERI SOCCORSO NAZIONALI H24"
+    },
+    "transport": {
+      "items": [
+        {
+          "desc": "Treni regionali diretti per Milano Centrale, Lecco, Colico, Sondrio, Tirano e Bernina Express.",
+          "time": "8 min a piedi (600 m)",
+          "title": "STAZIONE FERROVIARIA MORBEGNO",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Morbegno",
+          "subtitle": "Stop FS Morbegno"
+        },
+        {
+          "desc": "Autobus per Val Tartano (Ponte nel Cielo), Val Gerola, Val Masino e centri limitrofi.",
+          "time": "5 min a piedi",
+          "title": "AUTOBUS DI LINEA (VALLE E DINTORNI)",
+          "mapsUrl": "https://maps.google.com/?q=Fermata+Bus+Morbegno",
+          "subtitle": "Fermata Via Roma / Piazza S. Antonio"
+        },
+        {
+          "desc": "Collegamenti frequenti in treno da Morbegno per Milano Centrale e navette aeroportuali.",
+          "time": "1h 15m in auto / Treno diretto",
+          "title": "AEROPORTI DI MILANO",
+          "mapsUrl": "https://maps.google.com/?q=Milano+Bergamo+Airport",
+          "subtitle": "Orio al Serio (BGY) / Linate / Malpensa"
+        }
+      ],
+      "title": "TRASPORTI"
+    },
+    "activities": {
+      "title": "ATTIVITÀ & ITINERARI",
+      "bannerText": "Esperienze indimenticabili in Valtellina & Lago di Como",
+      "categories": [
+        {
+          "desc": "114 km ciclo-pedonale pianeggiante lungo l'Adda (noleggio E-bike)",
+          "title": "SENTIERO VALTELLINA"
+        },
+        {
+          "desc": "Tour degustazione tra i muretti a secco e cantine di Nebbiolo",
+          "title": "CANTINE & VINO SFORZATO"
+        },
+        {
+          "desc": "Impianti di Pescegallo (Valgerola), Aprica, Bormio e Chiesa Valmalenco",
+          "title": "SCI & SPORT INVERNALI"
+        },
+        {
+          "desc": "Passeggiata tra via Garibaldi, Ponte Ganda e le botteghe storiche del Bitto",
+          "title": "CENTRO STORICO & CROTTI"
+        }
+      ],
+      "highlights": [
+        {
+          "tag": "UNESCO & PANORAMA",
+          "desc": "Patrimonio Mondiale UNESCO: la ferrovia alpina più alta d'Europa. Viaggio spettacolare tra ghiacciai, laghi alpini e valichi fino in Engadina a St. Moritz. A 45 min in treno/auto da Morbegno.",
+          "title": "Trenino Rosso del Bernina (Tirano - St. Moritz)",
+          "mapsUrl": "https://maps.google.com/?q=Stazione+Tirano+Trenino+Rosso",
+          "tagColor": "bg-rose-100 text-rose-800"
+        },
+        {
+          "tag": "ATTRAZIONE TOP 1",
+          "desc": "Spettacolare passerella panoramica e punto di partenza per passeggiate. A circa 30 min in auto.",
+          "title": "Ponte nel Cielo (Val Tartano)",
+          "mapsUrl": "https://maps.google.com/?q=Ponte+nel+Cielo+Campo+Tartano",
+          "tagColor": "bg-amber-100 text-amber-900"
+        },
+        {
+          "tag": "NATURA & TREKKING",
+          "desc": "La 'Piccola Yosemite' italiana: pareti di granito maestose, piscine naturali color smeraldo, cascate spettacolari e rifugi con polenta taragna. A 20 min in auto.",
+          "title": "Riserva Naturale Val di Mello (Val Masino)",
+          "mapsUrl": "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
+          "tagColor": "bg-emerald-100 text-emerald-900"
+        },
+        {
+          "tag": "LAGO & RELAX",
+          "desc": "Paesaggi suggestivi e ottimo riso al pesce persico da provare. A circa 15 min in auto.",
+          "title": "Lago di Como, Colico",
+          "mapsUrl": "https://maps.google.com/?q=Colico+Lago+di+Como",
+          "tagColor": "bg-cyan-100 text-cyan-900"
+        },
+        {
+          "tag": "BENESSERE & TERME",
+          "desc": "Grotte termali romane millenarie, vasche panoramiche a sfioro all'aperto affacciate sulle vette innevate alpine.",
+          "title": "QC Terme Bagni di Bormio (Bagni Vecchi e Nuovi)",
+          "mapsUrl": "https://maps.google.com/?q=QC+Terme+Bormio",
+          "tagColor": "bg-purple-100 text-purple-900"
+        }
+      ],
+      "categoryTitle": "Altre Esperienze da Vivere"
+    },
+    "appSubtitle": "Il tuo rifugio accogliente a Morbegno, tra lago e Alpi...",
+    "restaurants": {
+      "title": "RISTORANTI CONSIGLIATI",
+      "bannerText": "I nostri ristoranti, pizzerie e locali consigliati",
+      "deliveries": [
+        {
+          "name": "PIZZERIA ANUBIS",
+          "type": "Consigliata per la consegna a domicilio",
+          "phone": ""
+        }
+      ],
+      "recommended": [
+        {
+          "desc": "Moderno e curato.",
+          "name": "BISTRONOMIA",
+          "time": "12 min a piedi / 1 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Bistronomia+Morbegno"
+        },
+        {
+          "desc": "Cucina tipica valtellinese.",
+          "name": "ANTICA OSTERIA RAPELLA",
+          "time": "19 min a piedi / 4 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
+        },
+        {
+          "desc": "Cucina tipica con prodotti locali (Bitto, bresaola), anche SPA.",
+          "name": "LA FIORIDA",
+          "time": "10 min in auto",
+          "phone": "",
+          "address": "Mantello",
+          "mapsUrl": "https://maps.google.com/?q=La+Fiorida+Mantello"
+        },
+        {
+          "desc": "Immerso nella natura.",
+          "name": "AGRITURISMO ORTESIDA",
+          "time": "12 min in auto",
+          "phone": "",
+          "address": "Valtellina",
+          "mapsUrl": "https://maps.google.com/?q=Agriturismo+Ortesida"
+        },
+        {
+          "desc": "Tipico per mangiare piatti a base di carne.",
+          "name": "IL BISTECA",
+          "time": "7 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Il+Bisteca+Morbegno"
+        },
+        {
+          "desc": "Ambiente accogliente e moderno, pizze sottili e ben condite, con ottimo rapporto qualità-prezzo.",
+          "name": "PIZZERIA VENTUNO",
+          "time": "23 min a piedi / 4 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Pizzeria+Ventuno+Morbegno"
+        },
+        {
+          "desc": "Ampia varietà di pizze classiche e speciali. Prezzi più alti rispetto a Pizzeria Ventuno, servizio rapido e cortese.",
+          "name": "PIZZERIA EDEN",
+          "time": "29 min a piedi / 4 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Pizzeria+Eden+Morbegno"
+        },
+        {
+          "desc": "Consigliata per la consegna a domicilio.",
+          "name": "PIZZERIA ANUBIS",
+          "time": "25 min a piedi / 7 min in auto",
+          "phone": "",
+          "address": "Morbegno",
+          "mapsUrl": "https://maps.google.com/?q=Pizzeria+Anubis+Morbegno"
+        }
+      ],
+      "deliveryTitle": "Consegna a domicilio"
+    },
+    "siteSettings": {
+      "redirects": {
+        "maps": "https://maps.google.com/?q=Morbegno",
+        "email": "",
+        "whatsapp": "https://wa.me/393917784042"
+      },
+      "siteTitle": "Aurora in Valtellina",
+      "textColor": "#f8fafc",
+      "fontFamily": "system-ui",
+      "accentColor": "#f59e0b",
+      "primaryColor": "#10b981",
+      "backgroundColor": "#070a0e"
+    }
+  }
+}

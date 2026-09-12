@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient'; // adjust path if needed
+import { supabase } from '../services/supabaseClient';
+import { validateGuestPassToken } from '../services/guestPassService';
 
 export const GuestRedirect: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -15,37 +16,58 @@ export const GuestRedirect: React.FC = () => {
       }
 
       try {
-        const { data, error: sbError } = await supabase
-          .from('guest_passes')
-          .select('*')
-          .eq('token', token)
-          .single();
+        let checkInDateStr: string | null = null;
+        let checkOutDateStr: string | null = null;
+        let passPayload: any = null;
 
-        if (sbError || !data) {
-          console.error("Pass not found or error", sbError);
-          // Redirect to base app or show error
-          window.location.href = '/'; 
+        if (supabase) {
+          try {
+            const { data, error: sbError } = await supabase
+              .from('guest_passes')
+              .select('*')
+              .eq('token', token)
+              .single();
+
+            if (!sbError && data) {
+              checkInDateStr = data.check_in_date;
+              checkOutDateStr = data.check_out_date;
+              passPayload = data;
+            }
+          } catch (sbEx) {
+            console.warn("Supabase query failed, falling back to API:", sbEx);
+          }
+        }
+
+        // Fallback to internal API / guestPassService
+        if (!passPayload) {
+          const apiPass = await validateGuestPassToken(token);
+          if (apiPass) {
+            checkInDateStr = apiPass.checkInDate;
+            checkOutDateStr = apiPass.checkOutDate;
+            passPayload = apiPass;
+          }
+        }
+
+        if (!passPayload || !checkInDateStr || !checkOutDateStr) {
+          console.warn("Pass not found or invalid token");
+          navigate('/');
           return;
         }
 
-        const checkInDate = new Date(data.check_in_date + "T00:00:00");
-        const checkOutDate = new Date(data.check_out_date + "T23:59:59");
+        const checkInDate = new Date(checkInDateStr + "T00:00:00");
+        const checkOutDate = new Date(checkOutDateStr + "T23:59:59");
         const today = new Date();
 
         if (today < checkInDate) {
           // Future booking
-          // They can only see the base site for now, or maybe a "wait" page.
-          // Let's redirect to base but save something to storage or just redirect.
-          window.location.href = '/';
+          navigate(`/?pass=${encodeURIComponent(token)}`);
         } else if (today > checkOutDate) {
           // Expired
           setError("Pass scaduto.");
         } else {
           // Active
-          // Save pass info to local storage so the PWA can pick it up
-          localStorage.setItem('aurora_guest_pass', JSON.stringify(data));
-          // Redirect to main PWA view
-          navigate('/'); 
+          localStorage.setItem('aurora_guest_pass', JSON.stringify(passPayload));
+          navigate(`/?pass=${encodeURIComponent(token)}`);
         }
       } catch (err) {
         console.error("Err", err);

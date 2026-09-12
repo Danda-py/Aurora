@@ -516,8 +516,8 @@ export function createApp() {
 
   apiRouter.post('/cms/save', async (req, res) => {
     try {
-      const { data } = req.body;
-      if (!data) {
+      const data = req.body.data || req.body.content || req.body;
+      if (!data || typeof data !== 'object') {
         res.status(400).json({ success: false, error: 'Dati mancanti' });
         return;
       }
@@ -567,12 +567,15 @@ export function createApp() {
 
   apiRouter.post('/cms/upload-photo', async (req, res) => {
     try {
-      const { photoKey, filename, base64DataUrl } = req.body;
+      const photoKey = req.body.photoKey || req.body.key;
+      const base64DataUrl = req.body.base64DataUrl || req.body.fileBase64 || req.body.dataUrl;
+      const filename = req.body.filename || `${photoKey}.jpg`;
+
       if (!photoKey || !base64DataUrl) {
         res.status(400).json({ success: false, error: 'photoKey e base64DataUrl sono obbligatori' });
         return;
       }
-      const result = saveUploadedPhoto(photoKey, filename || 'photo.jpg', base64DataUrl);
+      const result = saveUploadedPhoto(photoKey, filename, base64DataUrl);
       if (result.success) {
         if (result.media) await saveCmsMediaAsync(result.media);
         res.json({ success: true, url: result.url, media: result.media });
@@ -586,7 +589,8 @@ export function createApp() {
 
   apiRouter.post('/cms/save-media-url', async (req, res) => {
     try {
-      const { photoKey, url } = req.body;
+      const photoKey = req.body.photoKey || req.body.key;
+      const url = req.body.url;
       if (!photoKey || !url) {
         res.status(400).json({ success: false, error: 'photoKey e url sono obbligatori' });
         return;
@@ -602,7 +606,7 @@ export function createApp() {
 
   apiRouter.post('/cms/reset-photo', async (req, res) => {
     try {
-      const { photoKey } = req.body;
+      const photoKey = req.body.photoKey || req.body.key;
       if (!photoKey) {
         res.status(400).json({ success: false, error: 'photoKey obbligatoria' });
         return;

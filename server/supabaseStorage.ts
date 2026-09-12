@@ -9,13 +9,17 @@ export function isSupabaseConfigured(): boolean {
 }
 
 async function request<T>(table: string, init: RequestInit = {}): Promise<T> {
+  const preferHeader = init.method === 'POST' && table.includes('on_conflict=')
+    ? 'resolution=merge-duplicates,return=representation'
+    : 'return=representation';
+
   const response = await fetch(`${baseUrl}/rest/v1/${table}`, {
     ...init,
     headers: {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=representation',
+      Prefer: preferHeader,
       ...(init.headers || {})
     }
   });

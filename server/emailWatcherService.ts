@@ -1,4 +1,4 @@
-non arriva import { ImapFlow } from 'imapflow';
+import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import crypto from 'crypto';
 import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin } from '../src/services/guestPassService.js';
@@ -90,14 +90,20 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
     try {
       // Find unread messages from Bedandbreakfast.it or similar
       const messages = await client.search({ 
-        unseen: true
+        seen: false
       });
+
+      if (!messages || !Array.isArray(messages)) {
+        console.log(`[IMAP] No unread emails found.`);
+        return;
+      }
 
       console.log(`[IMAP] Found ${messages.length} unread emails.`);
 
       for (const uid of messages) {
         // Fetch message source
         const messageStream = await client.fetchOne(String(uid), { source: true });
+        if (!messageStream || !messageStream.source) continue;
         const parsedEmail = await simpleParser(messageStream.source);
         
         const subject = parsedEmail.subject || '';

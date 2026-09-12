@@ -125,8 +125,10 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
       // iCal di Bed-and-Breakfast.it di solito mette i dettagli dell'ospite nel campo "SUMMARY" o "DESCRIPTION"
       // es. SUMMARY: Mario Rossi - BB-12345
       // es. DESCRIPTION: Telefono: +393401234567\nNote: Arrivo pomeriggio...
-      const summary = event.summary || 'Ospite Bed-and-Breakfast.it';
-      const description = event.description || '';
+      const rawSummary = event.summary;
+      const summary: string = (typeof rawSummary === 'string' ? rawSummary : (rawSummary as any)?.val || '') || 'Ospite Bed-and-Breakfast.it';
+      const rawDesc = event.description;
+      const description: string = (typeof rawDesc === 'string' ? rawDesc : (rawDesc as any)?.val || '');
 
       // Tenta di decifrare nome, cognome e prenotazione dal SUMMARY
       let guestName = 'Ospite';

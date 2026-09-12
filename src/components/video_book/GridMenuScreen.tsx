@@ -459,6 +459,14 @@ export const GridMenuScreen: React.FC<Props> = ({
         <p className="text-[10px] text-slate-400">
           {t.gridMenu.footerTagline}
         </p>
+        <div className="pt-2">
+          <a
+            href="/host-portal/"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 border border-white/10 text-[10px] transition"
+          >
+            <span>Area Riservata Host</span>
+          </a>
+        </div>
       </footer>
 
     </div>

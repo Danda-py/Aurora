@@ -32,6 +32,8 @@ export interface VideoTranslationSchema {
     openWhatsApp: string;
     rateGoogle: string;
     rateWebsite: string;
+    checkoutLabel?: string;
+    openHostPortal?: string;
   };
   gridMenu: {
     categories: {

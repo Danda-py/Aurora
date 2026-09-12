@@ -13,10 +13,6 @@
       "destination": "/host-portal/index.html"
     },
     {
-      "source": "/guest/:token",
-      "destination": "/index.html"
-    },
-    {
       "source": "/((?!api|host-portal|uploads).*)",
       "destination": "/index.html"
     }
