@@ -1654,3 +1654,21 @@ async function handleResetPhoto(photoKey) {
 // Start
 window.addEventListener('DOMContentLoaded', init);
 
+  useEffect(() => {
+    const token = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('pass')
+      : null;
+    if (!token) {
+      setIsPassChecking(false);
+      return;
+    }
+    validateGuestPassToken(token).then(currentPass => {
+      if (currentPass) {
+        setPass(currentPass);
+        setCurrentPage('grid_menu');
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({ page: 'grid_menu' }, '');
+        }
+      }
+      setIsPassChecking(false);
+    });
