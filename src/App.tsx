@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { VideoWelcomeBook } from './components/video_book/VideoWelcomeBook';
 import { CmsProvider } from './context/CmsContext';
 import { GuestRedirect } from './pages/GuestRedirect';
+import { HostPortal } from './pages/host-portal/HostPortal';
 
 function MainApp() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/host-portal/*" element={<HostPortal />} />
         <Route path="/guest/:token" element={<GuestRedirect />} />
         <Route path="/*" element={<MainApp />} />
       </Routes>
