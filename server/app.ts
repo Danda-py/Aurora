@@ -35,7 +35,7 @@ import {
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
-import { startIcalWatcher, getIcalConfig, updateIcalConfig } from './icalWatcherService.js';
+import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig } from './icalWatcherService.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 
@@ -190,6 +190,7 @@ export function createApp() {
 
   void hydratePassesFromSupabase();
   void hydrateHomeAssistantConfig();
+  void hydrateIcalConfig();
 
   // Condividiamo l'array delle prenotazioni per l'engine iCal globale
   (global as any).serverPassesRef = serverPasses;

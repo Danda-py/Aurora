@@ -1,9 +1,8 @@
 import nodeIcal from 'node-ical';
 import crypto from 'crypto';
 import { generateRandomPin, formatInvitationMessage } from '../src/services/guestPassService.js';
-import { upsertPass } from './supabaseStorage.js';
+import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 import { GuestPass } from '../src/types.js';
-
 let icalPollingInterval: NodeJS.Timeout | null = null;
 let isIcalPolling = false;
 
@@ -11,7 +10,7 @@ export interface IcalSyncConfig {
   icalUrl: string;       // Link iCal di esportazione fornito dall'area riservata di Bed-and-Breakfast.it
   enabled: boolean;      // Attivo o Disattivato
   intervalMs?: number;   // Frequenza di polling in millisecondi (default: 30 minuti)
-  daysAheadToSend?: number; // Quanti giorni prima del check-in inviare il link (default: 3)
+  daysAheadToSend?: number; // Quanti giorni prima del check-in inviare il link (non più usato per l'invio istantaneo ma mantenuto per compatibilità)
 }
 
 let icalConfig: IcalSyncConfig = {
@@ -21,12 +20,37 @@ let icalConfig: IcalSyncConfig = {
   daysAheadToSend: Number(process.env.ICAL_DAYS_AHEAD_SEND) || 3
 };
 
+const ICAL_CONFIG_DOCUMENT_KEY = 'ical_sync_config';
+
 /**
- * Aggiorna dinamicamente la configurazione dell'iCal Engine
+ * Hydrate iCal configuration from Supabase
  */
-export function updateIcalConfig(newConfig: Partial<IcalSyncConfig>) {
+export async function hydrateIcalConfig(): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    const remoteConfig = await loadDocument<Partial<IcalSyncConfig>>(ICAL_CONFIG_DOCUMENT_KEY);
+    if (remoteConfig) {
+      icalConfig = { ...icalConfig, ...remoteConfig };
+    }
+  } catch (error) {
+    console.warn('[iCal Engine] Impossibile caricare la configurazione da Supabase:', error);
+  }
+}
+
+/**
+ * Aggiorna dinamicamente la configurazione dell'iCal Engine e la salva su Supabase
+ */
+export async function updateIcalConfigAsync(newConfig: Partial<IcalSyncConfig>) {
   icalConfig = { ...icalConfig, ...newConfig };
   
+  if (isSupabaseConfigured()) {
+    try {
+      await saveDocument(ICAL_CONFIG_DOCUMENT_KEY, icalConfig);
+    } catch (error) {
+      console.error('[iCal Engine] Errore salvataggio configurazione su Supabase:', error);
+    }
+  }
+
   if (icalPollingInterval) {
     clearInterval(icalPollingInterval);
     icalPollingInterval = null;
@@ -35,6 +59,11 @@ export function updateIcalConfig(newConfig: Partial<IcalSyncConfig>) {
   if (icalConfig.enabled && icalConfig.icalUrl) {
     startIcalWatcher();
   }
+}
+
+// Deprecated, use updateIcalConfigAsync
+export function updateIcalConfig(newConfig: Partial<IcalSyncConfig>) {
+  void updateIcalConfigAsync(newConfig);
 }
 
 export function getIcalConfig() {
@@ -103,7 +132,7 @@ async function sendNotification(phone: string, message: string): Promise<boolean
 
 /**
  * Esegue il fetch del calendario iCal da bed-and-breakfast.it,
- * estrae le prenotazioni, genera i link univoci e notifica se siamo a ridosso del check-in (es. <= 3 giorni prima)
+ * estrae le prenotazioni, genera i link univoci e notifica IMMEDIATAMENTE
  */
 export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
   if (!icalConfig.icalUrl || !icalConfig.enabled) {
@@ -124,8 +153,6 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
     const webEvents = await nodeIcal.fromURL(icalConfig.icalUrl);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const daysAheadLimit = icalConfig.daysAheadToSend || 3;
 
     for (const k in webEvents) {
       if (!Object.prototype.hasOwnProperty.call(webEvents, k)) continue;
@@ -185,11 +212,12 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
 
       // 1. Verifica se abbiamo già generato un pass per questa specifica prenotazione (UID/Ref)
       let existingPass = serverPasses.find(p => p.bookingRef === bookingRef);
+      let newlyCreated = false;
 
       if (!existingPass) {
         console.log(`[iCal Engine] Rilevata NUOVA prenotazione da iCal: ${guestName} ${guestSurname} (${checkInStr} -> ${checkOutStr})`);
-        
-        // Genera pass ma impostalo come "in attesa di invio" o inseriscilo in lista
+
+        // Genera pass
         const pinCode = generateRandomPin();
         const token = crypto.randomBytes(32).toString('base64url');
 
@@ -215,18 +243,15 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
         // Salva in memoria e su Supabase
         serverPasses.unshift(existingPass);
         await upsertPass(existingPass);
+        newlyCreated = true;
         console.log(`[iCal Engine] Pass VIP creato per ${guestName}. Token generato.`);
       }
 
-      // 2. Controllo TEMPO di invio: Invia solo se mancano <= daysAheadLimit (es. 3) giorni dal check-in
-      const msDiff = checkInDateObj.getTime() - today.getTime();
-      const daysUntilCheckIn = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
-
-      // Verifichiamo se abbiamo già inviato il messaggio per questo pass (salvato in una nota o campo custom)
+      // 2. Controllo TEMPO di invio: Invia il giorno stesso della prenotazione (ovvero non appena viene rilevata e creata!)
       const alreadySent = existingPass.notes && existingPass.notes.includes('[NOTIFICA_INVIATA]');
 
-      if (daysUntilCheckIn <= daysAheadLimit && daysUntilCheckIn >= 0 && !alreadySent) {
-        console.log(`[iCal Engine] Siamo a ${daysUntilCheckIn} giorni dal check-in di ${guestName}. Procedo all'invio automatico.`);
+      if (!alreadySent) {
+        console.log(`[iCal Engine] Procedo all'invio istantaneo della notifica per ${guestName}.`);
 
         const appUrl = (process.env.APP_URL || 'https://aurora-valtellina.app').replace(/\/$/, '');
         const guestUrl = `${appUrl}/?pass=${existingPass.token}`;
@@ -240,12 +265,10 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
         }
 
         // Segna come inviato nelle note del pass per evitare doppi invii successivi
-        existingPass.notes = `${existingPass.notes || ''}\n[NOTIFICA_INVIATA] Notificato il ${new Date().toISOString()} (mancavano ${daysUntilCheckIn} giorni al check-in).`.trim();
+        existingPass.notes = `${existingPass.notes || ''}\n[NOTIFICA_INVIATA] Notificato istantaneamente il ${new Date().toISOString()}.`.trim();
         await upsertPass(existingPass);
-      } else if (alreadySent) {
-        console.log(`[iCal Engine] Notifica per ${guestName} già inviata in precedenza.`);
       } else {
-        console.log(`[iCal Engine] Prenotazione di ${guestName} troppo lontana (${daysUntilCheckIn} giorni al check-in). Invio rimandato.`);
+        console.log(`[iCal Engine] Notifica per ${guestName} già inviata in precedenza.`);
       }
     }
 
@@ -284,3 +307,4 @@ export function startIcalWatcher() {
     void syncReservationsFromIcal(globalServerPasses);
   }, 5000);
 }
+
