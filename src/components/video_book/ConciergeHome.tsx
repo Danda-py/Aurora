@@ -613,8 +613,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </span>
               <ArrowUpRight className="h-4 w-4 relative z-10" />
             </button>
-          </section>
-        )}
             {doorMessage && (
               <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
                 {doorMessage}
@@ -622,6 +620,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             )}
           </div>
         </section>
+        )}
 
         {/* Apple Quick Action Controls */}
         <section>

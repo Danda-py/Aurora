@@ -22,13 +22,7 @@ export const BOOK_DATA: Record<Language, {
     kitchenDesc: string;
     viewTitle: string;
     viewDesc: string;
-        {
-          title: "MACELLERIA MAZZOLENI (DI FRONTE ALLA DROGHERIA)",
-          time: "23 min a piedi / 4 min in auto",
-          hours: "Aperta: Lun-Sab 08:00 - 13:00, 16:00 - 19:00",
-          desc: "Macelleria Mazzoleni — rinomata per carni locali e salumi artigianali.",
-          mapsUrl: "https://maps.google.com/?q=Macelleria+Mazzoleni+Morbegno"
-        }
+        
     step1: string;
     step2: string;
     step3: string;
