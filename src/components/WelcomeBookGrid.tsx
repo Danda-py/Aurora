@@ -679,9 +679,19 @@ export const WelcomeBookGrid: React.FC<Props> = ({
             {activeTileModal === 'contatti' && (
               <div className="space-y-3 text-xs sm:text-sm text-slate-700">
                 <div className="p-4 bg-white rounded-2xl border border-[#e8dfcf] space-y-3">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm font-serif">{APARTMENT_INFO.hostName} - Host</h4>
-                    <p className="text-xs text-slate-500">Disponibile tutti i giorni per assistenza a Morbegno</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-emerald-500/30 shadow-xs shrink-0 bg-slate-100">
+                      <img
+                        src="/uploads/host.jpg"
+                        alt="Nino"
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm font-serif">{APARTMENT_INFO.hostName} - Host</h4>
+                      <p className="text-xs text-slate-500">Disponibile tutti i giorni per assistenza a Morbegno</p>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 gap-2 pt-1">

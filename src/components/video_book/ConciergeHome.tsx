@@ -120,7 +120,7 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
   );
 };
 
-const getLocalizedGuideSections = (lang: Language, media?: Record<string, string>): {
+const getLocalizedGuideSections = (lang: Language, media?: Record<string, string>, isPublic: boolean = false): {
   houseEssentials: { title: string; subtitle: string; items: GuideTileItem[] };
   exploreValtellina: { title: string; subtitle: string; items: GuideTileItem[] };
   supportSecurity: { title: string; subtitle: string; items: GuideTileItem[] };
@@ -146,9 +146,25 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
         },
         {
           page: 'check_in',
-          label: isIt ? 'Check-in & Smart Lock' : isEn ? 'Check-in & Smart Lock' : isDe ? 'Check-in & Smart Lock' : isFr ? 'Check-in & Smart Lock' : 'Check-in & Smart Lock',
+          label: isIt 
+            ? (isPublic ? 'Check-in & Arrivo' : 'Check-in & Smart Lock') 
+            : isEn 
+            ? (isPublic ? 'Check-in & Arrival' : 'Check-in & Smart Lock') 
+            : isDe 
+            ? (isPublic ? 'Check-in & Ankunft' : 'Check-in & Smart Lock') 
+            : isFr 
+            ? (isPublic ? 'Check-in & Arrivée' : 'Check-in & Smart Lock') 
+            : (isPublic ? 'Check-in y Llegada' : 'Check-in & Smart Lock'),
           tag: isIt ? 'Accesso Casa' : isEn ? 'Home Access' : isDe ? 'Hauszugang' : isFr ? 'Accès Maison' : 'Acceso Casa',
-          desc: isIt ? 'Codice apriporta, keybox e ingresso autonomo' : isEn ? 'Door opener, keybox code & self check-in' : isDe ? 'Türöffner, Keybox & Self-Check-in' : isFr ? 'Ouvre-porte, boîte à clés & arrivée autonome' : 'Abrepuertas, keybox y llegada autónoma',
+          desc: isIt 
+            ? (isPublic ? 'Orari di arrivo, accoglienza di persona e parcheggio' : 'Codice apriporta, keybox e ingresso autonomo') 
+            : isEn 
+            ? (isPublic ? 'Arrival times, in-person welcome and parking' : 'Door opener, keybox code & self check-in') 
+            : isDe 
+            ? (isPublic ? 'Anreise, persönlicher Empfang und Parkplatz' : 'Türöffner, Keybox & Self-Check-in') 
+            : isFr 
+            ? (isPublic ? 'Horaires d\'arrivée, accueil en personne et parking' : 'Ouvre-porte, boîte à clés & arrivée autonome') 
+            : (isPublic ? 'Horarios de llegada, bienvenida en persona y parking' : 'Abrepuertas, keybox y llegada autónoma'),
           icon: <KeyRound className="h-5 w-5" />,
           bgImage: media?.checkInCover || '/uploads/lock.jpg'
         },
@@ -381,7 +397,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const isPublic = !pass;
   const firstName = pass?.guestName || 'Ospite';
   const copy = uiCopy[language] || uiCopy.it;
-  const guideSections = getLocalizedGuideSections(language, media);
+  const guideSections = getLocalizedGuideSections(language, media, isPublic);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
   const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
 
@@ -418,6 +434,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   };
 
   const runDoorOpen = async () => {
+    if (!pass) return;
     const wifiCheck = await checkCasaAuroraWifi();
     if (!wifiCheck.verified) {
       setDoorState('error');
@@ -500,6 +517,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         src={item.bgImage} 
         alt={item.label} 
         loading="lazy" 
+        onError={(e) => {
+          if (item.page === 'contatti') {
+            e.currentTarget.src = '/uploads/host.jpg';
+          }
+        }}
       />
       <div className="aurora-photo-card-info">
         <span className="aurora-photo-tag">
@@ -536,7 +558,19 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
           <div>
             <p className="aurora-eyebrow">Aurora in Valtellina</p>
-            <h1 className="aurora-brand-name">{firstName}, benvenuto.</h1>
+            <h1 className="aurora-brand-name">
+              {pass 
+                ? `${pass.guestName}, benvenuto.` 
+                : (language === 'it' 
+                  ? 'Benvenuto a Morbegno.' 
+                  : language === 'en' 
+                  ? 'Welcome to Morbegno.' 
+                  : language === 'de' 
+                  ? 'Willkommen in Morbegno.' 
+                  : language === 'fr' 
+                  ? 'Bienvenue à Morbegno.' 
+                  : 'Bienvenido a Morbegno.')}
+            </h1>
           </div>
         </section>
 
@@ -631,7 +665,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </div>
           </div>
           
-          <div className="quick-actions-grid">
+          <div className={`quick-actions-grid ${isPublic ? 'is-public' : ''}`}>
             {isPublic ? (
               <>
                 <a 
@@ -706,7 +740,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
           </div>
           <ScrollableTileRow hintLabel={copy.swipeForMore}>
-            {(isPublic ? guideSections.houseEssentials.items.filter(i => i.page !== 'check_in') : guideSections.houseEssentials.items).map(renderPhotoCard)}
+            {guideSections.houseEssentials.items.map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 

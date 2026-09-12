@@ -6,7 +6,6 @@ import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Phone, MessageSquare, Mail, Copy, Check, MessageCircle } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import hostAvatarPhoto from '../../../assets/images/host_nino_photo_1788354896364.jpg';
 
 interface Props {
   language: Language;
@@ -42,12 +41,15 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
 
         {/* Host Profile Avatar & Title */}
         <div className="aurora-glass-card text-center space-y-3 pt-4 pb-6">
-          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-xl ring-4 ring-[#62e6bd]/15">
+          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-xl ring-4 ring-[#62e6bd]/15 bg-white/10">
             <img
-              src={media?.hostAvatar || hostAvatarPhoto}
+              src={media?.hostAvatar || '/uploads/host.jpg'}
               alt={APARTMENT_INFO.hostName}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.src = '/uploads/host.jpg';
+              }}
             />
           </div>
 

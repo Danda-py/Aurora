@@ -217,9 +217,21 @@ export function createApp() {
   }
   app.use('/uploads', express.static(uploadsStaticPath));
 
+  // Serve static assets directory directly (/assets/*)
+  const assetsStaticPath = path.join(process.cwd(), 'public', 'assets');
+  if (!fs.existsSync(assetsStaticPath)) {
+    try {
+      fs.mkdirSync(assetsStaticPath, { recursive: true });
+    } catch {}
+  }
+  app.use('/assets', express.static(assetsStaticPath));
+
   // Serve standalone Host Portal static site directly
   const hostPortalStaticPath = path.join(process.cwd(), 'public', 'host-portal');
   app.use('/host-portal', express.static(hostPortalStaticPath));
+
+  // Serve public directory static files
+  app.use(express.static(path.join(process.cwd(), 'public')));
 
   // Create API router for modular routing
   const apiRouter = express.Router();
@@ -230,12 +242,10 @@ export function createApp() {
       next();
       return;
     }
+    // Allow public read access to CMS content and media (photos and guide text)
     if (req.method === 'GET' && (req.path === '/cms/content' || req.path === '/cms/media')) {
-      const guestToken = req.get('x-guest-token') || (typeof req.query.guestToken === 'string' ? req.query.guestToken : undefined);
-      if (findValidGuestPass(guestToken)) {
-        next();
-        return;
-      }
+      next();
+      return;
     }
     if (req.path === '/webhook/booking') {
       if (req.method === 'GET') {
@@ -957,9 +967,8 @@ export function createApp() {
     }
   });
 
-  // Mount API router on both /api and root / so it resolves properly in both local Express and Vercel Serverless
+  // Mount API router on /api
   app.use('/api', apiRouter);
-  app.use('/', apiRouter);
 
   return app;
 }

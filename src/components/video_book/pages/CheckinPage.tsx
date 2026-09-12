@@ -38,7 +38,7 @@ export const CheckinPage: React.FC<Props> = ({
   onSelectLanguage,
   pass
 }) => {
-  const { getPageData } = useCms();
+  const { getPageData, media } = useCms();
   const cmsCheckIn = getPageData('checkIn') || {};
   const c = { ...BOOK_DATA[language].checkIn, ...cmsCheckIn };
 
@@ -230,7 +230,7 @@ export const CheckinPage: React.FC<Props> = ({
         
         {/* Sleek Apple-inspired Navigation Header */}
         <PageHeader
-          title={c.title}
+          title={pass ? c.title : (language === 'it' ? 'Check-in & Arrivo' : language === 'en' ? 'Check-in & Arrival' : language === 'de' ? 'Check-in & Ankunft' : language === 'fr' ? 'Check-in & Arrivée' : 'Check-in y Llegada')}
           category="Accesso Casa"
           language={language}
           onBackToMenu={onBackToMenu}
@@ -247,7 +247,8 @@ export const CheckinPage: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* HERO COMPONENT: Apple Home Key / Action Card */}
+        {/* HERO COMPONENT: Apple Home Key / Action Card (only for guests with pass) */}
+        {pass ? (
         <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
           
           {/* Ambient Mint Glow */}
@@ -456,19 +457,42 @@ export const CheckinPage: React.FC<Props> = ({
             </div>
           </div>
         </div>
+        ) : (
+          <div className="aurora-glass-card p-5 sm:p-6 flex items-start gap-3.5 border border-white/10 bg-white/[0.03]">
+            <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 text-amber-300">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-white tracking-tight">
+                {language === 'it' ? 'Apertura Smart Lock' : 'Smart Lock Opening'}
+              </h4>
+              <p className="text-xs text-white/60 leading-relaxed">
+                {language === 'it' 
+                  ? "L'apertura smart lock del portoncino è abilitata solo per gli ospiti con pass personale attivo. All'arrivo le chiavi vi verranno consegnate di persona dall'host Nino."
+                  : "Smart lock door opening is enabled only for guests with an active personal pass. Upon arrival, physical keys will be handed over in person by your host Nino."}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* SECTION 2: In-Person Welcome & Keys */}
         <div className="aurora-glass-card space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="aurora-icon-box">
-              <HandHeart className="w-5 h-5" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#62e6bd]/40 ring-2 ring-[#62e6bd]/15 shadow-md shrink-0 bg-white/10">
+              <img 
+                src={media?.hostAvatar || '/uploads/host.jpg'} 
+                alt="Nino" 
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.src = '/uploads/host.jpg'; }}
+              />
             </div>
             <div>
               <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
                 {c.houseAccessTitle}
               </h4>
-              <p className="text-xs text-white/60">
-                Accoglienza calorosa di persona dal vostro host
+              <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
+                <HandHeart className="w-3.5 h-3.5 text-[#62e6bd]" />
+                Accoglienza calorosa di persona dal vostro host Nino
               </p>
             </div>
           </div>

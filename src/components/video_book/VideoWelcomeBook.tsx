@@ -30,7 +30,7 @@ interface Props {
 }
 
 export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
-  const [currentPage, setCurrentPage] = useState<WelcomePage>('language_select');
+  const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
   const { language, setLanguage } = useCms();
   
   // Set initial language if provided and different
@@ -42,18 +42,25 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
   
   // Guest Pass State
   const [pass, setPass] = useState<GuestPass | null>(null);
-  const [isPassChecking, setIsPassChecking] = useState(true);
+  const [isPassChecking, setIsPassChecking] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(new URLSearchParams(window.location.search).get('pass'));
+  });
   const [isSmartLockOpen, setIsSmartLockOpen] = useState(false);
   const [isAuroraAiOpen, setIsAuroraAiOpen] = useState(false);
   const [bypassExpired, setBypassExpired] = useState(false);
   const homeScrollPosition = useRef(0);
 
-  // Only server-issued, time-limited guest links can open the guide.
+  // If a pass token is present, validate it
   useEffect(() => {
     const token = typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('pass')
       : null;
-    validateGuestPassToken(token || '').then(currentPass => {
+    if (!token) {
+      setIsPassChecking(false);
+      return;
+    }
+    validateGuestPassToken(token).then(currentPass => {
       if (currentPass) {
         setPass(currentPass);
         setCurrentPage('grid_menu');

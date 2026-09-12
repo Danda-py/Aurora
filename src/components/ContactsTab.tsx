@@ -54,8 +54,13 @@ export const ContactsTab: React.FC<Props> = ({ language }) => {
         <div className="relative z-10 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white shadow-inner font-serif text-2xl font-bold text-amber-300">
-                N
+              <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/20 shadow-md shrink-0 bg-white/10 ring-2 ring-emerald-400/20">
+                <img
+                  src="/uploads/host.jpg"
+                  alt="Nino"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
               </div>
               <div>
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-200 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 mb-1">

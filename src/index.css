@@ -56,6 +56,8 @@ body { margin: 0; background: var(--aurora-ink); }
 .glass-key-progress { position: absolute; inset: 0; transform-origin: left center; background: rgba(7,17,13,.22); pointer-events: none; }
 .status-dot { color: var(--aurora-mint); font-size: .68rem; }
 .quick-actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .55rem; }
+.quick-actions-grid.is-public { grid-template-columns: repeat(3, 1fr); }
+
 .quick-actions-grid button, .quick-actions-grid a { display: flex; min-height: 6rem; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: .75rem; color: white; text-align: left; text-decoration: none; background: rgba(255,255,255,.055); border: 1px solid var(--aurora-line); border-radius: 1.15rem; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }
 .quick-actions-grid button:hover, .quick-actions-grid a:hover { background: rgba(255,255,255,.1); border-color: rgba(98,230,189,.5); transform: translateY(-2px); }
 .quick-actions-grid svg { width: 1.05rem; height: 1.05rem; color: var(--aurora-mint); }

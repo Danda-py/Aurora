@@ -33,7 +33,7 @@ export interface CmsMediaMap {
 }
 
 export const DEFAULT_MEDIA_MAP: CmsMediaMap = {
-  hostAvatar: '/assets/images/host_nino_photo_1788354896364.jpg',
+  hostAvatar: '/uploads/host.jpg',
   heroLiving: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80',
   locationCover: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
   checkInCover: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80',

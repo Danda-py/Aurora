@@ -26,7 +26,7 @@ export interface CmsMediaMap {
 }
 
 export const DEFAULT_MEDIA_MAP: CmsMediaMap = {
-  hostAvatar: '/assets/images/host_nino_photo_1788354896364.jpg',
+  hostAvatar: '/uploads/host.jpg',
   heroLiving: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80',
   bedroom: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
   kitchen: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&q=80',
@@ -75,7 +75,11 @@ let memoryMedia: CmsMediaMap = (() => {
     try {
       const cached = localStorage.getItem(CMS_MEDIA_STORAGE_KEY);
       if (cached) {
-        return { ...DEFAULT_MEDIA_MAP, ...JSON.parse(cached) };
+        const parsed = JSON.parse(cached);
+        if (!parsed.hostAvatar || parsed.hostAvatar.includes('/assets/images/')) {
+          parsed.hostAvatar = '/uploads/host.jpg';
+        }
+        return { ...DEFAULT_MEDIA_MAP, ...parsed };
       }
     } catch {
       // ignore

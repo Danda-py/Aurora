@@ -22,14 +22,26 @@ export const BOOK_DATA: Record<Language, {
     kitchenDesc: string;
     viewTitle: string;
     viewDesc: string;
-        
+  };
+  checkIn: {
+    title: string;
+    badge: string;
+    timingNotice: string;
+    houseAccessTitle: string;
+    keyboxCodeLabel: string;
     step1: string;
     step2: string;
     step3: string;
     parkingTitle: string;
     parkingDesc: string;
     parkingNote: string;
-        
+  };
+  wifi: {
+    title: string;
+    networkLabel: string;
+    passwordLabel: string;
+    speedNotice: string;
+    troubleshootTitle: string;
     troubleshootText: string;
   };
   rules: {
