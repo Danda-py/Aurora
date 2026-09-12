@@ -953,15 +953,15 @@ export const NEARBY_PLACES: NearbyPlace[] = [
     googleMapsUrl: "https://maps.google.com/?q=Drogheria+Ciapponi+Morbegno",
   },
   {
-    id: "macelleria_ciapponi",
-    name: "Macelleria di fronte alla drogheria",
+    id: "macelleria_mazzoleni",
+    name: "Macelleria Mazzoleni (di fronte alla Drogheria Ciapponi)",
     category: "grocery",
     distance: "4 min in auto",
     walkTime: "23 min a piedi",
     hours: "08:00 - 13:00, 16:00 - 19:00",
     address: "Di fronte alla Drogheria Ciapponi, Morbegno",
-    description: { it: "Ottima carne locale.", en: "Excellent local meat.", de: "Ausgezeichnetes lokales Fleisch.", fr: "Excellente viande locale.", es: "Excelente carne local." },
-    googleMapsUrl: "https://maps.google.com/?q=Macelleria+Morbegno+Drogheria+Ciapponi",
+    description: { it: "Macelleria Mazzoleni — rinomata per carni locali e salumi artigianali.", en: "Macelleria Mazzoleni — known for local meats and artisan cured meats.", de: "Macelleria Mazzoleni — bekannt für lokales Fleisch und handwerkliche Wurstwaren.", fr: "Macelleria Mazzoleni — reconnue pour ses viandes locales et charcuterie artisanale.", es: "Macelleria Mazzoleni — conocida por carnes locales y embutidos artesanos." },
+    googleMapsUrl: "https://maps.google.com/?q=Macelleria+Mazzoleni+Morbegno",
   },
   // Farmacia & Servizi
   {
