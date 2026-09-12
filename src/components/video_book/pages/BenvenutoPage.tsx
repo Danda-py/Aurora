@@ -2,6 +2,7 @@ import React from 'react';
 import { Language, GuestPass } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Sparkles, Bed, Utensils, Tv, Mountain, Heart, Key, ShieldCheck, Info } from 'lucide-react';
@@ -19,7 +20,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const cmsWelcome = getPageData('welcome') || {};
   const w = { ...BOOK_DATA[language].welcome, ...cmsWelcome };
   const guestFullName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : null;
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -161,8 +163,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Additional Sections Grid (Check-in, Services, Info) */}
         <div className="space-y-3 pt-2">
           <div>
-            <p className="aurora-eyebrow">Guida Soggiorno</p>
-            <h3 className="text-base font-bold text-white tracking-tight">Dettagli Utili</h3>
+            <p className="aurora-eyebrow">{labels.practical}</p>
+            <h3 className="text-base font-bold text-white tracking-tight">{labels.useful}</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -171,7 +173,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
                   src={media?.checkInCover || "/uploads/lock.jpg"} 
-                  alt="Check In & Smart Lock" 
+                  alt={t.tiles.checkIn} 
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -180,8 +182,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <Key className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <strong className="block text-xs sm:text-sm font-bold text-white">Check In & Smart Lock</strong>
-                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Accesso autonomo e sicuro alla struttura tramite smart lock.</span>
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{t.tiles.checkIn}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{t.gridMenu.descriptions.check_in}</span>
                 </div>
               </div>
             </div>
@@ -191,7 +193,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
                   src={media?.servicesCover || "/uploads/services.jpg"} 
-                  alt="Servizi Casa & Comfort" 
+                  alt={t.tiles.servizi} 
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -200,8 +202,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <strong className="block text-xs sm:text-sm font-bold text-white">Servizi Casa & Comfort</strong>
-                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Tutti i comfort e le comodità pensati per il tuo soggiorno.</span>
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{t.tiles.servizi}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{t.gridMenu.descriptions.servizi}</span>
                 </div>
               </div>
             </div>
@@ -211,7 +213,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
                   src={media?.infoCover || "/uploads/info.jpg"} 
-                  alt="Informazioni e Servizi" 
+                  alt={t.tiles.informazioni} 
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -220,8 +222,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <Info className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <strong className="block text-xs sm:text-sm font-bold text-white">Informazioni e Servizi</strong>
-                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">Guide utili e indicazioni generali per vivere al meglio l'esperienza.</span>
+                  <strong className="block text-xs sm:text-sm font-bold text-white">{t.tiles.informazioni}</strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{t.gridMenu.descriptions.informazioni}</span>
                 </div>
               </div>
             </div>

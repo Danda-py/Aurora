@@ -35,6 +35,7 @@ import {
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
+import { startIcalWatcher, getIcalConfig, updateIcalConfig } from './icalWatcherService.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 
@@ -189,6 +190,12 @@ export function createApp() {
 
   void hydratePassesFromSupabase();
   void hydrateHomeAssistantConfig();
+
+  // Condividiamo l'array delle prenotazioni per l'engine iCal globale
+  (global as any).serverPassesRef = serverPasses;
+
+  // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
+  startIcalWatcher();
 
   // Middlewares for JSON and form-urlencoded webhooks (up to 25mb for high-res photo uploads)
   app.use(express.json({ limit: '25mb' }));
@@ -736,6 +743,30 @@ export function createApp() {
     }
   });
 
+  // iCal Config endpoints
+  apiRouter.get('/ical/config', (req, res) => {
+    const config = getIcalConfig();
+    res.json({
+      success: true,
+      config
+    });
+  });
+
+  apiRouter.post('/ical/config', (req, res) => {
+    const { icalUrl, enabled, intervalMs, daysAheadToSend } = req.body;
+    updateIcalConfig({
+      ...(icalUrl !== undefined && { icalUrl }),
+      ...(enabled !== undefined && { enabled: Boolean(enabled) }),
+      ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) }),
+      ...(daysAheadToSend !== undefined && { daysAheadToSend: Number(daysAheadToSend) })
+    });
+      res.json({
+        success: true,
+      message: 'Configurazione iCal aggiornata con successo',
+      config: getIcalConfig()
+    });
+  });
+
   // Webhook Booking Receiver
   apiRouter.post('/webhook/booking', async (req, res) => {
     try {
@@ -795,7 +826,7 @@ export function createApp() {
 
       const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
       const guestUrl = `${origin}/?pass=${token}`;
-      const whatsappMessage = formatInvitationMessage(newPass, origin);
+      const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
       const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
       res.status(201).json({
@@ -857,8 +888,8 @@ export function createApp() {
       } = data;
 
       if (!guestName || !checkInDate || !checkOutDate) {
-        res.status(400).json({ 
-          error: 'Campi obbligatori mancanti: guestName, checkInDate, checkOutDate' 
+        res.status(400).json({
+          error: 'Campi obbligatori mancanti: guestName, checkInDate, checkOutDate'
         });
         return;
       }
@@ -890,7 +921,7 @@ export function createApp() {
 
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
       const guestUrl = `${origin}/?pass=${token}`;
-      const whatsappMessage = formatInvitationMessage(newPass, origin);
+      const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
       const whatsappLink = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
       res.json({
@@ -975,3 +1006,5 @@ export function createApp() {
 
 const app = createApp();
 export default app;
+
+

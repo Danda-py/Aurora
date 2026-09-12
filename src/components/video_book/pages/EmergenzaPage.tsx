@@ -17,8 +17,8 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const { getPageData, media } = useCms();
   const cmsEmergency = getPageData('emergency') || {};
   const em = { ...BOOK_DATA[language].emergency, ...cmsEmergency };
-  const t = VIDEO_TRANSLATIONS[language];
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
   const getEmergencyIcon = (title: string) => {
     const lower = title.toLowerCase();
@@ -85,9 +85,9 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             className="p-4 rounded-2xl bg-rose-600/30 hover:bg-rose-600/40 border border-rose-500/50 flex items-center justify-between transition cursor-pointer shadow-md"
           >
             <div className="min-w-0 pr-2">
-              <span className="text-xs font-bold text-rose-200 uppercase tracking-wider block">Numero Unico Europeo Emergenze</span>
+              <span className="text-xs font-bold text-rose-200 uppercase tracking-wider block">{t.emergencyPage.singleEuNumberTitle}</span>
               <span className="font-mono text-2xl font-black text-white">112</span>
-              <p className="text-[11px] text-rose-200/80 mt-0.5">Ambulanza, Vigili del Fuoco, Carabinieri, Polizia</p>
+              <p className="text-[11px] text-rose-200/80 mt-0.5">{t.emergencyPage.singleEuNumberSubtitle}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-lg">
               <Phone className="w-5 h-5" />

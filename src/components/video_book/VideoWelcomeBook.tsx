@@ -124,6 +124,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
       <ExpiredPassScreen
         pass={pass}
         onEnterAsPublicGuest={() => setBypassExpired(true)}
+        language={language}
       />
     );
   }
@@ -132,8 +133,20 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
       <div className="min-h-screen w-full flex items-center justify-center bg-[#070a0e] px-6 text-center text-slate-100">
         <div className="max-w-sm space-y-3">
           <Key className="mx-auto h-10 w-10 text-emerald-400" />
-          <h1 className="text-xl font-semibold">Verifica link...</h1>
-          <p className="text-sm text-slate-400">Sto verificando il link ospite, attendere prego.</p>
+          <h1 className="text-xl font-semibold">
+            {language === 'it' && "Verifica link..."}
+            {language === 'en' && "Verifying link..."}
+            {language === 'de' && "Link wird überprüft..."}
+            {language === 'fr' && "Vérification du lien..."}
+            {language === 'es' && "Verificando enlace..."}
+          </h1>
+          <p className="text-sm text-slate-400">
+            {language === 'it' && "Sto verificando il link ospite, attendere prego."}
+            {language === 'en' && "Verifying guest link, please wait."}
+            {language === 'de' && "Gästelink wird überprüft, bitte warten."}
+            {language === 'fr' && "Vérification du lien invité, veuillez patienter."}
+            {language === 'es' && "Verificando el enlace de invitado, por favor espere."}
+          </p>
         </div>
       </div>
     );
@@ -288,8 +301,8 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
           {/* WhatsApp Host Nino */}
           <a
             href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(
-              pass 
-                ? `Ciao Nino! Sono ${pass.guestName} ${pass.guestSurname}, ospite di Aurora in Valtellina.` 
+              pass
+                ? `Ciao Nino! Sono ${pass.guestName} ${pass.guestSurname}, ospite di Aurora in Valtellina.`
                 : 'Ciao Nino!'
             )}`}
             target="_blank"
@@ -344,17 +357,31 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
         isOpen={isSmartLockOpen}
         onClose={() => setIsSmartLockOpen(false)}
         pass={pass}
+        language={language}
       />
 
-      <AuroraAiChat isOpen={isAuroraAiOpen} onClose={() => setIsAuroraAiOpen(false)} pass={pass} />
+      <AuroraAiChat
+        isOpen={isAuroraAiOpen}
+        onClose={() => setIsAuroraAiOpen(false)}
+        pass={pass}
+        language={language}
+      />
 
       {/* Subtle footer */}
       {currentPage !== 'language_select' && currentPage !== 'grid_menu' && (
         <footer className="p-3 text-center border-t border-emerald-500/15 bg-[#070a0e] flex items-center justify-center text-[10px] text-slate-400 px-4">
-          <span>© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di Andaloro Davide</span>
+          <span>
+            {language === 'it' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di Andaloro Davide"}
+            {language === 'en' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App by Andaloro Davide"}
+            {language === 'de' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App von Andaloro Davide"}
+            {language === 'fr' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App par Andaloro Davide"}
+            {language === 'es' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App de Andaloro Davide"}
+          </span>
         </footer>
       )}
 
     </div>
   );
 };
+
+

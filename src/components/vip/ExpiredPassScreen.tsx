@@ -1,18 +1,22 @@
 import React from 'react';
-import { GuestPass } from '../../types';
+import { GuestPass, Language } from '../../types';
 import { clearActiveGuestPass } from '../../services/guestPassService';
 import { Calendar, ShieldAlert, Sparkles, MessageSquare, Star, ArrowRight, RefreshCw, KeyRound, ExternalLink } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   pass: GuestPass;
   onEnterAsPublicGuest: () => void;
+  language?: Language;
 }
 
 export const ExpiredPassScreen: React.FC<Props> = ({
   pass,
-  onEnterAsPublicGuest
+  onEnterAsPublicGuest,
+  language = 'it'
 }) => {
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const guestFullName = `${pass.guestName} ${pass.guestSurname}`.trim();
 
   const handleResetPass = () => {
@@ -35,7 +39,7 @@ export const ExpiredPassScreen: React.FC<Props> = ({
           Aurora in Valtellina
         </h1>
         <p className="text-xs text-emerald-300/70 font-mono tracking-wider uppercase">
-          Morbegno • Soggiorno Concluso
+          {t.expiredPass.headerSub}
         </p>
       </div>
 
@@ -46,16 +50,16 @@ export const ExpiredPassScreen: React.FC<Props> = ({
           {/* Status Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#131d27] border border-emerald-500/25 text-emerald-300 text-xs font-mono">
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            <span>PASS DIGITALE SCADUTO</span>
+            <span>{t.expiredPass.badge}</span>
           </div>
 
           {/* Heading */}
           <div className="space-y-2">
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-white leading-snug">
-              Grazie della visita, {guestFullName}!
+              {t.expiredPass.title}, {guestFullName}!
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Il tuo pass digitale e la chiave smart per l'Appartamento Aurora erano attivi per il soggiorno concluso il{' '}
+              {t.expiredPass.message}{' '}
               <span className="font-bold text-emerald-300 font-mono">{pass.checkOutDate}</span>.
             </p>
           </div>
@@ -63,16 +67,16 @@ export const ExpiredPassScreen: React.FC<Props> = ({
           {/* Soggiorno Details Summary */}
           <div className="p-3.5 rounded-2xl bg-[#131d27] border border-emerald-500/15 text-left text-xs space-y-1.5 font-mono text-slate-300">
             <div className="flex justify-between">
-              <span className="text-slate-400">Ospite:</span>
+              <span className="text-slate-400">{t.staySummary.guest}:</span>
               <span className="font-bold text-white">{guestFullName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Date soggiorno:</span>
+              <span className="text-slate-400">{t.expiredPass.stayDates}</span>
               <span className="text-emerald-200">{pass.checkInDate} ➔ {pass.checkOutDate}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Stato link:</span>
-              <span className="text-rose-400 font-bold">Disattivato per sicurezza</span>
+              <span className="text-slate-400">{t.expiredPass.linkStatus}</span>
+              <span className="text-rose-400 font-bold">{t.expiredPass.disabledForSecurity}</span>
             </div>
           </div>
 
@@ -86,7 +90,7 @@ export const ExpiredPassScreen: React.FC<Props> = ({
               rel="noopener noreferrer"
               className="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition cursor-pointer"
             >
-              <span>Prenota di nuovo su Bed-and-Breakfast.it</span>
+              <span>{t.expiredPass.rebookBtn}</span>
               <ExternalLink className="w-4 h-4" />
             </a>
 
@@ -98,7 +102,7 @@ export const ExpiredPassScreen: React.FC<Props> = ({
               className="w-full py-3 px-4 rounded-2xl bg-[#131d27] hover:bg-[#182533] text-emerald-300 border border-emerald-500/30 font-medium text-xs flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span>Scrivi all'Host Nino su WhatsApp</span>
+              <span>{t.staySummary.writeHostWhatsapp}</span>
             </a>
 
           </div>
@@ -109,14 +113,14 @@ export const ExpiredPassScreen: React.FC<Props> = ({
               onClick={onEnterAsPublicGuest}
               className="hover:text-emerald-300 transition cursor-pointer underline underline-offset-4"
             >
-              Guida generale
+              {t.expiredPass.generalGuide}
             </button>
             <button
               onClick={handleResetPass}
               className="hover:text-white transition cursor-pointer flex items-center gap-1"
             >
               <RefreshCw className="w-3 h-3" />
-              <span>Inserisci altro pass</span>
+              <span>{t.expiredPass.insertAnotherPass}</span>
             </button>
           </div>
 

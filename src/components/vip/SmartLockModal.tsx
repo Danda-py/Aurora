@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GuestPass } from '../../types';
-import { ShieldCheck, X, CheckCircle2, Unlock, Loader2, AlertCircle, Wifi, Lock, RotateCcw } from 'lucide-react';
+import { GuestPass, Language } from '../../types';
+import { X, CheckCircle2, Unlock, Loader2, AlertCircle, Wifi, Lock, RotateCcw, ShieldCheck } from 'lucide-react';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   pass: GuestPass | null;
+  language?: Language;
 }
 
-export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
+export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, language = 'it' }) => {
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const s = t.smartLock;
+
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [wifiChecking, setWifiChecking] = useState<boolean>(true);
@@ -27,7 +32,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
       setWifiMessage(res.message);
     } catch {
       setWifiVerified(false);
-      setWifiMessage('Non connesso al Wi-Fi Casa_Aurora');
+      setWifiMessage(t.checkInPage.wifi.notConnectedError);
     } finally {
       setWifiChecking(false);
     }
@@ -65,7 +70,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
 
     setOpeningState('opening');
     if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
-    setStatusMessage('Invio comando a Home Assistant...');
+    setStatusMessage(t.concierge.doorMessage.sending);
 
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -85,7 +90,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
         if ('vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         triggerHaptic();
         setOpeningState('success');
-        setStatusMessage(data.message || 'Portone sbloccato. Spingi la porta per entrare.');
+        setStatusMessage(data.message || t.concierge.doorMessage.unlocked);
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
@@ -145,10 +150,10 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
             </div>
             <div>
               <h3 className="font-semibold text-sm text-white tracking-tight">
-                Home Key Digitale
+                {s.title}
               </h3>
               <p className="text-[11px] text-neutral-400 font-normal">
-                Appartamento Aurora • Morbegno
+                {s.subtitle}
               </p>
             </div>
           </div>
@@ -156,7 +161,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-neutral-300 hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer border border-white/[0.06]"
-            aria-label="Chiudi"
+            aria-label={t.concierge.close}
           >
             <X className="w-4 h-4" />
           </button>
@@ -169,7 +174,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
           <div className="flex justify-between items-center px-1">
             <div>
               <span className="text-[10px] uppercase font-semibold tracking-widest text-neutral-400 block font-mono">
-                Ospite Registrato
+                {s.registeredGuest}
               </span>
               <span className="text-sm font-semibold text-white tracking-tight">
                 {guestFullName}
@@ -177,7 +182,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-neutral-300 text-[11px] font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-              <span>Attivo</span>
+              <span>{s.activeStatus}</span>
             </div>
           </div>
 
@@ -205,10 +210,10 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-mono uppercase font-bold block opacity-75">
-                  {wifiChecking ? 'Verifica Wi-Fi...' : wifiVerified ? 'Rete Casa_Aurora' : 'Rete richiesta'}
+                  {wifiChecking ? s.checkingWifi : wifiVerified ? s.casaAuroraNetwork : s.requiredNetwork}
                 </span>
                 <p className="text-xs font-semibold text-white truncate">
-                  {wifiChecking ? 'Rilevamento in corso' : wifiVerified ? 'Connesso a Casa_Aurora' : 'Collegati a Casa_Aurora'}
+                  {wifiChecking ? s.checkingInProgress : wifiVerified ? s.connectedToCasaAurora : s.connectToCasaAurora}
                 </p>
               </div>
             </div>
@@ -218,7 +223,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               onClick={runWifiCheck}
               disabled={wifiChecking}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-neutral-300 hover:text-white transition cursor-pointer"
-              title="Riprova rilevamento Wi-Fi"
+              title={s.rescanTitle}
             >
               <RotateCcw className={`w-3.5 h-3.5 ${wifiChecking ? 'animate-spin' : ''}`} />
             </button>
@@ -256,23 +261,23 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               {openingState === 'opening' && (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-                  <span className="text-sm font-semibold text-neutral-300">Apertura in corso...</span>
+                  <span className="text-sm font-semibold text-neutral-300">{s.openingInProgress}</span>
                 </>
               )}
 
               {openingState === 'success' && (
                 <>
                   <CheckCircle2 className="w-7 h-7 text-neutral-950 animate-scale-up" />
-                  <span className="text-base font-bold text-neutral-950 tracking-tight">Portone Aperto!</span>
-                  <span className="text-xs font-normal text-neutral-900">Spingi la porta per entrare</span>
+                  <span className="text-base font-bold text-neutral-950 tracking-tight">{s.doorUnlocked}</span>
+                  <span className="text-xs font-normal text-neutral-900">{s.pushDoorToEnter}</span>
                 </>
               )}
 
               {openingState === 'error' && (
                 <>
                   <AlertCircle className="w-6 h-6 text-white" />
-                  <span className="text-sm font-semibold text-white">Errore connessione</span>
-                  <span className="text-xs text-white/90">Tocca per riprovare</span>
+                  <span className="text-sm font-semibold text-white">{s.connectionError}</span>
+                  <span className="text-xs text-white/90">{s.tapToRetry}</span>
                 </>
               )}
 
@@ -285,10 +290,10 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
                     {wifiVerified ? <Unlock className="w-5 h-5 text-neutral-950" /> : <Lock className="w-5 h-5" />}
                   </div>
                   <span className={`text-lg font-bold tracking-tight ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
-                    {wifiChecking ? 'VERIFICA CONNESSIONE' : 'TIENI PREMUTO PER APRIRE'}
+                    {wifiChecking ? t.checkInPage.wifi.checkingConnection.toUpperCase() : s.pressToOpen}
                   </span>
                   <span className={`text-[11px] font-normal tracking-tight ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
-                    {wifiChecking ? 'Attendi un momento' : 'La sicurezza viene verificata dal server'}
+                    {wifiChecking ? s.waitAMoment : s.verifiedByServer}
                   </span>
                 </>
               )}
@@ -306,7 +311,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
           <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-2.5 text-xs text-neutral-400">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="text-[11px] leading-relaxed">
-              All'interno troverai anche il mazzo di chiavi tradizionali.
+              {s.physicalKeyNotice}
             </span>
           </div>
 
@@ -318,7 +323,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
             onClick={onClose}
             className="text-xs text-neutral-400 hover:text-white transition-colors font-medium cursor-pointer"
           >
-            Chiudi finestra
+            {s.closeWindow}
           </button>
         </div>
 
@@ -326,4 +331,3 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass }) => {
     </div>
   );
 };
-

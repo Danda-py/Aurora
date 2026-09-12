@@ -17,7 +17,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const { getPageData } = useCms();
   const cmsLocation = getPageData('location') || {};
   const loc = { ...BOOK_DATA[language].location, ...cmsLocation };
-  const t = VIDEO_TRANSLATIONS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const [copied, setCopied] = useState(false);
 
   const handleCopyAddress = () => {
@@ -73,7 +73,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                 <MapPin className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="aurora-eyebrow">Indirizzo Ufficiale</span>
+                <span className="aurora-eyebrow">{t.locationPage.officialAddress}</span>
                 <h3 className="font-bold text-sm sm:text-base text-white tracking-tight mt-0.5">
                   {APARTMENT_INFO.name}
                 </h3>
@@ -88,7 +88,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               className="aurora-secondary-pill"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
-              <span>{copied ? 'Copiato!' : 'Copia'}</span>
+              <span>{copied ? t.actions.copied : t.actions.copy}</span>
             </button>
           </div>
 
@@ -99,7 +99,7 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             className="aurora-action-pill w-full py-3.5"
           >
             <Navigation className="w-4 h-4 text-[#07110d]" />
-            <span>Avvia Navigatore GPS</span>
+            <span>{t.locationPage.startGps}</span>
           </a>
         </div>
 

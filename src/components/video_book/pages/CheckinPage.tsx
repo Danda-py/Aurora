@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Language, GuestPass } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { useCms } from '../../../context/CmsContext';
 import { 
   Unlock, 
@@ -41,6 +42,8 @@ export const CheckinPage: React.FC<Props> = ({
   const { getPageData, media } = useCms();
   const cmsCheckIn = getPageData('checkIn') || {};
   const c = { ...BOOK_DATA[language].checkIn, ...cmsCheckIn };
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const wifiMsgs = t.checkInPage.wifi;
 
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -72,7 +75,7 @@ export const CheckinPage: React.FC<Props> = ({
       setWifiMessage(result.message);
     } catch {
       setWifiVerified(false);
-      setWifiMessage('Non sei connesso alla rete Wi-Fi Casa_Aurora.');
+      setWifiMessage(wifiMsgs.notConnectedError);
     } finally {
       setWifiChecking(false);
     }
@@ -90,74 +93,6 @@ export const CheckinPage: React.FC<Props> = ({
     }
   };
 
-  const wifiMessages = {
-    it: {
-      requiredNotice: 'Rete richiesta: Casa_Aurora',
-      explain: "L'apriporta funziona esclusivamente quando sei collegato al Wi-Fi dell'appartamento.",
-      notConnectedError: "Accesso negato: Devi essere connesso alla rete Wi-Fi di casa (Casa_Aurora) per azionare l'apriporta.",
-      copyPwd: 'Copia password Wi-Fi',
-      verifying: 'Verifica Wi-Fi Casa_Aurora in corso...',
-      verifiedLabel: 'Wi-Fi Casa_Aurora Rilevato',
-      rescanBtn: 'Riprova Rilevamento',
-      openBtn: 'APRI PORTA',
-      wifiRequiredBtn: 'Connettiti a Casa_Aurora per Aprire'
-    },
-    en: {
-      requiredNotice: 'Required Network: Casa_Aurora',
-      explain: 'Door opener works exclusively when connected to the apartment Wi-Fi.',
-      notConnectedError: 'Access denied: You must be connected to the home Wi-Fi network (Casa_Aurora) to open the door.',
-      copyPwd: 'Copy Wi-Fi password',
-      verifying: 'Checking Casa_Aurora Wi-Fi connection...',
-      verifiedLabel: 'Casa_Aurora Wi-Fi Verified',
-      rescanBtn: 'Retry Scan',
-      openBtn: 'OPEN DOOR',
-      wifiRequiredBtn: 'Connect to Casa_Aurora to Open'
-    },
-    de: {
-      requiredNotice: 'Erforderliches Netzwerk: Casa_Aurora',
-      explain: 'Der Türöffner funktioniert ausschließlich, wenn Sie mit dem Wohnungs-WLAN verbunden sind.',
-      notConnectedError: 'Zugriff verweigert: Sie müssen mit dem Haus-WLAN (Casa_Aurora) verbunden sein, um die Tür zu öffnen.',
-      copyPwd: 'WLAN-Passwort kopieren',
-      verifying: 'Überprüfung des Casa_Aurora WLANs...',
-      verifiedLabel: 'Casa_Aurora WLAN Bestätigt',
-      rescanBtn: 'Erneut prüfen',
-      openBtn: 'TÜR ÖFFNEN',
-      wifiRequiredBtn: 'Mit Casa_Aurora verbinden zum Öffnen'
-    },
-    fr: {
-      requiredNotice: 'Réseau requis : Casa_Aurora',
-      explain: "L'ouverture de porte fonctionne exclusivement lorsque vous êtes connecté au Wi-Fi de l'appartement.",
-      notConnectedError: "Accès refusé : Vous devez être connecté au réseau Wi-Fi de la maison (Casa_Aurora) pour ouvrir la porte.",
-      copyPwd: 'Copier mot de passe Wi-Fi',
-      verifying: 'Vérification du Wi-Fi Casa_Aurora...',
-      verifiedLabel: 'Wi-Fi Casa_Aurora Vérifié',
-      rescanBtn: 'Réessayer',
-      openBtn: 'OUVRIR LA PORTE',
-      wifiRequiredBtn: 'Connectez-vous à Casa_Aurora pour ouvrir'
-    },
-    es: {
-      requiredNotice: 'Red requerida: Casa_Aurora',
-      explain: 'La apertura de la puerta funciona exclusivamente conectado al Wi-Fi del apartamento.',
-      notConnectedError: 'Acceso denegado: Debes estar conectado a la red Wi-Fi de casa (Casa_Aurora) para abrir la puerta.',
-      copyPwd: 'Copiar contraseña Wi-Fi',
-      verifying: 'Verificando red Wi-Fi Casa_Aurora...',
-      verifiedLabel: 'Wi-Fi Casa_Aurora Verificado',
-      rescanBtn: 'Reintentar',
-      openBtn: 'ABRIR PUERTA',
-      wifiRequiredBtn: 'Conéctate a Casa_Aurora para abrir'
-    }
-  }[language] || {
-    requiredNotice: 'Rete richiesta: Casa_Aurora',
-    explain: "L'apriporta funziona esclusivamente quando sei collegato al Wi-Fi dell'appartamento.",
-    notConnectedError: "Accesso negato: Devi essere connesso alla rete Wi-Fi di casa (Casa_Aurora) per azionare l'apriporta.",
-    copyPwd: 'Copia password Wi-Fi',
-    verifying: 'Verifica Wi-Fi Casa_Aurora in corso...',
-    verifiedLabel: 'Wi-Fi Casa_Aurora Rilevato',
-    rescanBtn: 'Riprova Rilevamento',
-    openBtn: 'APRI PORTA',
-    wifiRequiredBtn: 'Connettiti a Casa_Aurora per Aprire'
-  };
-
   const handleOpenDoor = async () => {
     const wifiCheck = await checkCasaAuroraWifi();
     setWifiVerified(wifiCheck.verified);
@@ -165,12 +100,12 @@ export const CheckinPage: React.FC<Props> = ({
 
     if (!wifiCheck.verified) {
       setOpeningState('error');
-      setStatusMessage(wifiMessages.notConnectedError);
+      setStatusMessage(wifiMsgs.notConnectedError);
       return;
     }
 
     setOpeningState('opening');
-    setStatusMessage(language === 'it' ? 'Invio comando di sblocco a Home Assistant...' : 'Sending unlock command to Home Assistant...');
+    setStatusMessage(t.concierge.doorMessage.sending);
 
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -189,7 +124,7 @@ export const CheckinPage: React.FC<Props> = ({
       if (res.ok && data.success) {
         triggerHaptic();
         setOpeningState('success');
-        setStatusMessage(language === 'it' ? 'Portone sbloccato! Spingi la porta per entrare.' : 'Door unlocked! Push the door to enter.');
+        setStatusMessage(t.concierge.doorMessage.unlocked);
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
@@ -206,23 +141,7 @@ export const CheckinPage: React.FC<Props> = ({
     }
   };
 
-  const whatsappArrivalMessage = {
-    it: `Ciao Nino, siamo in viaggio verso Aurora in Valtellina! Il nostro arrivo stimato è per le ore...`,
-    en: `Hello Nino, we are on our way to Aurora in Valtellina! Our estimated arrival time is...`,
-    fr: `Bonjour Nino, nous sommes en route vers Aurora in Valtellina ! Heure estimée d'arrivée...`,
-    es: `¡Hola Nino, estamos de camino a Aurora in Valtellina! Nuestra hora estimada de llegada es...`,
-    de: `Hallo Nino, wir sind auf dem Weg zu Aurora in Valtellina! Voraussichtliche Ankunft um...`
-  }[language];
-
   const cleanBadge = (c.badge || '').replace(/:+/g, '').trim();
-
-  const arrivalButtonLabel = {
-    it: "Comunica Orario di Arrivo su WhatsApp",
-    en: "Share Arrival Time on WhatsApp",
-    fr: "Indiquer l'Heure d'Arrivée sur WhatsApp",
-    es: "Compartir Hora de Llegada por WhatsApp",
-    de: "Ankunftszeit per WhatsApp Senden"
-  }[language];
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -230,8 +149,8 @@ export const CheckinPage: React.FC<Props> = ({
         
         {/* Sleek Apple-inspired Navigation Header */}
         <PageHeader
-          title={pass ? c.title : (language === 'it' ? 'Check-in & Arrivo' : language === 'en' ? 'Check-in & Arrival' : language === 'de' ? 'Check-in & Ankunft' : language === 'fr' ? 'Check-in & Arrivée' : 'Check-in y Llegada')}
-          category="Accesso Casa"
+          title={c.title}
+          category={t.tiles.checkIn}
           language={language}
           onBackToMenu={onBackToMenu}
           onSelectLanguage={onSelectLanguage}
@@ -259,10 +178,10 @@ export const CheckinPage: React.FC<Props> = ({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="aurora-eyebrow">
-                  Accesso Smart Home
+                  {t.checkInPage.smartHomeAccess}
                 </span>
                 <h3 className="text-lg font-bold text-white tracking-tight">
-                  Portoncino d'Ingresso
+                  {t.checkInPage.frontDoor}
                 </h3>
               </div>
 
@@ -278,7 +197,7 @@ export const CheckinPage: React.FC<Props> = ({
                     : 'bg-[#62e6bd] shadow-[0_0_8px_rgba(98,230,189,0.6)]'
                 }`} />
                 <span className="text-xs font-semibold text-white/80 tracking-tight">
-                  {openingState === 'opening' ? 'Connessione...' : openingState === 'success' ? 'Aperto' : 'Pronto'}
+                  {openingState === 'opening' ? t.concierge.doorOpeningState.opening : openingState === 'success' ? t.concierge.doorOpeningState.success : t.checkInPage.wifi.connected}
                 </span>
               </div>
             </div>
@@ -309,17 +228,17 @@ export const CheckinPage: React.FC<Props> = ({
                   <div className="min-w-0">
                     <span className="text-[10px] uppercase font-bold tracking-wider block opacity-75 font-mono">
                       {wifiChecking 
-                        ? 'Verifica Connessione' 
+                        ? wifiMsgs.checkingConnection 
                         : wifiVerified 
-                        ? 'Wi-Fi Casa_Aurora Verificato' 
-                        : wifiMessages.requiredNotice}
+                        ? wifiMsgs.verifiedLabel 
+                        : wifiMsgs.requiredNotice}
                     </span>
                     <p className="text-xs font-semibold truncate text-white">
                       {wifiChecking 
-                        ? wifiMessages.verifying 
+                        ? wifiMsgs.verifying 
                         : wifiVerified 
-                        ? 'Rete autorizzata per apertura sicura' 
-                        : 'Collegati alla rete "Casa_Aurora"'}
+                        ? t.checkInPage.authorizedNetwork 
+                        : t.checkInPage.connectToNetwork}
                     </p>
                   </div>
                 </div>
@@ -335,22 +254,22 @@ export const CheckinPage: React.FC<Props> = ({
                       ? 'bg-[#62e6bd]/20 text-[#9ef2d3] hover:bg-[#62e6bd]/30 border border-[#62e6bd]/30'
                       : 'bg-amber-500 text-neutral-950 hover:bg-amber-400 shadow-sm'
                   }`}
-                  title="Rileva nuovamente la connessione Wi-Fi"
+                  title={wifiMsgs.rescanBtn}
                 >
                   {wifiChecking ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Verifica...</span>
+                      <span>{wifiMsgs.checkingConnection}</span>
                     </>
                   ) : wifiVerified ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>Connesso</span>
+                      <span>{wifiMsgs.connected}</span>
                     </>
                   ) : (
                     <>
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>{wifiMessages.rescanBtn}</span>
+                      <span>{wifiMsgs.rescanBtn}</span>
                     </>
                   )}
                 </button>
@@ -368,7 +287,7 @@ export const CheckinPage: React.FC<Props> = ({
               {!wifiVerified && !wifiChecking && (
                 <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <span className="text-white/80">
-                    Password Wi-Fi: <span className="font-mono text-white font-bold">{APARTMENT_INFO.wifiPassword}</span>
+                    {t.checkInPage.wifi.copyPwd}: <span className="font-mono text-white font-bold">{APARTMENT_INFO.wifiPassword}</span>
                   </span>
                   <button
                     type="button"
@@ -376,7 +295,7 @@ export const CheckinPage: React.FC<Props> = ({
                     className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 hover:text-white transition cursor-pointer self-start sm:self-auto"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{copiedWifiPass ? 'Copiata!' : wifiMessages.copyPwd}</span>
+                    <span>{copiedWifiPass ? wifiMsgs.copySuccess : wifiMsgs.copyPwd}</span>
                   </button>
                 </div>
               )}
@@ -404,22 +323,22 @@ export const CheckinPage: React.FC<Props> = ({
                 {openingState === 'opening' ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    <span className="text-base font-semibold text-white">Apertura in corso...</span>
+                    <span className="text-base font-semibold text-white">{t.concierge.doorOpeningState.opening}</span>
                   </>
                 ) : openingState === 'success' ? (
                   <>
                     <CheckCircle2 className="w-6 h-6 text-[#07110d]" />
-                    <span className="text-base font-bold text-[#07110d] tracking-tight">Porta Sbloccata!</span>
+                    <span className="text-base font-bold text-[#07110d] tracking-tight">{t.concierge.doorOpeningState.success}</span>
                   </>
                 ) : openingState === 'error' ? (
                   <>
                     <AlertCircle className="w-5 h-5 text-white" />
-                    <span className="text-base font-bold text-white">Riprova Apertura</span>
+                    <span className="text-base font-bold text-white">{t.concierge.doorOpeningState.error}</span>
                   </>
                 ) : wifiChecking ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin text-white/50" />
-                    <span className="text-base font-semibold text-white/50">Verifica Wi-Fi...</span>
+                    <span className="text-base font-semibold text-white/50">{wifiMsgs.verifying}</span>
                   </>
                 ) : wifiVerified ? (
                   <>
@@ -427,7 +346,7 @@ export const CheckinPage: React.FC<Props> = ({
                       <Unlock className="w-4 h-4" />
                     </div>
                     <span className="text-base sm:text-lg font-bold tracking-tight text-[#07110d]">
-                      {wifiMessages.openBtn}
+                      {wifiMsgs.openBtn}
                     </span>
                   </>
                 ) : (
@@ -436,7 +355,7 @@ export const CheckinPage: React.FC<Props> = ({
                       <Lock className="w-4 h-4" />
                     </div>
                     <span className="text-sm sm:text-base font-semibold tracking-tight text-white/40">
-                      {wifiMessages.wifiRequiredBtn}
+                      {wifiMsgs.wifiRequiredBtn}
                     </span>
                   </>
                 )}
@@ -450,7 +369,7 @@ export const CheckinPage: React.FC<Props> = ({
                   </p>
                 ) : (
                   <p className="text-xs text-white/50 font-normal tracking-tight">
-                    Tocca il pulsante per azionare l'elettroserratura all'arrivo
+                    {wifiMsgs.pressToUnlockNotice}
                   </p>
                 )}
               </div>
@@ -464,12 +383,10 @@ export const CheckinPage: React.FC<Props> = ({
             </div>
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-white tracking-tight">
-                {language === 'it' ? 'Apertura Smart Lock' : 'Smart Lock Opening'}
+                {t.checkInPage.publicNoticeTitle}
               </h4>
               <p className="text-xs text-white/60 leading-relaxed">
-                {language === 'it' 
-                  ? "L'apertura smart lock del portoncino è abilitata solo per gli ospiti con pass personale attivo. All'arrivo le chiavi vi verranno consegnate di persona dall'host Nino."
-                  : "Smart lock door opening is enabled only for guests with an active personal pass. Upon arrival, physical keys will be handed over in person by your host Nino."}
+                {t.checkInPage.publicNoticeDesc}
               </p>
             </div>
           </div>
@@ -492,7 +409,7 @@ export const CheckinPage: React.FC<Props> = ({
               </h4>
               <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
                 <HandHeart className="w-3.5 h-3.5 text-[#62e6bd]" />
-                Accoglienza calorosa di persona dal vostro host Nino
+                {t.checkInPage.inPersonWelcome}
               </p>
             </div>
           </div>
@@ -506,7 +423,7 @@ export const CheckinPage: React.FC<Props> = ({
                 {c.keyboxCodeLabel}
               </div>
               <div className="text-xs text-white/60 leading-snug truncate">
-                Consegna chiavi tradizionali e breve introduzione alla casa.
+                {t.checkInPage.keyIntroDesc}
               </div>
             </div>
           </div>
@@ -543,14 +460,14 @@ export const CheckinPage: React.FC<Props> = ({
 
           <div className="pt-2">
             <a
-              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(whatsappArrivalMessage)}`}
+              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(t.checkInPage.whatsappArrivalMsg)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3.5 px-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] active:bg-white/[0.14] text-white font-bold text-xs flex items-center justify-between border border-white/[0.08] transition shadow-sm"
             >
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-[#62e6bd]" />
-                <span className="tracking-tight">{arrivalButtonLabel}</span>
+                <span className="tracking-tight">{t.checkInPage.shareArrivalBtn}</span>
               </div>
               <ChevronRight className="w-4 h-4 text-white/40" />
             </a>
@@ -568,7 +485,7 @@ export const CheckinPage: React.FC<Props> = ({
                 {c.parkingTitle}
               </h4>
               <span className="text-xs text-white/60">
-                Posto auto riservato in cortile
+                {t.checkInPage.reservedCourtyardParking}
               </span>
             </div>
           </div>
@@ -589,4 +506,3 @@ export const CheckinPage: React.FC<Props> = ({
     </div>
   );
 };
-

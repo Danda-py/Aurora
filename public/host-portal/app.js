@@ -85,6 +85,39 @@ const statActiveCount = document.getElementById('statActiveCount');
 const tabCount = document.getElementById('tabCount');
 const passesContainer = document.getElementById('passesContainer');
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// iCal elements
+const formIcalConfig = document.getElementById('formIcalConfig');
+const inputIcalUrl = document.getElementById('inputIcalUrl');
+const inputIcalDaysAhead = document.getElementById('inputIcalDaysAhead');
+const inputIcalInterval = document.getElementById('inputIcalInterval');
+const checkboxIcalEnabled = document.getElementById('checkboxIcalEnabled');
+const btnForceIcalSync = document.getElementById('btnForceIcalSync');
+const icalFeedbackBox = document.getElementById('icalFeedbackBox');
+const icalStatusBadge = document.getElementById('icalStatusBadge');
+
 // Form elements
 const formCreatePass = document.getElementById('formCreatePass');
 const fieldGuestName = document.getElementById('fieldGuestName');
@@ -213,6 +246,8 @@ function setupTabs() {
         loadCmsData();
       } else if (targetTab === 'media') {
         loadMediaData();
+      } else if (targetTab === 'ical') {
+        fetchIcalConfig();
       }
     });
   });
@@ -226,12 +261,1364 @@ function setupEventListeners() {
     });
   }
 
+
+
+
+  // iCal Form and Sync Events
+  if (formIcalConfig) {
+    formIcalConfig.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      await handleSaveIcalConfig();
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  if (btnForceIcalSync) {
+    btnForceIcalSync.addEventListener('click', async () => {
+      await handleForceIcalSync();
+    });
+  }
+
   // Submit Form: Create Pass
   if (formCreatePass) {
     formCreatePass.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       await handleCreatePass();
     });
+
+
   }
 
   // Copy Result Link
@@ -243,6 +1630,11 @@ function setupEventListeners() {
       copyLinkText.textContent = copied ? 'Copiato!' : 'Copia non riuscita';
       setTimeout(() => { copyLinkText.textContent = 'Copia Link'; }, 2500);
     });
+
+
+
+
+
   }
 
   // API Config Modal Events
@@ -251,6 +1643,12 @@ function setupEventListeners() {
       inputApiBaseUrl.value = API_BASE_URL;
       apiConfigModal.classList.remove('hidden');
     });
+
+
+
+
+
+
   }
   if (btnCloseApiConfig) {
     btnCloseApiConfig.addEventListener('click', () => {
@@ -268,6 +1666,26 @@ function setupEventListeners() {
       }
     });
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Toggle Home Assistant Config Modes
   if (btnModeWebhook && btnModeRest) {
@@ -295,8 +1713,23 @@ function setupEventListeners() {
         if (data.clientIp) {
           if (inputHomePublicIp) inputHomePublicIp.value = data.clientIp;
           const saveRes = await fetch(`${API_BASE_URL}/api/wifi/set-home-ip`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             body: JSON.stringify({ customIp: data.clientIp })
           });
           const saveData = await saveRes.json();
@@ -305,9 +1738,20 @@ function setupEventListeners() {
         } else {
           alert('Impossibile rilevare IP corrente.');
         }
-      } catch (err) {
+    } catch (err) {
+
         alert('Errore rilevamento IP: ' + err.message);
-      }
+    }
+
+
+
+
+
+
+
+
+
+
     });
   }
 
@@ -315,7 +1759,8 @@ function setupEventListeners() {
   if (btnSaveSonoffConfig) {
     btnSaveSonoffConfig.addEventListener('click', async () => {
       btnSaveSonoffConfig.textContent = 'Salvataggio in corso...';
-      try {
+  try {
+
         const payload = {
           webhookUrl: inputSonoffWebhookUrl ? inputSonoffWebhookUrl.value.trim() : '',
           haUrl: inputHassUrl ? inputHassUrl.value.trim() : '',
@@ -330,22 +1775,30 @@ function setupEventListeners() {
           payload.accessToken = inputHassToken.value.trim();
         }
         const res = await fetch(`${API_BASE_URL}/api/hass/config`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+
           body: JSON.stringify(payload)
-        });
+    });
+
+
+
+
+
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
         alert('Configurazione Home Assistant e Rete Casa_Aurora salvata con successo!');
         await fetchSonoffConfig();
         await fetchHassStatus();
-      } catch (err) {
+  } catch (err) {
+
         alert('Errore salvataggio Home Assistant: ' + err.message);
       } finally {
         btnSaveSonoffConfig.textContent = 'Salva Configurazione Completa';
-      }
-    });
   }
+    });
+}
 
   // Test Real Door Unlock (Pulse ON)
   if (btnTestSonoffPulse) {
@@ -357,7 +1810,7 @@ function setupEventListeners() {
         const res = await fetch(`${API_BASE_URL}/api/hass/unlock`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             guestName: 'Host (Test Portale)',
             source: 'Portale Host Test Diretto',
             wifiConnected: true,
@@ -400,7 +1853,7 @@ function setupEventListeners() {
         const res = await fetch(`${API_BASE_URL}/api/hass/unlock`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             guestName: 'Host (Pannello Superiore)',
             source: 'Top Bar Portale',
             wifiConnected: true,
@@ -522,7 +1975,7 @@ function highlightField(el) {
 function showParseFeedback(msg, type) {
   if (!parseFeedback) return;
   parseFeedback.classList.remove('hidden', 'bg-emerald-950/70', 'border-emerald-500/40', 'text-emerald-300', 'bg-rose-950/70', 'border-rose-500/40', 'text-rose-300', 'bg-amber-950/70', 'border-amber-500/40', 'text-amber-300');
-  
+
   if (type === 'success') {
     parseFeedback.className = 'text-xs py-2 px-3 rounded-xl font-medium border bg-emerald-950/70 border-emerald-500/40 text-emerald-300';
   } else if (type === 'warn') {
@@ -594,8 +2047,8 @@ function localFallbackParse(text) {
 
   // Booking reference extraction with multi-pattern precision
   const stopWords = new Set([
-    'da', 'di', 'del', 'della', 'per', 'a', 'in', 'su', 'il', 'la', 'un', 'una', 
-    'nuova', 'nuovo', 'bed', 'breakfast', 'airbnb', 'booking', 'com', 'it', 
+    'da', 'di', 'del', 'della', 'per', 'a', 'in', 'su', 'il', 'la', 'un', 'una',
+    'nuova', 'nuovo', 'bed', 'breakfast', 'airbnb', 'booking', 'com', 'it',
     'confermata', 'ricevuta', 'accettata', 'saluti', 'grazie', 'notifica'
   ]);
 
@@ -682,6 +2135,101 @@ async function fetchSonoffConfig() {
   }
 }
 
+// Fetch and Save iCal Config
+async function fetchIcalConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/ical/config`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.config) {
+      if (inputIcalUrl) inputIcalUrl.value = data.config.icalUrl || '';
+      if (inputIcalDaysAhead) inputIcalDaysAhead.value = data.config.daysAheadToSend || 3;
+      if (inputIcalInterval) inputIcalInterval.value = (data.config.intervalMs || 1800000) / 60000;
+      if (checkboxIcalEnabled) checkboxIcalEnabled.checked = Boolean(data.config.enabled);
+
+      if (icalStatusBadge) {
+        if (data.config.enabled && data.config.icalUrl) {
+          icalStatusBadge.className = 'px-3 py-1 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+          icalStatusBadge.textContent = 'Verifica Attiva H24';
+        } else {
+          icalStatusBadge.className = 'px-3 py-1 rounded-full text-[11px] font-mono bg-neutral-500/10 text-neutral-400 border border-neutral-500/20';
+          icalStatusBadge.textContent = 'Disattivato';
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Errore lettura iCal config:', err);
+  }
+}
+
+async function handleSaveIcalConfig() {
+  if (icalFeedbackBox) icalFeedbackBox.classList.add('hidden');
+  try {
+    const payload = {
+      icalUrl: inputIcalUrl.value.trim(),
+      daysAheadToSend: parseInt(inputIcalDaysAhead.value, 10) || 3,
+      intervalMs: (parseInt(inputIcalInterval.value, 10) || 30) * 60000,
+      enabled: checkboxIcalEnabled.checked
+    };
+
+    const res = await fetch(`${API_BASE_URL}/api/ical/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (icalFeedbackBox) {
+        icalFeedbackBox.className = 'p-3 rounded-xl text-xs font-mono bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 block';
+        icalFeedbackBox.textContent = '✔ Configurazione iCal salvata con successo!';
+      }
+      await fetchIcalConfig();
+      await fetchPasses();
+    } else {
+      throw new Error(data.error || 'Errore salvataggio');
+    }
+  } catch (err) {
+    if (icalFeedbackBox) {
+      icalFeedbackBox.className = 'p-3 rounded-xl text-xs font-mono bg-rose-950/50 border border-rose-500/40 text-rose-300 block';
+      icalFeedbackBox.textContent = '✖ Errore: ' + err.message;
+    }
+  }
+}
+
+async function handleForceIcalSync() {
+  if (icalFeedbackBox) {
+    icalFeedbackBox.className = 'p-3 rounded-xl text-xs font-mono bg-blue-950/50 border border-blue-500/40 text-blue-300 block';
+    icalFeedbackBox.textContent = 'Sincronizzazione forzata in corso... scarico iCal da Bed-and-Breakfast.it...';
+  }
+  btnForceIcalSync.disabled = true;
+
+  try {
+    // Salviamo prima la configurazione aggiornata
+    await handleSaveIcalConfig();
+
+    // Mandiamo un trigger per sincronizzare subito
+    const res = await fetch(`${API_BASE_URL}/api/ical/config`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        if (icalFeedbackBox) {
+          icalFeedbackBox.className = 'p-3 rounded-xl text-xs font-mono bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 block';
+          icalFeedbackBox.textContent = '✔ Sincronizzazione iCal completata! Nuovi pass generati se presenti. Controlla la lista dei pass.';
+        }
+        await fetchPasses();
+      }
+    }
+  } catch (err) {
+    if (icalFeedbackBox) {
+      icalFeedbackBox.className = 'p-3 rounded-xl text-xs font-mono bg-rose-950/50 border border-rose-500/40 text-rose-300 block';
+      icalFeedbackBox.textContent = '✖ Errore sincronizzazione: ' + err.message;
+    }
+  } finally {
+    btnForceIcalSync.disabled = false;
+  }
+}
+
 // Fetch Active Passes
 async function fetchPasses() {
   try {
@@ -717,7 +2265,7 @@ function renderPasses(passes) {
     const link = `${API_BASE_URL}/?pass=${p.token || ''}`;
     const cleanPhone = (p.phone || '').replace(/[^0-9+]/g, '');
     const isExpired = p.checkOutDate && new Date(p.checkOutDate) < new Date();
-    
+
     return `
       <div class="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#12141f] border border-white/[0.08] shadow-sm space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-3.5">
@@ -785,7 +2333,7 @@ window.triggerPassDoorUnlock = async function(guestName) {
     const res = await fetch(`${API_BASE_URL}/api/hass/unlock`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         guestName: guestName || 'Ospite',
         source: 'Pass Portale Host',
         wifiConnected: true,
@@ -939,7 +2487,7 @@ function setupCms() {
       if (!lang) return;
 
       currentCmsLanguage = lang;
-      
+
       // Update UI active styles
       cmsLanguageSelector.querySelectorAll('.cms-lang-btn').forEach(b => {
         b.className = 'cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/5 text-neutral-400 hover:text-white transition cursor-pointer';
@@ -1194,7 +2742,7 @@ function escapeHtml(value) {
 // Helper to prefill section with standard fields if empty
 window.initDefaultSectionFields = function(lang, section) {
   if (!cmsFullData[lang]) cmsFullData[lang] = {};
-  
+
   const defaults = {
     welcome: {
       title: 'Benvenuto ad Aurora',
@@ -1250,407 +2798,6 @@ window.initDefaultSectionFields = function(lang, section) {
   };
 
   renderCmsFields();
-};
-
-// Save CMS to Server
-async function handleSaveCms() {
-  if (btnSaveCms) btnSaveCms.disabled = true;
-  if (btnSaveCmsBottom) btnSaveCmsBottom.disabled = true;
-  if (cmsFeedback) {
-    cmsFeedback.className = 'text-xs p-3 rounded-xl border bg-amber-950/60 border-amber-500/40 text-amber-300';
-    cmsFeedback.textContent = 'Salvataggio delle modifiche sul server in corso...';
-    cmsFeedback.classList.remove('hidden');
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/cms/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: cmsFullData })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Salvataggio fallito');
-
-    if (cmsFeedback) {
-      cmsFeedback.className = 'text-xs p-3 rounded-xl border bg-emerald-950/70 border-emerald-500/40 text-emerald-300';
-      cmsFeedback.textContent = `✔ Modifiche salvate con successo! I nuovi testi sono ora definitivi per tutte le sessioni degli ospiti.`;
-    }
-    if (cmsSaveIndicator) {
-      cmsSaveIndicator.textContent = `Ultimo salvataggio: ${new Date().toLocaleTimeString()} (Definitivo)`;
-    }
-
-    setTimeout(() => {
-      if (cmsFeedback) cmsFeedback.classList.add('hidden');
-    }, 5000);
-
-  } catch (err) {
-    if (cmsFeedback) {
-      cmsFeedback.className = 'text-xs p-3 rounded-xl border bg-rose-950/70 border-rose-500/40 text-rose-300';
-      cmsFeedback.textContent = `✖ Errore durante il salvataggio: ${err.message}`;
-    }
-  } finally {
-    if (btnSaveCms) btnSaveCms.disabled = false;
-    if (btnSaveCmsBottom) btnSaveCmsBottom.disabled = false;
-  }
-}
-
-// Reset CMS
-async function handleResetCms() {
-  if (!confirm('Sei sicuro di voler ripristinare tutti i testi alle impostazioni originali di fabbrica? Le modifiche personalizzate andranno perse.')) {
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/cms/reset`, { method: 'POST' });
-    if (res.ok) {
-      alert('Testi ripristinati con successo!');
-      await loadCmsData();
-    }
-  } catch (err) {
-    alert('Errore ripristino: ' + err.message);
-  }
-}
-
-// ----------------------------------------------------
-// CMS MEDIA & FOTO ENGINE (UPLOAD FILE DEFINITIVO)
-// ----------------------------------------------------
-const MEDIA_CATALOG = [
-  {
-    key: 'hostAvatar',
-    title: 'Foto Profilo Host Nino',
-    desc: 'Visualizzata nella pagina Contatti, nell\'intestazione e nell\'accoglienza.',
-    aspectRatio: 'Quadrata (1:1)'
-  },
-  {
-    key: 'heroLiving',
-    title: 'Copertina Benvenuto & Living',
-    desc: 'Foto principale del soggiorno per la copertina di Benvenuto e schede.',
-    aspectRatio: 'Orizzontale (16:9 / 4:3)'
-  },
-  {
-    key: 'locationCover',
-    title: 'Copertina Come Arrivare & Mappa',
-    desc: 'Foto per la scheda di orientamento, GPS e arrivo a Morbegno.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'checkInCover',
-    title: 'Copertina Check-in & Smart Lock',
-    desc: 'Foto per la procedura di accesso e chiave smart.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'servicesCover',
-    title: 'Copertina Servizi Casa & Comfort',
-    desc: 'Foto per dotazioni, riscaldamento ed elettrodomestici.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'rulesCover',
-    title: 'Copertina Regole della Casa',
-    desc: 'Foto per orari di quiete e norme di rispetto.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'restaurantsCover',
-    title: 'Copertina Crotti & Ristoranti',
-    desc: 'Immagine della scheda per enogastronomia tipica e pizzoccheri.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'barsCover',
-    title: 'Copertina Bar & Colazioni',
-    desc: 'Immagine della scheda per colazioni, caffetterie e aperitivi serali.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'shoppingCover',
-    title: 'Copertina Botteghe del Bitto & Spesa',
-    desc: 'Immagine della scheda per formaggi tipici e alimentari.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'activitiesCover',
-    title: 'Copertina Escursioni & Sentieri',
-    desc: 'Immagine della scheda per escursioni in montagna, Val di Mello e trekking.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'transportCover',
-    title: 'Copertina Mezzi di Trasporto & Bici',
-    desc: 'Immagine per treni FS, orari bus e noleggio bici.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'infoCover',
-    title: 'Copertina Informazioni Utili',
-    desc: 'Immagine per farmacie, banche e raccolta differenziata.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'emergencyCover',
-    title: 'Copertina Emergenze & Soccorso',
-    desc: 'Immagine per numero unico 112 e guardia medica.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'checkOutCover',
-    title: 'Copertina Check-out & Riconsegna',
-    desc: 'Immagine per checklist di partenza e recensioni.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'bedroom',
-    title: 'Camera da Letto Matrimoniale',
-    desc: 'Foto dettagliata della camera matrimoniale e letti.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'kitchen',
-    title: 'Cucina Attrezzata Moderna',
-    desc: 'Foto della cucina a induzione, elettrodomestici e zona pranzo.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'bathroom',
-    title: 'Bagno & Doccia Cromoterapia',
-    desc: 'Foto del bagno con doccia rilassante a led cromoterapici.',
-    aspectRatio: 'Orizzontale (16:9)'
-  },
-  {
-    key: 'wifiQr',
-    title: 'Immagine QR Code Wi-Fi',
-    desc: 'Immagine del codice QR per connessione Wi-Fi rapida degli smartphone.',
-    aspectRatio: 'Quadrata (1:1)'
-  }
-];
-
-function setupMedia() {
-  if (btnRefreshMedia) {
-    btnRefreshMedia.addEventListener('click', loadMediaData);
-  }
-  if (btnResetAllPhotos) {
-    btnResetAllPhotos.addEventListener('click', async () => {
-      if (!confirm('Vuoi ripristinare TUTTE le foto alle impostazioni originali di fabbrica?')) return;
-      try {
-        for (const item of MEDIA_CATALOG) {
-          await fetch(`${API_BASE_URL}/api/cms/reset-photo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ photoKey: item.key })
-          });
-        }
-        showMediaFeedback('Tutte le foto sono state ripristinate alle immagini originali di fabbrica.', 'success');
-        await loadMediaData();
-      } catch (err) {
-        showMediaFeedback('Errore ripristino foto: ' + err.message, 'error');
-      }
-    });
-  }
-}
-
-async function loadMediaData() {
-  if (!mediaCardsGrid) return;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/cms/media`);
-    if (res.ok) {
-      const data = await res.json();
-      cmsMediaData = data.media || data;
-    }
-  } catch (err) {
-    console.warn('Could not load CMS media from server, using local state:', err);
-  }
-  renderMediaCards();
-}
-
-function showMediaFeedback(message, type = 'info') {
-  if (!mediaFeedback) return;
-  mediaFeedback.classList.remove('hidden');
-
-  let bgClass = 'bg-blue-950/70 border-blue-500/40 text-blue-300';
-  if (type === 'success') {
-    bgClass = 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300';
-  } else if (type === 'error') {
-    bgClass = 'bg-rose-950/70 border-rose-500/40 text-rose-300';
-  } else if (type === 'loading') {
-    bgClass = 'bg-amber-950/70 border-amber-500/40 text-amber-300';
-  }
-
-  mediaFeedback.className = `p-3.5 rounded-xl border text-xs font-mono flex items-center justify-between ${bgClass}`;
-  mediaFeedback.innerHTML = `
-    <span>${message}</span>
-    <button type="button" onclick="this.parentElement.classList.add('hidden')" class="ml-2 text-white/60 hover:text-white font-bold cursor-pointer">✕</button>
-  `;
-
-  if (type === 'success') {
-    setTimeout(() => {
-      mediaFeedback.classList.add('hidden');
-    }, 6000);
-  }
-}
-
-function renderMediaCards() {
-  if (!mediaCardsGrid) return;
-  mediaCardsGrid.innerHTML = '';
-
-  MEDIA_CATALOG.forEach(item => {
-    const photoKey = item.key;
-    const currentUrl = cmsMediaData[photoKey] || '';
-    const isCustomUploaded = currentUrl.startsWith('/uploads/');
-
-    const card = document.createElement('div');
-    card.className = 'p-4 rounded-2xl bg-[#090b10] border border-white/10 flex flex-col justify-between space-y-3 relative group';
-
-    card.innerHTML = `
-      <div class="space-y-2">
-        <!-- Card Header -->
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <h4 class="text-xs font-bold text-white tracking-tight">${item.title}</h4>
-            <p class="text-[10px] text-neutral-400 leading-snug mt-0.5">${item.desc}</p>
-          </div>
-          <span class="px-2 py-0.5 rounded-md text-[9px] font-mono font-semibold uppercase ${
-            isCustomUploaded ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-white/10 text-neutral-400'
-          }">
-            ${isCustomUploaded ? 'File Caricato' : 'Default'}
-          </span>
-        </div>
-
-        <!-- Preview Box / Dropzone -->
-        <div class="media-dropzone relative w-full h-40 rounded-xl overflow-hidden bg-black/60 border border-dashed border-white/20 flex items-center justify-center cursor-pointer transition hover:border-cyan-400 group/drop" data-key="${photoKey}">
-          <img src="${currentUrl}" alt="${item.title}" class="w-full h-full object-cover transition duration-300 group-hover/drop:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%221%22><rect width=%2218%22 height=%2218%22 x=%223%22 y=%223%22 rx=%222%22 ry=%222%22/><circle cx=%229%22 cy=%229%22 r=%222%22/><path d=%22m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21%22/></svg>'" />
-          
-          <div class="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3 text-center">
-            <svg class="w-6 h-6 text-cyan-300 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            <span class="text-[11px] font-bold text-white">Trascina o Clicca per caricare</span>
-            <span class="text-[9px] text-neutral-400 mt-0.5">${item.aspectRatio}</span>
-          </div>
-
-          <input type="file" accept="image/*" class="media-file-input hidden" data-key="${photoKey}" />
-        </div>
-
-        <!-- Current File Path Info -->
-        <div class="flex items-center justify-between text-[10px] font-mono text-neutral-400 bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/5 truncate">
-          <span class="truncate" title="${currentUrl}">${currentUrl ? currentUrl : 'Nessuna immagine impostata'}</span>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
-        <button type="button" class="btn-pick-file px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold text-[11px] transition cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95" data-key="${photoKey}">
-          <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          <span>Carica File</span>
-        </button>
-
-        <button type="button" class="btn-reset-single-photo px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 text-neutral-400 hover:text-rose-300 text-[11px] font-medium transition cursor-pointer" data-key="${photoKey}" title="Ripristina foto originale">
-          <span>Ripristina</span>
-        </button>
-      </div>
-    `;
-
-    // Hook events
-    const dropzone = card.querySelector('.media-dropzone');
-    const fileInput = card.querySelector('.media-file-input');
-    const btnPick = card.querySelector('.btn-pick-file');
-    const btnReset = card.querySelector('.btn-reset-single-photo');
-
-    dropzone.addEventListener('click', () => fileInput.click());
-    btnPick.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) uploadPhotoFile(photoKey, file);
-    });
-
-    // Drag and drop
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('border-cyan-400', 'bg-cyan-950/20');
-    });
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('border-cyan-400', 'bg-cyan-950/20');
-    });
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('border-cyan-400', 'bg-cyan-950/20');
-      const file = e.dataTransfer.files && e.dataTransfer.files[0];
-      if (file) uploadPhotoFile(photoKey, file);
-    });
-
-    btnReset.addEventListener('click', () => handleResetPhoto(photoKey));
-
-    mediaCardsGrid.appendChild(card);
-  });
-}
-
-async function uploadPhotoFile(photoKey, file) {
-  if (!file) return;
-
-  if (!file.type.startsWith('image/')) {
-    showMediaFeedback('Seleziona un file immagine valido (JPEG, PNG, WebP).', 'error');
-    return;
-  }
-
-  if (file.size > 25 * 1024 * 1024) {
-    showMediaFeedback('Il file supera la dimensione massima consentita di 25MB.', 'error');
-    return;
-  }
-
-  showMediaFeedback(`Caricamento definitivo di "${file.name}" in corso...`, 'loading');
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const dataUrl = e.target.result;
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/cms/upload-photo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          photoKey,
-          base64DataUrl: dataUrl,
-          filename: file.name
-        })
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Errore durante il salvataggio sul server');
-      }
-
-      cmsMediaData[photoKey] = json.url;
-      renderMediaCards();
-      showMediaFeedback(`✔ Foto per "${photoKey}" salvata definitivamente sul server! (URL: ${json.url})`, 'success');
-    } catch (err) {
-      showMediaFeedback(`✖ Errore caricamento file: ${err.message}`, 'error');
-    }
-  };
-  reader.onerror = () => {
-    showMediaFeedback('Impossibile leggere il file selezionato dal dispositivo.', 'error');
-  };
-  reader.readAsDataURL(file);
-}
-
-async function handleResetPhoto(photoKey) {
-  if (!confirm(`Vuoi ripristinare la foto originale di default per "${photoKey}"?`)) return;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/cms/reset-photo`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ photoKey })
-    });
-    const json = await res.json();
-    if (!res.ok || !json.success) throw new Error(json.error || 'Errore ripristino');
-
-    cmsMediaData[photoKey] = json.url;
-    renderMediaCards();
-    showMediaFeedback(`Foto "${photoKey}" ripristinata all'immagine originale di fabbrica.`, 'success');
-  } catch (err) {
-    showMediaFeedback(`Errore: ${err.message}`, 'error');
-  }
-}
-
 // Start
-window.addEventListener('DOMContentLoaded', init);
+window.addEo ventListener('DOMContentLoaded', init);
 

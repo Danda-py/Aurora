@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GuestPass } from '../../types';
+import { GuestPass, Language } from '../../types';
 import { getStayTiming } from '../../services/guestPassService';
 import { 
   Unlock, 
@@ -17,21 +17,25 @@ import {
   ExternalLink 
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   pass: GuestPass;
   onOpenSmartLock: () => void;
   onOpenWifi?: () => void;
   onNavigate?: (page: any) => void;
+  language?: Language;
 }
 
 export const VIPBoardingPassCard: React.FC<Props> = ({
   pass,
   onOpenSmartLock,
   onOpenWifi,
-  onNavigate
+  onNavigate,
+  language = 'it'
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
 
   const timing = getStayTiming(pass);
 
@@ -43,7 +47,7 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
     try {
       const [y, m, d] = dateStr.split('-').map(Number);
       const date = new Date(y, m - 1, d);
-      return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+      return date.toLocaleDateString(language === 'de' ? 'de-DE' : language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
     } catch {
       return dateStr;
     }
@@ -68,10 +72,10 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
             </div>
             <div>
               <span className="text-[10px] tracking-widest uppercase font-mono font-bold text-amber-300 block">
-                VIP BOARDING PASS • MSC SUITE EXPERIENCE
+                {t.boardingPass.headerTitle}
               </span>
               <span className="text-xs font-serif text-slate-300 block -mt-0.5">
-                Aurora in Valtellina • Morbegno
+                {t.boardingPass.headerSub}
               </span>
             </div>
           </div>
@@ -88,13 +92,13 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
               }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />
-              <span>{timing.isActive ? 'ATTIVO' : timing.isUpcoming ? 'CONFERMATO' : 'CONCLUSO'}</span>
+              <span>{timing.isActive ? t.boardingPass.statusActive : timing.isUpcoming ? t.boardingPass.statusConfirmed : t.boardingPass.statusCompleted}</span>
             </div>
 
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
-              title={isExpanded ? 'Riduci scheda' : 'Espandi scheda'}
+              title={isExpanded ? t.boardingPass.collapseCard : t.boardingPass.expandCard}
             >
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
@@ -108,7 +112,7 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
             <div>
               <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block">
-                Nome Ospite / Guest
+                {t.boardingPass.guestLabel}
               </span>
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide text-shadow-sm">
                 {guestFullName}
@@ -116,15 +120,15 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
             </div>
             <div className="sm:text-right">
               <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400 block">
-                Alloggio Riservato
+                {t.boardingPass.suiteLabel}
               </span>
               <span className="text-xs font-mono font-bold text-amber-200">
-                Suite Aurora • 70 m² con Parcheggio
+                {t.boardingPass.suiteValue}
               </span>
             </div>
           </div>
 
-          {/* Dynamic Stay Countdown Banner (Cruise-style MSC countdown) */}
+          {/* Dynamic Stay Countdown Banner */}
           <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-teal-500/15 to-amber-500/20 border border-amber-400/30 flex items-center justify-between gap-3 shadow-inner">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
@@ -132,7 +136,7 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
               </div>
               <div>
                 <span className="text-[10px] uppercase font-mono tracking-widest text-amber-300 font-bold block">
-                  {timing.isUpcoming ? 'COUNTDOWN ALL\'ARRIVO' : 'TEMPO DI SOGGIORNO'}
+                  {timing.isUpcoming ? t.boardingPass.countdownArrival : t.boardingPass.stayDuration}
                 </span>
                 <span className="text-xs sm:text-sm font-bold text-white leading-tight">
                   {timing.formattedCountdown}
@@ -156,26 +160,26 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                 <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
                   <div className="flex items-center gap-1.5 text-amber-300 text-[10px] font-mono uppercase font-bold mb-1">
                     <Calendar className="w-3 h-3" />
-                    <span>CHECK-IN</span>
+                    <span>{t.tiles.checkIn}</span>
                   </div>
                   <div className="font-bold text-sm text-white">
                     {formatDateDisplay(pass.checkInDate)}
                   </div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    dalle {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)
+                    {t.boardingPass.fromTime} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)
                   </div>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
                   <div className="flex items-center gap-1.5 text-amber-300 text-[10px] font-mono uppercase font-bold mb-1">
                     <Calendar className="w-3 h-3" />
-                    <span>CHECK-OUT</span>
+                    <span>{t.tiles.checkOut}</span>
                   </div>
                   <div className="font-bold text-sm text-white">
                     {formatDateDisplay(pass.checkOutDate)}
                   </div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    entro le {pass.checkOutTime || '10:00'}
+                    {t.boardingPass.byTime} {pass.checkOutTime || '10:00'}
                   </div>
                 </div>
               </div>
@@ -193,11 +197,11 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-bold">
-                          INGRESSO CON SMART LOCK
+                          {t.boardingPass.smartLockTitle}
                         </span>
                       </div>
                       <div className="text-xs text-slate-300">
-                        Apertura porta con 1 tocco
+                        {t.boardingPass.smartLockSub}
                       </div>
                     </div>
                   </div>
@@ -212,7 +216,7 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                       className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer"
                     >
                       <Unlock className="w-3.5 h-3.5" />
-                      <span>APRI PORTA</span>
+                      <span>{t.smartLock.openDoorBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -224,10 +228,10 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                 <div className="p-2 rounded-xl bg-white/5 border border-white/5 text-center">
                   <Car className="w-4 h-4 text-amber-300 mx-auto mb-1" />
                   <span className="text-[10px] font-mono text-slate-300 block leading-tight font-medium">
-                    Parcheggio Privato
+                    {t.boardingPass.parkingTitle}
                   </span>
                   <span className="text-[9px] text-emerald-400 font-mono">
-                    Riservato 24/7
+                    {t.boardingPass.parkingBadge}
                   </span>
                 </div>
 
@@ -238,10 +242,10 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                 >
                   <Wifi className="w-4 h-4 text-teal-300 mx-auto mb-1" />
                   <span className="text-[10px] font-mono text-slate-300 block leading-tight font-medium">
-                    Wi-Fi Fibra
+                    {t.boardingPass.wifiTitle}
                   </span>
                   <span className="text-[9px] text-teal-400 font-mono">
-                    Connetti Rapido
+                    {t.boardingPass.wifiBadge}
                   </span>
                 </button>
 
@@ -254,10 +258,10 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                 >
                   <MessageSquare className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
                   <span className="text-[10px] font-mono text-slate-300 block leading-tight font-medium">
-                    Concierge Nino
+                    {t.boardingPass.conciergeTitle}
                   </span>
                   <span className="text-[9px] text-emerald-400 font-mono">
-                    Chat WhatsApp
+                    {t.boardingPass.conciergeBadge}
                   </span>
                 </a>
               </div>

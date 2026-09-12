@@ -18,8 +18,8 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
   const { getPageData } = useCms();
   const cmsWifi = getPageData('wifi') || {};
   const w = { ...BOOK_DATA[language].wifi, ...cmsWifi };
-  const t = VIDEO_TRANSLATIONS[language];
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const [copiedSSID, setCopiedSSID] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
 
@@ -104,7 +104,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
               className="aurora-secondary-pill"
             >
               {copiedSSID ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
-              <span>{copiedSSID ? 'Copiato!' : 'Copia'}</span>
+              <span>{copiedSSID ? t.actions.copied : t.actions.copy}</span>
             </button>
           </div>
 
@@ -126,7 +126,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
               className="aurora-action-pill"
             >
               {copiedPass ? <Check className="w-3.5 h-3.5 text-[#07110d]" /> : <Copy className="w-3.5 h-3.5 text-[#07110d]" />}
-              <span>{copiedPass ? 'Copiato!' : 'Copia Password'}</span>
+              <span>{copiedPass ? t.actions.copied : (t.actions.copyPassword || t.actions.copy)}</span>
             </button>
           </div>
         </div>

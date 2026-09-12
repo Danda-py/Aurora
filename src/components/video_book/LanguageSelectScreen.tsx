@@ -2,12 +2,14 @@ import React from 'react';
 import { Language } from '../../types';
 import { FlagIcon } from './FlagIcon';
 import { Sparkles, ChevronRight, ShieldCheck, Mountain } from 'lucide-react';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   onSelectLanguage: (lang: Language) => void;
 }
 
 export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
+  const t = VIDEO_TRANSLATIONS.it;
   const languages: { code: Language; label: string; native: string }[] = [
     { code: 'it', label: 'ITALIANO', native: 'Seleziona lingua' },
     { code: 'en', label: 'ENGLISH', native: 'Select language' },
@@ -30,7 +32,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
       {/* Top Branding: Aurora in Valtellina */}
       <div className="aurora-shell text-center py-6 space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/[0.06] text-[#9ef2d3] text-xs font-semibold uppercase tracking-wider backdrop-blur-md border border-white/[0.1] shadow-inner">
-          <Sparkles className="w-3.5 h-3.5 text-[#62e6bd]" /> Guida Digitale & Concierge
+          <Sparkles className="w-3.5 h-3.5 text-[#62e6bd]" /> {t.langSelect.badge}
         </div>
         
         <div className="py-2">
@@ -43,7 +45,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-white/60 font-light italic tracking-wide max-w-xs mx-auto mt-2">
-            Il tuo soggiorno nel cuore delle Alpi
+            {t.langSelect.subtitle}
           </p>
         </div>
       </div>
@@ -52,7 +54,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
       <div className="aurora-shell w-full max-w-sm mx-auto space-y-3 pb-6 sm:pb-10">
         <div className="text-center pb-1">
           <span className="aurora-eyebrow text-[#62e6bd]">
-            Scegli la tua lingua
+            {t.selectLanguage}
           </span>
         </div>
 
@@ -86,7 +88,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ onSelectLanguage }) => {
         <div className="pt-2 text-center">
           <span className="inline-flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
             <ShieldCheck className="w-3.5 h-3.5 text-[#62e6bd]" />
-            <span>Accesso ospiti protetto e sicuro</span>
+            <span>{t.langSelect.secureAccess}</span>
           </span>
         </div>
       </div>

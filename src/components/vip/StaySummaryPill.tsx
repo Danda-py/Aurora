@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { GuestPass } from '../../types';
+import { GuestPass, Language } from '../../types';
 import { getStayTiming } from '../../services/guestPassService';
 import { Unlock, ChevronRight, User } from 'lucide-react';
 import { StayDetailsModal } from './StayDetailsModal';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   pass: GuestPass;
   onOpenSmartLock?: () => void;
+  language?: Language;
 }
 
-export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock }) => {
+export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, language = 'it' }) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
 
   const timing = getStayTiming(pass);
   const guestFirstName = pass.guestName || 'Ospite';
@@ -36,10 +39,10 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock }) => {
               </div>
               <p className="text-[10px] text-neutral-400 truncate -mt-0.5 tracking-tight font-normal">
                 {timing.isActive 
-                  ? `Soggiorno attivo • ${timing.formattedCountdown}`
+                  ? `${t.staySummary.activeStay} • ${timing.formattedCountdown}`
                   : timing.isUpcoming
-                  ? `Arrivo: ${pass.checkInDate}`
-                  : 'Soggiorno completato'}
+                  ? `${t.staySummary.upcomingStay}: ${pass.checkInDate}`
+                  : t.staySummary.completedStay}
               </p>
             </div>
           </div>
@@ -56,7 +59,7 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock }) => {
                 className="px-3 py-1.5 rounded-full bg-white text-neutral-950 hover:bg-neutral-100 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 <Unlock className="w-3.5 h-3.5 text-neutral-950" />
-                <span className="tracking-tight">APRI PORTA</span>
+                <span className="tracking-tight">{t.smartLock.openDoorBtn}</span>
               </button>
             )}
 
@@ -73,8 +76,8 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock }) => {
         onClose={() => setIsDetailsOpen(false)}
         pass={pass}
         onOpenSmartLock={onOpenSmartLock}
+        language={language}
       />
     </>
   );
 };
-

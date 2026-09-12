@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bot, LoaderCircle, Paperclip, Send, X } from 'lucide-react';
-import { GuestPass } from '../../types';
+import { GuestPass, Language } from '../../types';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -12,16 +13,19 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   pass: GuestPass;
+  language?: Language;
 }
-
-const welcomeMessage: ChatMessage = {
-  role: 'model',
-  text: 'Ciao, sono Aurora AI. Posso aiutarti con l appartamento, Morbegno e le esperienze in Valtellina.'
-};
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 
-export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
+export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass, language = 'it' }) => {
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  
+  const welcomeMessage: ChatMessage = {
+    role: 'model',
+    text: t.aiChat.welcomeMessage
+  };
+
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const [question, setQuestion] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -29,6 +33,13 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
   const [attachedImage, setAttachedImage] = useState<{ dataUrl: string; mimeType: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update welcome message when language changes if chat hasn't started
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === 'model') {
+      setMessages([{ role: 'model', text: t.aiChat.welcomeMessage }]);
+    }
+  }, [language]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -51,11 +62,11 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
     event.target.value = '';
     if (!file) return;
     if (!/^image\/(png|jpe?g|webp|heic|heif)$/i.test(file.type)) {
-      setError('Formato immagine non supportato. Usa JPG, PNG, WEBP o HEIC.');
+      setError(t.aiChat.unsupportedImageFormat);
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setError('La foto e troppo grande. Allega un immagine sotto i 6MB.');
+      setError(t.aiChat.imageTooLarge);
       return;
     }
     setError('');
@@ -88,14 +99,15 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
           question: text,
           history: messages.slice(1),
           image: imageToSend?.dataUrl,
-          imageMimeType: imageToSend?.mimeType
+          imageMimeType: imageToSend?.mimeType,
+          language
         })
       });
       const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Impossibile ricevere una risposta.');
+      if (!response.ok || !data.success) throw new Error(data.error || t.aiChat.responseError);
       setMessages(currentMessages => [...currentMessages, { role: 'model', text: data.answer }]);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Aurora AI non e disponibile al momento.');
+      setError(requestError instanceof Error ? requestError.message : t.aiChat.unavailableError);
     } finally {
       setIsSending(false);
     }
@@ -107,31 +119,34 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
         <header className="flex items-center justify-between border-b border-white/10 px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-[#62e6bd] text-[#07110d]"><Bot className="h-5 w-5" /></div>
-            <div><h2 id="aurora-ai-title" className="m-0 text-sm font-bold text-white">Aurora AI</h2><p className="m-0 text-xs text-white/55">Concierge digitale</p></div>
+            <div>
+              <h2 id="aurora-ai-title" className="m-0 text-sm font-bold text-white">{t.aiChat.title}</h2>
+              <p className="m-0 text-xs text-white/55">{t.aiChat.subtitle}</p>
+            </div>
           </div>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white" aria-label="Chiudi Aurora AI"><X className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white" aria-label={t.aiChat.closeLabel}><X className="h-5 w-5" /></button>
         </header>
         <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4">
           {messages.map((message, index) => (
             <div key={`${message.role}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${message.role === 'user' ? 'rounded-br-md bg-[#62e6bd] text-[#07110d]' : 'rounded-bl-md bg-white/10 text-white/90'}`}>
                 {message.imagePreview && (
-                  <img src={message.imagePreview} alt="Foto allegata" className="mb-2 max-h-48 w-full rounded-xl object-cover" />
+                  <img src={message.imagePreview} alt={t.aiChat.attachedPhotoAlt} className="mb-2 max-h-48 w-full rounded-xl object-cover" />
                 )}
                 {message.text && <p className="m-0 whitespace-pre-wrap">{message.text}</p>}
               </div>
             </div>
           ))}
-          {isSending && <div className="flex justify-start"><div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-white/10 px-3.5 py-2.5 text-sm text-white/70"><LoaderCircle className="h-4 w-4 animate-spin" />Aurora AI sta pensando</div></div>}
+          {isSending && <div className="flex justify-start"><div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-white/10 px-3.5 py-2.5 text-sm text-white/70"><LoaderCircle className="h-4 w-4 animate-spin" />{t.aiChat.thinking}</div></div>}
           <div ref={messagesEndRef} />
         </div>
         <form onSubmit={submitQuestion} className="border-t border-white/10 p-3">
           {error && <p className="mb-2 text-xs text-rose-300">{error}</p>}
           {attachedImage && (
             <div className="mb-2 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2">
-              <img src={attachedImage.dataUrl} alt="Anteprima foto" className="h-12 w-12 rounded-lg object-cover" />
-              <span className="flex-1 text-xs text-white/60">Foto pronta per l'invio</span>
-              <button type="button" onClick={() => setAttachedImage(null)} className="rounded-full p-1 text-white/50 hover:bg-white/10 hover:text-white" aria-label="Rimuovi foto">
+              <img src={attachedImage.dataUrl} alt={t.aiChat.attachedPhotoAlt} className="h-12 w-12 rounded-lg object-cover" />
+              <span className="flex-1 text-xs text-white/60">{t.aiChat.photoReady}</span>
+              <button type="button" onClick={() => setAttachedImage(null)} className="rounded-full p-1 text-white/50 hover:bg-white/10 hover:text-white" aria-label={t.aiChat.removePhoto}>
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -142,12 +157,12 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass }) => {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white"
-              aria-label="Allega foto"
+              aria-label={t.aiChat.attachPhoto}
             >
               <Paperclip className="h-4 w-4" />
             </button>
-            <textarea value={question} onChange={event => setQuestion(event.target.value)} maxLength={1000} rows={1} placeholder="Chiedi di Morbegno, esperienze o Aurora" className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/40" />
-            <button type="submit" disabled={(!question.trim() && !attachedImage) || isSending} className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#62e6bd] text-[#07110d] transition hover:bg-[#93f4d4] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Invia domanda"><Send className="h-4 w-4" /></button>
+            <textarea value={question} onChange={event => setQuestion(event.target.value)} maxLength={1000} rows={1} placeholder={t.aiChat.placeholder} className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/40" />
+            <button type="submit" disabled={(!question.trim() && !attachedImage) || isSending} className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#62e6bd] text-[#07110d] transition hover:bg-[#93f4d4] disabled:cursor-not-allowed disabled:opacity-40" aria-label={t.aiChat.sendQuestion}><Send className="h-4 w-4" /></button>
           </div>
         </form>
       </section>

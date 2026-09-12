@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
+import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { Phone, MessageSquare, Mail, Copy, Check, MessageCircle } from 'lucide-react';
@@ -17,7 +18,8 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const { getPageData, media } = useCms();
   const cmsContacts = getPageData('contacts') || getPageData('contact') || {};
   const c = { ...BOOK_DATA[language].contacts, ...cmsContacts };
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
   const handleCopy = (text: string, type: string) => {
@@ -160,7 +162,7 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                   {APARTMENT_INFO.hostEmail}
                 </span>
                 <span className="text-xs text-white/60 block">
-                  Email Assistenza
+                  {t.contactsPage.supportEmail}
                 </span>
               </div>
             </div>

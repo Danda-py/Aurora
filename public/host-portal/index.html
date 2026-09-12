@@ -178,6 +178,10 @@
         <i data-lucide="clipboard-list" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         <span>Gestione Pass (<span id="tabCount">0</span>)</span>
       </button>
+      <button class="tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 transition cursor-pointer flex items-center gap-2 shrink-0 whitespace-nowrap" data-tab="ical">
+        <i data-lucide="calendar-range" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400"></i>
+        <span>iCal Bed-and-Breakfast.it</span>
+      </button>
       <button class="tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 transition cursor-pointer flex items-center gap-2 shrink-0 whitespace-nowrap" data-tab="hass">
         <i data-lucide="home" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400"></i>
         <span>Home Assistant (Apriporta)</span>
@@ -189,8 +193,8 @@
       <button class="tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 transition cursor-pointer flex items-center gap-2 shrink-0 whitespace-nowrap" data-tab="media">
         <i data-lucide="image" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"></i>
         <span>📸 Modifica Foto & File (Upload)</span>
-      </button>
-    </div>
+            </button>
+          </div>
 
     <!-- TAB 1: CREATE PASS FORM -->
     <section id="tab-create" class="tab-content space-y-5">
@@ -206,8 +210,8 @@
         </div>
 
         <div class="space-y-2.5">
-          <textarea 
-            id="inputRawText" 
+          <textarea
+            id="inputRawText"
             rows="3"
             placeholder="Incolla qui qualsiasi testo o email di prenotazione. Es:&#10;Prenotazione confermata per Mario Rossi&#10;Arrivo: 15/09/2026 - Partenza: 20/09/2026&#10;Telefono: +39 340 1234567 • 2 ospiti"
             class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 resize-y"
@@ -225,12 +229,10 @@
       <!-- Main Form -->
       <form id="formCreatePass" class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#12141f] border border-white/[0.08] space-y-5">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-          
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Nome Ospite *</label>
             <input type="text" id="fieldGuestName" required placeholder="Es. Marco" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none" />
           </div>
-
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Cognome Ospite</label>
             <input type="text" id="fieldGuestSurname" placeholder="Es. Rossi" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none" />
@@ -239,18 +241,15 @@
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Telefono / WhatsApp</label>
             <input type="text" id="fieldPhone" placeholder="+39 340 123 4567" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none" />
-          </div>
-
+        </div>
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Data Check-in *</label>
             <input type="date" id="fieldCheckInDate" required class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none" />
-          </div>
-
+            </div>
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Data Check-out *</label>
             <input type="date" id="fieldCheckOutDate" required class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none" />
           </div>
-
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Canale / Fonte</label>
             <select id="fieldSource" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none cursor-pointer">
@@ -258,8 +257,8 @@
               <option value="booking.com">Booking.com</option>
               <option value="airbnb">Airbnb</option>
               <option value="diretto">Prenotazione Diretta</option>
-            </select>
-          </div>
+              </select>
+            </div>
 
           <div>
             <label class="block text-[11px] font-semibold text-neutral-300 mb-1">Codice Prenotazione</label>
@@ -286,8 +285,8 @@
           <button type="submit" id="btnSubmitGenerate" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-neutral-200 active:scale-98 text-neutral-950 font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
             <i data-lucide="key" class="w-4 h-4"></i>
             <span>Genera Link Univoco Ospite</span>
-          </button>
-        </div>
+                </button>
+              </div>
       </form>
 
       <!-- Pass Result Modal / Box (Appears after creation) -->
@@ -329,8 +328,8 @@
             <i data-lucide="send" class="w-4 h-4"></i>
             <span>Invia Invito via SMS</span>
           </a>
-        </div>
       </div>
+          </div>
 
     </section>
 
@@ -344,12 +343,81 @@
         <button id="btnRefreshPasses" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-medium border border-white/10 transition flex items-center gap-1.5 cursor-pointer">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
           <span>Aggiorna</span>
-        </button>
-      </div>
+            </button>
+          </div>
 
       <div id="passesContainer" class="space-y-3">
         <!-- Injected via JavaScript -->
         <div class="text-center py-8 text-xs text-neutral-400">Caricamento pass in corso...</div>
+        </div>
+    </section>
+
+    <!-- TAB iCal Bed-and-Breakfast.it -->
+    <section id="tab-ical" class="tab-content hidden space-y-5">
+      <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#12141f] border border-white/[0.08] space-y-5">
+        <div class="border-b border-white/[0.06] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="calendar" class="w-5 h-5 text-sky-400"></i>
+              <span>Sincronizzazione Automatica iCal Bed-and-Breakfast.it</span>
+            </h3>
+            <p class="text-xs text-neutral-400">Ottieni le prenotazioni senza intermediari, genera i link ed inviali via SMS/WhatsApp a ridosso dell'arrivo</p>
+  </div>
+          <div class="flex items-center gap-1.5">
+            <span id="icalStatusBadge" class="px-3 py-1 rounded-full text-[11px] font-mono bg-sky-500/10 text-sky-300 border border-sky-500/20">
+              Pronto
+            </span>
+          </div>
+        </div>
+
+        <form id="formIcalConfig" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-[11px] font-semibold text-neutral-300 mb-1">
+                Link iCal di esportazione calendario (da Bed-and-Breakfast.it)
+              </label>
+              <input type="url" id="inputIcalUrl" required placeholder="https://www.bed-and-breakfast.it/it/cal/ical/esporta/xxxxx" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 focus:ring-1 focus:ring-white/20 outline-none font-mono" />
+              <p class="text-[10px] text-neutral-400 mt-1">Vai nella tua area proprietario di Bed-and-Breakfast.it ➔ Calendario / Sincronizzazione ➔ Esporta Calendario e copia il link iCal (.ics) fornito.</p>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-neutral-300 mb-1">
+                Quanti giorni prima dell'arrivo inviare il link?
+              </label>
+              <input type="number" min="1" max="15" id="inputIcalDaysAhead" value="3" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 outline-none" />
+              <p class="text-[10px] text-neutral-400 mt-1">Il link non sarà inviato subito, ma esattamente X giorni prima del check-in (es. 3).</p>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-neutral-300 mb-1">
+                Frequenza di aggiornamento e verifica (minuti)
+              </label>
+              <input type="number" min="5" max="1440" id="inputIcalInterval" value="30" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-white/40 outline-none" />
+              <p class="text-[10px] text-neutral-400 mt-1">Ogni quanti minuti la PWA controllerà autonomamente se ci sono nuove prenotazioni.</p>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="flex items-center gap-2 cursor-pointer p-3.5 rounded-xl bg-black/30 border border-white/10">
+                <input type="checkbox" id="checkboxIcalEnabled" class="rounded border-white/15 bg-black/50 text-sky-500 focus:ring-sky-500/20" />
+                <div class="text-xs">
+                  <span class="font-bold text-white block">Abilita Sincronizzazione Automatica</span>
+                  <span class="text-neutral-400">Verifica in background H24 attiva sul server della PWA.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" id="btnForceIcalSync" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/10 transition active:scale-98">
+              Sincronizza Ora
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-neutral-950 font-bold text-xs transition active:scale-98">
+              Salva Configurazione iCal
+            </button>
+          </div>
+        </form>
+
+        <div id="icalFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
       </div>
     </section>
 
@@ -745,3 +813,4 @@ mode: single</pre>
   <script src="./app.js"></script>
 </body>
 </html>
+

@@ -18,16 +18,11 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const { getPageData, media } = useCms();
   const cmsInfo = getPageData('info') || {};
   const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
-  const t = VIDEO_TRANSLATIONS[language];
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
-  const pharmacyService = {
-    it: { title: 'FARMACIA DI TURNO', desc: 'Consulta disponibilità, orari e indicazioni aggiornati in tempo reale' },
-    en: { title: 'ON-DUTY PHARMACY', desc: 'Check live availability, opening hours, and directions' },
-    de: { title: 'NOTDIENST-APOTHEKE', desc: 'Live-Verfügbarkeit, Öffnungszeiten und Wegbeschreibung prüfen' },
-    fr: { title: 'PHARMACIE DE GARDE', desc: 'Consultez la disponibilité, les horaires et l’itinéraire en direct' },
-    es: { title: 'FARMACIA DE GUARDIA', desc: 'Consulta disponibilidad, horarios e indicaciones en tiempo real' }
-  }[language];
+  const pharmacyService = t.infoPage.pharmacyService;
+
   const services = inf.services.map((service) => /farmacia|pharmacy|apotheke|pharmacie/i.test(service.title)
     ? { ...service, ...pharmacyService, mapsUrl: pharmacyUrl }
     : service
@@ -131,7 +126,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
               <Trash2 className="w-5 h-5 text-[#62e6bd]" />
             </div>
             <div>
-              <span className="aurora-eyebrow">Raccolta Differenziata</span>
+              <span className="aurora-eyebrow">{t.infoPage.wasteRecycling}</span>
               <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
                 {inf.wasteTitle}
               </h4>

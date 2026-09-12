@@ -10,7 +10,6 @@ import {
   Hand,
   MapPin, 
   MessageCircle, 
-  Navigation, 
   Utensils, 
   Wifi, 
   X, 
@@ -28,6 +27,7 @@ import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
 import { useCms } from '../../context/CmsContext';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
+import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
   language: Language;
@@ -45,27 +45,6 @@ const languages: { id: Language; label: string }[] = [
   { id: 'de', label: 'Deutsch' },
   { id: 'fr', label: 'Français' },
   { id: 'es', label: 'Español' }
-];
-
-const localStories = [
-  { 
-    title: 'Sentiero Valtellina', 
-    meta: 'Percorso panoramico',
-    image: '/uploads/sentiero.jpg',
-    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sentiero+Valtellina+Morbegno'
-  },
-  { 
-    title: 'Centro storico', 
-    meta: 'Morbegno',
-    image: '/uploads/centro.jpg',
-    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+storico+di+Morbegno'
-  },
-  { 
-    title: 'Costiera dei Cèch', 
-    meta: 'Panorama valtellinese',
-    image: '/uploads/costiera.jpg',
-    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Costiera+dei+Cech+Morbegno'
-  }
 ];
 
 interface GuideTileItem {
@@ -263,114 +242,6 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
   };
 };
 
-const uiCopy: Record<Language, { 
-  home: string; 
-  subtitle: string; 
-  quick: string; 
-  wifi: string; 
-  host: string; 
-  rules: string; 
-  location: string;
-  bags: string; 
-  experiences: string; 
-  all: string; 
-  chooseLanguage: string;
-  allAurora: string;
-  allAuroraSubtitle: string;
-  handy: string;
-  activeStay: string;
-  directWhatsapp: string;
-  directions: string;
-  ideas: string;
-  experience: string;
-  territory: string;
-  support: string;
-  departure: string;
-  languagePreference: string;
-  swipeForMore: string;
-}> = {
-  it: { 
-    home: 'Fai come fossi a casa.', 
-    subtitle: 'Tutto il soggiorno, in un solo gesto. Apri, esplora, rilassati.', 
-    quick: 'Azioni rapide', 
-    wifi: 'Wi-Fi rapido', 
-    host: 'Contatta Nino', 
-    location: 'Come arrivare',
-    rules: 'Orari & regole', 
-    bags: 'Bagagli', 
-    experiences: 'Esperienze vicine', 
-    all: 'Vedi tutto', 
-    chooseLanguage: 'Scegli la tua lingua',
-    allAurora: 'TUTTO AURORA',
-    allAuroraSubtitle: 'La tua guida completa',
-    handy: 'A portata di mano', activeStay: 'Soggiorno attivo', directWhatsapp: 'WhatsApp diretto', directions: 'GPS & indicazioni', ideas: 'Idee per oggi', experience: 'Esperienza', territory: 'Territorio', support: 'Assistenza', departure: 'Fine soggiorno', languagePreference: 'Preferenza lingua', swipeForMore: 'Scorri per vedere altro'
-  },
-  en: { 
-    home: 'Feel at home.', 
-    subtitle: 'Your whole stay, in one gesture. Open, explore, relax.', 
-    quick: 'Quick actions', 
-    wifi: 'Quick Wi-Fi', 
-    host: 'Contact Nino', 
-    location: 'How to arrive',
-    rules: 'Hours & rules', 
-    bags: 'Luggage', 
-    experiences: 'Nearby experiences', 
-    all: 'See all', 
-    chooseLanguage: 'Choose your language',
-    allAurora: 'ALL OF AURORA',
-    allAuroraSubtitle: 'Your complete guide',
-    handy: 'At your fingertips', activeStay: 'Stay active', directWhatsapp: 'Direct WhatsApp', directions: 'GPS & directions', ideas: 'Ideas for today', experience: 'Experience', territory: 'Local area', support: 'Support', departure: 'End of stay', languagePreference: 'Language preference', swipeForMore: 'Swipe to see more'
-  },
-  de: { 
-    home: 'Fühl dich wie zu Hause.', 
-    subtitle: 'Der ganze Aufenthalt in einer Geste. Öffnen, entdecken, entspannen.', 
-    quick: 'Schnellzugriff', 
-    wifi: 'WLAN', 
-    host: 'Nino kontaktieren', 
-    location: 'Anreise',
-    rules: 'Zeiten & Regeln', 
-    bags: 'Gepäck', 
-    experiences: 'Erlebnisse in der Nähe', 
-    all: 'Alle ansehen', 
-    chooseLanguage: 'Sprache wählen',
-    allAurora: 'ALLES ÜBER AURORA',
-    allAuroraSubtitle: 'Ihr kompletter Reiseführer',
-    handy: 'Direkt zur Hand', activeStay: 'Aufenthalt aktiv', directWhatsapp: 'WhatsApp direkt', directions: 'GPS & Wegbeschreibung', ideas: 'Ideen für heute', experience: 'Erlebnis', territory: 'Region', support: 'Hilfe', departure: 'Ende des Aufenthalts', languagePreference: 'Spracheinstellung', swipeForMore: 'Wischen für mehr'
-  },
-  fr: { 
-    home: 'Comme chez vous.', 
-    subtitle: 'Tout le séjour en un geste. Ouvrez, explorez, profitez.', 
-    quick: 'Accès rapides', 
-    wifi: 'Wi-Fi rapide', 
-    host: 'Contacter Nino', 
-    location: 'Comment arriver',
-    rules: 'Horaires & règles', 
-    bags: 'Bagages', 
-    experiences: 'Expériences proches', 
-    all: 'Tout voir', 
-    chooseLanguage: 'Choisir la langue',
-    allAurora: 'TOUT SUR AURORA',
-    allAuroraSubtitle: 'Votre guide complet',
-    handy: 'À portée de main', activeStay: 'Séjour actif', directWhatsapp: 'WhatsApp direct', directions: 'GPS & itinéraire', ideas: 'Idées du jour', experience: 'Expérience', territory: 'Territoire', support: 'Assistance', departure: 'Fin du séjour', languagePreference: 'Préférence de langue', swipeForMore: 'Faites défiler pour voir plus'
-  },
-  es: { 
-    home: 'Siéntete como en casa.', 
-    subtitle: 'Toda tu estancia en un gesto. Abre, descubre y relájate.', 
-    quick: 'Acciones rápidas', 
-    wifi: 'Wi-Fi rápido', 
-    host: 'Contactar a Nino', 
-    location: 'Cómo llegar',
-    rules: 'Horarios y normas', 
-    bags: 'Equipaje', 
-    experiences: 'Experiencias cercanas', 
-    all: 'Ver todo', 
-    chooseLanguage: 'Elegir idioma',
-    allAurora: 'TODO SOBRE AURORA',
-    allAuroraSubtitle: 'Tu guía completa',
-    handy: 'A mano', activeStay: 'Estancia activa', directWhatsapp: 'WhatsApp directo', directions: 'GPS e indicaciones', ideas: 'Ideas para hoy', experience: 'Experiencia', territory: 'Territorio', support: 'Asistencia', departure: 'Fin de la estancia', languagePreference: 'Preferencia de idioma', swipeForMore: 'Desliza para ver más'
-  }
-};
-
 const formatPassDate = (dateStr?: string) => {
   if (!dateStr) return '';
   try {
@@ -396,10 +267,31 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const holdStartedAt = React.useRef(0);
   const isPublic = !pass;
   const firstName = pass?.guestName || 'Ospite';
-  const copy = uiCopy[language] || uiCopy.it;
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const guideSections = getLocalizedGuideSections(language, media, isPublic);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
   const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
+
+  const localStories = [
+    { 
+      title: 'Sentiero Valtellina', 
+      meta: t.gridMenu.descriptions.attivita,
+      image: '/uploads/sentiero.jpg',
+      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sentiero+Valtellina+Morbegno'
+    },
+    { 
+      title: 'Centro storico', 
+      meta: 'Morbegno',
+      image: '/uploads/centro.jpg',
+      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+storico+di+Morbegno'
+    },
+    { 
+      title: 'Costiera dei Cèch', 
+      meta: t.gridMenu.footerValtellina,
+      image: '/uploads/costiera.jpg',
+      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Costiera+dei+Cech+Morbegno'
+    }
+  ];
 
   useEffect(() => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
@@ -447,7 +339,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     }
 
     setDoorState('opening');
-    setDoorMessage('Invio comando a Home Assistant...');
+    setDoorMessage(t.concierge.doorMessage.sending);
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -464,7 +356,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       if (res.ok && data.success) {
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         setDoorState('success');
-        setDoorMessage('Portone sbloccato. Spingi la porta per entrare.');
+        setDoorMessage(t.concierge.doorMessage.unlocked);
       } else {
         throw new Error(data.error || 'Impossibile completare lo sblocco');
       }
@@ -544,7 +436,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       <button 
         className="aurora-floating-language" 
         onClick={() => setLanguageOpen(true)} 
-        aria-label="Cambia lingua"
+        aria-label={t.concierge.changeLanguage}
       >
         <FlagIcon language={language} className="h-full w-full object-cover" />
       </button>
@@ -560,16 +452,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <p className="aurora-eyebrow">Aurora in Valtellina</p>
             <h1 className="aurora-brand-name">
               {pass 
-                ? `${pass.guestName}, benvenuto.` 
-                : (language === 'it' 
-                  ? 'Benvenuto a Morbegno.' 
-                  : language === 'en' 
-                  ? 'Welcome to Morbegno.' 
-                  : language === 'de' 
-                  ? 'Willkommen in Morbegno.' 
-                  : language === 'fr' 
-                  ? 'Bienvenue à Morbegno.' 
-                  : 'Bienvenido a Morbegno.')}
+                ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}.` 
+                : t.concierge.welcomeCity}
             </h1>
           </div>
         </section>
@@ -579,8 +463,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <button className="stay-nudge" onClick={() => setSheet('luggage')}>
             <Clock3 className="h-4 w-4 text-amber-300 shrink-0" />
             <span>
-              <strong>Check-out entro le {APARTMENT_INFO.checkOutLimit}.</strong>
-              <small>Vuoi lasciare i bagagli o richiedere supporto?</small>
+              <strong>{t.concierge.nudge.checkoutTitle} {APARTMENT_INFO.checkOutLimit}.</strong>
+              <small>{t.concierge.nudge.checkoutSub}</small>
             </span>
             <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-amber-200" />
           </button>
@@ -597,7 +481,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-                  N. Ospiti <strong className="ml-1 text-sm text-white">{pass.guestsCount ?? 1}</strong>
+                  {t.concierge.guestCount} <strong className="ml-1 text-sm text-white">{pass.guestsCount ?? 1}</strong>
                 </p>
               </div>
               <div className="glass-chip">
@@ -612,14 +496,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
                   {formatPassDate(pass.checkInDate)}
                 </p>
-                <p className="text-[11px] font-medium text-white/70">dalle {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)</p>
+                <p className="text-[11px] font-medium text-white/70">{t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)</p>
               </div>
               <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>
                 <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
                   {formatPassDate(pass.checkOutDate)}
                 </p>
-                <p className="text-[11px] font-medium text-white/70">entro le {pass.checkOutTime ?? '10:00'}</p>
+                <p className="text-[11px] font-medium text-white/70">{t.concierge.by} {pass.checkOutTime ?? '10:00'}</p>
               </div>
             </div>
 
@@ -643,7 +527,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
               <span className="flex items-center gap-2 relative z-10">
                 <KeyRound className="h-4 w-4" />
-                {doorState === 'opening' ? 'Apertura in corso...' : doorState === 'success' ? 'Portone aperto!' : doorState === 'error' ? 'Riprova: tieni premuto' : 'Tieni premuto per aprire'}
+                {t.concierge.doorOpeningState[doorState]}
               </span>
               <ArrowUpRight className="h-4 w-4 relative z-10" />
             </button>
@@ -660,8 +544,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         <section>
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="aurora-eyebrow">{copy.handy}</p>
-              <h2>{copy.quick}</h2>
+              <p className="aurora-eyebrow">{t.gridMenu.readyForYou}</p>
+              <h2>{t.gridMenu.guideSectionTitle}</h2>
             </div>
           </div>
           
@@ -674,8 +558,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   rel="noreferrer"
                 >
                   <MessageCircle />
-                  <span>{copy.host}</span>
-                  <small>{copy.directWhatsapp}</small>
+                  <span>{t.tiles.contatti}</span>
+                  <small>WhatsApp</small>
                 </a>
 
                 <a
@@ -684,13 +568,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   rel="noreferrer"
                 >
                   <MapPin />
-                  <span>{copy.location}</span>
-                  <small>{copy.directions}</small>
+                  <span>{t.tiles.posizione}</span>
+                  <small>GPS</small>
                 </a>
 
                 <button onClick={() => setSheet('schedule')}>
                   <Clock3 />
-                  <span>{copy.rules}</span>
+                  <span>{t.tiles.regole}</span>
                   <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
                 </button>
               </>
@@ -698,8 +582,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <>
                 <button onClick={copyWifi}>
                   <Wifi />
-                  <span>{copy.wifi}</span>
-                  <small>{wifiCopied ? 'Password copiata!' : 'Copia password'}</small>
+                  <span>{t.tiles.wifi}</span>
+                  <small>{wifiCopied ? t.actions.copied : t.actions.copy}</small>
                 </button>
                 
                 <a 
@@ -708,8 +592,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   rel="noreferrer"
                 >
                   <MessageCircle />
-                  <span>{copy.host}</span>
-                  <small>{copy.directWhatsapp}</small>
+                  <span>{t.tiles.contatti}</span>
+                  <small>WhatsApp</small>
                 </a>
                 
                 <a
@@ -718,13 +602,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   rel="noreferrer"
                 >
                   <MapPin />
-                  <span>{copy.location}</span>
-                  <small>{copy.directions}</small>
+                  <span>{t.tiles.posizione}</span>
+                  <small>GPS</small>
                 </a>
                 
                 <button onClick={() => setSheet('schedule')}>
                   <Clock3 />
-                  <span>{copy.rules}</span>
+                  <span>{t.tiles.regole}</span>
                   <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
                 </button>
               </>
@@ -732,34 +616,34 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         </section>
 
-        {/* SECTION 1: Guida & Arrivo (Photographic Carousel) */}
+        {/* SECTION 1: Guida & Arrivo */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">{copy.allAurora}</p>
+            <p className="aurora-eyebrow">{t.gridMenu.guideSectionTitle}</p>
             <h2>{guideSections.houseEssentials.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
           </div>
-          <ScrollableTileRow hintLabel={copy.swipeForMore}>
+          <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.houseEssentials.items.map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 2: Idee per oggi (Esperienze Vicine Carousel) */}
+        {/* SECTION 2: Idee per oggi */}
         <section className="space-y-3">
           <div className="flex items-end justify-between">
             <div>
-              <p className="aurora-eyebrow">{copy.ideas}</p>
-              <h2>{copy.experiences}</h2>
+              <p className="aurora-eyebrow">{t.gridMenu.categories.explore}</p>
+              <h2>{t.tiles.attivita}</h2>
             </div>
             <button 
               onClick={() => onNavigate('attivita')} 
               className="text-xs font-semibold text-[#62e6bd] hover:text-[#93f4d4] flex items-center gap-1 transition"
             >
-              {copy.all} <ChevronRight className="inline h-3.5 w-3.5" />
+              {t.actions.backToMenu === 'MENU' ? 'Vedi tutto' : 'See all'} <ChevronRight className="inline h-3.5 w-3.5" />
             </button>
           </div>
           
-          <ScrollableTileRow hintLabel={copy.swipeForMore}>
+          <ScrollableTileRow hintLabel="Scorri per altro">
             {localStories.map((story) => (
               <a
                 key={story.title} 
@@ -770,7 +654,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               >
                 <img src={story.image} alt={story.title} loading="lazy" />
                 <div className="aurora-photo-card-info">
-                  <span className="aurora-photo-tag">{copy.experience}</span>
+                  <span className="aurora-photo-tag">{t.tiles.attivita}</span>
                   <strong>{story.title}</strong>
                   <small>{story.meta}</small>
                 </div>
@@ -779,26 +663,26 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 3: Vivere la Valtellina (Gusto, Botteghe, Trasporti, Info) */}
+        {/* SECTION 3: Vivere la Valtellina */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">{copy.territory}</p>
+            <p className="aurora-eyebrow">{t.gridMenu.categories.food}</p>
             <h2>{guideSections.exploreValtellina.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.exploreValtellina.subtitle}</p>
           </div>
-          <ScrollableTileRow hintLabel={copy.swipeForMore}>
+          <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.exploreValtellina.items.map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 4: Supporto & Sicurezza (Contatti & Emergenze) */}
+        {/* SECTION 4: Supporto & Sicurezza */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">{copy.support}</p>
+            <p className="aurora-eyebrow">{t.tiles.contatti}</p>
             <h2>{guideSections.supportSecurity.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
           </div>
-          <ScrollableTileRow hintLabel={copy.swipeForMore}>
+          <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.supportSecurity.items.map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
@@ -806,11 +690,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* SECTION 5: Partenza & Check-out */}
         <section className="space-y-3">
           <div>
-            <p className="aurora-eyebrow">{copy.departure}</p>
+            <p className="aurora-eyebrow">{t.tiles.checkOut}</p>
             <h2>{guideSections.departure.title}</h2>
             <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
           </div>
-          <ScrollableTileRow hintLabel={copy.swipeForMore}>
+          <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.departure.items.map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
@@ -822,11 +706,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         <>
           <div className="language-popover-backdrop" onClick={() => setLanguageOpen(false)} />
           <div className="language-popover">
-            <button className="sheet-close" onClick={() => setLanguageOpen(false)} aria-label="Chiudi">
+            <button className="sheet-close" onClick={() => setLanguageOpen(false)} aria-label={t.concierge.close}>
               <X className="h-4 w-4" />
             </button>
-            <p className="aurora-eyebrow">{copy.languagePreference}</p>
-            <h2>{copy.chooseLanguage}</h2>
+            <p className="aurora-eyebrow">{t.concierge.changeLanguage}</p>
+            <h2>{t.selectLanguage}</h2>
             <div className="language-options">
               {languages.map((item) => (
                 <button 
@@ -851,16 +735,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       {sheet && (
         <div className="sheet-backdrop" onClick={() => setSheet(null)}>
           <section className="aurora-sheet" onClick={(event) => event.stopPropagation()}>
-            <button className="sheet-close" onClick={() => setSheet(null)} aria-label="Chiudi">
+            <button className="sheet-close" onClick={() => setSheet(null)} aria-label={t.concierge.close}>
               <X className="h-4 w-4" />
             </button>
             
             {sheet === 'wifi' && (
               <>
-                <p className="aurora-eyebrow">Connessione</p>
+                <p className="aurora-eyebrow">Wi-Fi</p>
                 <h2>Wi-Fi Casa_Aurora</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  {wifiCopied ? 'Password copiata negli appunti.' : 'Scansiona il QR o copia la password.'}
+                  {wifiCopied ? t.concierge.sheets.wifiCopiedNotice : t.concierge.sheets.wifiScanNotice}
                 </p>
                 {showWifiQr ? (
                   <img 
@@ -875,29 +759,29 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   </div>
                 )}
                 <button className="sheet-action mt-3" onClick={() => setShowWifiQr(!showWifiQr)}>
-                  {showWifiQr ? 'Copia password' : 'Mostra QR Wi-Fi'} <Wifi className="h-4 w-4" />
+                  {showWifiQr ? t.concierge.sheets.copyPwd : t.concierge.sheets.showQr} <Wifi className="h-4 w-4" />
                 </button>
               </>
             )}
 
             {sheet === 'schedule' && (
               <>
-                <p className="aurora-eyebrow">Ritmo del soggiorno</p>
-                <h2>Orari & regole essenziali</h2>
+                <p className="aurora-eyebrow">{t.concierge.sheets.scheduleEyebrow}</p>
+                <h2>{t.concierge.sheets.scheduleTitle}</h2>
                 <div className="sheet-list">
                   <span>Check-in <b>{APARTMENT_INFO.checkInStart} - {APARTMENT_INFO.checkInEnd}</b></span>
-                  <span>Check-out <b>entro le {APARTMENT_INFO.checkOutLimit}</b></span>
-                  <span>Casa <b>silenzio e rispetto del vicinato</b></span>
+                  <span>Check-out <b>{t.concierge.by} {APARTMENT_INFO.checkOutLimit}</b></span>
+                  <span>{t.concierge.sheets.houseLabel} <b>{t.concierge.sheets.quietHours}</b></span>
                 </div>
               </>
             )}
 
             {sheet === 'luggage' && (
               <>
-                <p className="aurora-eyebrow">Flessibilità</p>
-                <h2>Deposito bagagli</h2>
+                <p className="aurora-eyebrow">{t.concierge.sheets.luggageEyebrow}</p>
+                <h2>{t.concierge.sheets.luggageTitle}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Scrivi all'host per concordare il deposito prima del check-in o dopo il check-out.
+                  {t.concierge.sheets.luggageDesc}
                 </p>
                 <a 
                   className="sheet-action" 
@@ -905,7 +789,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   target="_blank" 
                   rel="noreferrer"
                 >
-                  Chiedi a Nino <ArrowUpRight className="h-4 w-4" />
+                  {t.concierge.sheets.askNino} <ArrowUpRight className="h-4 w-4" />
                 </a>
               </>
             )}

@@ -47,158 +47,25 @@ export const GridMenuScreen: React.FC<Props> = ({
   onOpenSmartLock
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const t = VIDEO_TRANSLATIONS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const languagesList: Language[] = ['it', 'en', 'de', 'fr', 'es'];
-
-  // Multilingual categories & descriptions
-  const localizedCategories = {
-    home: {
-      it: 'La Casa & Servizi',
-      en: 'The Apartment & Services',
-      de: 'Die Wohnung & Services',
-      fr: 'Le Logement & Services',
-      es: 'La Casa y Servicios'
-    }[language],
-    food: {
-      it: 'Sapori di Valtellina',
-      en: 'Flavors of Valtellina',
-      de: 'Geschmäcker des Veltlins',
-      fr: 'Saveurs de la Valteline',
-      es: 'Sabores de Valtelina'
-    }[language],
-    explore: {
-      it: 'Esplorare & Utilità',
-      en: 'Explore & Utilities',
-      de: 'Erkunden & Nützliches',
-      fr: 'Explorer & Utilitaires',
-      es: 'Explorar y Utilidades'
-    }[language]
-  };
-
-  const localizedDescriptions = {
-    benvenuto: {
-      it: 'La tua casa a Morbegno e la nostra accoglienza',
-      en: 'Your home in Morbegno and our warm hospitality',
-      de: 'Ihr Zuhause in Morbegno und unser herzlicher Empfang',
-      fr: 'Votre maison à Morbegno et notre accueil chaleureux',
-      es: 'Tu hogar en Morbegno y nuestra cálida bienvenida'
-    }[language],
-    check_in: {
-      it: 'Accesso con smart lock e consegna chiavi',
-      en: 'Smart lock access and key handover',
-      de: 'Smart-Lock-Zugang und Schlüsselübergabe',
-      fr: 'Accès smart lock et remise des clés',
-      es: 'Acceso con smart lock y entrega de llaves'
-    }[language],
-    wifi: {
-      it: 'Fibra ad alta velocità e codice rapido',
-      en: 'High-speed fiber and instant Wi-Fi copy',
-      de: 'Highspeed-Glasfaser und schneller WLAN-Code',
-      fr: 'Fibre ultra-rapide et code Wi-Fi rapide',
-      es: 'Fibra de alta velocidad y código rápido'
-    }[language],
-    servizi: {
-      it: 'Elettrodomestici, riscaldamento e raccolta differenziata',
-      en: 'Appliances, heating and waste recycling',
-      de: 'Haushaltsgeräte, Heizung und Mülltrennung',
-      fr: 'Appareils ménagers, chauffage et tri sélectif',
-      es: 'Electrodomésticos, calefacción y reciclaje'
-    }[language],
-    regole: {
-      it: 'Poche e semplici attenzioni per il massimo relax',
-      en: 'Simple house rules for maximum relaxation',
-      de: 'Einfache Hausregeln für maximale Entspannung',
-      fr: 'Règles simples pour une détente maximale',
-      es: 'Normas sencillas para el máximo relax'
-    }[language],
-    check_out: {
-      it: 'Partenza serena entro le ore 10:00',
-      en: 'Smooth check-out before 10:00 AM',
-      de: 'Entspannte Abreise bis 10:00 Uhr',
-      fr: 'Départ serein avant 10h00',
-      es: 'Salida tranquila antes de las 10:00'
-    }[language],
-    ristoranti: {
-      it: 'I veri crotti tipici e i pizzoccheri fatti a mano',
-      en: 'Authentic local crotti and handmade pizzoccheri',
-      de: 'Traditionelle Crotti und hausgemachte Pizzoccheri',
-      fr: 'Crotti typiques et pizzoccheri faits maison',
-      es: 'Crotti típicos y pizzoccheri caseros'
-    }[language],
-    bar_club: {
-      it: 'Colazioni con brioches fresche, aperitivi e vini locali',
-      en: 'Fresh breakfast, aperitivo and local wines',
-      de: 'Frühstück mit frischen Croissants, Aperitifs und Weine',
-      fr: 'Petits-déjeuners frais, apéritifs et vins locaux',
-      es: 'Desayunos frescos, aperitivos y vinos locales'
-    }[language],
-    shopping: {
-      it: 'Botteghe storiche del Bitto, bresaola e botteghe di Morbegno',
-      en: 'Historic Bitto cheese and artisan bresaola shops',
-      de: 'Historische Bitto- und Bresaola-Feinkostläden',
-      fr: 'Boutiques artisanales de Bitto et bresaola',
-      es: 'Tiendas tradicionales de queso Bitto y bresaola'
-    }[language],
-    attivita: {
-      it: 'Sentiero Valtellina, Val Gerola e passeggiate panoramiche',
-      en: 'Sentiero Valtellina, Val Gerola and scenic trails',
-      de: 'Sentiero Valtellina, Val Gerola und Panoramawanderungen',
-      fr: 'Sentiero Valtellina, Val Gerola et sentiers panoramiques',
-      es: 'Sentiero Valtellina, Val Gerola y rutas panorámicas'
-    }[language],
-    posizione: {
-      it: 'Via Serta 188D e posto auto privato',
-      en: 'Via Serta 188D and private parking space',
-      de: 'Via Serta 188D und privater Parkplatz',
-      fr: 'Via Serta 188D et place de parking privée',
-      es: 'Via Serta 188D y aparcamiento privado'
-    }[language],
-    trasporti: {
-      it: 'Stazione ferroviaria di Morbegno, bus e noleggio bici',
-      en: 'Morbegno train station, local buses and bike rental',
-      de: 'Bahnhof Morbegno, Busse und Fahrradverleih',
-      fr: 'Gare de Morbegno, bus et location de vélos',
-      es: 'Estación de tren de Morbegno, autobuses y alquiler de bicis'
-    }[language],
-    informazioni: {
-      it: 'Cosa sapere su Morbegno e orari utili',
-      en: 'Key facts about Morbegno and local services',
-      de: 'Wichtiges über Morbegno und Öffnungszeiten',
-      fr: 'Ce qu’il faut savoir sur Morbegno et horaires',
-      es: 'Información sobre Morbegno y horarios útiles'
-    }[language],
-    emergenza: {
-      it: 'Farmacie di turno, guardia medica e numeri rapidi',
-      en: 'On-duty pharmacies, urgent care and emergency numbers',
-      de: 'Notapotheken, ärztlicher Notdienst und Notrufnummern',
-      fr: 'Pharmacies de garde, urgences et numéros utiles',
-      es: 'Farmacias de guardia, urgencias y teléfonos de emergencia'
-    }[language],
-    contatti: {
-      it: 'Parla direttamente con Nino per ogni esigenza',
-      en: 'Direct contact with Nino for any needs',
-      de: 'Direkter Kontakt zu Nino für alle Anliegen',
-      fr: 'Contact direct avec Nino pour toute demande',
-      es: 'Contacto directo con Nino para cualquier consulta'
-    }[language]
-  };
 
   // Categorized items with dark & emerald theme
   const menuSections = [
     {
-      category: localizedCategories.home,
+      category: t.gridMenu.categories.home,
       items: [
         {
           page: 'benvenuto' as WelcomePage,
           label: t.tiles.benvenuto,
-          desc: localizedDescriptions.benvenuto,
+          desc: t.gridMenu.descriptions.benvenuto,
           icon: <Home className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'check_in' as WelcomePage,
           label: t.tiles.checkIn,
-          desc: localizedDescriptions.check_in,
+          desc: t.gridMenu.descriptions.check_in,
           icon: <Key className="w-5 h-5 text-emerald-300" />,
           bg: 'bg-emerald-500/15 border-emerald-500/35',
           highlight: true
@@ -206,101 +73,101 @@ export const GridMenuScreen: React.FC<Props> = ({
         {
           page: 'wifi' as WelcomePage,
           label: t.tiles.wifi,
-          desc: localizedDescriptions.wifi,
+          desc: t.gridMenu.descriptions.wifi,
           icon: <Wifi className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'servizi' as WelcomePage,
           label: t.tiles.servizi,
-          desc: localizedDescriptions.servizi,
+          desc: t.gridMenu.descriptions.servizi,
           icon: <Armchair className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'regole' as WelcomePage,
           label: t.tiles.regole,
-          desc: localizedDescriptions.regole,
+          desc: t.gridMenu.descriptions.regole,
           icon: <ClipboardList className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'check_out' as WelcomePage,
           label: t.tiles.checkOut,
-          desc: localizedDescriptions.check_out,
+          desc: t.gridMenu.descriptions.check_out,
           icon: <LogOut className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         }
       ]
     },
     {
-      category: localizedCategories.food,
+      category: t.gridMenu.categories.food,
       items: [
         {
           page: 'ristoranti' as WelcomePage,
           label: t.tiles.ristoranti,
-          desc: localizedDescriptions.ristoranti,
+          desc: t.gridMenu.descriptions.ristoranti,
           icon: <UtensilsCrossed className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'bar_club' as WelcomePage,
           label: t.tiles.barClub,
-          desc: localizedDescriptions.bar_club,
+          desc: t.gridMenu.descriptions.bar_club,
           icon: <Wine className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'shopping' as WelcomePage,
           label: t.tiles.shopping,
-          desc: localizedDescriptions.shopping,
+          desc: t.gridMenu.descriptions.shopping,
           icon: <ShoppingBag className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         }
       ]
     },
     {
-      category: localizedCategories.explore,
+      category: t.gridMenu.categories.explore,
       items: [
         {
           page: 'attivita' as WelcomePage,
           label: t.tiles.attivita,
-          desc: localizedDescriptions.attivita,
+          desc: t.gridMenu.descriptions.attivita,
           icon: <Camera className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'posizione' as WelcomePage,
           label: t.tiles.posizione,
-          desc: localizedDescriptions.posizione,
+          desc: t.gridMenu.descriptions.posizione,
           icon: <MapPin className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'trasporti' as WelcomePage,
           label: t.tiles.trasporti,
-          desc: localizedDescriptions.trasporti,
+          desc: t.gridMenu.descriptions.trasporti,
           icon: <Bus className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'informazioni' as WelcomePage,
           label: t.tiles.informazioni,
-          desc: localizedDescriptions.informazioni,
+          desc: t.gridMenu.descriptions.informazioni,
           icon: <Info className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         },
         {
           page: 'emergenza' as WelcomePage,
           label: t.tiles.emergenza,
-          desc: localizedDescriptions.emergenza,
+          desc: t.gridMenu.descriptions.emergenza,
           icon: <PlusCircle className="w-5 h-5 text-rose-400" />,
           bg: 'bg-rose-500/10 border-rose-500/25'
         },
         {
           page: 'contatti' as WelcomePage,
           label: t.tiles.contatti,
-          desc: localizedDescriptions.contatti,
+          desc: t.gridMenu.descriptions.contatti,
           icon: <Headphones className="w-5 h-5 text-emerald-400" />,
           bg: 'bg-emerald-500/10 border-emerald-500/25'
         }
@@ -361,13 +228,13 @@ export const GridMenuScreen: React.FC<Props> = ({
         <div className="px-1 pt-1 pb-0.5">
           <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono mb-0.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span className="uppercase tracking-widest text-[10px] font-semibold">Benvenuti</span>
+            <span className="uppercase tracking-widest text-[10px] font-semibold">{t.gridMenu.welcomeTag}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Appartamento Aurora
+            {t.gridMenu.apartmentName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 font-normal mt-0.5">
-            La tua sosta serena a Morbegno • Tutto ciò che ti serve a portata di mano
+            {t.gridMenu.apartmentSubtitle}
           </p>
         </div>
 
@@ -388,35 +255,35 @@ export const GridMenuScreen: React.FC<Props> = ({
               </div>
               <div>
                 <h3 className="text-xs font-semibold text-white">
-                  Piccole attenzioni per il tuo soggiorno
+                  {t.gridMenu.pamperingTitle}
                 </h3>
                 <span className="text-[10px] text-slate-400 block -mt-0.5">
-                  Tutto preparato con cura per farti rilassare
+                  {t.gridMenu.pamperingSubtitle}
                 </span>
               </div>
             </div>
             <span className="text-[10px] font-medium text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
               <Heart className="w-2.5 h-2.5 fill-emerald-400 text-emerald-400" />
-              <span>Pronto per te</span>
+              <span>{t.gridMenu.readyForYou}</span>
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300 pt-0.5">
             <div className="flex items-center gap-2 p-2 rounded-xl bg-[#131b25] border border-emerald-500/10">
               <Coffee className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="truncate">Caffè & tisane in omaggio</span>
+              <span className="truncate">{t.gridMenu.freeCoffee}</span>
             </div>
             <div className="flex items-center gap-2 p-2 rounded-xl bg-[#131b25] border border-emerald-500/10">
               <Car className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="truncate">Posto auto riservato</span>
+              <span className="truncate">{t.gridMenu.reservedParking}</span>
             </div>
             <div className="flex items-center gap-2 p-2 rounded-xl bg-[#131b25] border border-emerald-500/10">
               <Key className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="truncate">Accesso smart e sicuro</span>
+              <span className="truncate">{t.gridMenu.smartAccess}</span>
             </div>
             <div className="flex items-center gap-2 p-2 rounded-xl bg-[#131b25] border border-emerald-500/10">
               <Wifi className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="truncate">Wi-Fi Fibra 1 Gbit</span>
+              <span className="truncate">{t.gridMenu.wifiGigabit}</span>
             </div>
           </div>
         </div>
@@ -432,7 +299,7 @@ export const GridMenuScreen: React.FC<Props> = ({
               <Wifi className="w-5 h-5 text-emerald-400" />
             </div>
             <span className="text-[11px] font-semibold text-slate-100">Wi-Fi</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">Password</span>
+            <span className="text-[9px] text-emerald-400/80 font-mono">{t.gridMenu.password}</span>
           </button>
 
           {/* Accesso Porta */}
@@ -443,8 +310,8 @@ export const GridMenuScreen: React.FC<Props> = ({
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Key className="w-5 h-5 text-emerald-400" />
             </div>
-            <span className="text-[11px] font-semibold text-slate-100">Chiavi</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">Accesso smart</span>
+            <span className="text-[11px] font-semibold text-slate-100">{t.gridMenu.keys}</span>
+            <span className="text-[9px] text-emerald-400/80 font-mono">{t.gridMenu.smartAccessLabel}</span>
           </button>
 
           {/* Parcheggio */}
@@ -455,8 +322,8 @@ export const GridMenuScreen: React.FC<Props> = ({
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Car className="w-5 h-5 text-emerald-400" />
             </div>
-            <span className="text-[11px] font-semibold text-slate-100">Auto</span>
-            <span className="text-[9px] text-slate-400">Posto Auto</span>
+            <span className="text-[11px] font-semibold text-slate-100">{t.gridMenu.car}</span>
+            <span className="text-[9px] text-slate-400">{t.gridMenu.parking}</span>
           </button>
 
           {/* Assistenza Nino WhatsApp */}
@@ -479,7 +346,7 @@ export const GridMenuScreen: React.FC<Props> = ({
         {/* View Switcher: Grid vs List */}
         <div className="flex items-center justify-between pt-1 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-400/90 font-mono">
-            Guida della Casa & Territorio
+            {t.gridMenu.guideSectionTitle}
           </span>
           <div className="flex items-center bg-[#0e151e] p-0.5 rounded-xl border border-emerald-500/20">
             <button
@@ -487,7 +354,7 @@ export const GridMenuScreen: React.FC<Props> = ({
               className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                 viewMode === 'grid' ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs' : 'text-slate-400 hover:text-white'
               }`}
-              title="Visualizzazione Griglia"
+              title={t.gridMenu.gridView}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </button>
@@ -496,7 +363,7 @@ export const GridMenuScreen: React.FC<Props> = ({
               className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                 viewMode === 'list' ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs' : 'text-slate-400 hover:text-white'
               }`}
-              title="Visualizzazione Lista"
+              title={t.gridMenu.listView}
             >
               <ListFilter className="w-3.5 h-3.5" />
             </button>
@@ -582,15 +449,15 @@ export const GridMenuScreen: React.FC<Props> = ({
 
       </div>
 
-      {/* Clean Dark Footer - No Host Area button */}
+      {/* Clean Dark Footer */}
       <footer className="w-full max-w-lg mx-auto px-4 pt-6 text-center text-[11px] text-slate-400 space-y-1">
         <div className="flex items-center justify-center gap-2">
-          <span>Via Serta 188D, Morbegno (SO)</span>
+          <span>{t.gridMenu.footerAddress}</span>
           <span>•</span>
-          <span>Valtellina</span>
+          <span>{t.gridMenu.footerValtellina}</span>
         </div>
         <p className="text-[10px] text-slate-400">
-          Aurora in Valtellina • Accoglienza serena e sincera
+          {t.gridMenu.footerTagline}
         </p>
       </footer>
 

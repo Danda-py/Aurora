@@ -17,8 +17,8 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
   const { getPageData, media } = useCms();
   const cmsRules = getPageData('rules') || {};
   const r = { ...BOOK_DATA[language].rules, ...cmsRules };
-  const t = VIDEO_TRANSLATIONS[language];
-  const labels = VIDEO_PAGE_LABELS[language];
+  const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
   const rulesList = [
     {
@@ -110,7 +110,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
               <div className="space-y-1 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="aurora-eyebrow text-[#62e6bd] font-mono">
-                    REGOLA #{item.num}
+                    {t.rulesPage.ruleLabel}{item.num}
                   </span>
                   <span className="text-xs sm:text-sm font-bold text-white truncate">
                     {item.title}
