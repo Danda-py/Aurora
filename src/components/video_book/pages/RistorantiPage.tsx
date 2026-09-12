@@ -69,19 +69,20 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
                   <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                     {r.name}
                   </h4>
-                  <span className="text-xs text-white/60 block mt-0.5">
-                    {r.address}
-                  </span>
+                  <span className="text-xs text-white/60 block mt-0.5">{r.address}</span>
+                  <span className="text-xs text-[#62e6bd] block mt-0.5">{r.time}</span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href={`tel:${r.phone}`}
-                    className="aurora-secondary-pill"
-                    title={t.actions.call}
-                  >
-                    <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
-                  </a>
+                  {r.phone && (
+                    <a
+                      href={`tel:${r.phone}`}
+                      className="aurora-secondary-pill"
+                      title={t.actions.call}
+                    >
+                      <Phone className="w-3.5 h-3.5 text-[#62e6bd]" />
+                    </a>
+                  )}
                   <a
                     href={r.mapsUrl}
                     target="_blank"

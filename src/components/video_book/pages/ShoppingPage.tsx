@@ -81,7 +81,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
 
               <div className="flex items-center gap-1.5 text-xs text-white/80 font-medium pl-14">
                 <Clock className="w-3.5 h-3.5 text-[#62e6bd]" />
-                <span>{shop.hours}</span>
+                <span>{[shop.time, shop.hours].filter(Boolean).join(' • ')}</span>
               </div>
 
               <p className="text-xs text-white/70 leading-relaxed pl-14">
