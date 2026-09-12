@@ -4,10 +4,12 @@
  */
 
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { VideoWelcomeBook } from './components/video_book/VideoWelcomeBook';
 import { CmsProvider } from './context/CmsContext';
+import { GuestRedirect } from './pages/GuestRedirect';
 
-export default function App() {
+function MainApp() {
   return (
     <CmsProvider>
       <div className="min-h-[100dvh] w-full bg-[#18181b] flex items-center justify-center p-0 m-0 select-none">
@@ -19,3 +21,13 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/guest/:token" element={<GuestRedirect />} />
+        <Route path="/*" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
