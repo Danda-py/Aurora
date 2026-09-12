@@ -35,7 +35,8 @@ import {
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
-import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig } from './icalWatcherService.js';
+import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
+import { sendGuestNotification } from './notificationService.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 
@@ -768,6 +769,20 @@ export function createApp() {
     });
   });
 
+  apiRouter.post('/ical/sync-now', async (_req, res) => {
+    try {
+      await syncReservationsFromIcal(serverPasses);
+      persistPasses();
+      res.json({
+        success: true,
+        message: 'Sincronizzazione iCal eseguita con successo',
+        totalPasses: serverPasses.length
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione iCal' });
+    }
+  });
+
   // Webhook Booking Receiver
   apiRouter.post('/webhook/booking', async (req, res) => {
     try {
@@ -830,6 +845,17 @@ export function createApp() {
       const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
       const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
+      // Invia subito (il giorno stesso della prenotazione) il link univoco via WhatsApp o SMS.
+      // Fino al check-in, il link mostrera comunque il sito base (gating gia gestito da findValidGuestPass).
+      const requestedChannel = isStructuredPayload && payload.channel === 'sms' ? 'sms' : 'whatsapp';
+      let messageSent = false;
+      let messageChannel: 'whatsapp' | 'sms' = requestedChannel;
+      if (phone) {
+        const sendResult = await sendGuestNotification(phone, whatsappMessage, requestedChannel);
+        messageSent = sendResult.sent;
+        messageChannel = sendResult.channel;
+      }
+
       res.status(201).json({
         success: true,
         message: 'Pass VIP generato autonomamente con successo!',
@@ -839,6 +865,8 @@ export function createApp() {
         guestUrl,
         whatsappUrl,
         whatsappMessage,
+        messageSent,
+        messageChannel,
         links: {
           guestDirectUrl: guestUrl,
           whatsappInvitationText: whatsappMessage,

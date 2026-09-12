@@ -1,4 +1,4 @@
-noimport { ImapFlow } from 'imapflow';
+non arriva import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import crypto from 'crypto';
 import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin } from '../src/services/guestPassService.js';

@@ -2,6 +2,7 @@ import nodeIcal from 'node-ical';
 import crypto from 'crypto';
 import { generateRandomPin, formatInvitationMessage } from '../src/services/guestPassService.js';
 import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
+import { sendGuestNotification } from './notificationService.js';
 import { GuestPass } from '../src/types.js';
 let icalPollingInterval: NodeJS.Timeout | null = null;
 let isIcalPolling = false;
@@ -77,58 +78,7 @@ function parseIcalDate(icalDate: any): Date {
   return new Date(icalDate);
 }
 
-/**
- * Invia l'SMS o WhatsApp automatico (via Twilio o gateway di notifica configurato)
- */
-async function sendNotification(phone: string, message: string): Promise<boolean> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_FROM_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    console.log(`[iCal Engine] Configurazione Twilio assente. Messaggio teorico per ${phone}:\n${message}`);
-    return false;
-  }
-
-  let cleanPhone = phone.replace(/[^0-9+]/g, '');
-  if (!cleanPhone.startsWith('+')) {
-    cleanPhone = `+39${cleanPhone}`;
-  }
-
-  try {
-    const isWhatsapp = fromNumber.startsWith('whatsapp:');
-    const to = isWhatsapp ? `whatsapp:${cleanPhone}` : cleanPhone;
-    
-    console.log(`[iCal Engine] Invio in corso via Twilio a ${to}...`);
-    
-    const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-    const params = new URLSearchParams();
-    params.append('To', to);
-    params.append('From', fromNumber);
-    params.append('Body', message);
-
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params.toString()
-    });
-
-    if (res.ok) {
-      console.log(`[iCal Engine] Notifica inviata con successo a ${cleanPhone}!`);
-      return true;
-    } else {
-      const errBody = await res.json();
-      console.error(`[iCal Engine] Errore Twilio API:`, errBody);
-      return false;
-    }
-  } catch (err) {
-    console.error(`[iCal Engine] Errore invio notifica a ${cleanPhone}:`, err);
-    return false;
-  }
-}
+// Twilio sending logic now lives in ./notificationService.ts (shared with manual pass creation).
 
 /**
  * Esegue il fetch del calendario iCal da bed-and-breakfast.it,
@@ -259,7 +209,8 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
 
         let success = false;
         if (existingPass.phone) {
-          success = await sendNotification(existingPass.phone, whatsappMessage);
+          const sendResult = await sendGuestNotification(existingPass.phone, whatsappMessage, 'whatsapp');
+          success = sendResult.sent;
         } else {
           console.warn(`[iCal Engine] Impossibile inviare notifica a ${guestName}: Telefono mancante nell'iCal.`);
         }
