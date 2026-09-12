@@ -28,7 +28,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
     fr: { title: 'PHARMACIE DE GARDE', desc: 'Consultez la disponibilité, les horaires et l’itinéraire en direct' },
     es: { title: 'FARMACIA DE GUARDIA', desc: 'Consulta disponibilidad, horarios e indicaciones en tiempo real' }
   }[language];
-  const services = inf.services.map((service, index) => index === 0
+  const services = inf.services.map((service) => /farmacia|pharmacy|apotheke|pharmacie/i.test(service.title)
     ? { ...service, ...pharmacyService, mapsUrl: pharmacyUrl }
     : service
   );

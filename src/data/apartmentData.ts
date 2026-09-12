@@ -832,6 +832,19 @@ export const HOUSE_RULES = [
 export const NEARBY_PLACES: NearbyPlace[] = [
   // Ristoranti, bar e prodotti tipici locali
   {
+    id: "bistronomia",
+    name: "Bistronomia",
+    category: "restaurant",
+    distance: "1 min in auto",
+    walkTime: "12 min a piedi",
+    address: "Morbegno",
+    description: {
+      it: "Moderno e curato.",
+      en: "Modern and refined.", de: "Modern und gepflegt.", fr: "Moderne et soigné.", es: "Moderno y cuidado.",
+    },
+    googleMapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno",
+  },
+  {
     id: "antica_osteria_rapella",
     name: "Antica Osteria Rapella",
     category: "restaurant",
@@ -844,19 +857,6 @@ export const NEARBY_PLACES: NearbyPlace[] = [
       en: "Traditional Valtellina cuisine.", de: "Traditionelle Veltliner Küche.", fr: "Cuisine traditionnelle de la Valteline.", es: "Cocina tradicional de Valtellina.",
     },
     googleMapsUrl: "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno",
-  },
-  {
-    id: "bistronomia",
-    name: "Bistronomia",
-    category: "restaurant",
-    distance: "1 min in auto",
-    walkTime: "12 min a piedi",
-    address: "Morbegno",
-    description: {
-      it: "Moderno e curato.",
-      en: "Modern and refined.", de: "Modern und gepflegt.", fr: "Moderne et soigné.", es: "Moderno y cuidado.",
-    },
-    googleMapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno",
   },
   {
     id: "la_fiorida",
@@ -922,6 +922,7 @@ export const NEARBY_PLACES: NearbyPlace[] = [
     category: "grocery",
     distance: "1 min in auto",
     walkTime: "6 min a piedi",
+    hours: "Orari da verificare",
     address: "Morbegno",
     description: {
       it: "Piccolo supermercato comodo per ogni esigenza.",
@@ -935,6 +936,7 @@ export const NEARBY_PLACES: NearbyPlace[] = [
     category: "grocery",
     distance: "3 min in auto",
     walkTime: "17 min a piedi",
+    hours: "Orari da verificare",
     address: "Morbegno",
     description: { it: "Supermercato piu grande, completo e conveniente.", en: "Larger, complete and convenient supermarket.", de: "Groesserer, kompletter und guenstiger Supermarkt.", fr: "Supermarche plus grand, complet et avantageux.", es: "Supermercado mas grande, completo y conveniente." },
     googleMapsUrl: "https://maps.google.com/?q=Iperal+Morbegno",
@@ -945,6 +947,7 @@ export const NEARBY_PLACES: NearbyPlace[] = [
     category: "grocery",
     distance: "4 min in auto",
     walkTime: "23 min a piedi",
+    hours: "Orari da verificare",
     address: "Morbegno",
     description: { it: "Bottega storica con vini, formaggi e salumi.", en: "Historic shop with wines, cheeses and cured meats.", de: "Historisches Geschaeft mit Weinen, Kaese und Wurstwaren.", fr: "Boutique historique avec vins, fromages et charcuterie.", es: "Tienda historica con vinos, quesos y embutidos." },
     googleMapsUrl: "https://maps.google.com/?q=Drogheria+Ciapponi+Morbegno",
@@ -955,6 +958,7 @@ export const NEARBY_PLACES: NearbyPlace[] = [
     category: "grocery",
     distance: "4 min in auto",
     walkTime: "23 min a piedi",
+    hours: "Orari da verificare",
     address: "Di fronte alla Drogheria Ciapponi, Morbegno",
     description: { it: "Ottima carne locale.", en: "Excellent local meat.", de: "Ausgezeichnetes lokales Fleisch.", fr: "Excellente viande locale.", es: "Excelente carne local." },
     googleMapsUrl: "https://maps.google.com/?q=Macelleria+Morbegno+Drogheria+Ciapponi",

@@ -42,6 +42,11 @@ export const PlacesTab: React.FC<Props> = ({ language }) => {
       place.description[language].toLowerCase().includes(searchQuery.toLowerCase()) ||
       place.address.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
+  }).sort((first, second) => {
+    if (first.category !== 'restaurant' || second.category !== 'restaurant') return 0;
+    const firstMinutes = Number(first.distance.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
+    const secondMinutes = Number(second.distance.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
+    return firstMinutes - secondMinutes;
   });
 
   return (
@@ -141,6 +146,12 @@ export const PlacesTab: React.FC<Props> = ({ language }) => {
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 {place.description[language]}
               </p>
+
+              {place.hours && (
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Orari: {place.hours}
+                </p>
+              )}
 
               {/* Highlight Badge */}
               {place.highlight && (

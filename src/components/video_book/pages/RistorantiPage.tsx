@@ -19,6 +19,11 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
   const res = { ...BOOK_DATA[language].restaurants, ...cmsRestaurants };
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const orderedRestaurants = [...res.recommended].sort((first, second) => {
+    const firstMinutes = Number(first.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
+    const secondMinutes = Number(second.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
+    return firstMinutes - secondMinutes;
+  });
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -56,7 +61,7 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
             <h3 className="text-base font-bold text-white tracking-tight">{labels.selected}</h3>
           </div>
 
-          {res.recommended.map((r, idx) => (
+          {orderedRestaurants.map((r, idx) => (
             <div
               key={idx}
               className="aurora-glass-card space-y-3"

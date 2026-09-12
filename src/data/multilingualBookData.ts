@@ -330,20 +330,20 @@ export const BOOK_DATA: Record<Language, {
       bannerText: "I nostri ristoranti, pizzerie e locali consigliati",
       recommended: [
         {
-          name: "ANTICA OSTERIA RAPELLA",
-          time: "19 min a piedi / 4 min in auto",
-          address: "Morbegno",
-          phone: "",
-          desc: "Cucina tipica valtellinese.",
-          mapsUrl: "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
-        },
-        {
           name: "BISTRONOMIA",
           time: "12 min a piedi / 1 min in auto",
           address: "Morbegno",
           phone: "",
           desc: "Moderno e curato.",
           mapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno"
+        },
+        {
+          name: "ANTICA OSTERIA RAPELLA",
+          time: "19 min a piedi / 4 min in auto",
+          address: "Morbegno",
+          phone: "",
+          desc: "Cucina tipica valtellinese.",
+          mapsUrl: "https://maps.google.com/?q=Antica+Osteria+Rapella+Morbegno"
         },
         {
           name: "LA FIORIDA",
@@ -384,14 +384,6 @@ export const BOOK_DATA: Record<Language, {
           phone: "",
           desc: "Ampia varietà di pizze classiche e speciali. Prezzi più alti rispetto a Pizzeria Ventuno, servizio rapido e cortese.",
           mapsUrl: "https://maps.google.com/?q=Pizzeria+Eden+Morbegno"
-        },
-        {
-          name: "BISTRONOMIA",
-          time: "12 min a piedi / 1 min in auto",
-          address: "Morbegno",
-          phone: "",
-          desc: "Moderno e curato.",
-          mapsUrl: "https://maps.google.com/?q=Bistronomia+Morbegno"
         },
         {
           name: "PIZZERIA ANUBIS",
@@ -437,28 +429,28 @@ export const BOOK_DATA: Record<Language, {
         {
           title: "SIGMA",
           time: "6 min a piedi / 1 min in auto",
-          hours: "",
+          hours: "Orari da verificare",
           desc: "Piccolo supermercato comodo per ogni esigenza.",
           mapsUrl: "https://maps.google.com/?q=Sigma+Morbegno"
         },
         {
           title: "IPERAL",
           time: "17 min a piedi / 3 min in auto",
-          hours: "",
+          hours: "Orari da verificare",
           desc: "Supermercato più grande, completo e conveniente.",
           mapsUrl: "https://maps.google.com/?q=Iperal+Morbegno"
         },
         {
           title: "DROGHERIA CIAPPONI",
           time: "23 min a piedi / 4 min in auto",
-          hours: "",
+          hours: "Orari da verificare",
           desc: "Bottega storica con vini, formaggi e salumi.",
           mapsUrl: "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
         },
         {
           title: "MACELLERIA DI FRONTE ALLA DROGHERIA",
           time: "23 min a piedi / 4 min in auto",
-          hours: "",
+          hours: "Orari da verificare",
           desc: "Ottima carne locale.",
           mapsUrl: "https://maps.google.com/?q=Macelleria+Morbegno+Drogheria+Ciapponi"
         }
@@ -474,8 +466,8 @@ export const BOOK_DATA: Record<Language, {
         },
         {
           title: "FARMACIA DI TURNO",
-          desc: "Farmacia San Giovanni • Via Garibaldi (5 min a piedi)",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
+          desc: "Disponibilità, orari e indicazioni aggiornati in tempo reale",
+          mapsUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5"
         },
         {
           title: "BANCA / SPORTELLO BANCOMAT",

@@ -10,6 +10,11 @@ interface Props {
 
 export const ExperiencesTab: React.FC<Props> = ({ language }) => {
   const t = translations[language];
+  const orderedExperiences = [...EXPERIENCES].sort((first, second) => {
+    const firstMinutes = Number(first.driveTime.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
+    const secondMinutes = Number(second.driveTime.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
+    return firstMinutes - secondMinutes;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -26,7 +31,7 @@ export const ExperiencesTab: React.FC<Props> = ({ language }) => {
 
       {/* Grid of Experiences */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {EXPERIENCES.map((exp) => (
+        {orderedExperiences.map((exp) => (
           <div
             key={exp.id}
             className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between group hover:shadow-xl hover:border-teal-200 transition-all duration-300"

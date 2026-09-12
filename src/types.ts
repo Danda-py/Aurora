@@ -54,6 +54,7 @@ export interface NearbyPlace {
   category: 'restaurant' | 'grocery' | 'bar' | 'pharmacy' | 'transport' | 'parking';
   distance: string;
   walkTime: string;
+  hours?: string;
   address: string;
   phone?: string;
   description: Record<Language, string>;
