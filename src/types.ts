@@ -95,7 +95,7 @@ export interface GuestPass {
   guestSurname: string;
   phone?: string;
   checkInDate: string; // YYYY-MM-DD
-  checkInTime?: string; // e.g. "15:00"
+  checkInTime?: string; // e.g. "14:00"
   checkOutDate: string; // YYYY-MM-DD
   checkOutTime?: string; // e.g. "10:00"
   pinCode: string; // 4-digit code e.g. "2741"

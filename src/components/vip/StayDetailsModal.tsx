@@ -139,7 +139,7 @@ export const StayDetailsModal: React.FC<Props> = ({
                 {formatDate(pass.checkInDate)}
               </div>
               <div className="text-[11px] text-slate-400">
-                dalle ore {pass.checkInTime || '15:00'}
+                dalle ore {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)
               </div>
             </div>
 

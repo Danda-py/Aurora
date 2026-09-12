@@ -162,7 +162,7 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                     {formatDateDisplay(pass.checkInDate)}
                   </div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    dalle {pass.checkInTime || '15:00'}
+                    dalle {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)
                   </div>
                 </div>
 

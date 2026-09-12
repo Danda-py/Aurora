@@ -108,9 +108,11 @@ export const CheckinCheckoutModal: React.FC<Props> = ({
                     {language === 'de' && "Einfacher Check-in & Privatparkplatz im Hof"}
                   </p>
                   <p className="mt-0.5 text-teal-800">
-                    {language === 'it' && `Disponibile dalle ore ${APARTMENT_INFO.checkInStart}. ${APARTMENT_INFO.parkingSpot}.`}
-                    {language === 'en' && `Available from ${APARTMENT_INFO.checkInStart}. ${APARTMENT_INFO.parkingSpot}.`}
-                    {language === 'de' && `Verfügbar ab ${APARTMENT_INFO.checkInStart} Uhr. ${APARTMENT_INFO.parkingSpot}.`}
+                    {language === 'it' && `Disponibile dalle ore ${APARTMENT_INFO.checkInStart} in poi (2 PM). ${APARTMENT_INFO.parkingSpot}.`}
+                    {language === 'en' && `Available from ${APARTMENT_INFO.checkInStart} onwards (2 PM). ${APARTMENT_INFO.parkingSpot}.`}
+                    {language === 'de' && `Verfügbar ab ${APARTMENT_INFO.checkInStart} Uhr (2 PM). ${APARTMENT_INFO.parkingSpot}.`}
+                    {language === 'fr' && `Disponible à partir de ${APARTMENT_INFO.checkInStart} (2 PM). ${APARTMENT_INFO.parkingSpot}.`}
+                    {language === 'es' && `Disponible a partir de las ${APARTMENT_INFO.checkInStart} (2 PM). ${APARTMENT_INFO.parkingSpot}.`}
                   </p>
                 </div>
               </div>

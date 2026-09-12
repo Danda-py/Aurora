@@ -122,7 +122,7 @@ export const BOOK_DATA: Record<Language, {
     title: string;
     freeBadge: string;
     nationalNumbersTitle: string;
-    items: Array<{ title: string; subtitle: string; phone: string; mapsUrl?: string }>;
+    items: Array<{ title: string; subtitle: string; phone?: string; mapsUrl?: string; webUrl?: string; webLabel?: string }>;
   };
   checkOut: {
     title: string;
@@ -172,8 +172,8 @@ export const BOOK_DATA: Record<Language, {
     },
     checkIn: {
       title: "CHECK-IN",
-      badge: "::: 15:00 (3 PM) :::",
-      timingNotice: "Vi chiediamo gentilmente di rispettare l'orario di check-in dalle ore 15:00. Se arrivate prima o avete esigenze particolari, scriveteci su WhatsApp.",
+      badge: "::: 14:00 (2 PM) :::",
+      timingNotice: "Vi chiediamo gentilmente di rispettare l'orario di check-in dalle ore 14:00 in poi (2 PM). Se arrivate prima o avete esigenze particolari, scriveteci su WhatsApp.",
       houseAccessTitle: "Consegna Chiavi di Persona",
       keyboxCodeLabel: "CONSEGNA A MANO DALL'HOST",
       step1: "1. Le chiavi dell'appartamento vi verranno consegnate a mano direttamente dall'host al vostro arrivo.",
@@ -489,9 +489,27 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NUMERI SOCCORSO NAZIONALI H24",
       items: [
         {
-          title: "NUMERO UNICO EMERGENZA",
-          subtitle: "Chiamare 112",
-          phone: "112"
+          title: "Centro di Comando Carabinieri Morbegno",
+          subtitle: "Compagnia e Stazione • Via Morelli 24, Morbegno (SO)",
+          phone: "0342 610210",
+          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+        },
+        {
+          title: "Ospedale di Morbegno",
+          subtitle: "Presidio Ospedaliero Territoriale • Via Morelli 1, Morbegno (SO)",
+          phone: "0342 607111",
+          mapsUrl: "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+        },
+        {
+          title: "Farmacia di Turno (Morbegno)",
+          subtitle: "Verifica turni e farmacie aperte in tempo reale su PharmAround",
+          webUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          webLabel: "Farmacie di Turno"
+        },
+        {
+          title: "Guardia Medica (Continuità Assistenziale)",
+          subtitle: "Assistenza sanitaria notturna e festiva",
+          phone: "116 117"
         }
       ]
     },
@@ -552,8 +570,8 @@ export const BOOK_DATA: Record<Language, {
     },
     checkIn: {
       title: "CHECK-IN",
-      badge: "::: 15:00 (3 PM) :::",
-      timingNotice: "Please kindly respect our check-in time from 3:00 PM onwards. If you arrive earlier or have special requests, feel free to text us on WhatsApp.",
+      badge: "::: 14:00 (2 PM) :::",
+      timingNotice: "Please kindly respect our check-in time from 2:00 PM (14:00) onwards. If you arrive earlier or have special requests, feel free to text us on WhatsApp.",
       houseAccessTitle: "In-Person Key Handover",
       keyboxCodeLabel: "HAND DELIVERED BY HOST",
       step1: "1. The apartment keys will be handed to you in person directly by the host upon your arrival.",
@@ -849,9 +867,27 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "24/7 EMERGENCY HOTLINES",
       items: [
         {
-          title: "EMERGENCY NUMBER",
-          subtitle: "Call 112",
-          phone: "112"
+          title: "Carabinieri Police Command - Morbegno",
+          subtitle: "Headquarters & Station • Via Morelli 24, Morbegno",
+          phone: "0342 610210",
+          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+        },
+        {
+          title: "Morbegno Hospital (Ospedale)",
+          subtitle: "Territorial Healthcare Center • Via Morelli 1, Morbegno",
+          phone: "0342 607111",
+          mapsUrl: "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+        },
+        {
+          title: "On-Duty Pharmacy (PharmAround)",
+          subtitle: "Check open pharmacies in real time (within 5 km)",
+          webUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          webLabel: "Open Pharmacies"
+        },
+        {
+          title: "Medical Guard (116 117)",
+          subtitle: "Night & weekend non-urgent medical service",
+          phone: "116 117"
         }
       ]
     },
@@ -912,8 +948,8 @@ export const BOOK_DATA: Record<Language, {
     },
     checkIn: {
       title: "ARRIVÉE (CHECK-IN)",
-      badge: "::: 15:00 (3 PM) :::",
-      timingNotice: "L'accès au logement est possible dès 15h00. Pour toute demande d'arrivée anticipée, écrivez-nous sur WhatsApp.",
+      badge: "::: 14:00 (2 PM) :::",
+      timingNotice: "L'accès au logement est possible dès 14h00 (2 PM). Pour toute demande d'arrivée anticipée, écrivez-nous sur WhatsApp.",
       houseAccessTitle: "Remise des Clés en Main Propre",
       keyboxCodeLabel: "REMISE EN PERSONNE PAR L'HÔTE",
       step1: "1. Les clés de l'appartement vous seront remises en main propre par votre hôte à votre arrivée.",
@@ -1209,9 +1245,27 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NUMÉROS D'URGENCE 24H/24",
       items: [
         {
-          title: "NUMÉRO D'URGENCE",
-          subtitle: "Appeler le 112",
-          phone: "112"
+          title: "Poste de Commandement Carabinieri Morbegno",
+          subtitle: "Gendarmerie • Via Morelli 24, Morbegno",
+          phone: "0342 610210",
+          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+        },
+        {
+          title: "Hôpital de Morbegno",
+          subtitle: "Pôle Hospitalier Territorial • Via Morelli 1, Morbegno",
+          phone: "0342 607111",
+          mapsUrl: "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+        },
+        {
+          title: "Pharmacie de Garde (PharmAround)",
+          subtitle: "Pharmacies ouvertes en temps réel à Morbegno",
+          webUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          webLabel: "Pharmacies Ouvertes"
+        },
+        {
+          title: "Permanence Médicale (116 117)",
+          subtitle: "Assistance médicale non urgente de nuit et jours fériés",
+          phone: "116 117"
         }
       ]
     },
@@ -1272,8 +1326,8 @@ export const BOOK_DATA: Record<Language, {
     },
     checkIn: {
       title: "LLEGADA (CHECK-IN)",
-      badge: "::: 15:00 (3 PM) :::",
-      timingNotice: "La entrada es a partir de las 15:00 h. Si necesitáis llegar antes o tenéis peticiones especiales, avisadnos por WhatsApp.",
+      badge: "::: 14:00 (2 PM) :::",
+      timingNotice: "La entrada es a partir de las 14:00 h en adelante (2 PM). Si necesitáis llegar antes o tenéis peticiones especiales, avisadnos por WhatsApp.",
       houseAccessTitle: "Entrega de Llaves en Mano",
       keyboxCodeLabel: "ENTREGA EN PERSONA POR EL ANFITRIÓN",
       step1: "1. Las llaves del apartamento os serán entregadas en mano directamente por el anfitrión a vuestra llegada.",
@@ -1569,9 +1623,27 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NÚMEROS DE EMERGENCIA 24H",
       items: [
         {
-          title: "NÚMERO DE EMERGENCIA",
-          subtitle: "Llamar al 112",
-          phone: "112"
+          title: "Centro de Mando Carabinieri Morbegno",
+          subtitle: "Compañía y Cuartel • Via Morelli 24, Morbegno",
+          phone: "0342 610210",
+          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+        },
+        {
+          title: "Hospital de Morbegno",
+          subtitle: "Centro Hospitalario Territorial • Via Morelli 1, Morbegno",
+          phone: "0342 607111",
+          mapsUrl: "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+        },
+        {
+          title: "Farmacia de Guardia (PharmAround)",
+          subtitle: "Consulta farmacias de guardia en tiempo real",
+          webUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          webLabel: "Farmacias Abiertas"
+        },
+        {
+          title: "Guardia Médica (116 117)",
+          subtitle: "Asistencia médica nocturna y días festivos",
+          phone: "116 117"
         }
       ]
     },
@@ -1632,8 +1704,8 @@ export const BOOK_DATA: Record<Language, {
     },
     checkIn: {
       title: "CHECK-IN",
-      badge: "::: 15:00 (3 PM) :::",
-      timingNotice: "Der Check-in ist ab 15:00 Uhr möglich. Bei früherer Ankunft oder Sonderwünschen schreiben Sie uns gerne per WhatsApp.",
+      badge: "::: 14:00 (2 PM) :::",
+      timingNotice: "Der Check-in ist ab 14:00 Uhr (2 PM) möglich. Bei früherer Ankunft oder Sonderwünschen schreiben Sie uns gerne per WhatsApp.",
       houseAccessTitle: "Persönliche Schlüsselübergabe",
       keyboxCodeLabel: "PERSÖNLICHE ÜBERGABE DURCH DEN GASTGEBER",
       step1: "1. Die Wohnungsschlüssel werden Ihnen bei Ihrer Ankunft persönlich direkt vom Gastgeber übergeben.",
@@ -1935,9 +2007,27 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "24-STUNDEN-NOTRUFNUMMERN",
       items: [
         {
-          title: "NOTRUFNUMMER",
-          subtitle: "Rufen Sie 112 an",
-          phone: "112"
+          title: "Carabinieri Polizeikommando Morbegno",
+          subtitle: "Hauptquartier & Wache • Via Morelli 24, Morbegno",
+          phone: "0342 610210",
+          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+        },
+        {
+          title: "Krankenhaus Morbegno",
+          subtitle: "Regionales Krankenhaus • Via Morelli 1, Morbegno",
+          phone: "0342 607111",
+          mapsUrl: "https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+        },
+        {
+          title: "Notdienstapotheke (PharmAround)",
+          subtitle: "Aktuell diensthabende Apotheken in Morbegno",
+          webUrl: "https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5",
+          webLabel: "Offene Apotheken"
+        },
+        {
+          title: "Ärztlicher Bereitschaftsdienst (116 117)",
+          subtitle: "Nacht- und Wochenendbereitschaft",
+          phone: "116 117"
         }
       ]
     },

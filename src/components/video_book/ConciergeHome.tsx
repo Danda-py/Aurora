@@ -240,7 +240,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           page: 'emergenza',
           label: isIt ? 'Emergenze & Numeri utili' : isEn ? 'Emergencies & Numbers' : isDe ? 'Notfall & Notruf' : isFr ? 'Urgences & Numéros' : 'Emergencias y números',
           tag: isIt ? 'Soccorso 24/7' : isEn ? '24/7 Emergency' : isDe ? '24/7 Notdienst' : isFr ? 'Urgence 24/7' : 'Urgencias 24/7',
-          desc: isIt ? '112 Numero Unico, guardia medica e pronto soccorso' : isEn ? '112 European emergency, medical guard & hospital' : isDe ? '112 Euro-Notruf, Notarzt & Krankenhaus' : isFr ? '112 Numéro d’urgence, médecin de garde & hôpital' : '112 Número de emergencias y médicos',
+          desc: isIt ? 'Carabinieri, Ospedale Morbegno, farmacia di turno e 112' : isEn ? 'Carabinieri, Morbegno hospital, on-duty pharmacy & 112' : isDe ? 'Carabinieri, Krankenhaus, Notapotheke & 112' : isFr ? 'Carabinieri, hôpital, pharmacie de garde & 112' : 'Carabinieri, hospital, farmacia de guardia y 112',
           icon: <ShieldAlert className="h-5 w-5" />,
           bgImage: media?.emergencyCover || '/uploads/emergency.jpg'
         }
@@ -612,7 +612,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
                   {formatPassDate(pass.checkInDate)}
                 </p>
-                <p className="text-[11px] font-medium text-white/70">dalle {pass.checkInTime ?? '15:00'}</p>
+                <p className="text-[11px] font-medium text-white/70">dalle {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)</p>
               </div>
               <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>

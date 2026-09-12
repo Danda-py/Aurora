@@ -5,7 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
-import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield } from 'lucide-react';
+import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 
 interface Props {
   language: Language;
@@ -134,13 +134,26 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                       <MapPin className="w-3.5 h-3.5 text-white/70" />
                     </a>
                   )}
-                  <a
-                    href={`tel:${item.phone.replace(/\s+/g, '')}`}
-                    className="aurora-action-pill bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-white" />
-                    <span>{t.actions.call}</span>
-                  </a>
+                  {item.phone && (
+                    <a
+                      href={`tel:${item.phone.replace(/\s+/g, '')}`}
+                      className="aurora-action-pill bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-white" />
+                      <span>{t.actions.call}</span>
+                    </a>
+                  )}
+                  {item.webUrl && (
+                    <a
+                      href={item.webUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aurora-action-pill bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30"
+                    >
+                      <span>{item.webLabel || (language === 'it' ? 'Farmacie' : language === 'de' ? 'Apotheken' : language === 'fr' ? 'Pharmacies' : language === 'es' ? 'Farmacias' : 'Pharmacies')}</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-white" />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

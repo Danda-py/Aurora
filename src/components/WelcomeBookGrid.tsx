@@ -430,7 +430,7 @@ export const WelcomeBookGrid: React.FC<Props> = ({
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-3 bg-white rounded-xl border border-[#e8dfcf]">
                     <span className="font-bold text-slate-900 block mb-0.5">Check-in</span>
-                    <span className="text-slate-600">Dalle 15:00 (Self Keybox)</span>
+                    <span className="text-slate-600">Dalle 14:00 (2 PM)</span>
                   </div>
                   <div className="p-3 bg-white rounded-xl border border-[#e8dfcf]">
                     <span className="font-bold text-slate-900 block mb-0.5">Check-out</span>

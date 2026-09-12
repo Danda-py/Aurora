@@ -10,7 +10,10 @@ import {
   Cross, 
   Clock, 
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  ExternalLink,
+  Pill,
+  Shield
 } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../data/translations';
@@ -174,41 +177,96 @@ export const ContactsTab: React.FC<Props> = ({ language }) => {
           </div>
 
           {/* Ospedale Morbegno */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0">
                 <Building2 className="w-5 h-5" />
               </div>
               <div className="text-xs">
                 <h4 className="font-bold text-slate-900">Ospedale di Morbegno</h4>
-                <p className="text-slate-500 text-[11px]">Presidio Sanitario Territoriale</p>
+                <p className="text-slate-500 text-[11px]">Presidio Ospedaliero Territoriale • Via Morelli 1</p>
               </div>
             </div>
-            <a
-              href="tel:0342607111"
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition"
-            >
-              0342 607111
-            </a>
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <a
+                href="https://maps.google.com/?q=Ospedale+di+Morbegno+Via+Morelli+1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
+                title="Mappa Ospedale"
+              >
+                <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                <span>Maps</span>
+              </a>
+              <a
+                href="tel:0342607111"
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Chiama</span>
+              </a>
+            </div>
           </div>
 
-          {/* Carabinieri Morbegno */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
+          {/* Centro di Comando Carabinieri Morbegno */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
-                <ShieldAlert className="w-5 h-5" />
+                <Shield className="w-5 h-5" />
               </div>
               <div className="text-xs">
-                <h4 className="font-bold text-slate-900">Carabinieri Morbegno</h4>
-                <p className="text-slate-500 text-[11px]">Caserma Via Stelvio</p>
+                <h4 className="font-bold text-slate-900">Centro Comando Carabinieri Morbegno</h4>
+                <p className="text-slate-500 text-[11px]">Compagnia e Stazione • Via Morelli 24</p>
               </div>
             </div>
-            <a
-              href="tel:0342610210"
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition"
-            >
-              0342 610210
-            </a>
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <a
+                href="https://maps.google.com/?q=Carabinieri+Morbegno+Via+Morelli+24"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
+                title="Mappa Carabinieri"
+              >
+                <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                <span>Maps</span>
+              </a>
+              <a
+                href="tel:0342610210"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Chiama</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Farmacia di Turno */}
+          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <Pill className="w-5 h-5" />
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-emerald-950">Farmacia di Turno (Morbegno)</h4>
+                  <span className="text-[10px] font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.2 rounded-full">
+                    Live
+                  </span>
+                </div>
+                <p className="text-emerald-800 text-[11px] mt-0.5">Turni e farmacie aperte adesso in tempo reale (PharmAround)</p>
+              </div>
+            </div>
+            <div className="self-end sm:self-auto shrink-0">
+              <a
+                href="https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+              >
+                <span>Farmacie di Turno</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
 
         </div>

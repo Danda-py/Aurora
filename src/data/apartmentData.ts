@@ -30,7 +30,7 @@ export const APARTMENT_INFO = {
   wifiPassword: "Luglio2025",
   
   // Times
-  checkInStart: "15:00",
+  checkInStart: "14:00",
   checkInEnd: "22:00",
   checkOutLimit: "10:00",
   

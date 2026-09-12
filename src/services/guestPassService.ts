@@ -36,7 +36,7 @@ export function encodePassToToken(pass: Omit<GuestPass, 'token'>): string {
     s: pass.guestSurname,
     p: pass.phone || '',
     ci: pass.checkInDate,
-    cit: pass.checkInTime || '15:00',
+    cit: pass.checkInTime || '14:00',
     co: pass.checkOutDate,
     cot: pass.checkOutTime || '10:00',
     pin: pass.pinCode,
@@ -88,7 +88,7 @@ export function decodeTokenToPass(token: string): GuestPass | null {
       guestSurname: p.s || '',
       phone: p.p || '',
       checkInDate: p.ci,
-      checkInTime: p.cit || '15:00',
+      checkInTime: p.cit || '14:00',
       checkOutDate: p.co,
       checkOutTime: p.cot || '10:00',
       pinCode: p.pin || '2741',
@@ -331,11 +331,11 @@ export function getStayTiming(pass: GuestPass, now: Date = new Date()): StayTimi
   const [inY, inM, inD] = pass.checkInDate.split('-').map(Number);
   const [outY, outM, outD] = pass.checkOutDate.split('-').map(Number);
   
-  const [inH, inMin] = (pass.checkInTime || '15:00').split(':').map(Number);
+  const [inH, inMin] = (pass.checkInTime || '14:00').split(':').map(Number);
   const [outH, outMin] = (pass.checkOutTime || '10:00').split(':').map(Number);
 
-  // Check-in timestamp (e.g. 15:00 on checkInDate)
-  const checkInDateTime = new Date(inY, inM - 1, inD, inH || 15, inMin || 0, 0);
+  // Check-in timestamp (e.g. 14:00 on checkInDate)
+  const checkInDateTime = new Date(inY, inM - 1, inD, inH || 14, inMin || 0, 0);
   // Check-out timestamp (e.g. 10:00 on checkOutDate, with 2-hour grace margin up to 12:00)
   const checkOutDateTime = new Date(outY, outM - 1, outD, outH || 10, outMin || 0, 0);
   // Total night duration in ms
@@ -440,7 +440,7 @@ Ciao ${fullName}, ti diamo un caloroso benvenuto!
 
 Abbiamo preparato tutto con cura per farti sentire coccolato e rilassato durante il tuo soggiorno ad Aurora:
 
-📅 *Arrivo:* ${pass.checkInDate} (accesso autonomo dalle ore ${pass.checkInTime || '15:00'})
+📅 *Arrivo:* ${pass.checkInDate} (accesso dalle ore ${pass.checkInTime || '14:00'} in poi / 2 PM)
 📅 *Partenza:* ${pass.checkOutDate} (entro le ore ${pass.checkOutTime || '10:00'})
 🚪 *Apertura Portone:* 1-tap dal tuo link personale (Pulsante Smart Sonoff)
 🚗 *Parcheggio:* Posto auto riservato gratuito nel cortile privato
@@ -494,7 +494,7 @@ export function createAutonomousGuestPass(params: {
     guestSurname: (params.guestSurname || '').trim(),
     phone: (params.phone || '').trim(),
     checkInDate: params.checkInDate,
-    checkInTime: params.checkInTime || '15:00',
+    checkInTime: params.checkInTime || '14:00',
     checkOutDate: params.checkOutDate,
     checkOutTime: params.checkOutTime || '10:00',
     pinCode,
@@ -681,7 +681,7 @@ function getInitialDemoPasses(): GuestPass[] {
     guestSurname: 'Rossi',
     phone: '+39 340 123 4567',
     checkInDate: format(inDate),
-    checkInTime: '15:00',
+    checkInTime: '14:00',
     checkOutDate: format(outDate),
     checkOutTime: '10:00',
     pinCode: '2741',
