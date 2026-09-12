@@ -1672,3 +1672,44 @@ window.addEventListener('DOMContentLoaded', init);
       }
       setIsPassChecking(false);
     });
+
+const PUBLIC_BASE_URL = "https://casa-aurora-in-valtellina.vercel.app";
+function buildGuestUniqueLink(token) {
+return `${PUBLIC_BASE_URL}/guest/${token}`;
+}
+function isBeforeCheckIn(checkInDate) {
+const today = new Date();
+const target = new Date(checkInDate + "T00:00:00");
+return today.getTime() < target.getTime();
+}
+async function sendGuestMessageToTwilio({ token, guestName, phone, channel = "whatsapp" }) {
+const response = await fetch(`${API_BASE_URL}/functions/v1/send-guest-link`, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${localStorage.getItem("supabase_access_token") ?? ""}`,
+},
+body: JSON.stringify({ token, guestName, phone, channel }),
+});
+const json = await response.json();
+if (!response.ok) {
+throw new Error(json?.error || "Invio messaggio fallito");
+}
+return json;
+}
+async function finalizeGuestPass(passRecord) {
+const token = passRecord.token;
+const guestName = passRecord.pass?.guestName || "ospite";
+const phone = passRecord.guest_phone || passRecord.pass?.phone || "";
+if (!token || !phone) return passRecord;
+passRecord.guest_link = buildGuestUniqueLink(token);
+try {
+const result = await sendGuestMessageToTwilio({ token, guestName, phone, channel: "whatsapp" });
+passRecord.message_sent_at = new Date().toISOString();
+passRecord.message_channel = result.channel;
+passRecord.guest_link = result.guest_link;
+} catch (error) {
+console.warn("Guest message not sent:", error);
+}
+return passRecord;
+}
