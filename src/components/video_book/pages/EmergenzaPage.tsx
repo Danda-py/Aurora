@@ -5,7 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
-import { Phone, ShieldAlert, HeartPulse, MapPin } from 'lucide-react';
+import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield } from 'lucide-react';
 
 interface Props {
   language: Language;
@@ -20,12 +20,22 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
-  const emergencyHots = [
-    { num: '112', label: 'Numero Unico Europeo (112)' },
-    { num: '118', label: 'Soccorso Sanitario / Ambulanza' },
-    { num: '115', label: 'Vigili del Fuoco' },
-    { num: '113', label: 'Polizia di Stato' }
-  ];
+  const getEmergencyIcon = (title: string) => {
+    const lower = title.toLowerCase();
+    if (lower.includes('ospedale') || lower.includes('hospital') || lower.includes('kh') || lower.includes('hopital')) {
+      return <Building2 className="w-5 h-5" />;
+    }
+    if (lower.includes('farmacia') || lower.includes('pharmacy') || lower.includes('apotheke') || lower.includes('pharmacie')) {
+      return <Pill className="w-5 h-5" />;
+    }
+    if (lower.includes('guardia') || lower.includes('medica') || lower.includes('doctor') || lower.includes('continuità')) {
+      return <Stethoscope className="w-5 h-5" />;
+    }
+    if (lower.includes('carabinieri') || lower.includes('police') || lower.includes('polizia') || lower.includes('gendarmerie')) {
+      return <Shield className="w-5 h-5" />;
+    }
+    return <HeartPulse className="w-5 h-5" />;
+  };
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -70,23 +80,19 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5 pt-1">
-            {emergencyHots.map((e) => (
-              <a
-                key={e.num}
-                href={`tel:${e.num}`}
-                className="p-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-between transition cursor-pointer shadow-sm"
-              >
-                <div className="min-w-0 pr-1">
-                  <span className="text-[10px] text-white/70 truncate block">{e.label}</span>
-                  <span className="font-mono text-lg font-black text-rose-300">{e.num}</span>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4" />
-                </div>
-              </a>
-            ))}
-          </div>
+          <a
+            href="tel:112"
+            className="p-4 rounded-2xl bg-rose-600/30 hover:bg-rose-600/40 border border-rose-500/50 flex items-center justify-between transition cursor-pointer shadow-md"
+          >
+            <div className="min-w-0 pr-2">
+              <span className="text-xs font-bold text-rose-200 uppercase tracking-wider block">Numero Unico Europeo Emergenze</span>
+              <span className="font-mono text-2xl font-black text-white">112</span>
+              <p className="text-[11px] text-rose-200/80 mt-0.5">Ambulanza, Vigili del Fuoco, Carabinieri, Polizia</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-lg">
+              <Phone className="w-5 h-5" />
+            </div>
+          </a>
         </div>
 
         {/* Local emergency locations */}
@@ -103,8 +109,8 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center shrink-0 text-rose-300 shadow-inner">
-                    <HeartPulse className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center shrink-0 text-rose-300 shadow-inner mt-0.5">
+                    {getEmergencyIcon(item.title)}
                   </div>
                   <div className="min-w-0">
                     <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">

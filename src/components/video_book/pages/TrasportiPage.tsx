@@ -20,12 +20,19 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
-  const transportIcons = [
-    <Train key="train" className="w-5 h-5 text-[#62e6bd]" />,
-    <Bus key="bus" className="w-5 h-5 text-[#62e6bd]" />,
-    <Car key="car" className="w-5 h-5 text-[#62e6bd]" />,
-    <Plane key="plane" className="w-5 h-5 text-[#62e6bd]" />
-  ];
+  const getTransportIcon = (title: string, subtitle: string = '') => {
+    const text = (title + ' ' + subtitle).toLowerCase();
+    if (text.includes('stazione') || text.includes('treno') || text.includes('train') || text.includes('bahn') || text.includes('fs')) {
+      return <Train className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (text.includes('bus') || text.includes('autobus') || text.includes('fermata')) {
+      return <Bus className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (text.includes('aeroport') || text.includes('airport') || text.includes('flughafen')) {
+      return <Plane className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    return <Car className="w-5 h-5 text-[#62e6bd]" />;
+  };
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -66,7 +73,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="aurora-icon-box mt-0.5">
-                    {transportIcons[idx % transportIcons.length]}
+                    {getTransportIcon(item.title, item.subtitle)}
                   </div>
                   <div className="min-w-0">
                     <span className="aurora-eyebrow">{item.subtitle}</span>

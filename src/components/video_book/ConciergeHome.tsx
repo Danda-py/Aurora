@@ -33,7 +33,7 @@ interface Props {
   language: Language;
   onSelectLanguage: (language: Language) => void;
   onNavigate: (page: WelcomePage) => void;
-  pass: GuestPass;
+  pass?: GuestPass | null;
   onOpenSmartLock: () => void;
 }
 
@@ -378,11 +378,12 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [holdProgress, setHoldProgress] = useState(0);
   const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartedAt = React.useRef(0);
-  const firstName = pass.guestName || 'Ospite';
+  const isPublic = !pass;
+  const firstName = pass?.guestName || 'Ospite';
   const copy = uiCopy[language] || uiCopy.it;
   const guideSections = getLocalizedGuideSections(language, media);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
-  const isCheckoutDay = new Date().toISOString().slice(0, 10) === pass.checkOutDate;
+  const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
 
   useEffect(() => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
@@ -551,11 +552,12 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </button>
         )}
 
-        {/* Apple Wallet-Style 3D Glass Pass */}
-        <section 
-          className="glass-pass" 
-          style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}
-        >
+        {/* Apple Wallet-Style 3D Glass Pass (only for guests with a pass) */}
+        {pass && (
+          <section 
+            className="glass-pass" 
+            style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}
+          >
           <div className="glass-pass-shine" />
           <div className="relative z-10 flex h-full flex-col justify-between p-3.5 sm:p-4">
             <div className="flex items-start justify-between gap-4">
@@ -611,6 +613,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </span>
               <ArrowUpRight className="h-4 w-4 relative z-10" />
             </button>
+          </section>
+        )}
             {doorMessage && (
               <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
                 {doorMessage}
@@ -629,37 +633,69 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
           
           <div className="quick-actions-grid">
-            <button onClick={copyWifi}>
-              <Wifi />
-              <span>{copy.wifi}</span>
-              <small>{wifiCopied ? 'Password copiata!' : 'Copia password'}</small>
-            </button>
-            
-            <a 
-              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} 
-              target="_blank" 
-              rel="noreferrer"
-            >
-              <MessageCircle />
-              <span>{copy.host}</span>
-              <small>{copy.directWhatsapp}</small>
-            </a>
-            
-            <a
-              href={APARTMENT_INFO.googleMapsUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MapPin />
-              <span>{copy.location}</span>
-              <small>{copy.directions}</small>
-            </a>
-            
-            <button onClick={() => setSheet('schedule')}>
-              <Clock3 />
-              <span>{copy.rules}</span>
-              <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
-            </button>
+            {isPublic ? (
+              <>
+                <a 
+                  href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent('Ciao Nino!')}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                >
+                  <MessageCircle />
+                  <span>{copy.host}</span>
+                  <small>{copy.directWhatsapp}</small>
+                </a>
+
+                <a
+                  href={APARTMENT_INFO.googleMapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin />
+                  <span>{copy.location}</span>
+                  <small>{copy.directions}</small>
+                </a>
+
+                <button onClick={() => setSheet('schedule')}>
+                  <Clock3 />
+                  <span>{copy.rules}</span>
+                  <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={copyWifi}>
+                  <Wifi />
+                  <span>{copy.wifi}</span>
+                  <small>{wifiCopied ? 'Password copiata!' : 'Copia password'}</small>
+                </button>
+                
+                <a 
+                  href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                >
+                  <MessageCircle />
+                  <span>{copy.host}</span>
+                  <small>{copy.directWhatsapp}</small>
+                </a>
+                
+                <a
+                  href={APARTMENT_INFO.googleMapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin />
+                  <span>{copy.location}</span>
+                  <small>{copy.directions}</small>
+                </a>
+                
+                <button onClick={() => setSheet('schedule')}>
+                  <Clock3 />
+                  <span>{copy.rules}</span>
+                  <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
+                </button>
+              </>
+            )}
           </div>
         </section>
 
@@ -671,7 +707,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
           </div>
           <ScrollableTileRow hintLabel={copy.swipeForMore}>
-            {guideSections.houseEssentials.items.map(renderPhotoCard)}
+            {(isPublic ? guideSections.houseEssentials.items.filter(i => i.page !== 'check_in') : guideSections.houseEssentials.items).map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 

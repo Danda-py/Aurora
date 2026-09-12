@@ -120,14 +120,13 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
       />
     );
   }
-
-  if (isPassChecking || !pass) {
+  if (isPassChecking) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-[#070a0e] px-6 text-center text-slate-100">
         <div className="max-w-sm space-y-3">
           <Key className="mx-auto h-10 w-10 text-emerald-400" />
-          <h1 className="text-xl font-semibold">Accesso ospite richiesto</h1>
-          <p className="text-sm text-slate-400">Apri il link personale ricevuto dall'host. Il link è limitato al periodo del soggiorno.</p>
+          <h1 className="text-xl font-semibold">Verifica link...</h1>
+          <p className="text-sm text-slate-400">Sto verificando il link ospite, attendere prego.</p>
         </div>
       </div>
     );
@@ -147,7 +146,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
             language={language}
             onSelectLanguage={setLanguage}
             onNavigate={handleNavigate}
-            pass={pass!}
+            pass={pass}
             onOpenSmartLock={() => setIsSmartLockOpen(true)}
           />
         )}

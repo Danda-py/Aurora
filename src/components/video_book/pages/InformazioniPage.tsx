@@ -5,7 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
-import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building } from 'lucide-react';
+import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building, Droplet, Church } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
 interface Props {
@@ -33,13 +33,28 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
     : service
   );
 
-  const infoIcons = [
-    <Pill key="pill" className="w-5 h-5 text-[#62e6bd]" />,
-    <Landmark key="bank" className="w-5 h-5 text-[#62e6bd]" />,
-    <Fuel key="fuel" className="w-5 h-5 text-[#62e6bd]" />,
-    <Building key="post" className="w-5 h-5 text-[#62e6bd]" />,
-    <Info key="info" className="w-5 h-5 text-[#62e6bd]" />
-  ];
+  const getServiceIcon = (title: string) => {
+    const lower = title.toLowerCase();
+    if (lower.includes('acqua') || lower.includes('water') || lower.includes('wasser') || lower.includes('eau')) {
+      return <Droplet className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (lower.includes('farmacia') || lower.includes('pharmacy') || lower.includes('apotheke') || lower.includes('pharmacie')) {
+      return <Pill className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (lower.includes('banc') || lower.includes('bank') || lower.includes('atm')) {
+      return <Landmark className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (lower.includes('carburante') || lower.includes('fuel') || lower.includes('ev') || lower.includes('gas') || lower.includes('ricarica') || lower.includes('tankstelle') || lower.includes('station')) {
+      return <Fuel className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (lower.includes('post') || lower.includes('poste') || lower.includes('correos')) {
+      return <Building className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    if (lower.includes('chiesa') || lower.includes('monument') || lower.includes('church') || lower.includes('kirche') || lower.includes('eglise') || lower.includes('iglesia')) {
+      return <Church className="w-5 h-5 text-[#62e6bd]" />;
+    }
+    return <Info className="w-5 h-5 text-[#62e6bd]" />;
+  };
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -83,7 +98,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
               className="aurora-item-card items-center"
             >
               <div className="aurora-icon-box">
-                {infoIcons[idx % infoIcons.length]}
+                {getServiceIcon(s.title)}
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="font-bold text-sm text-white truncate">
@@ -94,15 +109,17 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
                 </p>
               </div>
 
-              <a
-                href={s.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="aurora-action-pill"
-              >
-                <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                <span>{t.actions.googleMaps}</span>
-              </a>
+              {s.mapsUrl && s.mapsUrl.trim() !== '' && (
+                <a
+                  href={s.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="aurora-action-pill shrink-0"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
+                  <span>{t.actions.googleMaps}</span>
+                </a>
+              )}
             </div>
           ))}
         </div>
@@ -111,7 +128,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         <div className="aurora-glass-card space-y-2.5">
           <div className="flex items-center gap-2.5">
             <div className="aurora-icon-box">
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-5 h-5 text-[#62e6bd]" />
             </div>
             <div>
               <span className="aurora-eyebrow">Raccolta Differenziata</span>

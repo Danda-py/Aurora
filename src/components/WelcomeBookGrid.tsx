@@ -511,13 +511,6 @@ export const WelcomeBookGrid: React.FC<Props> = ({
                     A circa 600 metri (7 minuti a piedi). Treni diretti per Milano Centrale (circa 1h 35m), Sondrio e Tirano (capolinea del famoso <em>Bernina Express</em> UNESCO).
                   </p>
                 </div>
-
-                <div className="p-3.5 bg-white rounded-2xl border border-[#e8dfcf] space-y-1.5">
-                  <h4 className="font-bold text-slate-900 text-xs">🚕 Taxi Morbegno</h4>
-                  <p className="text-xs text-slate-600">
-                    Servizio transfer valli e stazioni: <a href="tel:+393381234567" className="font-bold text-teal-800 underline">+39 338 1234567</a>
-                  </p>
-                </div>
               </div>
             )}
 

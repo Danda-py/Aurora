@@ -22,26 +22,20 @@ export const BOOK_DATA: Record<Language, {
     kitchenDesc: string;
     viewTitle: string;
     viewDesc: string;
-  };
-  checkIn: {
-    title: string;
-    badge: string;
-    timingNotice: string;
-    houseAccessTitle: string;
-    keyboxCodeLabel: string;
+        {
+          title: "MACELLERIA MAZZOLENI (DI FRONTE ALLA DROGHERIA)",
+          time: "23 min a piedi / 4 min in auto",
+          hours: "Aperta: Lun-Sab 08:00 - 13:00, 16:00 - 19:00",
+          desc: "Macelleria Mazzoleni — rinomata per carni locali e salumi artigianali.",
+          mapsUrl: "https://maps.google.com/?q=Macelleria+Mazzoleni+Morbegno"
+        }
     step1: string;
     step2: string;
     step3: string;
     parkingTitle: string;
     parkingDesc: string;
     parkingNote: string;
-  };
-  wifi: {
-    title: string;
-    networkLabel: string;
-    passwordLabel: string;
-    speedNotice: string;
-    troubleshootTitle: string;
+        
     troubleshootText: string;
   };
   rules: {
@@ -234,13 +228,7 @@ export const BOOK_DATA: Record<Language, {
           desc: "Autobus per Val Tartano (Ponte nel Cielo), Val Gerola, Val Masino e centri limitrofi.",
           mapsUrl: "https://maps.google.com/?q=Fermata+Bus+Morbegno"
         },
-        {
-          title: "SERVIZIO TAXI MORBEGNO",
-          subtitle: "Piazza Stazione",
-          time: "Disponibile h24 su chiamata",
-          desc: "Transfer per le valli alpine, Passo San Marco, Lago di Como e stazioni sciistiche.",
-          phone: "+39 0342 610000"
-        },
+        
         {
           title: "AEROPORTI DI MILANO",
           subtitle: "Orio al Serio (BGY) / Linate / Malpensa",
@@ -295,13 +283,7 @@ export const BOOK_DATA: Record<Language, {
           mapsUrl: "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
           tagColor: "bg-emerald-100 text-emerald-900"
         },
-        {
-          tag: "ADRENALINA & VOLO",
-          title: "Fly Emotion - Aerofune (Albaredo per San Marco)",
-          desc: "Volo d'angelo panoramico assicurati a un cavo d'acciaio che attraversa la valle tra Albaredo e Bema ad oltre 100 km/h. Adatto a tutti!",
-          mapsUrl: "https://maps.google.com/?q=Fly+Emotion+Albaredo",
-          tagColor: "bg-blue-100 text-blue-900"
-        },
+        
         {
           tag: "LAGO & RELAX",
           title: "Lago di Como, Colico",
@@ -429,30 +411,30 @@ export const BOOK_DATA: Record<Language, {
         {
           title: "SIGMA",
           time: "6 min a piedi / 1 min in auto",
-          hours: "Orari da verificare",
-          desc: "Piccolo supermercato comodo per ogni esigenza.",
+          hours: "08:00 - 20:00",
+          desc: "Supermercato di quartiere per prodotti freschi, pane e generi alimentari.",
           mapsUrl: "https://maps.google.com/?q=Sigma+Morbegno"
         },
         {
           title: "IPERAL",
           time: "17 min a piedi / 3 min in auto",
-          hours: "Orari da verificare",
-          desc: "Supermercato più grande, completo e conveniente.",
+          hours: "08:00 - 20:30",
+          desc: "Supermercato più grande con reparti freschi, panetteria e macelleria.",
           mapsUrl: "https://maps.google.com/?q=Iperal+Morbegno"
         },
         {
           title: "DROGHERIA CIAPPONI",
           time: "23 min a piedi / 4 min in auto",
-          hours: "Orari da verificare",
-          desc: "Bottega storica con vini, formaggi e salumi.",
+          hours: "08:30 - 19:30",
+          desc: "Bottega storica con vini, formaggi, salumi e selezioni locali.",
           mapsUrl: "https://maps.google.com/?q=Fratelli+Ciapponi+Morbegno"
         },
         {
-          title: "MACELLERIA DI FRONTE ALLA DROGHERIA",
+          title: "MACELLERIA MAZZOLENI (DI FRONTE ALLA DROGHERIA)",
           time: "23 min a piedi / 4 min in auto",
-          hours: "Orari da verificare",
-          desc: "Ottima carne locale.",
-          mapsUrl: "https://maps.google.com/?q=Macelleria+Morbegno+Drogheria+Ciapponi"
+          hours: "Aperta: Lun-Sab 08:00 - 13:00, 16:00 - 19:00",
+          desc: "Macelleria Mazzoleni — rinomata per carni locali e salumi artigianali.",
+          mapsUrl: "https://maps.google.com/?q=Macelleria+Mazzoleni+Morbegno"
         }
       ]
     },
@@ -501,32 +483,9 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NUMERI SOCCORSO NAZIONALI H24",
       items: [
         {
-          title: "OSPEDALE PIÙ VICINO",
-          subtitle: "Presidio Ospedaliero di Morbegno / Sondrio",
-          phone: "+39 0342 607111",
-          mapsUrl: "https://maps.google.com/?q=Ospedale+Morbegno"
-        },
-        {
-          title: "FARMACIA 24 ORE / TURNO",
-          subtitle: "Farmacia Comunale Morbegno",
-          phone: "+39 0342 611222",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
-        },
-        {
-          title: "CONTINUITÀ ASSISTENZIALE (GUARDIA MEDICA)",
-          subtitle: "Attiva notturna e giorni festivi",
-          phone: "116 117"
-        },
-        {
-          title: "STAZIONE CARABINIERI MORBEGNO",
-          subtitle: "Via Merizzi 2, Morbegno",
-          phone: "+39 0342 606100",
-          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno"
-        },
-        {
-          title: "SERVIZIO TAXI URGENZE",
-          subtitle: "Piazza Stazione Morbegno",
-          phone: "+39 0342 610000"
+          title: "NUMERO UNICO EMERGENZA",
+          subtitle: "Chiamare 112",
+          phone: "112"
         }
       ]
     },
@@ -649,13 +608,7 @@ export const BOOK_DATA: Record<Language, {
           desc: "Buses to Val Tartano (Bridge in the Sky), Val Gerola, Val Masino, and surrounding valleys.",
           mapsUrl: "https://maps.google.com/?q=Fermata+Bus+Morbegno"
         },
-        {
-          title: "TAXI SERVICE MORBEGNO",
-          subtitle: "Station Square",
-          time: "24/7 on call",
-          desc: "Direct transfers to mountain valleys, San Marco Pass, Lake Como, and ski resorts.",
-          phone: "+39 0342 610000"
-        },
+        
         {
           title: "MILAN AIRPORTS",
           subtitle: "Bergamo (BGY) / Linate / Malpensa",
@@ -710,13 +663,7 @@ export const BOOK_DATA: Record<Language, {
           mapsUrl: "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
           tagColor: "bg-emerald-100 text-emerald-900"
         },
-        {
-          tag: "ADVENTURE & ZIPLINE",
-          title: "Fly Emotion Zipline (Albaredo per San Marco)",
-          desc: "Fly like an eagle across the alpine valley attached to a scenic zip-line at over 100 km/h. Suitable for couples and families!",
-          mapsUrl: "https://maps.google.com/?q=Fly+Emotion+Albaredo",
-          tagColor: "bg-blue-100 text-blue-900"
-        },
+        
         {
           tag: "LAKE & WATERSPORTS",
           title: "Lake Como Beaches & Kitesurfing in Colico",
@@ -896,32 +843,9 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "24/7 EMERGENCY HOTLINES",
       items: [
         {
-          title: "NEAREST HOSPITAL",
-          subtitle: "Morbegno / Sondrio Regional Hospital",
-          phone: "+39 0342 607111",
-          mapsUrl: "https://maps.google.com/?q=Ospedale+Morbegno"
-        },
-        {
-          title: "24/7 PHARMACY",
-          subtitle: "Morbegno Municipal Pharmacy",
-          phone: "+39 0342 611222",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
-        },
-        {
-          title: "DOCTOR ON CALL (GUARDIA MEDICA)",
-          subtitle: "Night & holiday emergency doctor",
-          phone: "116 117"
-        },
-        {
-          title: "CARABINIERI POLICE STATION",
-          subtitle: "Via Merizzi 2, Morbegno",
-          phone: "+39 0342 606100",
-          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno"
-        },
-        {
-          title: "EMERGENCY TAXI",
-          subtitle: "Station Square Morbegno",
-          phone: "+39 0342 610000"
+          title: "EMERGENCY NUMBER",
+          subtitle: "Call 112",
+          phone: "112"
         }
       ]
     },
@@ -1044,13 +968,7 @@ export const BOOK_DATA: Record<Language, {
           desc: "Lignes pour le Val Tartano (Ponte nel Cielo), Val Gerola et Val Masino.",
           mapsUrl: "https://maps.google.com/?q=Fermata+Bus+Morbegno"
         },
-        {
-          title: "SERVICE TAXI MORBEGNO",
-          subtitle: "Place de la Gare",
-          time: "Disponible 24h/24",
-          desc: "Transferts vers les vallées alpines, cols, Lac de Côme et stations de ski.",
-          phone: "+39 0342 610000"
-        },
+        
         {
           title: "AÉROPORTS DE MILAN",
           subtitle: "Bergame / Linate / Malpensa",
@@ -1105,13 +1023,7 @@ export const BOOK_DATA: Record<Language, {
           mapsUrl: "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
           tagColor: "bg-emerald-100 text-emerald-900"
         },
-        {
-          tag: "SENSATIONS FORTES",
-          title: "Fly Emotion - Tyrolienne (Albaredo)",
-          desc: "Survolez la vallée alpine suspendu à un câble à plus de 100 km/h pour une expérience unique !",
-          mapsUrl: "https://maps.google.com/?q=Fly+Emotion+Albaredo",
-          tagColor: "bg-blue-100 text-blue-900"
-        },
+        
         {
           tag: "LAC & NAUTISME",
           title: "Plages de Colico & Kitesurf au Lac de Côme",
@@ -1291,32 +1203,9 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NUMÉROS D'URGENCE 24H/24",
       items: [
         {
-          title: "HÔPITAL LE PLUS PROCHE",
-          subtitle: "Hôpital de Morbegno / Sondrio",
-          phone: "+39 0342 607111",
-          mapsUrl: "https://maps.google.com/?q=Ospedale+Morbegno"
-        },
-        {
-          title: "PHARMACIE 24H / DE GARDE",
-          subtitle: "Pharmacie Municipale de Morbegno",
-          phone: "+39 0342 611222",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
-        },
-        {
-          title: "MÉDECIN DE GARDE (GUARDIA MEDICA)",
-          subtitle: "Nuits et jours fériés",
-          phone: "116 117"
-        },
-        {
-          title: "GENDARMERIE (CARABINIERI)",
-          subtitle: "Via Merizzi 2, Morbegno",
-          phone: "+39 0342 606100",
-          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno"
-        },
-        {
-          title: "TAXI D'URGENCE",
-          subtitle: "Place de la Gare",
-          phone: "+39 0342 610000"
+          title: "NUMÉRO D'URGENCE",
+          subtitle: "Appeler le 112",
+          phone: "112"
         }
       ]
     },
@@ -1439,13 +1328,7 @@ export const BOOK_DATA: Record<Language, {
           desc: "Conexiones a Val Tartano (Puente en el Cielo), Val Gerola y Val Masino.",
           mapsUrl: "https://maps.google.com/?q=Fermata+Bus+Morbegno"
         },
-        {
-          title: "SERVICIO DE TAXI MORBEGNO",
-          subtitle: "Plaza de la Estación",
-          time: "Disponible 24h",
-          desc: "Traslados a valles alpinos, Lago de Como y pistas de esquí.",
-          phone: "+39 0342 610000"
-        },
+        
         {
           title: "AEROPUERTOS DE MILÁN",
           subtitle: "Bérgamo / Linate / Malpensa",
@@ -1500,13 +1383,7 @@ export const BOOK_DATA: Record<Language, {
           mapsUrl: "https://maps.google.com/?q=Val+di+Mello+Val+Masino",
           tagColor: "bg-emerald-100 text-emerald-900"
         },
-        {
-          tag: "ADRENALINA",
-          title: "Fly Emotion - Tirolina (Albaredo)",
-          desc: "Vuela sobre el valle alpino colgado de una tirolina a más de 100 km/h. ¡Una experiencia única para todas las edades!",
-          mapsUrl: "https://maps.google.com/?q=Fly+Emotion+Albaredo",
-          tagColor: "bg-blue-100 text-blue-900"
-        },
+        
         {
           tag: "LAGO Y DEPORTES",
           title: "Playas de Colico y Kitesurf en el Lago de Como",
@@ -1686,32 +1563,9 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "NÚMEROS DE EMERGENCIA 24H",
       items: [
         {
-          title: "HOSPITAL MÁS CERCANO",
-          subtitle: "Hospital de Morbegno / Sondrio",
-          phone: "+39 0342 607111",
-          mapsUrl: "https://maps.google.com/?q=Ospedale+Morbegno"
-        },
-        {
-          title: "FARMACIA 24H / GUARDIA",
-          subtitle: "Farmacia Municipal de Morbegno",
-          phone: "+39 0342 611222",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
-        },
-        {
-          title: "MÉDICO DE GUARDIA (GUARDIA MEDICA)",
-          subtitle: "Noches y festivos",
-          phone: "116 117"
-        },
-        {
-          title: "POLICÍA (CARABINIERI)",
-          subtitle: "Via Merizzi 2, Morbegno",
-          phone: "+39 0342 606100",
-          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno"
-        },
-        {
-          title: "TAXI DE URGENCIAS",
-          subtitle: "Plaza de la Estación",
-          phone: "+39 0342 610000"
+          title: "NÚMERO DE EMERGENCIA",
+          subtitle: "Llamar al 112",
+          phone: "112"
         }
       ]
     },
@@ -1834,13 +1688,7 @@ export const BOOK_DATA: Record<Language, {
           desc: "Linienbusse ins Val Tartano (Hängebrücke Ponte nel Cielo), Val Gerola und Val Masino.",
           mapsUrl: "https://maps.google.com/?q=Fermata+Bus+Morbegno"
         },
-        {
-          title: "TAXIRUF MORBEGNO",
-          subtitle: "Bahnhofsplatz",
-          time: "Rund um die Uhr auf Abruf",
-          desc: "Transfers in Bergtäler, zum Comer See und in Skigebiete.",
-          phone: "+39 0342 610000"
-        },
+        
         {
           title: "FLUGHÄFEN MAILAND",
           subtitle: "Bergamo / Linate / Malpensa",
@@ -2081,32 +1929,9 @@ export const BOOK_DATA: Record<Language, {
       nationalNumbersTitle: "24-STUNDEN-NOTRUFNUMMERN",
       items: [
         {
-          title: "NÄCHSTES KRANKENHAUS",
-          subtitle: "Krankenhaus Morbegno / Sondrio",
-          phone: "+39 0342 607111",
-          mapsUrl: "https://maps.google.com/?q=Ospedale+Morbegno"
-        },
-        {
-          title: "24H NOTAPOTHEKE",
-          subtitle: "Städtische Apotheke Morbegno",
-          phone: "+39 0342 611222",
-          mapsUrl: "https://maps.google.com/?q=Farmacia+Morbegno"
-        },
-        {
-          title: "ÄRZTLICHER BEREITSCHAFTSDIENST",
-          subtitle: "Nacht- und Feiertagsnotdienst",
-          phone: "116 117"
-        },
-        {
-          title: "POLIZEISTATION (CARABINIERI)",
-          subtitle: "Via Merizzi 2, Morbegno",
-          phone: "+39 0342 606100",
-          mapsUrl: "https://maps.google.com/?q=Carabinieri+Morbegno"
-        },
-        {
-          title: "NOTFALL-TAXI",
-          subtitle: "Bahnhofsplatz Morbegno",
-          phone: "+39 0342 610000"
+          title: "NOTRUFNUMMER",
+          subtitle: "Rufen Sie 112 an",
+          phone: "112"
         }
       ]
     },

@@ -65,6 +65,11 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                     <h4 className="font-bold text-base text-white tracking-tight mt-0.5">
                       {shop.title}
                     </h4>
+                    {shop.time && (
+                      <span className="text-xs text-white/60 block mt-0.5">
+                        {shop.time}
+                      </span>
+                    )}
                   </div>
                 </div>
 

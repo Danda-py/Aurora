@@ -206,25 +206,6 @@ export const ContactsTab: React.FC<Props> = ({ language }) => {
             </a>
           </div>
 
-          {/* Taxi Morbegno */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
-                <Car className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <h4 className="font-bold text-slate-900">Taxi Morbegno</h4>
-                <p className="text-slate-500 text-[11px]">Servizio transfer stazioni e valli</p>
-              </div>
-            </div>
-            <a
-              href="tel:+393381234567"
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition"
-            >
-              Chiama Taxi
-            </a>
-          </div>
-
         </div>
       </section>
 
