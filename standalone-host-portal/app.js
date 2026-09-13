@@ -135,27 +135,74 @@ function hideToast() {
   }
 }
 
-// Ensure Host Authentication / Development Session
+// Authentication gate. The first account can only be created once; after that
+// the server permanently closes registration and accepts login only.
 async function ensureHostSession() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.authenticated) return true;
+    const data = res.ok ? await res.json() : { authenticated: false, registrationOpen: false };
+    if (data.authenticated) {
+      document.getElementById('hostAuthScreen')?.classList.add('hidden');
+      document.getElementById('hostPortalContent')?.classList.remove('hidden');
+      return true;
     }
-    
-    // Auto-login for developer/host environment if unauthenticated
-    const loginRes = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email: 'antonino.andaloro@gmail.com', password: '' })
-    });
-    return loginRes.ok;
+    setupAuthForm(Boolean(data.registrationOpen));
+    return false;
   } catch (err) {
-    console.warn('Auth session check notice:', err);
-    return true; // continue in dev mode
+    setupAuthForm(false, 'Impossibile verificare la sessione. Riprova tra poco.');
+    return false;
   }
+}
+
+function setupAuthForm(registrationOpen, initialError = '') {
+  const form = document.getElementById('hostAuthForm');
+  if (!form || form.dataset.ready === 'true') return;
+  form.dataset.ready = 'true';
+  const title = document.getElementById('authTitle');
+  const description = document.getElementById('authDescription');
+  const submit = document.getElementById('authSubmit');
+  const password = document.getElementById('authPassword');
+  const confirmWrap = document.getElementById('authConfirmWrap');
+  const confirm = document.getElementById('authConfirmPassword');
+  const feedback = document.getElementById('authFeedback');
+  const setFeedback = message => {
+    feedback.textContent = message;
+    feedback.classList.toggle('hidden', !message);
+  };
+  if (registrationOpen) {
+    title.textContent = 'Crea il primo account host';
+    description.textContent = 'La registrazione è disponibile una sola volta. Dopo la creazione, l’accesso sarà riservato a questo account.';
+    submit.textContent = 'Crea account e accedi';
+    password.autocomplete = 'new-password';
+    confirmWrap.classList.remove('hidden');
+    confirm.required = true;
+  }
+  setFeedback(initialError);
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    setFeedback('');
+    if (registrationOpen && password.value !== confirm.value) {
+      setFeedback('Le password non coincidono.');
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = registrationOpen ? 'Creazione in corso…' : 'Accesso in corso…';
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/${registrationOpen ? 'bootstrap' : 'login'}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ email: document.getElementById('authEmail').value, password: password.value })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Operazione non riuscita.');
+      document.getElementById('hostAuthScreen').classList.add('hidden');
+      document.getElementById('hostPortalContent').classList.remove('hidden');
+      await startHostPortal();
+    } catch (error) {
+      setFeedback(error.message || 'Operazione non riuscita.');
+      submit.disabled = false;
+      submit.textContent = registrationOpen ? 'Crea account e accedi' : 'Accedi';
+    }
+  });
 }
 
 // Copy Helper with Apple-style clipboard feedback
@@ -211,7 +258,11 @@ function addHassLog(message, isSuccess = true) {
 // MAIN INITIALIZATION
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  await ensureHostSession();
+  if (!await ensureHostSession()) return;
+  await startHostPortal();
+});
+
+async function startHostPortal() {
 
   // Populate default dates (Check-in = today, Check-out = +3 days)
   const today = new Date();
@@ -239,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Render icons
   renderIcons();
-});
+}
 
 // Tab Navigation
 function setupTabs() {

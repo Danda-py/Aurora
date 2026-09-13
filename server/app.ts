@@ -33,7 +33,7 @@ import {
   saveCmsMediaAsync
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
-import { getHostSession, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
+import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
 import { sendGuestNotification } from './notificationService.js';
@@ -235,12 +235,10 @@ export function createApp() {
   }
   app.use('/assets', express.static(assetsStaticPath));
 
-  // NOTA: la versione statica standalone del Host Portal vive in
-  // standalone-host-portal/ (FUORI da public/, così Vite non la copia in
-  // dist/ e non puo' mai "vincere" sulla route della SPA). Non ha login ed è
-  // pensata solo per il download via /api/download-host-portal-zip (uso
-  // offline). La route live /host-portal/* è gestita dalla SPA React
-  // (src/pages/host-portal), che richiede autenticazione reale.
+  // Il portale standalone è la versione pubblicata su /host-portal/.
+  // L'interfaccia mostra il login prima della dashboard e ogni API operativa
+  // resta comunque protetta dalla sessione HttpOnly lato server.
+  app.use('/host-portal', express.static(path.join(process.cwd(), 'standalone-host-portal')));
 
   // Serve public directory static files
   app.use(express.static(path.join(process.cwd(), 'public')));
@@ -297,10 +295,11 @@ export function createApp() {
   });
 
   apiRouter.post('/auth/login', loginHost);
+  apiRouter.post('/auth/bootstrap', bootstrapHost);
   apiRouter.post('/auth/logout', logoutHost);
   apiRouter.get('/auth/me', (req, res) => {
     const session = getHostSession(req);
-    res.json({ authenticated: Boolean(session), email: session?.email || null, configured: isHostConfigured() });
+    res.json({ authenticated: Boolean(session), email: session?.email || null, configured: isHostConfigured(), registrationOpen: hostRegistrationOpen() });
   });
 
   apiRouter.get('/guest/pass', (req, res) => {
@@ -1042,5 +1041,4 @@ export function createApp() {
 
 const app = createApp();
 export default app;
-
 
