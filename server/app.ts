@@ -417,8 +417,8 @@ export function createApp() {
       return;
     }
     
-    // Se il soggiorno non è attualmente attivo, nascondi il PIN sensibile per la serratura
-    if (!isPassCurrentlyValid(pass)) {
+    // Se il soggiorno non è attualmente attivo o il check-in non è confermato, nascondi il PIN sensibile per la serratura
+    if (!isPassCurrentlyValid(pass) || !pass.checkInConfirmed) {
       const sanitized = {
         ...pass,
         pinCode: '••••'

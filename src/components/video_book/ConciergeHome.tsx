@@ -560,6 +560,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                     : t.concierge.keysConcluded}
                 </span>
               </div>
+            ) : !isCheckinConfirmed ? (
+              <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex flex-col gap-1.5 items-center justify-center text-center">
+                <Clock3 className="h-5 w-5 text-amber-400 animate-pulse" />
+                <span className="font-bold text-white">{t.checkInPage.pendingHostConfirmation}</span>
+                <span className="text-white/70 text-center leading-normal">
+                  {t.checkInPage.pendingHostConfirmationDesc}
+                </span>
+              </div>
             ) : (
               <>
                 <button
