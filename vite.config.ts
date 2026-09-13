@@ -1,14 +1,35 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
+
+// Vercel serves files from dist before applying SPA rewrites. Emit the
+// standalone host portal explicitly so /host-portal/ is never handled by the
+// guest-facing React application.
+function hostPortalStaticFiles() {
+  const portalDir = path.resolve(__dirname, 'standalone-host-portal');
+  return {
+    name: 'aurora-host-portal-static-files',
+    generateBundle() {
+      for (const fileName of ['index.html', 'app.js']) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `host-portal/${fileName}`,
+          source: fs.readFileSync(path.join(portalDir, fileName)),
+        });
+      }
+    },
+  };
+}
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
+      hostPortalStaticFiles(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
