@@ -473,6 +473,14 @@ export function createApp() {
         res.status(400).json({ success: false, error: 'Dati immagine mancanti.' });
         return;
       }
+      // Le funzioni serverless di Vercel rifiutano richieste sopra i 4.5MB con un 413
+      // prima ancora che questo codice venga eseguito. Controlliamo comunque qui la
+      // dimensione per dare un errore chiaro nei casi in cui il body arrivi comunque
+      // (es. altri hosting) o quando il client non ha potuto comprimere l'immagine.
+      if (typeof dataUrl === 'string' && dataUrl.length > 4 * 1024 * 1024) {
+        res.status(413).json({ success: false, error: 'Immagine troppo pesante. Riprova con più luce o inquadrando solo il documento.' });
+        return;
+      }
       // Parse base64 Data URL
       const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
       let mimeType = 'image/jpeg';
@@ -576,7 +584,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
 
       res.json({ success: true, data: parsedData });
     } catch (err: any) {
-      console.error('OCR scan failed:', err);
+      console.error('OCR scan failed:', err?.message || err, err?.stack || '');
       res.status(502).json({ success: false, error: 'Scansione intelligente fallita. Riprova o compila manualmente.' });
     }
   });

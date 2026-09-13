@@ -238,6 +238,48 @@ interface GuestDocument {
   issueDate: string;
 }
 
+/**
+ * Le foto scattate con la fotocamera del telefono (capture="environment") sono spesso
+ * da 3 a 10+ MB. Le funzioni serverless di Vercel rifiutano qualunque richiesta sopra i
+ * 4.5MB con un errore 413, che a schermo si traduceva in "scansione fallita al 90%".
+ * Ridimensioniamo e ricomprimiamo l'immagine lato client prima di inviarla, così il
+ * payload resta piccolo (tipicamente poche centinaia di KB) senza perdere leggibilità
+ * per l'OCR.
+ */
+async function resizeImageForOcr(file: File, maxDimension = 1800, quality = 0.85): Promise<string> {
+  const originalDataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  // Se il browser non supporta canvas per qualche motivo, torniamo all'originale.
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = originalDataUrl;
+    });
+
+    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+    const targetWidth = Math.round(img.width * scale);
+    const targetHeight = Math.round(img.height * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return originalDataUrl;
+
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch {
+    return originalDataUrl;
+  }
+}
+
 export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSuccess, onCancel }) => {
   const t = dTranslations[language] || dTranslations.en;
   
@@ -335,13 +377,9 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
         });
       }, 350);
 
-      // Convert image to base64 Data URL
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Ridimensiona e comprimi la foto (evita il 413 "payload too large" di Vercel
+      // sulle foto ad alta risoluzione scattate dalla fotocamera del telefono).
+      const dataUrl = await resizeImageForOcr(file);
 
       setState(s => ({ ...s, scanProgress: 50 }));
 
@@ -353,6 +391,10 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
       clearInterval(progressInterval);
       setState(s => ({ ...s, scanProgress: 100 }));
+
+      if (res.status === 413) {
+        throw new Error('La foto è troppo pesante anche dopo la compressione. Riprova con più luce o inquadrando solo il documento, oppure inserisci i dati manualmente.');
+      }
 
       if (!res.ok) {
         throw new Error(t.scanFailedAuto);
@@ -380,7 +422,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       setState(s => ({ ...s, ocrStatus: 'success' }));
     } catch (err: any) {
       console.error(err);
-      setState(s => ({ ...s, ocrStatus: 'success', error: t.scanFailedManual }));
+      setState(s => ({ ...s, ocrStatus: 'success', error: err?.message || t.scanFailedManual }));
     } finally {
       setState(s => ({ ...s, isScanning: false }));
     }

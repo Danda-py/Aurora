@@ -10,7 +10,8 @@ import {
   ShieldCheck, 
   MapPin,
   Unlock,
-  Heart
+  Heart,
+  Lock
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
@@ -103,13 +104,21 @@ export const StayDetailsModal: React.FC<Props> = ({
           </div>
 
           {/* Open Door Button Card */}
-          <div className="p-4 rounded-2xl bg-[#070a0e] border border-emerald-500/30 text-white space-y-3">
+          <div className={`p-4 rounded-2xl text-white space-y-3 ${
+            !pass.checkInConfirmed 
+              ? 'bg-amber-950/20 border border-amber-500/30' 
+              : 'bg-[#070a0e] border border-emerald-500/30'
+          }`}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-300">
                 {t.staySummary.mainDoorOpening}
               </span>
-              <span className="text-[10px] text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-md font-mono">
-                {t.staySummary.active24h}
+              <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono border ${
+                !pass.checkInConfirmed
+                  ? 'text-amber-300 bg-amber-500/20 border-amber-500/30'
+                  : 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30'
+              }`}>
+                {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.staySummary.active24h}
               </span>
             </div>
 
@@ -117,18 +126,25 @@ export const StayDetailsModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onClose();
-                  onOpenSmartLock();
+                  if (pass.checkInConfirmed) {
+                    onClose();
+                    onOpenSmartLock();
+                  }
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                disabled={!pass.checkInConfirmed}
+                className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  !pass.checkInConfirmed
+                    ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed shadow-none'
+                    : 'bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 shadow-lg shadow-emerald-500/20'
+                }`}
               >
-                <Unlock className="w-4 h-4" />
-                <span>{t.smartLock.openDoorBtn}</span>
+                {!pass.checkInConfirmed ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                <span>{!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}</span>
               </button>
             )}
 
             <p className="text-[11px] text-slate-400 leading-snug text-center">
-              {t.staySummary.openDoorInstructions}
+              {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : t.staySummary.openDoorInstructions}
             </p>
           </div>
 

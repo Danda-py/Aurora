@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
 import { getStayTiming } from '../../services/guestPassService';
-import { Unlock, ChevronRight, User } from 'lucide-react';
+import { Unlock, ChevronRight, User, Lock } from 'lucide-react';
 import { StayDetailsModal } from './StayDetailsModal';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
@@ -35,11 +35,17 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, langua
                 <span className="text-xs font-semibold text-white tracking-tight truncate">
                   {guestFirstName}
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#30d158] shrink-0 shadow-[0_0_6px_rgba(48,209,88,0.8)]" />
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  !pass.checkInConfirmed
+                    ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] animate-pulse'
+                    : 'bg-[#30d158] shadow-[0_0_6px_rgba(48,209,88,0.8)]'
+                }`} />
               </div>
               <p className="text-[10px] text-neutral-400 truncate -mt-0.5 tracking-tight font-normal">
                 {timing.isActive 
-                  ? `${t.staySummary.activeStay} • ${timing.formattedCountdown}`
+                  ? (!pass.checkInConfirmed 
+                    ? t.checkInPage.pendingHostConfirmation 
+                    : `${t.staySummary.activeStay} • ${timing.formattedCountdown}`)
                   : timing.isUpcoming
                   ? `${t.staySummary.upcomingStay}: ${pass.checkInDate}`
                   : t.staySummary.completedStay}
@@ -54,12 +60,21 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, langua
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenSmartLock();
+                  if (pass.checkInConfirmed) {
+                    onOpenSmartLock();
+                  }
                 }}
-                className="px-3 py-1.5 rounded-full bg-white text-neutral-950 hover:bg-neutral-100 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
+                disabled={!pass.checkInConfirmed}
+                className={`px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 ${
+                  !pass.checkInConfirmed
+                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                    : 'bg-white text-neutral-950 hover:bg-neutral-100 cursor-pointer'
+                }`}
               >
-                <Unlock className="w-3.5 h-3.5 text-neutral-950" />
-                <span className="tracking-tight">{t.smartLock.openDoorBtn}</span>
+                {!pass.checkInConfirmed ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                <span className="tracking-tight">
+                  {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}
+                </span>
               </button>
             )}
 

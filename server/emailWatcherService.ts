@@ -189,11 +189,7 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
       
       let unseen: number[] = [];
       let allUids: number[] = [];
-      let pastBB: number[] = [];
-      let pastBB2: number[] = [];
-      let pastBB3: number[] = [];
-      let pastBB4: number[] = [];
-      
+
       try {
         unseen = (await client.search({ seen: false }, { uid: true })) || [];
       } catch (err) {
@@ -205,41 +201,45 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
       } catch (err) {
         console.warn('[IMAP] Search all failed:', err);
       }
-      
-      try {
-        pastBB = (await client.search({ from: 'bed-and-breakfast.it' }, { uid: true })) || [];
-      } catch (err) {
-        console.warn('[IMAP] Search pastBB failed:', err);
+
+      // Ricerche mirate per piattaforma, sia sul mittente che sull'oggetto, così le email
+      // storiche (anche molto vecchie) vengono trovate indipendentemente da quante email
+      // ci sono nella casella. IMAP SEARCH scansiona l'intera mailbox, non solo le recenti.
+      const platformSearchTerms = [
+        'bed-and-breakfast.it',
+        'ireservation',
+        'prenotazione',
+        'booking.com',
+        'airbnb',
+        'vrbo',
+        'expedia'
+      ];
+
+      let platformUids: number[] = [];
+      for (const term of platformSearchTerms) {
+        try {
+          const bySender = (await client.search({ from: term }, { uid: true })) || [];
+          platformUids.push(...bySender);
+        } catch (err) {
+          console.warn(`[IMAP] Search from:"${term}" failed:`, err);
+        }
+        try {
+          const bySubject = (await client.search({ subject: term }, { uid: true })) || [];
+          platformUids.push(...bySubject);
+        } catch (err) {
+          console.warn(`[IMAP] Search subject:"${term}" failed:`, err);
+        }
       }
-      
-      try {
-        pastBB2 = (await client.search({ from: 'ireservation' }, { uid: true })) || [];
-      } catch (err) {
-        console.warn('[IMAP] Search pastBB2 failed:', err);
-      }
-      
-      try {
-        pastBB3 = (await client.search({ subject: 'ireservation' }, { uid: true })) || [];
-      } catch (err) {
-        console.warn('[IMAP] Search pastBB3 failed:', err);
-      }
-      
-      try {
-        pastBB4 = (await client.search({ subject: 'prenotazione' }, { uid: true })) || [];
-      } catch (err) {
-        console.warn('[IMAP] Search pastBB4 failed:', err);
-      }
-      
-      // Slicing the last 1000 UIDs (ascending order by default)
-      const recentUids = allUids.slice(-1000);
+
+      // In sincronizzazione forzata (backfill manuale "Sincronizza ora") scansioniamo TUTTA
+      // la mailbox, per recuperare anche gli ospiti passati/scaduti. Nel polling periodico
+      // automatico invece ci limitiamo alle ultime 1000 email per non appesantire ogni ciclo.
+      const recentUids = forceAll ? allUids : allUids.slice(-1000);
       
       const uids = Array.from(new Set([
         ...unseen,
         ...recentUids,
-        ...pastBB,
-        ...pastBB2,
-        ...pastBB3,
-        ...pastBB4
+        ...platformUids
       ])).sort((a, b) => a - b);
 
       if (uids.length === 0) {
