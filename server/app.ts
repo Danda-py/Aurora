@@ -542,7 +542,7 @@ export function createApp() {
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni. Se un campo non è rilevabile dal documento, lascialo vuoto (""). Assicurati di convertire le date nel formato YYYY-MM-DD.`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash-lite',
           contents: [
             {
               parts: [
@@ -669,7 +669,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       }
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: [
           ...history.map((message: { role: 'user' | 'model'; text: string }) => ({
             role: message.role,
@@ -678,9 +678,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           { role: 'user', parts: userParts }
         ],
         config: {
-          systemInstruction: personalizedInstructions,
-          // Lets Aurora AI answer up-to-date general questions (e.g. local events) like plain Gemini does.
-          tools: [{ googleSearch: {} }]
+          systemInstruction: personalizedInstructions
         }
       });
       const answer = response.text?.trim();
@@ -1053,7 +1051,7 @@ Ritorna una risposta in formato JSON strutturato con le chiavi delle lingue dest
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: [
           {
             parts: [{ text: prompt }]
