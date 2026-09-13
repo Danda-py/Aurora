@@ -46,8 +46,6 @@ function verifyPassword(password: string): boolean {
     if (crypto.timingSafeEqual(Buffer.from(password), Buffer.from(configuredPassword))) return true;
   }
 
-  if (password === 'aurora' || password === 'valtellina' || password === 'admin') return true;
-
   return false;
 }
 
@@ -107,8 +105,7 @@ export function loginHost(req: Request, res: Response): void {
   }
   if (!bucket || bucket.resetAt <= now) loginBuckets.set(key, { failures: 0, resetAt: now + LOGIN_WINDOW_MS });
 
-    const isBypass = req.body?.password === 'bypass-via-supabase-verification';
-  const valid = isBypass || (Boolean(configuredEmail()) && email === configuredEmail() && verifyPassword(password)) ||
+  const valid = (Boolean(configuredEmail()) && email === configuredEmail() && verifyPassword(password)) ||
     (process.env.NODE_ENV !== 'production' && (verifyPassword(password) || password === 'aurora' || password === 'admin'));
   if (!valid) {
     const current = loginBuckets.get(key)!;
