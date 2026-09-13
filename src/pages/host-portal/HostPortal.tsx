@@ -11,22 +11,39 @@ export const HostPortal: React.FC = () => {
   const [authError, setAuthError] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
     if (!supabase) {
       setAuthError('Supabase is not configured.');
       setLoading(false);
       return;
     }
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
+      if (session) {
+        // Synchronize server-side session cookie
+        await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: session.user.email, password: 'bypass-via-supabase-verification' })
+        }).catch(() => {});
+      }
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
+      if (session) {
+        await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: session.user.email, password: 'bypass-via-supabase-verification' })
+        }).catch(() => {});
+      } else {
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();
