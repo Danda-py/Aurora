@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import JSZip from 'jszip';
+import Tesseract from 'tesseract.js';
 import { GoogleGenAI } from '@google/genai';
 import { simpleParser } from 'mailparser';
 import { 
@@ -472,12 +473,7 @@ export function createApp() {
         res.status(400).json({ success: false, error: 'Dati immagine mancanti.' });
         return;
       }
-      if (!process.env.GEMINI_API_KEY) {
-        res.status(503).json({ success: false, error: 'Configurazione Gemini assente sul server.' });
-        return;
-      }
-
-      // Parse base64 Data URL (e.g. "data:image/png;base64,...")
+      // Parse base64 Data URL
       const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
       let mimeType = 'image/jpeg';
       let base64Data = dataUrl;
@@ -492,8 +488,11 @@ export function createApp() {
         }
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Analizza l'immagine di questo documento di identità (${docType || 'documento'}) e scansiona/estrai i seguenti dati dell'ospite in formato JSON strutturato con le seguenti chiavi esatte:
+      let parsedData: any = {};
+
+      if (process.env.GEMINI_API_KEY) {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const prompt = `Analizza l'immagine di questo documento di identità (${docType || 'documento'}) e scansiona/estrai i seguenti dati dell'ospite in formato JSON strutturato con le seguenti chiavi esatte:
 {
   "name": "Nome in maiuscolo (es. MARIO)",
   "surname": "Cognome in maiuscolo (es. ROSSI)",
@@ -508,41 +507,76 @@ export function createApp() {
 
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni. Se un campo non è rilevabile dal documento, lascialo vuoto (""). Assicurati di convertire le date nel formato YYYY-MM-DD.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              { inlineData: { data: base64Data, mimeType: mimeType } }
-            ]
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                { inlineData: { data: base64Data, mimeType: mimeType } }
+              ]
+            }
+          ],
+          config: {
+            responseMimeType: "application/json"
           }
-        ],
-        config: {
-          responseMimeType: "application/json"
-        }
-      });
+        });
 
-      const responseText = response.text?.trim();
-      if (!responseText) {
-        throw new Error('Gemini non ha restituito una risposta valida.');
-      }
-
-      let parsedData: any = {};
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseErr) {
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedData = JSON.parse(jsonMatch[0]);
-        } else {
-          throw parseErr;
+        const responseText = response.text?.trim();
+        if (!responseText) {
+          throw new Error('Gemini non ha restituito una risposta valida.');
         }
+
+        try {
+          parsedData = JSON.parse(responseText);
+        } catch (parseErr) {
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsedData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw parseErr;
+          }
+        }
+      } else {
+        // Fallback to local Tesseract OCR
+        console.log('[OCR] Using local Tesseract fallback...');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const { data: { text } } = await Tesseract.recognize(buffer, 'ita');
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        
+        // Basic naive extraction
+        parsedData = {
+          name: '',
+          surname: '',
+          gender: 'M',
+          birthDate: '',
+          birthPlace: '',
+          citizenship: 'ITALIANA',
+          documentNumber: '',
+          issuePlace: '',
+          issueDate: ''
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].toUpperCase();
+          if (line.includes('COGNOME') && lines[i+1]) {
+            parsedData.surname = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
+          } else if (line.includes('NOME') && lines[i+1]) {
+            parsedData.name = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
+          } else if (line.includes('DATA DI NASCITA')) {
+            const dateMatch = (lines[i] + ' ' + (lines[i+1]||'')).match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
+            if (dateMatch) parsedData.birthDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+          }
+        }
+        
+        // Try to find any typical document number
+        const docNumMatch = text.match(/\b([A-Z]{2}\d{5}[A-Z]{2}|[A-Z0-9]{9})\b/i);
+        if (docNumMatch) parsedData.documentNumber = docNumMatch[1].toUpperCase();
       }
 
       res.json({ success: true, data: parsedData });
     } catch (err: any) {
-      console.error('OCR scan with Gemini failed:', err);
+      console.error('OCR scan failed:', err);
       res.status(502).json({ success: false, error: 'Scansione intelligente fallita. Riprova o compila manualmente.' });
     }
   });

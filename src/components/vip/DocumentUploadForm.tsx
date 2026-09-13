@@ -322,9 +322,13 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
             </div>
 
             <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => setState(s => ({ ...s, ocrStatus: 'idle', isScanning: false, scanProgress: 0 }))} className="py-2.5 px-3 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-xs border border-amber-500/20 cursor-pointer">
+                <Camera className="w-4 h-4 inline-block mr-1" />
+                {isIt ? "Riscattare Foto" : "Retake Photo"}
+              </button>
               <button type="submit" className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer">
                 <Check className="w-3.5 h-3.5" />
-                <span>{isIt ? "Salva Ospite" : "Confirm Guest"}</span>
+                <span>{isIt ? "Salva" : "Save"}</span>
               </button>
               <button type="button" onClick={() => setActiveIndex(null)} className="py-2.5 px-3 rounded-xl bg-white/[0.04] text-slate-400 font-bold text-xs border border-white/5 cursor-pointer">{isIt ? "Annulla" : "Cancel"}</button>
             </div>

@@ -29,6 +29,8 @@ export interface EmailLog {
   details?: any;
 }
 
+const processedUids = new Set<number>();
+
 // Simple in-memory config for testing (normally populated via environment variables or host config)
 let imapConfig: ImapConfig = {
   host: process.env.IMAP_HOST || '',
@@ -166,7 +168,10 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
       user: imapConfig.user,
       pass: imapConfig.pass
     },
-    logger: false
+    logger: false,
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 
   try {
@@ -176,21 +181,28 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
     const lock = await client.getMailboxLock('INBOX');
     try {
       console.log('[IMAP] Avvio sincronizzazione vecchie e nuove email...');
-      const unseen = (await client.search({ seen: false })) || [];
-      const pastBB = (await client.search({ subject: 'ireservation' })) || [];
-      const pastBB2 = (await client.search({ subject: 'prenotazione' })) || [];
-      const pastBB3 = (await client.search({ from: 'bed-and-breakfast.it' })) || [];
-      const uids = Array.from(new Set([...unseen, ...pastBB, ...pastBB2, ...pastBB3]));
+      const unseen = (await client.search({ seen: false }, { uid: true })) || [];
+      const pastBB = (await client.search({ from: 'bed-and-breakfast.it' }, { uid: true })) || [];
+      const pastBB2 = (await client.search({ from: 'ireservation' }, { uid: true })) || [];
+      const pastBB3 = (await client.search({ subject: 'ireservation' }, { uid: true })) || [];
+      const pastBB4 = (await client.search({ subject: 'prenotazione' }, { uid: true })) || [];
+      const recent = (await client.search({ since: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) }, { uid: true })) || [];
+      
+      const uids = Array.from(new Set([...unseen, ...pastBB, ...pastBB2, ...pastBB3, ...pastBB4, ...recent]));
 
       if (uids.length === 0) {
         console.log('[IMAP] Nessuna email rilevata con i criteri di ricerca.');
         return;
       }
-      console.log(`[IMAP] Trovate ${uids.length} email da esaminare.`);
+      
+      const toProcess = uids.filter(uid => !processedUids.has(uid));
+      console.log(`[IMAP] Trovate ${uids.length} email, di cui ${toProcess.length} da elaborare.`);
+      
       const todayStr = new Date().toISOString().split('T')[0];
 
-      for (const uid of uids) {
-        const messageStream = await client.fetchOne(String(uid), { source: true });
+      for (const uid of toProcess) {
+        processedUids.add(uid);
+        const messageStream = await client.fetchOne(String(uid), { source: true }, { uid: true });
         if (!messageStream || !messageStream.source) continue;
         const parsedEmail = await simpleParser(messageStream.source);
         

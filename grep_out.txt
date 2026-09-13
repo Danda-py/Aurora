@@ -1,0 +1,71 @@
+   150	    dicembre: '12', dic: '12', dec: '12', december: '12'
+   151	  };
+   152	
+   153	  // Helper to parse date string into YYYY-MM-DD
+   154	  const parseAnyDate = (dateStr: string): string => {
+   155	    if (!dateStr) return '';
+   156	    // Check written month: e.g. 15 settembre 2026 or 15 set 2026
+   157	    const writtenMatch = dateStr.match(/(\d{1,2})\s+([a-zA-ZÀ-ÿ]+)\s+(\d{2,4})/);
+   158	    if (writtenMatch) {
+   159	      const day = writtenMatch[1].padStart(2, '0');
+   160	      const mName = writtenMatch[2].toLowerCase();
+   161	      const month = monthsMap[mName] || '01';
+   162	      let year = writtenMatch[3];
+   163	      if (year.length === 2) year = `20${year}`;
+   164	      return `${year}-${month}-${day}`;
+   165	    }
+   166	
+   167	    // Check numeric: dd/mm/yyyy or yyyy-mm-dd
+   168	    const numMatch = dateStr.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+   169	    if (numMatch) {
+   170	      const day = numMatch[1].padStart(2, '0');
+   171	      const month = numMatch[2].padStart(2, '0');
+   172	      let year = numMatch[3];
+   173	      if (year.length === 2) year = `20${year}`;
+   174	      return `${year}-${month}-${day}`;
+   175	    }
+   176	
+   177	    const isoMatch = dateStr.match(/(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+   178	    if (isoMatch) {
+   179	      const year = isoMatch[1];
+   180	      const month = isoMatch[2].padStart(2, '0');
+   181	      const day = isoMatch[3].padStart(2, '0');
+   182	      return `${year}-${month}-${day}`;
+   183	    }
+   184	
+   185	    return '';
+   186	  };
+   187	
+   188	  // Extract Booking Reference / Numero prenotazione with multi-pattern precision
+   189	  const stopWords = new Set([
+   190	    'da', 'di', 'del', 'della', 'per', 'a', 'in', 'su', 'il', 'la', 'un', 'una', 
+   191	    'nuova', 'nuovo', 'bed', 'breakfast', 'airbnb', 'booking', 'com', 'it', 
+   192	    'confermata', 'ricevuta', 'accettata', 'saluti', 'grazie', 'notifica'
+   193	  ]);
+   194	
+   195	  const refPatterns = [
+   196	    // 1. Explicit full labels (e.g. "Numero prenotazione: BB-67807", "Codice di prenotazione: 39482")
+   197	    /(?:codice\s*(?:di\s*)?prenotazione|numero\s*(?:di\s*)?prenotazione|n(?:umero|\.|\s*#)?\s*prenotazione|prenotazione\s*n(?:umero|\.|\s*#)?|riferimento\s*(?:di\s*)?prenotazione|rif\.?\s*prenotazione|id\s*prenotazione)\s*[:=–-]?\s*#?\s*([A-Za-z0-9\-_]{3,30})/i,
+   198	    // 2. Booking.com / Airbnb / OTA specific patterns
+   199	    /(?:booking\s*(?:number|ref|reference|id|code)|confirmation\s*code|reservation\s*(?:id|number|code)|pin\s*code)\s*[:=–-]?\s*#?\s*([A-Za-z0-9\-_]{3,30})/i,
+   200	    // 2b. Common notification formats such as "Prenotazione #67807" or "Booking ID 67807"
+   201	    /(?:prenotazione|booking|reservation)\s*(?:n(?:umero|\.)?|id|code|ref(?:erence)?)?\s*#\s*([A-Za-z0-9\-_]{3,30})/i,
+   202	    /(?:id|codice|numero|ref|rif)\s*(?:di\s*)?(?:prenotazione|booking|reservation)?\s*[:=#-]\s*([A-Za-z0-9\-_]{3,30})/i,
+   203	    // 3. Shorter labels requiring strict colon/equals/hash delimiter (to avoid matching "prenotazione da...")
+   204	    /(?:codice|numero|ref|rif|booking\s?id)\s*[:=#]\s*([A-Za-z0-9\-_]{3,30})/i,
+   205	    // 4. Standalone BB-XXXXX format typical of bed-and-breakfast.it
+   206	    /\b(BB-\d{4,8})\b/i,
+   207	    // 5. Strict "Prenotazione: XYZ" requiring colon
+   208	    /(?:prenotazione)\s*[:=]\s*#?\s*([A-Za-z0-9\-_]{3,30})/i
+   209	  ];
+   210	
+   211	  for (const pattern of refPatterns) {
+   212	    const match = text.match(pattern);
+   213	    if (match && match[1]) {
+   214	      const candidate = match[1].trim();
+   215	      if (!stopWords.has(candidate.toLowerCase()) && candidate.length >= 3 && !/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}$/.test(candidate)) {
+   216	        bookingRef = candidate;
+   217	        break;
+   218	      }
+   219	    }
+   220	  }

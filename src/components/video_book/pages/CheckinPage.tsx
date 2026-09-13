@@ -42,6 +42,7 @@ export const CheckinPage: React.FC<Props> = ({
   pass,
   onUpdatePass
 }) => {
+  const [isEditingDocs, setIsEditingDocs] = useState(false);
   const { getPageData, media } = useCms();
   const cmsCheckIn = getPageData('checkIn') || {};
   const c = { ...BOOK_DATA[language].checkIn, ...cmsCheckIn };
@@ -169,7 +170,7 @@ export const CheckinPage: React.FC<Props> = ({
 
         {/* HERO COMPONENT: Apple Home Key / Action Card (only for guests with pass) */}
         {pass ? (
-          pass.documentsUploaded ? (
+          pass.documentsUploaded && !isEditingDocs ? (
             <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
           
           {/* Ambient Mint or Amber Glow */}
@@ -217,11 +218,19 @@ export const CheckinPage: React.FC<Props> = ({
             {!pass.checkInConfirmed ? (
               /* Pending Confirmation warning block */
               <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-amber-200 space-y-2.5">
-                <div className="flex items-center gap-2.5">
-                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider font-mono">
-                    {t.checkInPage.pendingHostConfirmation}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono">
+                      {t.checkInPage.pendingHostConfirmation}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setIsEditingDocs(true)} 
+                    className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-200 text-[11px] font-bold transition whitespace-nowrap self-start sm:self-auto cursor-pointer"
+                  >
+                    {language === 'it' ? 'Modifica Documenti' : 'Edit Documents'}
+                  </button>
                 </div>
                 <p className="text-xs leading-relaxed text-white/80 font-normal">
                   {t.checkInPage.pendingHostConfirmationDesc}
@@ -415,10 +424,12 @@ export const CheckinPage: React.FC<Props> = ({
               pass={pass}
               language={language}
               onSaveSuccess={(updatedPass) => {
+                setIsEditingDocs(false);
                 if (onUpdatePass) {
                   onUpdatePass(updatedPass);
                 }
               }}
+              onCancel={() => setIsEditingDocs(false)}
             />
           )
         ) : (
