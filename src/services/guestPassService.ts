@@ -696,3 +696,98 @@ function getInitialDemoPasses(): GuestPass[] {
   const token = encodePassToToken(demoPass);
   return [{ ...demoPass, token }];
 }
+
+
+/**
+ * Parse an email from iReservation to extract booking fields
+ */
+export function parseIReservationEmail(text: string, html?: string): {
+  bookingRef: string;
+  bookingSource: string;
+  guestName: string;
+  guestSurname: string;
+  guestEmail: string;
+  phone: string;
+  apartmentName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  nightsCount: number;
+  guestsCount: number;
+  amount: string;
+} {
+  let textToParse = text || '';
+  if (!textToParse && html) {
+    let t = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>|<\/div>|<\/tr>/gi, '\n').replace(/<[^>]+>/g, ' ');
+    textToParse = t.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  }
+
+  const monthsMap: Record<string, string> = {
+    gennaio: '01', gen: '01', jan: '01', january: '01', dic: '12', dec: '12', dicembre: '12',
+    febbraio: '02', feb: '02', marzo: '03', mar: '03', aprile: '04', apr: '04', maggio: '05', mag: '05',
+    giugno: '06', giu: '06', luglio: '07', lug: '07', agosto: '08', ago: '08', settembre: '09', set: '09',
+    ottobre: '10', ott: '10', novembre: '11', nov: '11'
+  };
+
+  const parseAnyDate = (dateStr: string): string => {
+    if (!dateStr) return '';
+    let s = dateStr.replace(/^(?:lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|monday|tuesday|wednesday|thursday|friday|saturday|sunday|lun|mar|mer|gio|ven|sab|dom|mon|tue|wed|thu|fri|sat|sun)\.?\s*,?\s*/i, '').trim();
+    const writtenMatch = s.match(/(\d{1,2})\s+([a-zA-ZÀ-ÿ]+)\s+(\d{2,4})/);
+    if (writtenMatch) {
+      const day = writtenMatch[1].padStart(2, '0');
+      const month = monthsMap[writtenMatch[2].toLowerCase().replace(/\./g, '')] || '01';
+      let year = writtenMatch[3];
+      return `${year.length === 2 ? '20' + year : year}-${month}-${day}`;
+    }
+    const numMatch = s.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+    if (numMatch) {
+      let year = numMatch[3];
+      return `${year.length === 2 ? '20' + year : year}-${numMatch[2].padStart(2, '0')}-${numMatch[1].padStart(2, '0')}`;
+    }
+    return '';
+  };
+
+  const findField = (regexes: RegExp[], fallback = ''): string => {
+    for (const r of regexes) {
+      const m = textToParse.match(r);
+      if (m && m[1]) return m[1].trim();
+    }
+    return fallback;
+  };
+
+  const bookingRef = findField([
+    /(?:id[-_ ]*prenotazione|numero[-_ ]*prenotazione|prenotazione[-_ ]*n|codice[-_ ]*prenotazione|ireservation[-_ ]*id|reservation[-_ ]*id|booking[-_ ]*id|riferimento[-_ ]*prenotazione|booking[-_ ]*ref)\s*[:=–-]?\s*#?\s*(\d{8,15})/i,
+    /\b(\d{10})\b/i
+  ]);
+
+  const rawSource = findField([/(?:provider|canale|origine|channel|source|booking[-_ ]*source|provenienza)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
+  const bookingSource = /booking/i.test(rawSource || textToParse) ? 'booking.com' : /airbnb/i.test(rawSource || textToParse) ? 'airbnb' : /bed/i.test(rawSource || textToParse) ? 'bed-and-breakfast.it' : 'other';
+
+  const rawName = findField([/(?:nome[-_ ]*e[-_ ]*cognome|viaggiatore|ospite|guest|cliente|name|richiedente|intestatario)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
+  const nameParts = rawName.replace(/^(?:sig\.|sig\.ra|dott\.|mr\.|mrs\.|ms\.)\s*/i, '').split(/\s+/);
+  const guestName = nameParts[0] || '';
+  const guestSurname = nameParts.slice(1).join(' ') || '';
+
+  const guestEmail = findField([
+    /(?:email[-_ ]*ospite|guest[-_ ]*email|email|e-mail|posta)\s*[:=–-]?\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i,
+    /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/i
+  ]);
+
+  const phone = findField([
+    /(?:telefono|cellulare|cell|tel|phone|mobile|whatsapp)\s*[:=–-]?\s*([+\d\s()-]{8,22})/i,
+    /(?:\+39|0039)?[\s\-\.]*3\d{2}[\s\-\.]*\d{6,7}/i
+  ]);
+
+  const apartmentName = findField([/(?:struttura|alloggio|appartamento|casa|property|apartment)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
+  const checkInDate = parseAnyDate(findField([/(?:check[-_ ]*in|arrivo|\bdal\b|data[-_ ]*arrivo|arrival)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i]));
+  const checkOutDate = parseAnyDate(findField([/(?:check[-_ ]*out|partenza|\bal\b|data[-_ ]*partenza|departure)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i]));
+
+  const nightsMatch = textToParse.match(/(?:(\d+)\s*(?:notti|nights|notte|night)|(?:notti|nights|notte|night)\s*[:=–-]?\s*(\d+))/i);
+  const nightsCount = nightsMatch ? (parseInt(nightsMatch[1] || nightsMatch[2], 10) || 1) : 1;
+
+  const guestsMatch = textToParse.match(/(?:(\d+)\s*(?:ospiti|guests|ospite|guest|persone|adulti|pax|pers\.)|(?:ospiti|guests|ospite|guest|persone|adulti|pax|pers\.)\s*[:=–-]?\s*(\d+))/i);
+  const guestsCount = guestsMatch ? (parseInt(guestsMatch[1] || guestsMatch[2], 10) || 2) : 2;
+
+  const amount = findField([/(?:totale[-_ ]*importo|importo[-_ ]*totale|importo|prezzo|tariffa|total|price|amount|totale)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
+
+  return { bookingRef, bookingSource, guestName, guestSurname, guestEmail, phone, apartmentName, checkInDate, checkOutDate, nightsCount, guestsCount, amount };
+}

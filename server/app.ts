@@ -4,10 +4,12 @@ import path from 'path';
 import fs from 'fs';
 import JSZip from 'jszip';
 import { GoogleGenAI } from '@google/genai';
+import { simpleParser } from 'mailparser';
 import { 
   parseBedAndBreakfastBooking, 
   generateRandomPin, 
-  formatInvitationMessage 
+  formatInvitationMessage,
+  parseIReservationEmail
 } from '../src/services/guestPassService.js';
 import { GuestPass } from '../src/types.js';
 import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
@@ -42,6 +44,7 @@ import {
   scheduleBookingMessages,
   getScheduledMessages,
   cancelScheduledMessage,
+  cancelAllMessagesForPass,
   retryScheduledMessage,
   startScheduledMessagingWatcher
 } from './scheduledMessagingService.js';
@@ -354,7 +357,7 @@ export function createApp() {
       next();
       return;
     }
-    if (req.path === '/webhook/booking') {
+    if (req.path === '/webhook/booking' || req.path === '/webhook/ireservation') {
       if (req.method === 'GET') {
         next();
         return;
@@ -1217,6 +1220,172 @@ export function createApp() {
         bookingRef: 'Opzionale (Es. BB-12345)'
       },
       exampleCurl: `curl -X POST https://${req.get('host')}/api/webhook/booking -H "Content-Type: application/json" -d '{"rawText": "Nuova prenotazione per Mario Rossi dal 15/09/2026 al 18/09/2026 tel: +39 340 1234567"}'`
+    });
+  });
+
+  // Webhook iReservation Email Receiver
+  apiRouter.post('/webhook/ireservation', async (req, res) => {
+    try {
+      let rawText = '', html = '', emailSubject = '', emailSender = '';
+      const contentType = req.get('content-type') || '';
+      if (contentType.includes('message/rfc822') || (contentType.includes('text/plain') && typeof req.body === 'string' && !req.body.startsWith('{'))) {
+        try {
+          const parsedMime = await simpleParser(req.body);
+          rawText = parsedMime.text || '';
+          html = parsedMime.html || '';
+          emailSubject = parsedMime.subject || '';
+          emailSender = parsedMime.from?.value[0]?.address || '';
+        } catch (mimeErr) {
+          rawText = req.body;
+        }
+      } else {
+        const payload = req.body || {};
+        rawText = payload.text || payload.rawText || payload.body || payload.message || '';
+        html = payload.html || '';
+        emailSubject = payload.subject || '';
+        emailSender = payload.from || payload.sender || payload.email || '';
+        if (payload.rawEmail && typeof payload.rawEmail === 'string') {
+          try {
+            const parsedMime = await simpleParser(payload.rawEmail);
+            rawText = parsedMime.text || rawText;
+            html = parsedMime.html || html;
+            emailSubject = parsedMime.subject || emailSubject;
+            emailSender = parsedMime.from?.value[0]?.address || emailSender;
+          } catch {}
+        }
+      }
+      console.log(`[iReservation] Payload. Sender: "${emailSender}", Subject: "${emailSubject}", Text: ${rawText.length}`);
+
+      // Filtro di sicurezza: Accetta SOLO email provenienti da bed-and-breakfast.it o ireservation
+      const isFromBBOrIRes = 
+        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(emailSender) ||
+        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(emailSubject) ||
+        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(rawText);
+
+      if (!isFromBBOrIRes) {
+        console.log(`[iReservation] Email ignorata (non appartiene a bed-and-breakfast o ireservation). Sender: "${emailSender}", Subject: "${emailSubject}"`);
+        res.json({ success: false, message: 'Email ignorata: sorgente non associata a Bed-and-Breakfast.it o iReservation.' });
+        return;
+      }
+
+      const parsed = parseIReservationEmail(rawText, html);
+      const bookingRef = parsed.bookingRef;
+
+      // Rileva se si tratta di una notifica di cancellazione (evitando le clausole standard dei messaggi di conferma)
+      const isCancellation = 
+        /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(emailSubject) ||
+        /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled|status\s*[:=]\s*(?:cancellata|annullata|cancelled|deleted)/i.test(rawText.replace(/[\s\r\n\t]+/g, ' '));
+
+      if (isCancellation) {
+        console.log(`[iReservation] Rilevata notifica di CANCELLAZIONE per ID "${bookingRef}"`);
+        if (!bookingRef) {
+          res.status(400).json({ success: false, error: 'Cancellazione ignorata: ID Prenotazione non identificato.' });
+          return;
+        }
+
+        const existingIdx = serverPasses.findIndex(p => p.bookingRef === bookingRef || p.id === `ires-${bookingRef}`);
+        if (existingIdx !== -1) {
+          const targetPass = serverPasses[existingIdx];
+          targetPass.active = false;
+          targetPass.notes = `DISATTIVATO via Email di Cancellazione iReservation il ${new Date().toISOString()}.\n${targetPass.notes || ''}`;
+          
+          persistPasses();
+          await upsertPass(targetPass);
+          const cancelledCount = await cancelAllMessagesForPass(targetPass.id);
+          
+          console.log(`[iReservation] Soggiorno disattivato per ID "${bookingRef}". Cancellati ${cancelledCount} messaggi programmati.`);
+          res.status(200).json({ success: true, message: 'Prenotazione disattivata e messaggi in coda rimossi.', pass: targetPass });
+          return;
+        } else {
+          console.warn(`[iReservation] Cancellazione ricevuta per ID "${bookingRef}" ma nessun pass corrisponde.`);
+          res.status(200).json({ success: true, message: 'Ricevuto annullamento per prenotazione non esistente.' });
+          return;
+        }
+      }
+
+      console.log('[iReservation] Parsed:', parsed);
+
+      if (!bookingRef || !parsed.guestName || !parsed.checkInDate || !parsed.checkOutDate) {
+        const errM = `Dati incompleti. ID: "${bookingRef}", Ospite: "${parsed.guestName}", Check-in: "${parsed.checkInDate}", Check-out: "${parsed.checkOutDate}"`;
+        console.error(`[iReservation] ${errM}`);
+        if (isSupabaseConfigured()) {
+          try {
+            const currentLogs = (await loadDocument<any[]>('ireservation_fallback_logs')) || [];
+            currentLogs.unshift({ timestamp: new Date().toISOString(), error: errM, parsed, rawText: rawText.substring(0, 1000) });
+            await saveDocument('ireservation_fallback_logs', currentLogs.slice(0, 100));
+          } catch {}
+        }
+        res.status(400).json({ success: false, error: errM, parsed });
+        return;
+      }
+
+      const { bookingSource, guestName, guestSurname, guestEmail, phone, apartmentName, checkInDate, checkOutDate, nightsCount, guestsCount, amount } = parsed;
+      const existingIdx = serverPasses.findIndex(p => p.bookingRef === bookingRef || p.id === `ires-${bookingRef}`);
+      let targetPass: GuestPass;
+
+      if (existingIdx !== -1) {
+        const existingPass = serverPasses[existingIdx];
+        targetPass = {
+          ...existingPass, guestName, guestSurname, phone: phone || existingPass.phone, guestEmail: guestEmail || existingPass.guestEmail,
+          checkInDate, checkOutDate, guestsCount, bookingSource, amount, apartmentName, nightsCount, active: true,
+          notes: `Aggiornato da Email iReservation il ${new Date().toISOString()}.\nOriginale: ${existingPass.notes || ''}`
+        };
+        serverPasses[existingIdx] = targetPass;
+      } else {
+        const pinCode = generateRandomPin();
+        const token = crypto.randomBytes(32).toString('base64url');
+        targetPass = {
+          id: `ires-${bookingRef}`, guestName, guestSurname, phone, guestEmail, checkInDate, checkInTime: '14:00',
+          checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount, bookingSource, amount,
+          apartmentName, nightsCount, notes: `Generato da Email iReservation il ${new Date().toISOString()}`,
+          createdAt: new Date().toISOString(), active: true, token
+        };
+        serverPasses.unshift(targetPass);
+      }
+
+      persistPasses();
+      await upsertPass(targetPass);
+
+      const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const guestUrl = `${origin}/?pass=${targetPass.token}`;
+
+      await scheduleBookingMessages(targetPass, origin);
+
+      const allScheduled = getScheduledMessages();
+      const welcomeMsg = allScheduled.find(m => m.passId === targetPass.id && m.triggerType === 'welcome');
+      const messageSent = welcomeMsg ? (welcomeMsg.status === 'sent' || welcomeMsg.status === 'sending') : false;
+      const messageChannel = welcomeMsg?.channel || 'whatsapp';
+      const welcomeMessageText = welcomeMsg?.messageText || formatInvitationMessage(targetPass, guestUrl);
+
+      res.status(existingIdx !== -1 ? 200 : 201).json({
+        success: true, message: existingIdx !== -1 ? 'Prenotazione aggiornata!' : 'Prenotazione creata!',
+        pass: targetPass, token: targetPass.token, link: guestUrl, guestUrl, messageSent, messageChannel, welcomeMessageText
+      });
+    } catch (err: any) {
+      console.error('[iReservation] Errore:', err);
+      if (isSupabaseConfigured()) {
+        try {
+          const currentLogs = (await loadDocument<any[]>('ireservation_fallback_logs')) || [];
+          currentLogs.unshift({ timestamp: new Date().toISOString(), error: err.message || 'Errore', stack: err.stack });
+          await saveDocument('ireservation_fallback_logs', currentLogs.slice(0, 100));
+        } catch {}
+      }
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // GET endpoint for iReservation status/metadata
+  apiRouter.get('/webhook/ireservation', (req, res) => {
+    res.json({
+      status: 'active',
+      description: 'Elaborazione automatica delle email di conferma inviate da iReservation',
+      method: 'POST',
+      acceptedFormats: ['application/json', 'application/x-www-form-urlencoded', 'message/rfc822', 'text/plain'],
+      expectedFields: {
+        rawEmail: 'Testo dell\'email MIME originale intera',
+        html: 'Opzionale (HTML email iReservation)',
+        text: 'Opzionale (Text email iReservation)'
+      }
     });
   });
 

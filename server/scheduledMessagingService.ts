@@ -274,6 +274,24 @@ export async function cancelScheduledMessage(id: string): Promise<boolean> {
 }
 
 /**
+ * Cancel/delete all scheduled messages for a specific GuestPass ID
+ */
+export async function cancelAllMessagesForPass(passId: string): Promise<number> {
+  await hydrateScheduledMessages();
+  let count = 0;
+  for (let i = serverScheduledMessages.length - 1; i >= 0; i--) {
+    if (serverScheduledMessages[i].passId === passId && serverScheduledMessages[i].status === 'pending') {
+      serverScheduledMessages.splice(i, 1);
+      count++;
+    }
+  }
+  if (count > 0) {
+    await persistScheduledMessages();
+  }
+  return count;
+}
+
+/**
  * Manually trigger / retry sending a scheduled message immediately
  */
 export async function retryScheduledMessage(id: string): Promise<boolean> {
