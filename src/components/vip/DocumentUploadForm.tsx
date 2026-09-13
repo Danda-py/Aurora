@@ -2,6 +2,220 @@ import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
 import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
 
+const dTranslations: Record<Language, any> = {
+  it: {
+    title: "Check-in Alloggiati Web",
+    subtitle: "Registra i dati personali e i documenti di tutti gli ospiti della prenotazione.",
+    guestsList: "Ospiti della Prenotazione",
+    guestLeader: "Ospite 1 (Capogruppo)",
+    guestLabel: "Ospite",
+    toCompile: "Da compilare",
+    completed: "COMPLETATO",
+    pending: "DA COMPILARE",
+    submitAll: "Invia tutti i documenti e completa il Check-in",
+    cancel: "Annulla",
+    back: "Indietro",
+    selectDocType: "Seleziona tipo documento",
+    idCard: "C. Identità",
+    passport: "Passaporto",
+    driverLicense: "Patente",
+    snapPhoto: "Scatta Foto Documento (OCR)",
+    fillManually: "Compila Manualmente",
+    ocrScanning: "Analisi OCR...",
+    surname: "Cognome *",
+    name: "Nome *",
+    gender: "Sesso *",
+    male: "Maschio",
+    female: "Femmina",
+    birthDate: "Data Nascita *",
+    birthPlace: "Luogo Nascita *",
+    cityOrCountry: "Comune o Stato",
+    citizenship: "Cittadinanza *",
+    arrivalDate: "Data Arrivo",
+    nightsCount: "Notti di Soggiorno",
+    docNumber: "Numero Documento *",
+    issueDate: "Data Rilascio *",
+    issueAuthority: "Luogo/Ente Rilascio *",
+    issuePlacePlaceholder: "es. Comune, Questura, etc.",
+    retakePhoto: "Rifare Foto",
+    save: "Salva",
+    successTitle: "Check-in Completato con Successo!",
+    scanFailedAuto: "Impossibile completare la scansione automatica.",
+    scanFailedManual: "Scansione fallita. Inserisci i dati manualmente.",
+    requiredFields: "Tutti i campi con asterisco (*) sono obbligatori.",
+    registerAll: "Registra i dati di tutti gli ospiti della prenotazione."
+  },
+  en: {
+    title: "Alloggiati Web Registration",
+    subtitle: "Register details and IDs for all guests on this booking.",
+    guestsList: "Guests list",
+    guestLeader: "Guest 1 (Group Leader)",
+    guestLabel: "Guest",
+    toCompile: "To compile",
+    completed: "COMPLETED",
+    pending: "PENDING",
+    submitAll: "Submit All & Complete Check-in",
+    cancel: "Cancel",
+    back: "Back",
+    selectDocType: "Select Document Type",
+    idCard: "ID Card",
+    passport: "Passport",
+    driverLicense: "Driver's Lic.",
+    snapPhoto: "Snap ID Photo (OCR)",
+    fillManually: "Fill Manually",
+    ocrScanning: "OCR Scanning...",
+    surname: "Surname *",
+    name: "Name *",
+    gender: "Gender *",
+    male: "Male",
+    female: "Female",
+    birthDate: "Birth Date *",
+    birthPlace: "Birth Place *",
+    cityOrCountry: "City or Country",
+    citizenship: "Citizenship *",
+    arrivalDate: "Arrival Date",
+    nightsCount: "Nights of Stay",
+    docNumber: "Doc Number *",
+    issueDate: "Issue Date *",
+    issueAuthority: "Issue Authority *",
+    issuePlacePlaceholder: "e.g. Town Hall, Police",
+    retakePhoto: "Retake Photo",
+    save: "Save",
+    successTitle: "Check-in Completed Successfully!",
+    scanFailedAuto: "Failed to complete auto-scan.",
+    scanFailedManual: "Scan failed. Please enter details manually.",
+    requiredFields: "All fields with asterisk (*) are required.",
+    registerAll: "Please register details for all guests."
+  },
+  es: {
+    title: "Registro Alloggiati Web",
+    subtitle: "Registra los datos personales y documentos de todos los huéspedes de esta reserva.",
+    guestsList: "Lista de huéspedes",
+    guestLeader: "Huésped 1 (Responsable de grupo)",
+    guestLabel: "Huésped",
+    toCompile: "Por rellenar",
+    completed: "COMPLETADO",
+    pending: "PENDIENTE",
+    submitAll: "Enviar todos los documentos y completar check-in",
+    cancel: "Cancelar",
+    back: "Atrás",
+    selectDocType: "Seleccionar tipo de documento",
+    idCard: "Doc. Identidad",
+    passport: "Pasaporte",
+    driverLicense: "Lic. de Conducir",
+    snapPhoto: "Tomar foto del documento (OCR)",
+    fillManually: "Rellenar manualmente",
+    ocrScanning: "Análisis OCR...",
+    surname: "Apellido *",
+    name: "Nombre *",
+    gender: "Sexo *",
+    male: "Masculino",
+    female: "Femenino",
+    birthDate: "Fecha de nacimiento *",
+    birthPlace: "Lugar de nacimiento *",
+    cityOrCountry: "Ciudad o País",
+    citizenship: "Nacionalidad *",
+    arrivalDate: "Fecha de llegada",
+    nightsCount: "Noches de estancia",
+    docNumber: "Número de documento *",
+    issueDate: "Fecha de emisión *",
+    issueAuthority: "Autoridad emisora *",
+    issuePlacePlaceholder: "ej. Ayuntamiento, Policía",
+    retakePhoto: "Repetir foto",
+    save: "Guardar",
+    successTitle: "¡Check-in completado con éxito!",
+    scanFailedAuto: "No se pudo completar el escaneo automático.",
+    scanFailedManual: "Escaneo fallido. Por favor, introduce los datos manualmente.",
+    requiredFields: "Todos los campos con asterisco (*) son obligatorios.",
+    registerAll: "Por favor, registra los datos de todos los huéspedes."
+  },
+  de: {
+    title: "Meldestelle Web-Registrierung",
+    subtitle: "Registrieren Sie die persönlichen Daten und Ausweise aller Gäste dieser Buchung.",
+    guestsList: "Gästeliste",
+    guestLeader: "Gast 1 (Gruppenleiter)",
+    guestLabel: "Gast",
+    toCompile: "Auszufüllen",
+    completed: "AUSGEFÜLLT",
+    pending: "OFFEN",
+    submitAll: "Alle Dokumente senden & Check-in abschließen",
+    cancel: "Abbrechen",
+    back: "Zurück",
+    selectDocType: "Dokumententyp auswählen",
+    idCard: "Personalausweis",
+    passport: "Reisepass",
+    driverLicense: "Führerschein",
+    snapPhoto: "Ausweis-Foto aufnehmen (OCR)",
+    fillManually: "Manuell ausfüllen",
+    ocrScanning: "OCR-Scannen...",
+    surname: "Nachname *",
+    name: "Vorname *",
+    gender: "Geschlecht *",
+    male: "Männlich",
+    female: "Weiblich",
+    birthDate: "Geburtsdatum *",
+    birthPlace: "Geburtsort *",
+    cityOrCountry: "Ort oder Land",
+    citizenship: "Staatsangehörigkeit *",
+    arrivalDate: "Ankunftsdatum",
+    nightsCount: "Übernachtungen",
+    docNumber: "Ausweisnummer *",
+    issueDate: "Ausstellungsdatum *",
+    issueAuthority: "Ausstellungsbehörde *",
+    issuePlacePlaceholder: "z. B. Rathaus, Polizei",
+    retakePhoto: "Foto erneut aufnehmen",
+    save: "Speichern",
+    successTitle: "Check-in erfolgreich abgeschlossen!",
+    scanFailedAuto: "Automatischer Scan fehlgeschlagen.",
+    scanFailedManual: "Scan fehlgeschlagen. Bitte geben Sie die Daten manuell ein.",
+    requiredFields: "Alle Felder mit einem Sternchen (*) sind Pflichtfelder.",
+    registerAll: "Bitte registrieren Sie die Daten für alle Gäste."
+  },
+  fr: {
+    title: "Enregistrement Alloggiati Web",
+    subtitle: "Enregistrez les coordonnées et pièces d'identité de tous les voyageurs de cette réservation.",
+    guestsList: "Liste des voyageurs",
+    guestLeader: "Voyageur 1 (Chef de groupe)",
+    guestLabel: "Voyageur",
+    toCompile: "À remplir",
+    completed: "COMPLÉTÉ",
+    pending: "À REMPLIR",
+    submitAll: "Envoyer tous les documents et terminer le check-in",
+    cancel: "Annuler",
+    back: "Retour",
+    selectDocType: "Sélectionner le type de document",
+    idCard: "Carte d'identité",
+    passport: "Passeport",
+    driverLicense: "Permis de conduire",
+    snapPhoto: "Prendre photo du document (OCR)",
+    fillManually: "Remplir manuellement",
+    ocrScanning: "Analyse OCR...",
+    surname: "Nom de famille *",
+    name: "Prénom *",
+    gender: "Sexe *",
+    male: "Masculin",
+    female: "Féminin",
+    birthDate: "Date de naissance *",
+    birthPlace: "Lieu de naissance *",
+    cityOrCountry: "Ville ou Pays",
+    citizenship: "Nationalité *",
+    arrivalDate: "Date d'arrivée",
+    nightsCount: "Nuits de séjour",
+    docNumber: "Numéro de document *",
+    issueDate: "Date de délivrance *",
+    issueAuthority: "Autorité de délivrance *",
+    issuePlacePlaceholder: "ex. Mairie, Police",
+    retakePhoto: "Reprendre la photo",
+    save: "Sauvegarder",
+    successTitle: "Check-in terminé avec succès !",
+    scanFailedAuto: "Échec du scan automatique.",
+    scanFailedManual: "Échec du scan. Veuillez saisir les informations manuellement.",
+    requiredFields: "Tous les champs avec un astérisque (*) sont obligatoires.",
+    registerAll: "Veuillez enregistrer les coordonnées de tous les voyageurs."
+  }
+};
+
+
 interface Props {
   pass: GuestPass;
   language: Language;
@@ -25,7 +239,7 @@ interface GuestDocument {
 }
 
 export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSuccess, onCancel }) => {
-  const isIt = language === 'it';
+  const t = dTranslations[language] || dTranslations.en;
   
   // State for list of guests, prefilled from previous data or booking info
   const [guests, setGuests] = useState<Array<{ id: number; data: Partial<GuestDocument> | null; isCompleted: boolean }>>(() => {
@@ -141,7 +355,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       setState(s => ({ ...s, scanProgress: 100 }));
 
       if (!res.ok) {
-        throw new Error(isIt ? 'Impossibile completare la scansione automatica.' : 'Failed to complete auto-scan.');
+        throw new Error(t.scanFailedAuto);
       }
 
       const json = await res.json();
@@ -166,7 +380,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       setState(s => ({ ...s, ocrStatus: 'success' }));
     } catch (err: any) {
       console.error(err);
-      setState(s => ({ ...s, ocrStatus: 'success', error: isIt ? 'Scansione fallita. Inserisci i dati manualmente.' : 'Scan failed. Please enter details manually.' }));
+      setState(s => ({ ...s, ocrStatus: 'success', error: t.scanFailedManual }));
     } finally {
       setState(s => ({ ...s, isScanning: false }));
     }
@@ -175,7 +389,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
   const saveGuestForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.surname || !form.documentNumber || !form.birthDate || !form.citizenship) {
-      setState(s => ({ ...s, error: isIt ? "Tutti i campi con asterisco (*) sono obbligatori." : "All fields with asterisk (*) are required." }));
+      setState(s => ({ ...s, error: t.requiredFields }));
       return;
     }
     const finalData = { ...form, documentType: docType };
@@ -187,7 +401,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
   const submitAll = async () => {
     const incomplete = guests.filter(g => !g.isCompleted);
     if (incomplete.length > 0) {
-      setState(s => ({ ...s, error: isIt ? "Registra i dati di tutti gli ospiti della prenotazione." : "Please register details for all guests." }));
+      setState(s => ({ ...s, error: t.registerAll }));
       return;
     }
     setState(s => ({ ...s, isSubmitting: true, error: null }));
@@ -212,7 +426,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
   if (state.success) return (
     <div className="aurora-glass-card p-6 text-center space-y-4 animate-scale-up">
       <CheckCircle2 className="w-12 h-12 text-[#62e6bd] mx-auto animate-pulse" />
-      <h3 className="text-base font-bold text-white">{isIt ? "Check-in Completato con Successo!" : "Check-in Completed Successfully!"}</h3>
+      <h3 className="text-base font-bold text-white">{t.successTitle}</h3>
     </div>
   );
 
@@ -221,20 +435,20 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
     return (
       <div className="aurora-glass-card p-4 sm:p-5 space-y-4 text-left animate-fade-in relative">
         <button onClick={() => setActiveIndex(null)} className="absolute top-4 left-4 text-xs text-slate-400 hover:text-white flex items-center gap-1">
-          &larr; {isIt ? "Indietro" : "Back"}
+          &larr; {t.back}
         </button>
         <div className="text-center pt-4 pb-1">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">{isMain ? (isIt ? "Ospite 1 (Capogruppo)" : "Guest 1 (Group Leader)") : `${isIt ? "Ospite" : "Guest"} ${activeIndex}`}</h3>
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider">{isMain ? t.guestLeader : `${t.guestLabel} ${activeIndex}`}</h3>
         </div>
         {state.ocrStatus === 'idle' && !state.isScanning ? (
           <div className="space-y-4 pt-1">
             <div className="space-y-1">
-              <span className={labelC}>{isIt ? "Seleziona tipo documento" : "Select Document Type"}</span>
+              <span className={labelC}>{t.selectDocType}</span>
               <div className="grid grid-cols-3 gap-2">
                 {(['identita', 'passaporto', 'patente'] as const).map(type => (
                   <button key={type} type="button" onClick={() => setDocType(type)} className={`py-2 px-1 text-center rounded-xl border text-[11px] font-semibold transition cursor-pointer flex flex-col items-center justify-center gap-1 ${docType === type ? 'bg-emerald-500/15 border-emerald-500 text-white font-bold' : 'bg-white/[0.03] border-white/10 text-slate-400'}`}>
                     <FileText className="w-3.5 h-3.5" />
-                    <span>{type === 'identita' ? (isIt ? "C. Identità" : "ID Card") : type === 'passaporto' ? (isIt ? "Passaporto" : "Passport") : (isIt ? "Patente" : "Driver's Lic.")}</span>
+                    <span>{type === 'identita' ? t.idCard : type === 'passaporto' ? t.passport : t.driverLicense}</span>
                   </button>
                 ))}
               </div>
@@ -242,17 +456,17 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
             <label className="w-full py-5 px-4 rounded-2xl bg-white/[0.03] border border-dashed border-white/10 hover:border-emerald-500/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition">
               <Camera className="w-6 h-6 text-emerald-400 animate-pulse" />
-              <span className="text-xs font-bold text-white">{isIt ? "Scatta Foto Documento (OCR)" : "Snap ID Photo (OCR)"}</span>
+              <span className="text-xs font-bold text-white">{t.snapPhoto}</span>
               <input type="file" accept="image/*" capture="environment" onChange={handleFile} className="hidden" />
             </label>
             <div className="text-center">
-              <button onClick={() => setState(s => ({ ...s, ocrStatus: 'success' }))} className="text-xs text-emerald-400 underline font-mono cursor-pointer font-bold">{isIt ? "Compila Manualmente" : "Fill Manually"}</button>
+              <button onClick={() => setState(s => ({ ...s, ocrStatus: 'success' }))} className="text-xs text-emerald-400 underline font-mono cursor-pointer font-bold">{t.fillManually}</button>
             </div>
           </div>
         ) : state.isScanning ? (
           <div className="p-6 text-center space-y-3">
             <Loader2 className="w-7 h-7 text-emerald-400 animate-spin mx-auto" />
-            <p className="text-xs font-bold text-white">{isIt ? "Analisi OCR..." : "OCR Scanning..."} ({state.scanProgress}%)</p>
+            <p className="text-xs font-bold text-white">{t.ocrScanning} ({state.scanProgress}%)</p>
           </div>
         ) : (
           <form onSubmit={saveGuestForm} className="space-y-3.5 pt-1 animate-fade-in">
@@ -260,77 +474,77 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className={labelC}>{isIt ? "Cognome *" : "Surname *"}</label>
+                <label className={labelC}>{t.surname}</label>
                 <input type="text" required value={form.surname || ''} onChange={e => setForm({ ...form, surname: e.target.value.toUpperCase() })} className={inputC} />
               </div>
               <div>
-                <label className={labelC}>{isIt ? "Nome *" : "Name *"}</label>
+                <label className={labelC}>{t.name}</label>
                 <input type="text" required value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })} className={inputC} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className={labelC}>{isIt ? "Sesso *" : "Gender *"}</label>
+                <label className={labelC}>{t.gender}</label>
                 <select value={form.gender || 'M'} onChange={e => setForm({ ...form, gender: e.target.value as any })} className={inputC}>
-                  <option value="M">{isIt ? "Maschio" : "Male"}</option>
-                  <option value="F">{isIt ? "Femmina" : "Female"}</option>
+                  <option value="M">{t.male}</option>
+                  <option value="F">{t.female}</option>
                 </select>
               </div>
               <div>
-                <label className={labelC}>{isIt ? "Data Nascita *" : "Birth Date *"}</label>
+                <label className={labelC}>{t.birthDate}</label>
                 <input type="date" required value={form.birthDate || ''} onChange={e => setForm({ ...form, birthDate: e.target.value })} className={inputC} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className={labelC}>{isIt ? "Luogo Nascita *" : "Birth Place *"}</label>
-                <input type="text" required placeholder={isIt ? "Comune o Stato" : "City or Country"} value={form.birthPlace || ''} onChange={e => setForm({ ...form, birthPlace: e.target.value.toUpperCase() })} className={inputC} />
+                <label className={labelC}>{t.birthPlace}</label>
+                <input type="text" required placeholder={t.cityOrCountry} value={form.birthPlace || ''} onChange={e => setForm({ ...form, birthPlace: e.target.value.toUpperCase() })} className={inputC} />
               </div>
               <div>
-                <label className={labelC}>{isIt ? "Cittadinanza *" : "Citizenship *"}</label>
+                <label className={labelC}>{t.citizenship}</label>
                 <input type="text" required value={form.citizenship || form.nationality || 'ITALIANA'} onChange={e => setForm({ ...form, citizenship: e.target.value.toUpperCase() })} className={inputC} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/5">
               <div>
-                <label className={labelC}>{isIt ? "Data Arrivo" : "Arrival Date"}</label>
+                <label className={labelC}>{t.arrivalDate}</label>
                 <input type="text" disabled value={form.arrivalDate || ''} className={`${inputC} opacity-60`} />
               </div>
               <div>
-                <label className={labelC}>{isIt ? "Notti di Soggiorno" : "Nights of Stay"}</label>
+                <label className={labelC}>{t.nightsCount}</label>
                 <input type="text" disabled value={form.nightsCount || 1} className={`${inputC} opacity-60`} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className={labelC}>{isIt ? "Numero Documento *" : "Doc Number *"}</label>
+                <label className={labelC}>{t.docNumber}</label>
                 <input type="text" required value={form.documentNumber || ''} onChange={e => setForm({ ...form, documentNumber: e.target.value.toUpperCase() })} className={`${inputC} font-mono`} />
               </div>
               <div>
-                <label className={labelC}>{isIt ? "Data Rilascio *" : "Issue Date *"}</label>
+                <label className={labelC}>{t.issueDate}</label>
                 <input type="date" required value={form.issueDate || ''} onChange={e => setForm({ ...form, issueDate: e.target.value })} className={inputC} />
               </div>
             </div>
 
             <div>
-              <label className={labelC}>{isIt ? "Luogo/Ente Rilascio *" : "Issue Authority *"}</label>
-              <input type="text" required placeholder={isIt ? "es. Comune, Questura, etc." : "e.g. Town Hall, Police"} value={form.issuePlace || ''} onChange={e => setForm({ ...form, issuePlace: e.target.value.toUpperCase() })} className={inputC} />
+              <label className={labelC}>{t.issueAuthority}</label>
+              <input type="text" required placeholder={t.issuePlacePlaceholder} value={form.issuePlace || ''} onChange={e => setForm({ ...form, issuePlace: e.target.value.toUpperCase() })} className={inputC} />
             </div>
 
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={() => setState(s => ({ ...s, ocrStatus: 'idle', isScanning: false, scanProgress: 0 }))} className="py-2.5 px-3 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-xs border border-amber-500/20 cursor-pointer">
                 <Camera className="w-4 h-4 inline-block mr-1" />
-                {isIt ? "Riscattare Foto" : "Retake Photo"}
+                {t.retakePhoto}
               </button>
               <button type="submit" className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer">
                 <Check className="w-3.5 h-3.5" />
-                <span>{isIt ? "Salva" : "Save"}</span>
+                <span>{t.save}</span>
               </button>
-              <button type="button" onClick={() => setActiveIndex(null)} className="py-2.5 px-3 rounded-xl bg-white/[0.04] text-slate-400 font-bold text-xs border border-white/5 cursor-pointer">{isIt ? "Annulla" : "Cancel"}</button>
+              <button type="button" onClick={() => setActiveIndex(null)} className="py-2.5 px-3 rounded-xl bg-white/[0.04] text-slate-400 font-bold text-xs border border-white/5 cursor-pointer">{t.cancel}</button>
             </div>
           </form>
         )}
@@ -344,20 +558,20 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       <div className="text-center space-y-1">
         <h3 className="text-base font-bold text-white flex items-center justify-center gap-1.5">
           <User className="w-4 h-4 text-emerald-400" />
-          <span>{isIt ? "Check-in Alloggiati Web" : "Alloggiati Web Registration"}</span>
+          <span>{t.title}</span>
         </h3>
-        <p className="text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">{isIt ? "Registra i dati personali e i documenti di tutti gli ospiti della prenotazione." : "Register details and IDs for all guests on this booking."}</p>
+        <p className="text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">{t.subtitle}</p>
       </div>
 
       {state.error && <div className="p-2.5 rounded-xl bg-red-950/20 border border-red-500/30 text-rose-300 text-xs">{state.error}</div>}
 
       <div className="space-y-2.5">
-        <span className={labelC}>{isIt ? "Ospiti della Prenotazione" : "Guests list"}</span>
+        <span className={labelC}>{t.guestsList}</span>
         <div className="space-y-2">
           {guests.map((g, idx) => {
             const isCompleted = g.isCompleted && g.data;
-            const title = g.id === 1 ? (isIt ? "Ospite 1 (Capogruppo)" : "Guest 1 (Group Leader)") : `${isIt ? "Ospite" : "Guest"} ${g.id}`;
-            const nameLabel = isCompleted ? `${g.data?.name} ${g.data?.surname}`.trim() : (isIt ? "Da compilare" : "To compile");
+            const title = g.id === 1 ? t.guestLeader : `${t.guestLabel} ${g.id}`;
+            const nameLabel = isCompleted ? `${g.data?.name} ${g.data?.surname}`.trim() : t.toCompile;
 
             return (
               <div key={g.id} onClick={() => startEdit(g.id)} className={`p-3 rounded-xl border transition flex items-center justify-between cursor-pointer active:scale-[0.99] group ${isCompleted ? 'bg-emerald-500/5 border-emerald-500/30 hover:border-emerald-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}>
@@ -372,7 +586,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border font-bold ${isCompleted ? 'text-[#62e6bd] bg-emerald-500/10 border-emerald-500/25' : 'text-slate-400 bg-white/[0.04] border-white/5'}`}>
-                    {isCompleted ? (isIt ? "COMPLETATO" : "COMPLETED") : (isIt ? "DA COMPILARE" : "PENDING")}
+                    {isCompleted ? t.completed : t.pending}
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
@@ -385,10 +599,10 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       <div className="pt-2">
         <button type="button" onClick={submitAll} disabled={state.isSubmitting || guests.filter(g => !g.isCompleted).length > 0} className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:hover:bg-emerald-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg cursor-pointer transition">
           {state.isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-          <span>{isIt ? "Invia tutti i documenti e completa il Check-in" : "Submit All & Complete Check-in"}</span>
+          <span>{t.submitAll}</span>
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="w-full mt-2 py-2 rounded-xl bg-white/[0.02] text-slate-400 hover:text-white text-xs border border-white/5 cursor-pointer">{isIt ? "Annulla" : "Cancel"}</button>
+          <button type="button" onClick={onCancel} className="w-full mt-2 py-2 rounded-xl bg-white/[0.02] text-slate-400 hover:text-white text-xs border border-white/5 cursor-pointer">{t.cancel}</button>
         )}
       </div>
     </div>
