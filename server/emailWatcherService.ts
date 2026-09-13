@@ -146,7 +146,7 @@ export function getImapConfig() {
  * Connect to IMAP, read messages, parse them, 
  * generate pass and eventually flag them as read.
  */
-export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[]) {
+export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[], forceAll: boolean = false) {
   if (!imapConfig.host || !imapConfig.user || !imapConfig.pass) {
     console.log('[IMAP] Engine not fully configured yet. Skipping email check.');
     return;
@@ -155,6 +155,11 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
   if (isPolling) {
     console.log('[IMAP] Check already in progress, skipping.');
     return;
+  }
+
+  if (forceAll) {
+    console.log('[IMAP] Sincronizzazione forzata: pulizia dei messaggi già elaborati.');
+    processedUids.clear();
   }
 
   isPolling = true;
@@ -181,14 +186,61 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
     const lock = await client.getMailboxLock('INBOX');
     try {
       console.log('[IMAP] Avvio sincronizzazione vecchie e nuove email...');
-      const unseen = (await client.search({ seen: false }, { uid: true })) || [];
-      const pastBB = (await client.search({ from: 'bed-and-breakfast.it' }, { uid: true })) || [];
-      const pastBB2 = (await client.search({ from: 'ireservation' }, { uid: true })) || [];
-      const pastBB3 = (await client.search({ subject: 'ireservation' }, { uid: true })) || [];
-      const pastBB4 = (await client.search({ subject: 'prenotazione' }, { uid: true })) || [];
-      const recent = (await client.search({ since: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) }, { uid: true })) || [];
       
-      const uids = Array.from(new Set([...unseen, ...pastBB, ...pastBB2, ...pastBB3, ...pastBB4, ...recent]));
+      let unseen: number[] = [];
+      let allUids: number[] = [];
+      let pastBB: number[] = [];
+      let pastBB2: number[] = [];
+      let pastBB3: number[] = [];
+      let pastBB4: number[] = [];
+      
+      try {
+        unseen = (await client.search({ seen: false }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search unseen failed:', err);
+      }
+      
+      try {
+        allUids = (await client.search({ all: true }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search all failed:', err);
+      }
+      
+      try {
+        pastBB = (await client.search({ from: 'bed-and-breakfast.it' }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search pastBB failed:', err);
+      }
+      
+      try {
+        pastBB2 = (await client.search({ from: 'ireservation' }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search pastBB2 failed:', err);
+      }
+      
+      try {
+        pastBB3 = (await client.search({ subject: 'ireservation' }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search pastBB3 failed:', err);
+      }
+      
+      try {
+        pastBB4 = (await client.search({ subject: 'prenotazione' }, { uid: true })) || [];
+      } catch (err) {
+        console.warn('[IMAP] Search pastBB4 failed:', err);
+      }
+      
+      // Slicing the last 1000 UIDs (ascending order by default)
+      const recentUids = allUids.slice(-1000);
+      
+      const uids = Array.from(new Set([
+        ...unseen,
+        ...recentUids,
+        ...pastBB,
+        ...pastBB2,
+        ...pastBB3,
+        ...pastBB4
+      ])).sort((a, b) => a - b);
 
       if (uids.length === 0) {
         console.log('[IMAP] Nessuna email rilevata con i criteri di ricerca.');

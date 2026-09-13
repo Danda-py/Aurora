@@ -1308,7 +1308,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
 
   apiRouter.post('/email/sync-now', async (_req, res) => {
     try {
-      await checkNewEmailsAndGeneratePasses(serverPasses);
+      await checkNewEmailsAndGeneratePasses(serverPasses, true);
       persistPasses();
       res.json({
         success: true,
@@ -1359,15 +1359,15 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
 
   apiRouter.post('/ical/sync-now', async (_req, res) => {
     try {
-      await checkNewEmailsAndGeneratePasses(serverPasses);
+      await syncReservationsFromIcal(serverPasses);
       persistPasses();
       res.json({
         success: true,
-        message: 'Sincronizzazione email iReservation completata con successo!',
+        message: 'Sincronizzazione iCal completata con successo!',
         totalPasses: serverPasses.length
       });
     } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione email' });
+      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione iCal' });
     }
   });
 
