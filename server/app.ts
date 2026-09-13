@@ -39,6 +39,7 @@ import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageU
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
+import { checkNewEmailsAndGeneratePasses, startEmailWatcher } from './emailWatcherService.js';
 import { sendGuestNotification, sendHostNotification } from './notificationService.js';
 import {
   scheduleBookingMessages,
@@ -286,6 +287,9 @@ export function createApp() {
 
   // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
   startIcalWatcher();
+
+  // Avvia l'engine di polling email IMAP (se abilitato nelle variabili d'ambiente)
+  startEmailWatcher();
 
   // Avvia l'engine di messaggistica programmata
   startScheduledMessagingWatcher();
@@ -1093,15 +1097,15 @@ export function createApp() {
 
   apiRouter.post('/ical/sync-now', async (_req, res) => {
     try {
-      await syncReservationsFromIcal(serverPasses);
+      await checkNewEmailsAndGeneratePasses(serverPasses);
       persistPasses();
       res.json({
         success: true,
-        message: 'Sincronizzazione iCal eseguita con successo',
+        message: 'Sincronizzazione email iReservation completata con successo!',
         totalPasses: serverPasses.length
       });
     } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione iCal' });
+      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione email' });
     }
   });
 
