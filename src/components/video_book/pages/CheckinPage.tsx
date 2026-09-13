@@ -174,8 +174,10 @@ export const CheckinPage: React.FC<Props> = ({
           pass.documentsUploaded ? (
             <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
           
-          {/* Ambient Mint Glow */}
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 bg-[#62e6bd]/10 blur-3xl pointer-events-none rounded-full" />
+          {/* Ambient Mint or Amber Glow */}
+          <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 blur-3xl pointer-events-none rounded-full ${
+            pass.checkInConfirmed ? 'bg-[#62e6bd]/10' : 'bg-amber-500/10'
+          }`} />
 
           <div className="relative z-10 space-y-5">
             {/* Card Eyebrow & Status Header */}
@@ -192,7 +194,9 @@ export const CheckinPage: React.FC<Props> = ({
               {/* Apple Home-style live status capsule */}
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-md">
                 <span className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                  openingState === 'opening'
+                  !pass.checkInConfirmed
+                    ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
+                    : openingState === 'opening'
                     ? 'bg-sky-400 animate-ping'
                     : openingState === 'success'
                     ? 'bg-[#62e6bd]'
@@ -201,109 +205,130 @@ export const CheckinPage: React.FC<Props> = ({
                     : 'bg-[#62e6bd] shadow-[0_0_8px_rgba(98,230,189,0.6)]'
                 }`} />
                 <span className="text-xs font-semibold text-white/80 tracking-tight">
-                  {openingState === 'opening' ? t.concierge.doorOpeningState.opening : openingState === 'success' ? t.concierge.doorOpeningState.success : t.checkInPage.wifi.connected}
+                  {!pass.checkInConfirmed
+                    ? t.checkInPage.pendingHostConfirmation
+                    : openingState === 'opening'
+                    ? t.concierge.doorOpeningState.opening
+                    : openingState === 'success'
+                    ? t.concierge.doorOpeningState.success
+                    : t.checkInPage.wifi.connected}
                 </span>
               </div>
             </div>
 
-            {/* Real Wi-Fi Security Verification Badge for Casa_Aurora */}
-            <div className={`p-4 rounded-2xl border transition-all duration-200 ${
-              wifiChecking
-                ? 'bg-white/[0.04] border-white/10 text-white/80'
-                : wifiVerified 
-                ? 'bg-[#62e6bd]/10 border-[#62e6bd]/30 text-[#9ef2d3]' 
-                : 'bg-amber-950/30 border-amber-500/30 text-amber-200'
-            }`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    wifiChecking
-                      ? 'bg-white/10 text-white'
-                      : wifiVerified 
-                      ? 'bg-[#62e6bd]/20 text-[#62e6bd]' 
-                      : 'bg-amber-500/20 text-amber-400'
-                  }`}>
-                    {wifiChecking ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
-                    ) : (
-                      <Wifi className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold tracking-wider block opacity-75 font-mono">
-                      {wifiChecking 
-                        ? wifiMsgs.checkingConnection 
-                        : wifiVerified 
-                        ? wifiMsgs.verifiedLabel 
-                        : wifiMsgs.requiredNotice}
-                    </span>
-                    <p className="text-xs font-semibold truncate text-white">
-                      {wifiChecking 
-                        ? wifiMsgs.verifying 
-                        : wifiVerified 
-                        ? t.checkInPage.authorizedNetwork 
-                        : t.checkInPage.connectToNetwork}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={runWifiVerification}
-                  disabled={wifiChecking}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                    wifiChecking
-                      ? 'bg-white/10 text-white/50 cursor-wait'
-                      : wifiVerified
-                      ? 'bg-[#62e6bd]/20 text-[#9ef2d3] hover:bg-[#62e6bd]/30 border border-[#62e6bd]/30'
-                      : 'bg-amber-500 text-neutral-950 hover:bg-amber-400 shadow-sm'
-                  }`}
-                  title={wifiMsgs.rescanBtn}
-                >
-                  {wifiChecking ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{wifiMsgs.checkingConnection}</span>
-                    </>
-                  ) : wifiVerified ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>{wifiMsgs.connected}</span>
-                    </>
-                  ) : (
-                    <>
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>{wifiMsgs.rescanBtn}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Diagnostic Message */}
-              {wifiMessage && !wifiChecking && (
-                <p className={`mt-2 text-xs leading-relaxed ${
-                  wifiVerified ? 'text-[#9ef2d3]' : 'text-amber-300'
-                }`}>
-                  {wifiMessage}
-                </p>
-              )}
-
-              {!wifiVerified && !wifiChecking && (
-                <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                  <span className="text-white/80">
-                    {t.checkInPage.wifi.copyPwd}: <span className="font-mono text-white font-bold">{APARTMENT_INFO.wifiPassword}</span>
+            {!pass.checkInConfirmed ? (
+              /* Pending Confirmation warning block */
+              <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-amber-200 space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider font-mono">
+                    {t.checkInPage.pendingHostConfirmation}
                   </span>
+                </div>
+                <p className="text-xs leading-relaxed text-white/80 font-normal">
+                  {t.checkInPage.pendingHostConfirmationDesc}
+                </p>
+              </div>
+            ) : (
+              /* Real Wi-Fi Security Verification Badge for Casa_Aurora */
+              <div className={`p-4 rounded-2xl border transition-all duration-200 ${
+                wifiChecking
+                  ? 'bg-white/[0.04] border-white/10 text-white/80'
+                  : wifiVerified 
+                  ? 'bg-[#62e6bd]/10 border-[#62e6bd]/30 text-[#9ef2d3]' 
+                  : 'bg-amber-950/30 border-amber-500/30 text-amber-200'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      wifiChecking
+                        ? 'bg-white/10 text-white'
+                        : wifiVerified 
+                        ? 'bg-[#62e6bd]/20 text-[#62e6bd]' 
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}>
+                      {wifiChecking ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      ) : (
+                        <Wifi className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold tracking-wider block opacity-75 font-mono">
+                        {wifiChecking 
+                          ? wifiMsgs.checkingConnection 
+                          : wifiVerified 
+                          ? wifiMsgs.verifiedLabel 
+                          : wifiMsgs.requiredNotice}
+                      </span>
+                      <p className="text-xs font-semibold truncate text-white">
+                        {wifiChecking 
+                          ? wifiMsgs.verifying 
+                          : wifiVerified 
+                          ? t.checkInPage.authorizedNetwork 
+                          : t.checkInPage.connectToNetwork}
+                      </p>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={copyWifiPassword}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 hover:text-white transition cursor-pointer self-start sm:self-auto"
+                    onClick={runWifiVerification}
+                    disabled={wifiChecking}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                      wifiChecking
+                        ? 'bg-white/10 text-white/50 cursor-wait'
+                        : wifiVerified
+                        ? 'bg-[#62e6bd]/20 text-[#9ef2d3] hover:bg-[#62e6bd]/30 border border-[#62e6bd]/30'
+                        : 'bg-amber-500 text-neutral-950 hover:bg-amber-400 shadow-sm'
+                    }`}
+                    title={wifiMsgs.rescanBtn}
                   >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>{copiedWifiPass ? wifiMsgs.copySuccess : wifiMsgs.copyPwd}</span>
+                    {wifiChecking ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{wifiMsgs.checkingConnection}</span>
+                      </>
+                    ) : wifiVerified ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{wifiMsgs.connected}</span>
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>{wifiMsgs.rescanBtn}</span>
+                      </>
+                    )}
                   </button>
                 </div>
-              )}
-            </div>
+
+                {/* Diagnostic Message */}
+                {wifiMessage && !wifiChecking && (
+                  <p className={`mt-2 text-xs leading-relaxed ${
+                    wifiVerified ? 'text-[#9ef2d3]' : 'text-amber-300'
+                  }`}>
+                    {wifiMessage}
+                  </p>
+                )}
+
+                {!wifiVerified && !wifiChecking && (
+                  <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <span className="text-white/80">
+                      {t.checkInPage.wifi.copyPwd}: <span className="font-mono text-white font-bold">{APARTMENT_INFO.wifiPassword}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={copyWifiPassword}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 hover:text-white transition cursor-pointer self-start sm:self-auto"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedWifiPass ? wifiMsgs.copySuccess : wifiMsgs.copyPwd}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Apple-Grade Tactile Action Button */}
             <div>
@@ -311,9 +336,11 @@ export const CheckinPage: React.FC<Props> = ({
                 id="btn-open-door-checkin"
                 type="button"
                 onClick={handleOpenDoor}
-                disabled={openingState === 'opening' || wifiChecking || !wifiVerified}
+                disabled={!pass.checkInConfirmed || openingState === 'opening' || wifiChecking || !wifiVerified}
                 className={`group relative w-full overflow-hidden rounded-2xl py-4 sm:py-5 px-6 font-bold tracking-tight transition-all duration-300 cursor-pointer flex items-center justify-center gap-3 select-none active:scale-[0.98] ${
-                  openingState === 'opening'
+                  !pass.checkInConfirmed
+                    ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
+                    : openingState === 'opening'
                     ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner'
                     : openingState === 'success'
                     ? 'bg-[#62e6bd] text-[#07110d] shadow-[0_8px_25px_rgba(98,230,189,0.4)]'
@@ -324,7 +351,12 @@ export const CheckinPage: React.FC<Props> = ({
                     : 'bg-white/[0.06] text-white/30 border border-white/5 cursor-not-allowed'
                 }`}
               >
-                {openingState === 'opening' ? (
+                {!pass.checkInConfirmed ? (
+                  <>
+                    <Lock className="w-5 h-5 text-white/30" />
+                    <span className="text-base font-semibold text-white/40">{t.checkInPage.pendingHostConfirmation}</span>
+                  </>
+                ) : openingState === 'opening' ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin text-white" />
                     <span className="text-base font-semibold text-white">{t.concierge.doorOpeningState.opening}</span>
@@ -373,7 +405,7 @@ export const CheckinPage: React.FC<Props> = ({
                   </p>
                 ) : (
                   <p className="text-xs text-white/50 font-normal tracking-tight">
-                    {wifiMsgs.pressToUnlockNotice}
+                    {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : wifiMsgs.pressToUnlockNotice}
                   </p>
                 )}
               </div>

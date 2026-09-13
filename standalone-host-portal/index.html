@@ -335,16 +335,16 @@
         </button>
       </div>
 
-      <!-- Card 3: Autonomous iCal Bed-and-Breakfast.it -->
+      <!-- Card 3: Autonomous Email Sincronizzazione -->
       <div class="apple-card p-4 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 border border-[#0071e3]/20 text-[#0071e3] flex items-center justify-center shrink-0">
-            <i data-lucide="calendar-range" class="w-5 h-5"></i>
+            <i data-lucide="mail" class="w-5 h-5"></i>
           </div>
           <div class="min-w-0">
             <span class="text-[10px] uppercase font-semibold text-[#86868b] tracking-wider block">Bed-and-Breakfast.it</span>
-            <span class="text-xs font-semibold text-white block truncate">Sincronizzazione iCal</span>
-            <span id="icalOverviewStatus" class="text-[11px] text-[#86868b] block truncate font-mono">● Pronto</span>
+            <span class="text-xs font-semibold text-white block truncate">Sincronizzazione Email</span>
+            <span id="emailOverviewStatus" class="text-[11px] text-[#86868b] block truncate font-mono">● Pronto</span>
           </div>
         </div>
         <button id="btnOpenIcalModal" type="button" onclick="document.querySelector('[data-tab=ical]').click()" class="btn-apple-secondary px-3 py-1.5 text-xs font-medium shrink-0 cursor-pointer">
@@ -366,8 +366,8 @@
       </button>
 
       <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="ical">
-        <i data-lucide="calendar" class="w-4 h-4 text-[#0071e3]"></i>
-        <span>iCal Bed & Breakfast</span>
+        <i data-lucide="mail" class="w-4 h-4 text-[#0071e3]"></i>
+        <span>Sincronizzazione Email & Log</span>
       </button>
 
       <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="hass">
@@ -576,74 +576,131 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TAB 3: iCal BED-AND-BREAKFAST.IT                             -->
+    <!-- TAB 3: EMAIL SYNCHRONIZATION & IMAP CONFIG                   -->
     <!-- ============================================================ -->
     <section id="tab-ical" class="tab-content hidden space-y-5">
       <div class="apple-card p-5 sm:p-6 space-y-5">
         <div class="border-b border-white/[0.08] pb-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 class="text-base font-semibold text-white tracking-tight flex items-center gap-2">
-              <i data-lucide="calendar" class="w-5 h-5 text-[#0071e3]"></i>
-              <span>Sincronizzazione Automatica iCal Bed-and-Breakfast.it</span>
+              <i data-lucide="mail" class="w-5 h-5 text-[#0071e3]"></i>
+              <span>Sincronizzazione Email Automatica (iReservation)</span>
             </h3>
-            <p class="text-xs text-[#86868b]">Ricevi le prenotazioni direttamente dal calendario di Bed-and-Breakfast.it e genera le chiavi senza commissioni</p>
+            <p class="text-xs text-[#86868b]">Ricevi le prenotazioni direttamente dal provider Bed-and-Breakfast.it e genera le chiavi d'accesso in automatico.</p>
           </div>
-          <span id="icalStatusBadge" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-[#0071e3]/10 text-[#0071e3] border border-[#0071e3]/20">
-            Sincronizzazione Pronta
+          <span id="emailStatusBadge" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20">
+            Sincronizzazione Attiva
           </span>
         </div>
 
-        <form id="formIcalConfig" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form id="formEmailConfig" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="md:col-span-2">
               <label class="block text-xs font-medium text-[#86868b] mb-1.5">
-                Link iCal di esportazione calendario (da Bed-and-Breakfast.it)
+                Server IMAP Host
               </label>
-              <input type="url" id="inputIcalUrl" required placeholder="https://www.bed-and-breakfast.it/it/cal/ical/esporta/xxxxx" class="w-full text-xs p-3 rounded-xl font-mono" />
-              <p class="text-[11px] text-[#86868b] mt-1">Vai su Bed-and-Breakfast.it ➔ Calendario / Sincronizzazione ➔ Esporta Calendario e copia il link iCal fornito.</p>
+              <input type="text" id="inputImapHost" required placeholder="Es. imap.gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
             </div>
 
             <div>
               <label class="block text-xs font-medium text-[#86868b] mb-1.5">
-                Quanti giorni prima del check-in inviare il link?
+                Porta IMAP
               </label>
-              <input type="number" min="1" max="15" id="inputIcalDaysAhead" value="3" class="w-full text-xs p-3 rounded-xl" />
-              <p class="text-[11px] text-[#86868b] mt-1">Il link sarà preparato ed inviato esattamente X giorni prima dell'arrivo.</p>
+              <input type="number" id="inputImapPort" required placeholder="993" value="993" class="w-full text-xs p-3 rounded-xl font-mono" />
             </div>
 
             <div>
               <label class="block text-xs font-medium text-[#86868b] mb-1.5">
-                Frequenza di aggiornamento e verifica (minuti)
+                Email / Utente IMAP
               </label>
-              <input type="number" min="5" max="1440" id="inputIcalInterval" value="30" class="w-full text-xs p-3 rounded-xl" />
-              <p class="text-[11px] text-[#86868b] mt-1">Ogni quanti minuti il server controllerà la presenza di nuove prenotazioni.</p>
+              <input type="email" id="inputImapUser" required placeholder="Es. nome@gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
             </div>
 
-            <div class="md:col-span-2">
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">
+                Password / Password App
+              </label>
+              <input type="password" id="inputImapPass" required placeholder="••••••••" class="w-full text-xs p-3 rounded-xl font-mono" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">
+                Intervallo di Polling (minuti)
+              </label>
+              <input type="number" min="1" max="1440" id="inputImapInterval" value="2" class="w-full text-xs p-3 rounded-xl" />
+            </div>
+
+            <div class="md:col-span-3">
               <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
-                <input type="checkbox" id="checkboxIcalEnabled" class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
+                <input type="checkbox" id="checkboxImapSecure" checked class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
                 <div class="text-xs">
-                  <span class="font-semibold text-white block">Abilita Sincronizzazione Continua in Background</span>
-                  <span class="text-[#86868b]">Il server interroga periodicamente il feed iCal e inserisce automaticamente i soggiorni.</span>
+                  <span class="font-semibold text-white block">Connessione Sicura SSL/TLS (Consigliato)</span>
+                  <span class="text-[#86868b]">Usa la crittografia SSL/TLS sicura per la porta IMAP (solitamente porta 993).</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
+                <input type="checkbox" id="checkboxImapEnabled" class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
+                <div class="text-xs">
+                  <span class="font-semibold text-white block">Abilita Polling in Background</span>
+                  <span class="text-[#86868b]">Il server controllerà periodicamente la posta per sincronizzare le prenotazioni vecchie e nuove.</span>
                 </div>
               </label>
             </div>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-            <button type="button" id="btnForceIcalSync" class="btn-apple-secondary w-full sm:w-auto px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="button" id="btnForceEmailSync" class="btn-apple-secondary w-full sm:w-auto px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
               <span>Sincronizza Ora</span>
             </button>
 
             <button type="submit" class="btn-apple-blue w-full sm:w-auto px-5 py-2.5 text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
               <i data-lucide="save" class="w-3.5 h-3.5"></i>
-              <span>Salva Configurazione iCal</span>
+              <span>Salva Configurazione Email</span>
             </button>
           </div>
         </form>
 
-        <div id="icalFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
+        <div id="emailFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
+      </div>
+
+      <!-- Card dei Log Email -->
+      <div class="apple-card p-5 sm:p-6 space-y-4">
+        <div class="border-b border-white/[0.08] pb-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="receipt-text" class="w-4 h-4 text-[#ff9f0a]"></i>
+              <span>Log Attività Sincronizzazione Email</span>
+            </h3>
+            <p class="text-[11px] text-[#86868b]">Storico in tempo reale dei messaggi ricevuti dal provider ed elaborati dal sistema</p>
+          </div>
+          <button type="button" id="btnRefreshEmailLogs" class="p-1.5 rounded-lg hover:bg-white/[0.08] text-[#86868b] hover:text-white transition cursor-pointer" title="Ricarica Log">
+            <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-left border-collapse">
+            <thead>
+              <tr class="border-b border-white/[0.08] text-[#86868b]">
+                <th class="py-2.5 font-medium w-[130px]">Data e Ora</th>
+                <th class="py-2.5 font-medium w-[90px]">Stato</th>
+                <th class="py-2.5 font-medium w-[220px]">Mittente / Oggetto</th>
+                <th class="py-2.5 font-medium">Esito / Dettaglio</th>
+                <th class="py-2.5 font-medium w-[60px] text-right">Dati</th>
+              </tr>
+            </thead>
+            <tbody id="emailLogsTableBody" class="divide-y divide-white/[0.04]">
+              <!-- Rendered via JS -->
+              <tr>
+                <td colspan="5" class="py-8 text-center text-[#86868b]">Caricamento dei log in corso...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 

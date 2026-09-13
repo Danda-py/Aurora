@@ -274,6 +274,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
   const timing = pass ? getStayTiming(pass) : null;
   const isStayActive = timing ? timing.isActive : false;
+  const isCheckinConfirmed = pass ? Boolean(pass.checkInConfirmed) : false;
+  const isWifiActive = isStayActive && isCheckinConfirmed;
 
   const localStories = [
     { 
@@ -307,7 +309,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   }, []);
 
   const copyWifi = async () => {
-    if (!isStayActive) return;
+    if (!isWifiActive) return;
     try {
       await navigator.clipboard?.writeText(APARTMENT_INFO.wifiPassword);
       setWifiCopied(true);
@@ -599,13 +601,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             ) : (
               <>
                 <button 
-                  onClick={isStayActive ? copyWifi : undefined}
-                  className={!isStayActive ? "opacity-40 cursor-not-allowed" : ""}
-                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : ""}
+                  onClick={isWifiActive ? copyWifi : undefined}
+                  className={!isWifiActive ? "opacity-40 cursor-not-allowed" : ""}
+                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isCheckinConfirmed ? t.checkInPage.pendingHostConfirmationDesc : "")}
                 >
                   <Wifi />
                   <span>{t.tiles.wifi}</span>
-                  <small>{!isStayActive ? "Non attivo" : (wifiCopied ? t.actions.copied : t.actions.copy)}</small>
+                  <small>{!isWifiActive ? t.actions.notActive : (wifiCopied ? t.actions.copied : t.actions.copy)}</small>
                 </button>
                 
                 <a 

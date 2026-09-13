@@ -39,7 +39,7 @@ import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageU
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
-import { checkNewEmailsAndGeneratePasses, startEmailWatcher } from './emailWatcherService.js';
+import { checkNewEmailsAndGeneratePasses, startEmailWatcher, addEmailLog, getEmailLogs, hydrateImapConfig, updateImapConfigAsync, getImapConfig } from './emailWatcherService.js';
 import { sendGuestNotification, sendHostNotification } from './notificationService.js';
 import {
   scheduleBookingMessages,
@@ -70,6 +70,7 @@ const defaultPasses: GuestPass[] = [
     notes: 'Arrivo in treno da Milano Centrale',
     createdAt: new Date().toISOString(),
     active: true,
+    checkInConfirmed: true,
     token: 'eyJndWVzdE5hbWUiOiJNYXJjbyIsImd1ZXN0U3VybmFtZSI6IlJvc3NpIiwicGluQ29kZSI6IjI3NDEifQ=='
   }
 ];
@@ -280,6 +281,7 @@ export function createApp() {
   void hydrateDeletedRefsFromSupabase();
   void hydrateHomeAssistantConfig();
   void hydrateIcalConfig();
+  void hydrateImapConfig();
 
   // Condividiamo l'array delle prenotazioni per l'engine iCal globale
   (global as any).serverPassesRef = serverPasses;
@@ -463,6 +465,89 @@ export function createApp() {
     }
   });
 
+  apiRouter.post('/guest/ocr-scan', async (req, res) => {
+    try {
+      const { dataUrl, docType } = req.body;
+      if (!dataUrl) {
+        res.status(400).json({ success: false, error: 'Dati immagine mancanti.' });
+        return;
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        res.status(503).json({ success: false, error: 'Configurazione Gemini assente sul server.' });
+        return;
+      }
+
+      // Parse base64 Data URL (e.g. "data:image/png;base64,...")
+      const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      let mimeType = 'image/jpeg';
+      let base64Data = dataUrl;
+      if (matches && matches.length === 3) {
+        mimeType = matches[1];
+        base64Data = matches[2];
+      } else if (dataUrl.includes(';base64,')) {
+        const parts = dataUrl.split(';base64,');
+        base64Data = parts[1];
+        if (parts[0].startsWith('data:')) {
+          mimeType = parts[0].substring(5);
+        }
+      }
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const prompt = `Analizza l'immagine di questo documento di identità (${docType || 'documento'}) e scansiona/estrai i seguenti dati dell'ospite in formato JSON strutturato con le seguenti chiavi esatte:
+{
+  "name": "Nome in maiuscolo (es. MARIO)",
+  "surname": "Cognome in maiuscolo (es. ROSSI)",
+  "gender": "M o F",
+  "birthDate": "Data di nascita nel formato YYYY-MM-DD (es. 1985-05-15)",
+  "birthPlace": "Luogo o comune di nascita (es. MILANO o BERLIN)",
+  "citizenship": "Nazionalità/Cittadinanza in italiano maiuscolo (es. ITALIANA, TEDESCA, FRANCESE, SVIZZERA)",
+  "documentNumber": "Numero del documento (es. CA12345XX)",
+  "issuePlace": "Luogo o ente di rilascio (es. COMUNE DI MILANO o QUESTURA DI SONDRIO)",
+  "issueDate": "Data di rilascio nel formato YYYY-MM-DD (es. 2020-10-12)"
+}
+
+Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni. Se un campo non è rilevabile dal documento, lascialo vuoto (""). Assicurati di convertire le date nel formato YYYY-MM-DD.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-lite',
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              { inlineData: { data: base64Data, mimeType: mimeType } }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text?.trim();
+      if (!responseText) {
+        throw new Error('Gemini non ha restituito una risposta valida.');
+      }
+
+      let parsedData: any = {};
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseErr) {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw parseErr;
+        }
+      }
+
+      res.json({ success: true, data: parsedData });
+    } catch (err: any) {
+      console.error('OCR scan with Gemini failed:', err);
+      res.status(502).json({ success: false, error: 'Scansione intelligente fallita. Riprova o compila manualmente.' });
+    }
+  });
+
+
   apiRouter.post('/aurora-ai/chat', async (req, res) => {
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
     const rawImage = typeof req.body?.image === 'string' ? req.body.image : '';
@@ -643,6 +728,30 @@ export function createApp() {
       
       const actualGuest = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : (guestName || guest || 'Ospite Aurora');
       const actualSource = source || (pass ? 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)' : 'Pannello Host');
+
+      if (pass && !pass.checkInConfirmed) {
+        const errorMsg = 'Accesso negato: il check-in deve essere prima confermato dall’host.';
+        const logEntry = {
+          timestamp: new Date().toISOString(),
+          guestPassId: pass.id,
+          guestName: actualGuest,
+          success: false,
+          errorMessage: errorMsg,
+          source: actualSource,
+          ipAddress: clientIp
+        };
+        serverLogs.unshift(logEntry);
+        persistLogs();
+        if (isSupabaseConfigured()) {
+          await logDigitalKeyAccess(logEntry);
+        }
+        res.status(403).json({
+          success: false,
+          checkInNotConfirmed: true,
+          error: errorMsg
+        });
+        return;
+      }
       
       // Do not trust a `wifiConnected` flag sent by the browser: it can be
       // forged and was the reason the first unlock could bypass the check.
@@ -849,6 +958,68 @@ export function createApp() {
       res.status(500).json({ success: false, error: err.message });
     }
   });
+
+  apiRouter.post('/cms/translate', async (req, res) => {
+    try {
+      const { text, sourceLang } = req.body;
+      if (!text || !sourceLang) {
+        res.status(400).json({ success: false, error: 'Campi obbligatori mancanti: text, sourceLang' });
+        return;
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        res.status(503).json({ success: false, error: 'Configurazione Gemini assente sul server.' });
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const targetLangs = ['it', 'en', 'de', 'fr', 'es'].filter(l => l !== sourceLang);
+      const prompt = `Traduci il seguente testo dalla lingua '${sourceLang}' alle seguenti lingue di destinazione: ${targetLangs.join(', ')}. Mantieni lo stile, il formato (ad esempio se ci sono numeri o emoji) ed il tono del testo originale. Non aggiungere commenti personali, traduci solo il testo in modo naturale.
+Testo originale:
+"${text}"
+
+Ritorna una risposta in formato JSON strutturato con le chiavi delle lingue destinazione:
+{
+  ${targetLangs.map(l => `"${l}": "traduzione in ${l}"`).join(',\n  ')}
+}
+
+Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text?.trim();
+      if (!responseText) {
+        throw new Error('Gemini non ha restituito una risposta valida.');
+      }
+
+      let parsedTranslations: any = {};
+      try {
+        parsedTranslations = JSON.parse(responseText);
+      } catch (parseErr) {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedTranslations = JSON.parse(jsonMatch[0]);
+        } else {
+          throw parseErr;
+        }
+      }
+
+      res.json({ success: true, translations: parsedTranslations });
+    } catch (err: any) {
+      console.error('Translation with Gemini failed:', err);
+      res.status(502).json({ success: false, error: 'Traduzione automatica fallita. Riprova più tardi.' });
+    }
+  });
+
 
   apiRouter.post('/cms/section', async (req, res) => {
     try {
@@ -1071,28 +1242,85 @@ export function createApp() {
     }
   });
 
-  // iCal Config endpoints
-  apiRouter.get('/ical/config', (req, res) => {
-    const config = getIcalConfig();
+  // Email & IMAP Config and Log endpoints
+  apiRouter.get('/email/config', (req, res) => {
     res.json({
       success: true,
-      config
+      config: getImapConfig()
     });
   });
 
-  apiRouter.post('/ical/config', (req, res) => {
-    const { icalUrl, enabled, intervalMs, daysAheadToSend } = req.body;
-    updateIcalConfig({
-      ...(icalUrl !== undefined && { icalUrl }),
-      ...(enabled !== undefined && { enabled: Boolean(enabled) }),
-      ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) }),
-      ...(daysAheadToSend !== undefined && { daysAheadToSend: Number(daysAheadToSend) })
-    });
+  apiRouter.post('/email/config', async (req, res) => {
+    try {
+      const { host, port, secure, user, pass, enabled, intervalMs } = req.body;
+      await updateImapConfigAsync({
+        ...(host !== undefined && { host: String(host) }),
+        ...(port !== undefined && { port: Number(port) }),
+        ...(secure !== undefined && { secure: Boolean(secure) }),
+        ...(user !== undefined && { user: String(user) }),
+        ...(pass !== undefined && { pass: String(pass) }),
+        ...(enabled !== undefined && { enabled: Boolean(enabled) }),
+        ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) })
+      });
       res.json({
         success: true,
-      message: 'Configurazione iCal aggiornata con successo',
-      config: getIcalConfig()
+        message: 'Configurazione Email (IMAP) aggiornata con successo',
+        config: getImapConfig()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.post('/email/sync-now', async (_req, res) => {
+    try {
+      await checkNewEmailsAndGeneratePasses(serverPasses);
+      persistPasses();
+      res.json({
+        success: true,
+        message: 'Sincronizzazione email iReservation completata con successo!',
+        totalPasses: serverPasses.length
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione email' });
+    }
+  });
+
+  apiRouter.get('/email/logs', async (_req, res) => {
+    try {
+      const logs = await getEmailLogs();
+      res.json({
+        success: true,
+        logs
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message || 'Errore durante il recupero dei log' });
+    }
+  });
+
+  // Backward compatibility alias for deprecated iCal endpoints mapping to Email Sync
+  apiRouter.get('/ical/config', (req, res) => {
+    res.json({
+      success: true,
+      config: getImapConfig()
     });
+  });
+
+  apiRouter.post('/ical/config', async (req, res) => {
+    try {
+      const { enabled, intervalMs } = req.body;
+      await updateImapConfigAsync({
+        ...(enabled !== undefined && { enabled: Boolean(enabled) }),
+        ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) })
+      });
+      res.json({
+        success: true,
+        message: 'Configurazione aggiornata',
+        config: getImapConfig()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   apiRouter.post('/ical/sync-now', async (_req, res) => {
@@ -1156,6 +1384,7 @@ export function createApp() {
         notes: (parsed as any).notes || `Ricevuto autonomamente via webhook`,
         createdAt: new Date().toISOString(),
         active: true,
+        checkInConfirmed: false,
         token: ''
       };
 
@@ -1287,6 +1516,15 @@ export function createApp() {
       const parsed = parseIReservationEmail(rawText, html);
       const bookingRef = parsed.bookingRef;
 
+      // Se si tratta di una mail di test da Bed-and-Breakfast, completiamo i dati mancanti per far sì che crei comunque il pass!
+      const isTestEmail = /test/i.test(emailSubject) || /test/i.test(rawText) || /test/i.test(html || '');
+      if (bookingRef && isTestEmail) {
+        if (!parsed.guestName) parsed.guestName = 'Ospite Test';
+        if (!parsed.guestSurname) parsed.guestSurname = 'BB';
+        if (!parsed.checkInDate) parsed.checkInDate = new Date().toISOString().split('T')[0];
+        if (!parsed.checkOutDate) parsed.checkOutDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      }
+
       // Rileva se si tratta di una notifica di cancellazione (evitando le clausole standard dei messaggi di conferma)
       const isCancellation = 
         /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(emailSubject) ||
@@ -1295,6 +1533,13 @@ export function createApp() {
       if (isCancellation) {
         console.log(`[iReservation] Rilevata notifica di CANCELLAZIONE per ID "${bookingRef}"`);
         if (!bookingRef) {
+          await addEmailLog({
+            sender: emailSender,
+            subject: emailSubject,
+            status: 'error',
+            message: `Ricevuto webhook di cancellazione ma impossibile estrarre l'ID prenotazione`,
+            details: { emailSubject, snippet: rawText.substring(0, 300) }
+          });
           res.status(400).json({ success: false, error: 'Cancellazione ignorata: ID Prenotazione non identificato.' });
           return;
         }
@@ -1310,10 +1555,28 @@ export function createApp() {
           const cancelledCount = await cancelAllMessagesForPass(targetPass.id);
           
           console.log(`[iReservation] Soggiorno disattivato per ID "${bookingRef}". Cancellati ${cancelledCount} messaggi programmati.`);
+          
+          await addEmailLog({
+            sender: emailSender,
+            subject: emailSubject,
+            status: 'success',
+            message: `Annullata prenotazione per ${targetPass.guestName} ${targetPass.guestSurname} (ID: ${bookingRef}) via Webhook`,
+            details: { bookingRef, parsed }
+          });
+
           res.status(200).json({ success: true, message: 'Prenotazione disattivata e messaggi in coda rimossi.', pass: targetPass });
           return;
         } else {
           console.warn(`[iReservation] Cancellazione ricevuta per ID "${bookingRef}" ma nessun pass corrisponde.`);
+          
+          await addEmailLog({
+            sender: emailSender,
+            subject: emailSubject,
+            status: 'warning',
+            message: `Annullamento Webhook ricevuto per ID ${bookingRef} ma nessun pass corrispondente trovato`,
+            details: { bookingRef, parsed }
+          });
+
           res.status(200).json({ success: true, message: 'Ricevuto annullamento per prenotazione non esistente.' });
           return;
         }
@@ -1324,13 +1587,15 @@ export function createApp() {
       if (!bookingRef || !parsed.guestName || !parsed.checkInDate || !parsed.checkOutDate) {
         const errM = `Dati incompleti. ID: "${bookingRef}", Ospite: "${parsed.guestName}", Check-in: "${parsed.checkInDate}", Check-out: "${parsed.checkOutDate}"`;
         console.error(`[iReservation] ${errM}`);
-        if (isSupabaseConfigured()) {
-          try {
-            const currentLogs = (await loadDocument<any[]>('ireservation_fallback_logs')) || [];
-            currentLogs.unshift({ timestamp: new Date().toISOString(), error: errM, parsed, rawText: rawText.substring(0, 1000) });
-            await saveDocument('ireservation_fallback_logs', currentLogs.slice(0, 100));
-          } catch {}
-        }
+        
+        await addEmailLog({
+          sender: emailSender,
+          subject: emailSubject,
+          status: 'warning',
+          message: `Webhook iReservation ignorato per dati incompleti. ID: "${bookingRef || 'Mancante'}", Ospite: "${parsed.guestName || 'Mancante'}", Check-in: "${parsed.checkInDate || 'Mancante'}", Check-out: "${parsed.checkOutDate || 'Mancante'}"`,
+          details: { bookingRef, parsed, snippet: rawText.substring(0, 300) }
+        });
+
         res.status(400).json({ success: false, error: errM, parsed });
         return;
       }
@@ -1347,6 +1612,14 @@ export function createApp() {
           notes: `Aggiornato da Email iReservation il ${new Date().toISOString()}.\nOriginale: ${existingPass.notes || ''}`
         };
         serverPasses[existingIdx] = targetPass;
+
+        await addEmailLog({
+          sender: emailSender,
+          subject: emailSubject,
+          status: 'success',
+          message: `Aggiornato pass ospite per ${parsed.guestName} ${parsed.guestSurname} (ID: ${bookingRef}) via Webhook`,
+          details: { bookingRef, parsed }
+        });
       } else {
         const pinCode = generateRandomPin();
         const token = crypto.randomBytes(32).toString('base64url');
@@ -1354,7 +1627,7 @@ export function createApp() {
           id: `ires-${bookingRef}`, guestName, guestSurname, phone, guestEmail, checkInDate, checkInTime: '14:00',
           checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount, bookingSource, amount,
           apartmentName, nightsCount, notes: `Generato da Email iReservation il ${new Date().toISOString()}`,
-          createdAt: new Date().toISOString(), active: true, token
+          createdAt: new Date().toISOString(), active: true, checkInConfirmed: false, token
         };
         serverPasses.unshift(targetPass);
       }
@@ -1445,6 +1718,7 @@ export function createApp() {
         bookingSource,
         createdAt: new Date().toISOString(),
         active: true,
+        checkInConfirmed: false,
         token: ''
       };
 
@@ -1545,6 +1819,26 @@ export function createApp() {
       }
       pass.documentsData = documentsData;
       pass.documentsUploaded = Array.isArray(documentsData) && documentsData.length > 0;
+      persistPasses();
+      if (isSupabaseConfigured()) {
+        await upsertPass(pass);
+      }
+      res.json({ success: true, pass });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.post('/passes/:id/confirm-checkin', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { confirmed } = req.body;
+      const pass = serverPasses.find(p => p.id === id);
+      if (!pass) {
+        res.status(404).json({ success: false, error: 'Pass non trovato.' });
+        return;
+      }
+      pass.checkInConfirmed = Boolean(confirmed);
       persistPasses();
       if (isSupabaseConfigured()) {
         await upsertPass(pass);

@@ -503,7 +503,8 @@ export function createAutonomousGuestPass(params: {
     bookingSource: params.bookingSource || 'bed-and-breakfast.it',
     notes: params.notes || 'Generato automaticamente via Webhook/API',
     createdAt: new Date().toISOString(),
-    active: true
+    active: true,
+    checkInConfirmed: false
   };
 
   const token = encodePassToToken(rawPass);

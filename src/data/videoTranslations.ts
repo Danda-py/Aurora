@@ -27,6 +27,7 @@ export interface VideoTranslationSchema {
     googleMaps: string;
     copy: string;
     copied: string;
+    notActive: string;
     copyPassword?: string;
     backToMenu: string;
     openWhatsApp: string;
@@ -134,6 +135,8 @@ export interface VideoTranslationSchema {
     };
     smartHomeAccess: string;
     frontDoor: string;
+    pendingHostConfirmation: string;
+    pendingHostConfirmationDesc: string;
     authorizedNetwork: string;
     connectToNetwork: string;
     publicNoticeTitle: string;
@@ -299,6 +302,7 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       googleMaps: "GOOGLE MAPS",
       copy: "Copia",
       copied: "Copiato!",
+      notActive: "Non attivo",
       copyPassword: "Copia Password",
       backToMenu: "MENU",
       openWhatsApp: "Scrivici su WhatsApp",
@@ -406,6 +410,8 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       smartHomeAccess: "Accesso Smart Home",
       frontDoor: "Portoncino d'Ingresso",
+      pendingHostConfirmation: "In Attesa di Conferma",
+      pendingHostConfirmationDesc: "Il tuo check-in deve essere confermato dall'host prima di poter aprire la porta e accedere al Wi-Fi.",
       authorizedNetwork: "Rete autorizzata per apertura sicura",
       connectToNetwork: "Collegati alla rete \"Casa_Aurora\"",
       publicNoticeTitle: "Apertura Smart Lock",
@@ -569,6 +575,7 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       googleMaps: "GOOGLE MAPS",
       copy: "Copy",
       copied: "Copied!",
+      notActive: "Not active",
       copyPassword: "Copy Password",
       backToMenu: "MENU",
       openWhatsApp: "Chat on WhatsApp",
@@ -674,6 +681,8 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       smartHomeAccess: "Smart Home Access",
       frontDoor: "Front Door",
+      pendingHostConfirmation: "Pending Confirmation",
+      pendingHostConfirmationDesc: "Your check-in must be confirmed by the host before you can open the door and access the Wi-Fi.",
       authorizedNetwork: "Authorized network for secure unlocking",
       connectToNetwork: "Connect to network \"Casa_Aurora\"",
       publicNoticeTitle: "Smart Lock Opening",
@@ -837,6 +846,7 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       googleMaps: "GOOGLE MAPS",
       copy: "Kopieren",
       copied: "Kopiert!",
+      notActive: "Nicht aktiv",
       copyPassword: "Passwort Kopieren",
       backToMenu: "MENÜ",
       openWhatsApp: "Auf WhatsApp schreiben",
@@ -942,6 +952,8 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       smartHomeAccess: "Smart-Home-Zugang",
       frontDoor: "Eingangstür",
+      pendingHostConfirmation: "Warten auf Bestätigung",
+      pendingHostConfirmationDesc: "Ihr Check-in muss vom Gastgeber bestätigt werden, bevor Sie die Tür öffnen und auf das WLAN zugreifen können.",
       authorizedNetwork: "Autorisiertes Netzwerk für sicheres Öffnen",
       connectToNetwork: "Verbinden Sie sich mit \"Casa_Aurora\"",
       publicNoticeTitle: "Smart-Lock-Öffnung",
@@ -1105,6 +1117,7 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       googleMaps: "GOOGLE MAPS",
       copy: "Copier",
       copied: "Copié !",
+      notActive: "Non actif",
       copyPassword: "Copier le Mot de Passe",
       backToMenu: "MENU",
       openWhatsApp: "Écrivez sur WhatsApp",
@@ -1210,6 +1223,8 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       smartHomeAccess: "Accès Smart Home",
       frontDoor: "Porte d’entrée",
+      pendingHostConfirmation: "En attente de confirmation",
+      pendingHostConfirmationDesc: "Votre check-in doit être confirmé par l'hôte avant de pouvoir ouvrir la porte et accéder au Wi-Fi.",
       authorizedNetwork: "Réseau autorisé pour ouverture sécurisée",
       connectToNetwork: "Connectez-vous au réseau \"Casa_Aurora\"",
       publicNoticeTitle: "Ouverture Smart Lock",
@@ -1373,6 +1388,7 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       googleMaps: "GOOGLE MAPS",
       copy: "Copiar",
       copied: "¡Copiado!",
+      notActive: "No activo",
       copyPassword: "Copiar Contraseña",
       backToMenu: "MENÚ",
       openWhatsApp: "Escribir en WhatsApp",
@@ -1478,6 +1494,8 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       smartHomeAccess: "Acceso Smart Home",
       frontDoor: "Puerta de entrada",
+      pendingHostConfirmation: "En espera de confirmación",
+      pendingHostConfirmationDesc: "Tu check-in debe ser confirmado por el anfitrión antes de poder abrir la puerta y acceder al Wi-Fi.",
       authorizedNetwork: "Red autorizada para apertura segura",
       connectToNetwork: "Conéctate a la red \"Casa_Aurora\"",
       publicNoticeTitle: "Apertura Smart Lock",

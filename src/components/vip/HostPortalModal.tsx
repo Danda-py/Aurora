@@ -265,7 +265,8 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       notes: notes.trim(),
       bookingSource: 'bed-and-breakfast.it',
       createdAt: new Date().toISOString(),
-      active: true
+      active: true,
+      checkInConfirmed: false
     };
 
     const token = encodePassToToken(newPassData);
@@ -323,6 +324,37 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       }
       // Also delete from server memory
       fetch(`/api/passes/${id}`, { method: 'DELETE' }).catch(err => console.warn('Delete server pass notice:', err));
+    }
+  };
+
+  // Handle Toggle Check-in Confirmation
+  const handleToggleCheckInConfirmation = async (pass: GuestPass) => {
+    try {
+      const newStatus = !pass.checkInConfirmed;
+      // Optimistic update locally
+      const updatedPasses = storedPasses.map(p => 
+        p.id === pass.id ? { ...p, checkInConfirmed: newStatus } : p
+      );
+      setStoredPasses(updatedPasses);
+      localStorage.setItem('AURORA_HOST_PASSES_V1', JSON.stringify(updatedPasses));
+
+      // Call API
+      const res = await fetch(`/api/passes/${pass.id}/confirm-checkin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmed: newStatus })
+      });
+      if (!res.ok) {
+        throw new Error('Errore durante la conferma del check-in.');
+      }
+      const data = await res.json();
+      if (data.success && data.pass) {
+        // Sync with actual server response
+        setStoredPasses(prev => prev.map(p => p.id === pass.id ? data.pass : p));
+      }
+    } catch (error: any) {
+      alert(error.message || 'Errore di rete.');
+      setStoredPasses(getSavedHostPasses());
     }
   };
 
@@ -914,6 +946,27 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
                           <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs flex-wrap">
                             <div className="flex items-center gap-2 flex-wrap">
+                              <button
+                                onClick={() => handleToggleCheckInConfirmation(pass)}
+                                className={`px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 cursor-pointer text-xs ${
+                                  pass.checkInConfirmed
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700'
+                                    : 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-200'
+                                }`}
+                              >
+                                {pass.checkInConfirmed ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Check-in Confermato</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span>Conferma Check-in</span>
+                                  </>
+                                )}
+                              </button>
+
                               <button
                                 onClick={() => handleSendWhatsApp(pass)}
                                 className="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:hover:bg-emerald-200 border border-emerald-200 transition flex items-center gap-1 cursor-pointer text-xs"

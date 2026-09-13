@@ -3,6 +3,7 @@ import { Language, WelcomePage, GuestPass } from '../../types';
 import { FlagIcon } from './FlagIcon';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { StaySummaryPill } from '../vip/StaySummaryPill';
+import { getStayTiming } from '../../services/guestPassService';
 import { 
   Home, 
   Key, 
@@ -48,6 +49,10 @@ export const GridMenuScreen: React.FC<Props> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
+  const timing = pass ? getStayTiming(pass) : null;
+  const isStayActive = timing ? timing.isActive : false;
+  const isCheckinConfirmed = pass ? Boolean(pass.checkInConfirmed) : false;
+  const isWifiActive = isStayActive && isCheckinConfirmed;
   const languagesList: Language[] = ['it', 'en', 'de', 'fr', 'es'];
 
   // Categorized items with dark & emerald theme
@@ -292,14 +297,19 @@ export const GridMenuScreen: React.FC<Props> = ({
         <div className="grid grid-cols-4 gap-2">
           {/* Wi-Fi Quick */}
           <button
-            onClick={() => onNavigate('wifi')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+            onClick={isWifiActive ? () => onNavigate('wifi') : undefined}
+            className={`flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 active:scale-95 transition cursor-pointer group shadow-sm ${
+              !isWifiActive ? 'opacity-40 cursor-not-allowed hover:border-emerald-500/20 hover:bg-[#0e151e]' : 'hover:border-emerald-400/50 hover:bg-[#131d27]'
+            }`}
+            title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isCheckinConfirmed ? t.checkInPage.pendingHostConfirmationDesc : "")}
           >
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
               <Wifi className="w-5 h-5 text-emerald-400" />
             </div>
             <span className="text-[11px] font-semibold text-slate-100">Wi-Fi</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">{t.gridMenu.password}</span>
+            <span className="text-[9px] text-emerald-400/80 font-mono">
+              {!isWifiActive ? t.actions.notActive : t.gridMenu.password}
+            </span>
           </button>
 
           {/* Accesso Porta */}
@@ -311,7 +321,9 @@ export const GridMenuScreen: React.FC<Props> = ({
               <Key className="w-5 h-5 text-emerald-400" />
             </div>
             <span className="text-[11px] font-semibold text-slate-100">{t.gridMenu.keys}</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">{t.gridMenu.smartAccessLabel}</span>
+            <span className="text-[9px] text-emerald-400/80 font-mono">
+              {!isCheckinConfirmed ? t.actions.notActive : t.gridMenu.smartAccessLabel}
+            </span>
           </button>
 
           {/* Parcheggio */}
@@ -383,11 +395,12 @@ export const GridMenuScreen: React.FC<Props> = ({
                   {section.items.map((item) => (
                     <button
                       key={item.page}
-                      onClick={() => onNavigate(item.page)}
+                      onClick={item.page === 'wifi' && !isWifiActive ? undefined : () => onNavigate(item.page)}
                       id={`tile-${item.page}`}
-                      className={`p-3.5 rounded-2xl bg-[#0e151e] border border-emerald-500/15 hover:border-emerald-400/50 hover:bg-[#131d27] shadow-sm text-left flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group ${
+                      className={`p-3.5 rounded-2xl bg-[#0e151e] border border-emerald-500/15 shadow-sm text-left flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group ${
                         (item as any).highlight ? 'ring-1 ring-emerald-400/40 bg-[#111c25]' : ''
-                      }`}
+                      } ${item.page === 'wifi' && !isWifiActive ? 'opacity-40 cursor-not-allowed hover:bg-[#0e151e] hover:border-emerald-500/15' : 'hover:border-emerald-400/50 hover:bg-[#131d27]'}`}
+                      title={item.page === 'wifi' && !isWifiActive ? (!isStayActive ? "Disponibile solo durante il soggiorno" : (!isCheckinConfirmed ? t.checkInPage.pendingHostConfirmationDesc : "")) : ""}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${item.bg} group-hover:scale-105 transition-transform`}>
@@ -400,7 +413,7 @@ export const GridMenuScreen: React.FC<Props> = ({
                           {item.label}
                         </span>
                         <span className="text-[11px] text-slate-400 line-clamp-1 block mt-0.5">
-                          {item.desc}
+                          {item.page === 'wifi' && !isWifiActive ? t.actions.notActive : item.desc}
                         </span>
                       </div>
                     </button>
@@ -421,9 +434,14 @@ export const GridMenuScreen: React.FC<Props> = ({
                   {section.items.map((item) => (
                     <button
                       key={item.page}
-                      onClick={() => onNavigate(item.page)}
+                      onClick={item.page === 'wifi' && !isWifiActive ? undefined : () => onNavigate(item.page)}
                       id={`list-${item.page}`}
-                      className="w-full px-3.5 py-3 flex items-center justify-between hover:bg-[#131d27] active:bg-[#16222e] transition cursor-pointer text-left group"
+                      className={`w-full px-3.5 py-3 flex items-center justify-between transition text-left group ${
+                        item.page === 'wifi' && !isWifiActive 
+                          ? 'opacity-40 cursor-not-allowed bg-transparent' 
+                          : 'hover:bg-[#131d27] active:bg-[#16222e] cursor-pointer'
+                      }`}
+                      title={item.page === 'wifi' && !isWifiActive ? (!isStayActive ? "Disponibile solo durante il soggiorno" : (!isCheckinConfirmed ? t.checkInPage.pendingHostConfirmationDesc : "")) : ""}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${item.bg}`}>
@@ -434,7 +452,7 @@ export const GridMenuScreen: React.FC<Props> = ({
                             {item.label}
                           </span>
                           <span className="text-[11px] text-slate-400 block">
-                            {item.desc}
+                            {item.page === 'wifi' && !isWifiActive ? t.actions.notActive : item.desc}
                           </span>
                         </div>
                       </div>

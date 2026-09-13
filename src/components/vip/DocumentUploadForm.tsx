@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
-import Tesseract from 'tesseract.js';
 import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, Trash2, Plus, ChevronRight } from 'lucide-react';
 
 interface Props {
@@ -109,32 +108,65 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setState(s => ({ ...s, isScanning: true, scanProgress: 0, error: null }));
+    setState(s => ({ ...s, isScanning: true, scanProgress: 15, error: null }));
     try {
-      const res = await Tesseract.recognize(file, 'ita+eng', {
-        logger: m => m.status === 'recognizing text' && setState(s => ({ ...s, scanProgress: Math.round(m.progress * 100) }))
+      // Simulation of progress bar since backend call has no real-time percentage
+      const progressInterval = setInterval(() => {
+        setState(s => {
+          if (s.scanProgress >= 90) {
+            clearInterval(progressInterval);
+            return s;
+          }
+          return { ...s, scanProgress: s.scanProgress + 10 };
+        });
+      }, 350);
+
+      // Convert image to base64 Data URL
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
-      const text = res.data.text;
-      let docNum = '', birthDate = '', name = form.name || '', surname = form.surname || '';
-      
-      const cie = text.match(/[A-Z]{2}\s?\d{5}\s?[A-Z]{2}/i);
-      const passp = text.match(/[A-Z]{2}\s?\d{7}/i);
-      if (docType === 'passaporto' && passp) docNum = passp[0].toUpperCase().replace(/\s/g, '');
-      else if (cie) docNum = cie[0].toUpperCase().replace(/\s/g, '');
 
-      const dateM = text.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
-      if (dateM) birthDate = `${dateM[3]}-${dateM[2]}-${dateM[1]}`;
+      setState(s => ({ ...s, scanProgress: 50 }));
 
-      const lines = text.split('\n').map(l => l.trim().toUpperCase()).filter(Boolean);
-      lines.forEach((line, idx) => {
-        if ((line.includes('COGNOME') || line.includes('SURNAME')) && lines[idx+1]) surname = lines[idx+1].replace(/[^A-Z\s]/g, '');
-        if ((line.includes('NOME') || line.includes('GIVEN')) && lines[idx+1]) name = lines[idx+1].replace(/[^A-Z\s]/g, '');
+      const res = await fetch('/api/guest/ocr-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl, docType })
       });
 
-      setForm(f => ({ ...f, documentNumber: docNum || f.documentNumber || '', name: name || f.name || '', surname: surname || f.surname || '', birthDate: birthDate || f.birthDate || '' }));
+      clearInterval(progressInterval);
+      setState(s => ({ ...s, scanProgress: 100 }));
+
+      if (!res.ok) {
+        throw new Error(isIt ? 'Impossibile completare la scansione automatica.' : 'Failed to complete auto-scan.');
+      }
+
+      const json = await res.json();
+      if (!json.success || !json.data) {
+        throw new Error(json.error || 'Errore OCR.');
+      }
+
+      const data = json.data;
+      setForm(f => ({
+        ...f,
+        name: data.name || f.name || '',
+        surname: data.surname || f.surname || '',
+        gender: data.gender || f.gender || 'M',
+        birthDate: data.birthDate || f.birthDate || '',
+        birthPlace: data.birthPlace || f.birthPlace || '',
+        citizenship: data.citizenship || f.citizenship || 'ITALIANA',
+        documentNumber: data.documentNumber || f.documentNumber || '',
+        issuePlace: data.issuePlace || f.issuePlace || '',
+        issueDate: data.issueDate || f.issueDate || ''
+      }));
+
       setState(s => ({ ...s, ocrStatus: 'success' }));
-    } catch {
-      setState(s => ({ ...s, ocrStatus: 'success' }));
+    } catch (err: any) {
+      console.error(err);
+      setState(s => ({ ...s, ocrStatus: 'success', error: isIt ? 'Scansione fallita. Inserisci i dati manualmente.' : 'Scan failed. Please enter details manually.' }));
     } finally {
       setState(s => ({ ...s, isScanning: false }));
     }

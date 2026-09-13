@@ -342,7 +342,8 @@ function setupTabs() {
       if (targetTab === 'passes') {
         fetchPasses();
       } else if (targetTab === 'ical') {
-        fetchIcalConfig();
+        fetchEmailConfig();
+        fetchEmailLogs();
       } else if (targetTab === 'hass') {
         fetchSonoffConfig();
         fetchLockStatus();
@@ -377,7 +378,7 @@ async function checkHealthAndBootstrap() {
       Promise.all([
         fetchPasses(),
         fetchSonoffConfig(),
-        fetchIcalConfig(),
+        fetchEmailConfig(),
         loadCmsData()
       ]).catch(console.warn);
     } else {
@@ -497,16 +498,22 @@ function setupEventListeners() {
     });
   }
 
-  // iCal Config Form Submit
-  const formIcalConfig = document.getElementById('formIcalConfig');
-  if (formIcalConfig) {
-    formIcalConfig.addEventListener('submit', handleSaveIcalConfig);
+  // Email Config Form Submit
+  const formEmailConfig = document.getElementById('formEmailConfig');
+  if (formEmailConfig) {
+    formEmailConfig.addEventListener('submit', handleSaveEmailConfig);
   }
 
-  // iCal Force Sync Button
-  const btnForceIcalSync = document.getElementById('btnForceIcalSync');
-  if (btnForceIcalSync) {
-    btnForceIcalSync.addEventListener('click', handleForceIcalSync);
+  // Email Force Sync Button
+  const btnForceEmailSync = document.getElementById('btnForceEmailSync');
+  if (btnForceEmailSync) {
+    btnForceEmailSync.addEventListener('click', handleForceEmailSync);
+  }
+
+  // Refresh Email Logs Button
+  const btnRefreshEmailLogs = document.getElementById('btnRefreshEmailLogs');
+  if (btnRefreshEmailLogs) {
+    btnRefreshEmailLogs.addEventListener('click', fetchEmailLogs);
   }
 
   // Home Assistant Trigger Buttons
@@ -880,6 +887,12 @@ function filterAndRenderPasses(filterQuery) {
 
         <!-- Actions -->
         <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <!-- Toggle Check-in Confirmation -->
+          <button type="button" data-pass-action="confirm" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${pass.checkInConfirmed ? 'bg-[#30d158]/10 text-[#30d158] border-[#30d158]/20' : 'bg-[#ff9f0a]/10 text-[#ff9f0a] border-[#ff9f0a]/20'}" title="Toggle conferma check-in ospite">
+            <i data-lucide="${pass.checkInConfirmed ? 'check-circle' : 'circle'}" class="w-3.5 h-3.5"></i>
+            <span>${pass.checkInConfirmed ? 'Confermato' : 'Conferma Check-in'}</span>
+          </button>
+
           <!-- Unlock Door Button with this pass -->
           <button type="button" data-pass-action="unlock" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer" title="Test apertura portone per questo pass">
             <i data-lucide="unlock" class="w-3.5 h-3.5 text-[#30d158]"></i>
@@ -922,6 +935,7 @@ function filterAndRenderPasses(filterQuery) {
       if (button.dataset.passAction === 'unlock') triggerDoorUnlock(pass.guestName || 'Host', pass.token);
       if (button.dataset.passAction === 'copy') copyPassLink(guestLink, button);
       if (button.dataset.passAction === 'delete') deletePass(pass.id, pass.guestName || 'questo ospite');
+      if (button.dataset.passAction === 'confirm') toggleCheckinConfirmation(pass);
     });
   });
 
@@ -965,66 +979,103 @@ window.deletePass = async function(id, guestName) {
   }
 };
 
-// ============================================================
-// iCal CONFIG & SYNCHRONIZATION
-// ============================================================
-async function fetchIcalConfig() {
+window.toggleCheckinConfirmation = async function(pass) {
+  const newStatus = !pass.checkInConfirmed;
+  showToast(newStatus ? 'Conferma check-in...' : 'Annullamento conferma...', 'loading');
   try {
-    const res = await fetch(`${API_BASE_URL}/api/ical/config`);
+    const res = await fetch(`${API_BASE_URL}/api/passes/${pass.id}/confirm-checkin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmed: newStatus })
+    });
+    if (res.ok) {
+      showToast(newStatus ? 'Check-in confermato!' : 'Conferma annullata!', 'success');
+      pass.checkInConfirmed = newStatus;
+      filterAndRenderPasses('');
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (err) {
+    showToast(`Errore: ${err.message}`, 'error');
+  }
+};
+
+// ============================================================
+// EMAIL SYNCHRONIZATION & IMAP CONFIG
+// ============================================================
+async function fetchEmailConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/email/config`);
     if (!res.ok) return;
     const data = await res.json();
     if (data.success && data.config) {
       const cfg = data.config;
-      const inputIcalUrl = document.getElementById('inputIcalUrl');
-      const inputIcalDaysAhead = document.getElementById('inputIcalDaysAhead');
-      const inputIcalInterval = document.getElementById('inputIcalInterval');
-      const checkboxIcalEnabled = document.getElementById('checkboxIcalEnabled');
-      const icalOverviewStatus = document.getElementById('icalOverviewStatus');
-      const icalStatusBadge = document.getElementById('icalStatusBadge');
+      const inputImapHost = document.getElementById('inputImapHost');
+      const inputImapPort = document.getElementById('inputImapPort');
+      const inputImapUser = document.getElementById('inputImapUser');
+      const inputImapPass = document.getElementById('inputImapPass');
+      const inputImapInterval = document.getElementById('inputImapInterval');
+      const checkboxImapSecure = document.getElementById('checkboxImapSecure');
+      const checkboxImapEnabled = document.getElementById('checkboxImapEnabled');
+      
+      const emailOverviewStatus = document.getElementById('emailOverviewStatus');
+      const emailStatusBadge = document.getElementById('emailStatusBadge');
 
-      if (inputIcalUrl && cfg.icalUrl) inputIcalUrl.value = cfg.icalUrl;
-      if (inputIcalDaysAhead && cfg.daysAheadToSend) inputIcalDaysAhead.value = cfg.daysAheadToSend;
-      if (inputIcalInterval && cfg.intervalMs) inputIcalInterval.value = Math.round(cfg.intervalMs / 60000);
-      if (checkboxIcalEnabled) checkboxIcalEnabled.checked = Boolean(cfg.enabled);
+      if (inputImapHost && cfg.host) inputImapHost.value = cfg.host;
+      if (inputImapPort && cfg.port) inputImapPort.value = cfg.port;
+      if (inputImapUser && cfg.user) inputImapUser.value = cfg.user;
+      if (inputImapPass && cfg.pass) inputImapPass.value = cfg.pass;
+      if (inputImapInterval && cfg.intervalMs) inputImapInterval.value = Math.round(cfg.intervalMs / 60000);
+      if (checkboxImapSecure) checkboxImapSecure.checked = Boolean(cfg.secure);
+      if (checkboxImapEnabled) checkboxImapEnabled.checked = Boolean(cfg.enabled);
 
-      if (icalOverviewStatus) {
-        icalOverviewStatus.textContent = cfg.enabled ? '● Sincronizzazione Attiva' : '● In Attesa';
-        icalOverviewStatus.className = cfg.enabled ? 'text-[11px] text-[#30d158] block truncate font-mono' : 'text-[11px] text-[#86868b] block truncate font-mono';
+      if (emailOverviewStatus) {
+        emailOverviewStatus.textContent = cfg.enabled ? '● Sincronizzazione Attiva' : '● In Attesa';
+        emailOverviewStatus.className = cfg.enabled ? 'text-[11px] text-[#30d158] block truncate font-mono' : 'text-[11px] text-[#86868b] block truncate font-mono';
       }
-      if (icalStatusBadge) {
-        icalStatusBadge.textContent = cfg.enabled ? 'Sincronizzazione Attiva' : 'Configurazione Pronta';
+      if (emailStatusBadge) {
+        emailStatusBadge.textContent = cfg.enabled ? 'Sincronizzazione Attiva' : 'Configurazione Pronta';
+        emailStatusBadge.className = cfg.enabled 
+          ? 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/25'
+          : 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-white/5 text-[#86868b] border border-white/10';
       }
     }
   } catch (err) {
-    console.warn('iCal config fetch notice:', err);
+    console.warn('Email config fetch notice:', err);
   }
 }
 
-async function handleSaveIcalConfig(e) {
+async function handleSaveEmailConfig(e) {
   if (e) e.preventDefault();
 
-  const url = document.getElementById('inputIcalUrl')?.value.trim();
-  const daysAhead = parseInt(document.getElementById('inputIcalDaysAhead')?.value || '3', 10);
-  const intervalMins = parseInt(document.getElementById('inputIcalInterval')?.value || '30', 10);
-  const enabled = document.getElementById('checkboxIcalEnabled')?.checked || false;
+  const host = document.getElementById('inputImapHost')?.value.trim();
+  const port = parseInt(document.getElementById('inputImapPort')?.value || '993', 10);
+  const user = document.getElementById('inputImapUser')?.value.trim();
+  const pass = document.getElementById('inputImapPass')?.value;
+  const intervalMins = parseInt(document.getElementById('inputImapInterval')?.value || '2', 10);
+  const secure = document.getElementById('checkboxImapSecure')?.checked || false;
+  const enabled = document.getElementById('checkboxImapEnabled')?.checked || false;
 
-  showToast('Salvataggio configurazione iCal...', 'loading');
+  showToast('Salvataggio configurazione email...', 'loading');
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/ical/config`, {
+    const res = await fetch(`${API_BASE_URL}/api/email/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        icalUrl: url,
-        daysAheadToSend: daysAhead,
+        host,
+        port,
+        user,
+        pass,
         intervalMs: intervalMins * 60 * 1000,
-        enabled: enabled
+        secure,
+        enabled
       })
     });
 
     if (res.ok) {
-      showToast('Configurazione iCal salvata con successo!', 'success');
-      fetchIcalConfig();
+      showToast('Configurazione Email (IMAP) salvata con successo!', 'success');
+      fetchEmailConfig();
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -1033,24 +1084,25 @@ async function handleSaveIcalConfig(e) {
   }
 }
 
-async function handleForceIcalSync() {
-  const btn = document.getElementById('btnForceIcalSync');
-  const feedback = document.getElementById('icalFeedbackBox');
+async function handleForceEmailSync() {
+  const btn = document.getElementById('btnForceEmailSync');
+  const feedback = document.getElementById('emailFeedbackBox');
   
-  showToast('Sincronizzazione iCal in corso...', 'loading');
+  showToast('Sincronizzazione email in corso...', 'loading');
   if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/ical/sync-now`, { method: 'POST' });
+    const res = await fetch(`${API_BASE_URL}/api/email/sync-now`, { method: 'POST' });
     const data = await res.json();
 
     if (res.ok && data.success) {
       showToast('Sincronizzazione completata con successo!', 'success');
       if (feedback) {
         feedback.className = 'p-3.5 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
-        feedback.textContent = `${data.message} (Totale soggiorni memorizzati: ${data.totalPasses || activePasses.length})`;
+        feedback.textContent = `${data.message} (Totale pass attivi: ${data.totalPasses || activePasses.length})`;
       }
       fetchPasses();
+      fetchEmailLogs();
     } else {
       throw new Error(data.error || 'Errore durante la sincronizzazione');
     }
@@ -1064,6 +1116,78 @@ async function handleForceIcalSync() {
     if (btn) btn.disabled = false;
   }
 }
+
+async function fetchEmailLogs() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/email/logs`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && Array.isArray(data.logs)) {
+      const tbody = document.getElementById('emailLogsTableBody');
+      if (!tbody) return;
+      
+      if (data.logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-8 text-center text-[#86868b]">Nessun log registrato nel sistema. Invia una mail di prova dal provider per testare l'integrazione.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = data.logs.map(log => {
+        const date = new Date(log.timestamp).toLocaleString('it-IT', { hour12: false });
+        let statusBadge = '';
+        if (log.status === 'success') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20">Successo</span>';
+        } else if (log.status === 'warning') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#ff9f0a]/10 text-[#ff9f0a] border border-[#ff9f0a]/20">Avviso</span>';
+        } else if (log.status === 'error') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20">Errore</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#86868b]/10 text-[#86868b] border border-[#86868b]/20">Ignorato</span>';
+        }
+        
+        const detailsJson = log.details ? JSON.stringify(log.details, null, 2).replace(/"/g, '&quot;') : '';
+        const detailsButton = log.details 
+          ? `<button class="p-1 text-[#0071e3] hover:text-[#0077ed] transition" onclick="toggleLogDetails('${log.id}')" title="Vedi dati grezzi"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>`
+          : '-';
+          
+        return `
+          <tr class="hover:bg-white/[0.02] transition font-sans">
+            <td class="py-3 font-mono text-[#86868b]">${date}</td>
+            <td class="py-3">${statusBadge}</td>
+            <td class="py-3 font-medium text-white truncate max-w-[220px]" title="${log.sender}\n${log.subject}">
+              <div class="truncate text-[11px] text-[#86868b] font-mono">${log.sender}</div>
+              <div class="truncate text-[10px] text-white">${log.subject}</div>
+            </td>
+            <td class="py-3 text-white pr-2 font-sans">${log.message}</td>
+            <td class="py-3 text-right">${detailsButton}</td>
+          </tr>
+          ${log.details ? `
+          <tr id="details-${log.id}" class="hidden bg-black/20">
+            <td colspan="5" class="p-4">
+              <pre class="text-[10px] text-[#86868b] font-mono bg-white/[0.02] p-3 rounded-xl overflow-x-auto border border-white/5 max-w-full whitespace-pre-wrap text-left">${detailsJson}</pre>
+            </td>
+          </tr>
+          ` : ''}
+        `;
+      }).join('');
+      
+      renderIcons();
+    }
+  } catch (err) {
+    console.error('Errore recupero log email:', err);
+  }
+}
+
+// Global helper to toggle logs collapse
+window.toggleLogDetails = function(logId) {
+  const row = document.getElementById(`details-${logId}`);
+  if (row) {
+    row.classList.toggle('hidden');
+  }
+};
 
 // ============================================================
 // HOME ASSISTANT INTEGRATION
@@ -1286,6 +1410,17 @@ function setDeepValue(obj, path, val) {
   curr[parts[parts.length - 1]] = val;
 }
 
+function getDeepValue(obj, path) {
+  if (!obj) return undefined;
+  const parts = path.split('.');
+  let curr = obj;
+  for (const p of parts) {
+    if (curr === null || curr === undefined) return undefined;
+    curr = curr[p];
+  }
+  return curr;
+}
+
 function renderCmsFields() {
   const container = document.getElementById('cmsFieldsContainer');
   const preview = document.getElementById('cmsPreview');
@@ -1319,10 +1454,16 @@ function renderCmsFields() {
       if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
         const strVal = String(v);
         const isMultiline = strVal.length > 55 || strVal.includes('\n');
+        const showTranslate = typeof v === 'string' && strVal.trim().length > 2 && !pathKey.toLowerCase().includes('phone') && !pathKey.toLowerCase().includes('url') && !pathKey.toLowerCase().includes('email') && !pathKey.toLowerCase().includes('color') && !pathKey.toLowerCase().includes('font');
         fieldItems.push(`
           <div class="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
             <div class="flex items-center justify-between gap-2">
               <label class="block text-xs font-mono text-[#ff9f0a] font-semibold">${pathKey}</label>
+              ${showTranslate ? `
+                <button type="button" data-translate-path="${pathKey}" class="btn-cms-translate text-[10px] px-2 py-1 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/20 transition flex items-center gap-1 cursor-pointer">
+                  ✨ Traduci con IA
+                </button>
+              ` : ''}
             </div>
             ${isMultiline ? `
               <textarea data-field-path="${pathKey}" rows="3" class="cms-field-input w-full text-xs p-2.5 rounded-xl resize-y bg-[#1c1c1e] text-white border border-white/10">${strVal}</textarea>
@@ -1340,12 +1481,29 @@ function renderCmsFields() {
             <div class="space-y-3">
               ${v.map((item, idx) => {
                 if (typeof item === 'object' && item !== null) {
-                  const subFields = Object.entries(item).map(([subK, subV]) => `
+                  const subFields = Object.entries(item).map(([subK, subV]) => {
+                    const strVal = String(subV || '');
+                    const isTextarea = strVal.length > 55 || subK.toLowerCase().includes('desc') || subK.toLowerCase().includes('text') || subK.toLowerCase().includes('message') || subK.toLowerCase().includes('note');
+                    const fullSubPath = `${pathKey}.${idx}.${subK}`;
+                    const showTranslate = typeof subV === 'string' && strVal.trim().length > 2 && !subK.toLowerCase().includes('phone') && !subK.toLowerCase().includes('url') && !subK.toLowerCase().includes('hours') && !subK.toLowerCase().includes('time') && !subK.toLowerCase().includes('address') && !subK.toLowerCase().includes('tagcolor');
+                    return `
                     <div>
-                      <label class="block text-[11px] font-mono text-[#86868b]">${subK}</label>
-                      <input type="text" data-field-path="${pathKey}.${idx}.${subK}" value="${String(subV || '').replace(/"/g, '&quot;')}" class="cms-field-input w-full text-xs p-2 rounded-lg bg-[#1c1c1e] text-white border border-white/10 mt-0.5" />
+                      <div class="flex items-center justify-between gap-1.5">
+                        <label class="block text-[11px] font-mono text-[#86868b]">${subK}</label>
+                        ${showTranslate ? `
+                          <button type="button" data-translate-path="${fullSubPath}" class="btn-cms-translate text-[9px] px-1.5 py-0.5 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/15 transition flex items-center gap-0.5 cursor-pointer">
+                            ✨ Traduci
+                          </button>
+                        ` : ''}
+                      </div>
+                      ${isTextarea ? `
+                        <textarea data-field-path="${fullSubPath}" rows="3" class="cms-field-input w-full text-xs p-2 rounded-lg resize-y bg-[#1c1c1e] text-white border border-white/10 mt-0.5">${strVal}</textarea>
+                      ` : `
+                        <input type="text" data-field-path="${fullSubPath}" value="${strVal.replace(/"/g, '&quot;')}" class="cms-field-input w-full text-xs p-2 rounded-lg bg-[#1c1c1e] text-white border border-white/10 mt-0.5" />
+                      `}
                     </div>
-                  `).join('');
+                    `;
+                  }).join('');
                   return `
                     <div class="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-2">
                       <span class="text-[10px] font-mono text-[#ff9f0a] font-semibold">Elemento #${idx + 1}</span>
@@ -1355,9 +1513,12 @@ function renderCmsFields() {
                     </div>
                   `;
                 } else {
+                  const strVal = String(item || '');
+                  const fullSubPath = `${pathKey}.${idx}`;
                   return `
-                    <div>
-                      <input type="text" data-field-path="${pathKey}.${idx}" value="${String(item || '').replace(/"/g, '&quot;')}" class="cms-field-input w-full text-xs p-2 rounded-lg bg-[#1c1c1e] text-white border border-white/10" />
+                    <div class="p-2 bg-white/[0.02] border border-white/[0.04] rounded-lg flex items-center gap-2 mt-1">
+                      <input type="text" data-field-path="${fullSubPath}" value="${strVal.replace(/"/g, '&quot;')}" class="cms-field-input w-full text-xs p-2 rounded-lg bg-[#1c1c1e] text-white border border-white/10" />
+                      <button type="button" data-translate-path="${fullSubPath}" class="btn-cms-translate text-[9px] px-2 py-2 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/15 transition shrink-0 cursor-pointer">✨ Traduci</button>
                     </div>
                   `;
                 }
@@ -1382,6 +1543,59 @@ function renderCmsFields() {
       if (!cmsContentData[currentCmsLang][sectionKey]) cmsContentData[currentCmsLang][sectionKey] = {};
       setDeepValue(cmsContentData[currentCmsLang][sectionKey], fieldPath, input.value);
       updateCmsPreview();
+    });
+  });
+
+  // Attach translation buttons listeners
+  container.querySelectorAll('.btn-cms-translate').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const fieldPath = btn.getAttribute('data-translate-path');
+      const text = getDeepValue(cmsContentData[currentCmsLang]?.[sectionKey], fieldPath);
+      
+      if (!text || String(text).trim().length < 2) {
+        showToast('Inserisci del testo prima di richiedere la traduzione.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '⚡ Traduzione...';
+
+      showToast('Traduzione in corso con Google AI...', 'loading');
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/cms/translate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: String(text), sourceLang: currentCmsLang })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const json = await res.json();
+        if (!json.success || !json.translations) {
+          throw new Error(json.error || 'Errore risposta traduzione.');
+        }
+
+        const translationsDict = json.translations;
+        for (const [lang, translatedText] of Object.entries(translationsDict)) {
+          if (!cmsContentData[lang]) cmsContentData[lang] = {};
+          if (!cmsContentData[lang][sectionKey]) cmsContentData[lang][sectionKey] = {};
+          setDeepValue(cmsContentData[lang][sectionKey], fieldPath, translatedText);
+        }
+
+        showToast('Tradotto in tutte le lingue! Salva per confermare.', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Errore durante la traduzione automatica.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        renderCmsFields();
+      }
     });
   });
 
