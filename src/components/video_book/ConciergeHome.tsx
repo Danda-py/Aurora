@@ -334,18 +334,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const runDoorOpen = async () => {
     if (!pass) return;
     const wifiCheck = await checkCasaAuroraWifi();
-    if (!wifiCheck.verified) {
-      setDoorState('error');
-      setDoorMessage(wifiCheck.message);
-      window.setTimeout(() => {
-        setDoorState('idle');
-        setDoorMessage('');
-      }, 4500);
-      return;
-    }
 
     setDoorState('opening');
-    setDoorMessage(t.concierge.doorMessage.sending);
+    if (!wifiCheck.verified) {
+      setDoorMessage(language === 'it' ? "Wi-Fi non rilevato. Invio tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
+    } else {
+      setDoorMessage(t.concierge.doorMessage.sending);
+    }
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -353,7 +348,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: `${pass.guestName} ${pass.guestSurname}`.trim(),
-          source: 'Aurora Glass Pass',
+          source: wifiCheck.verified ? 'Aurora Glass Pass (Wi-Fi Verificato)' : 'Aurora Glass Pass (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
           guestToken: pass.token
         })
@@ -558,11 +553,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             {!isStayActive ? (
               <div className="mt-3 p-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-slate-400 text-xs flex flex-col gap-1 items-center justify-center text-center">
                 <ShieldAlert className="h-5 w-5 text-amber-500 animate-pulse" />
-                <span className="font-bold text-white">Chiavi digitali non attive</span>
+                <span className="font-bold text-white">{t.concierge.keysNotActive}</span>
                 <span>
                   {timing?.isUpcoming 
-                    ? `Saranno disponibili dalle ore ${pass.checkInTime || '14:00'} del ${formatPassDate(pass.checkInDate)}`
-                    : "Il tuo soggiorno si è concluso. Le chiavi sono state disattivate."}
+                    ? `${t.concierge.keysAvailableFrom} ${pass.checkInTime || '14:00'} ${t.concierge.keysOn} ${formatPassDate(pass.checkInDate)}`
+                    : t.concierge.keysConcluded}
                 </span>
               </div>
             ) : (

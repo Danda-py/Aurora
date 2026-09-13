@@ -101,14 +101,12 @@ export const CheckinPage: React.FC<Props> = ({
     setWifiVerified(wifiCheck.verified);
     setWifiMessage(wifiCheck.message);
 
-    if (!wifiCheck.verified) {
-      setOpeningState('error');
-      setStatusMessage(wifiMsgs.notConnectedError);
-      return;
-    }
-
     setOpeningState('opening');
-    setStatusMessage(t.concierge.doorMessage.sending);
+    if (!wifiCheck.verified) {
+      setStatusMessage(language === 'it' ? "Wi-Fi non rilevato. Invio comando tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
+    } else {
+      setStatusMessage(t.concierge.doorMessage.sending);
+    }
 
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -116,7 +114,7 @@ export const CheckinPage: React.FC<Props> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: guestFullName,
-          source: 'Check-in App (Wi-Fi Casa_Aurora Verificato)',
+          source: wifiCheck.verified ? 'Check-in App (Wi-Fi Casa_Aurora Verificato)' : 'Check-in App (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
           guestToken: pass?.token

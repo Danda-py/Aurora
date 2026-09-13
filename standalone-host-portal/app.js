@@ -3,6 +3,14 @@
  * Apple HIG-inspired Minimalist & Robust Experience
  */
 
+// Clean up trailing '?' from the URL if present
+if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+  if (window.location.href.endsWith('?') || window.location.search === '?') {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+
 // Configuration & State
 const DEFAULT_API_BASE = window.location.origin;
 let API_BASE_URL = localStorage.getItem('AURORA_API_BASE_URL') || DEFAULT_API_BASE;

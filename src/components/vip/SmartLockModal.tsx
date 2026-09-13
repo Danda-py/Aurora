@@ -62,15 +62,14 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
     const wifiCheck = await checkCasaAuroraWifi();
     setWifiVerified(wifiCheck.verified);
     setWifiMessage(wifiCheck.message);
-    if (!wifiCheck.verified) {
-      setOpeningState('error');
-      setStatusMessage(wifiCheck.message);
-      return;
-    }
 
     setOpeningState('opening');
     if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
-    setStatusMessage(t.concierge.doorMessage.sending);
+    if (!wifiCheck.verified) {
+      setStatusMessage(language === 'it' ? "Wi-Fi non rilevato. Invio tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
+    } else {
+      setStatusMessage(t.concierge.doorMessage.sending);
+    }
 
     try {
       const res = await fetch('/api/hass/unlock', {
@@ -78,7 +77,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: guestFullName,
-          source: 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)',
+          source: wifiCheck.verified ? 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)' : 'Pulsante Ospite VIP (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
           guestToken: pass?.token

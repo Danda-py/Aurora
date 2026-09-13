@@ -116,6 +116,10 @@ export interface VideoTranslationSchema {
     changeLanguage: string;
     close: string;
     welcomeCity: string;
+    keysNotActive: string;
+    keysAvailableFrom: string;
+    keysConcluded: string;
+    keysOn: string;
   };
   checkInPage: {
     wifi: {
@@ -390,7 +394,11 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       changeLanguage: "Cambia lingua",
       close: "Chiudi",
-      welcomeCity: "Benvenuto a Morbegno."
+      welcomeCity: "Benvenuto a Morbegno.",
+      keysNotActive: "Chiavi digitali non attive",
+      keysAvailableFrom: "Saranno disponibili dalle ore",
+      keysConcluded: "Il tuo soggiorno si è concluso. Le chiavi sono state disattivate.",
+      keysOn: "del"
     },
     checkInPage: {
       wifi: {
@@ -661,7 +669,11 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       changeLanguage: "Change language",
       close: "Close",
-      welcomeCity: "Welcome to Morbegno."
+      welcomeCity: "Welcome to Morbegno.",
+      keysNotActive: "Digital keys not active",
+      keysAvailableFrom: "They will be available from",
+      keysConcluded: "Your stay has concluded. The keys have been deactivated.",
+      keysOn: "on"
     },
     checkInPage: {
       wifi: {
@@ -932,7 +944,11 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       changeLanguage: "Sprache ändern",
       close: "Schließen",
-      welcomeCity: "Willkommen in Morbegno."
+      welcomeCity: "Willkommen in Morbegno.",
+      keysNotActive: "Digitale Schlüssel nicht aktiv",
+      keysAvailableFrom: "Sie sind verfügbar ab",
+      keysConcluded: "Ihr Aufenthalt ist beendet. Die Schlüssel wurden deaktiviert.",
+      keysOn: "am"
     },
     checkInPage: {
       wifi: {
@@ -1203,7 +1219,11 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       changeLanguage: "Changer de langue",
       close: "Fermer",
-      welcomeCity: "Bienvenue à Morbegno."
+      welcomeCity: "Bienvenue à Morbegno.",
+      keysNotActive: "Clés de la maison non actives",
+      keysAvailableFrom: "Elles seront disponibles à partir de",
+      keysConcluded: "Votre séjour est terminé. Les clés ont été désactivées.",
+      keysOn: "le"
     },
     checkInPage: {
       wifi: {
@@ -1474,7 +1494,11 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       },
       changeLanguage: "Cambiar idioma",
       close: "Cerrar",
-      welcomeCity: "Bienvenido a Morbegno."
+      welcomeCity: "Bienvenido a Morbegno.",
+      keysNotActive: "Llaves digitales no activas",
+      keysAvailableFrom: "Estarán disponibles a partir de las",
+      keysConcluded: "Tu estancia ha concluido. Las llaves han sido desactivadas.",
+      keysOn: "el"
     },
     checkInPage: {
       wifi: {
