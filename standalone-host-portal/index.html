@@ -995,6 +995,21 @@
           </div>
         </div>
 
+        <!-- Cerca Campi Search Filter -->
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 my-2.5">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <span class="text-xs font-semibold text-[#86868b] uppercase tracking-wider whitespace-nowrap">Filtra Campi:</span>
+            <div class="relative flex-1">
+              <input type="text" id="inputFilterCmsFields" placeholder="Digita una parola chiave per filtrare i campi della sezione..." class="w-full text-xs py-2 px-3.5 pl-8 rounded-xl bg-[#1c1c1e] text-white border border-white/10 outline-none focus:border-[#ff9f0a]" />
+              <i data-lucide="search" class="w-3.5 h-3.5 text-[#86868b] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            </div>
+          </div>
+          <button id="btnClearCmsFilter" type="button" class="text-xs text-[#ff453a] hover:underline cursor-pointer transition flex items-center gap-1 bg-transparent border-0 outline-none">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i> Ripristina Filtro
+          </button>
+        </div>
+
+
         <div id="cmsFeedback" class="hidden p-3 rounded-xl text-xs font-medium"></div>
 
         <!-- Dynamic Fields Editor & Live Preview -->

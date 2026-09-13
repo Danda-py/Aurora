@@ -464,6 +464,48 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         </section>
 
+        {/* Mandatory Check-in Document Banner */}
+        {pass && !pass.documentsUploaded && (
+          <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-pulse">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
+                <ShieldAlert className="w-3 h-3" /> {language === 'it' ? 'Azione Obbligatoria' : 'Required Action'}
+              </span>
+              <h3 className="text-sm font-bold text-white tracking-tight">
+                {language === 'it' ? 'Registra i Documenti degli Ospiti' : 'Register Guest Documents'}
+              </h3>
+              <p className="text-xs text-white/75 leading-relaxed max-w-xl">
+                {language === 'it' 
+                  ? 'La legge italiana richiede la registrazione dei documenti entro 24 ore dall\'arrivo. Registra tutti gli ospiti per abilitare l\'apertura della porta (Smart Lock) e il Wi-Fi fibra ad alta velocità!' 
+                  : 'Italian law requires registering all guests. Please submit documents for everyone to enable home access (Smart Lock) and high-speed Wi-Fi!'}
+              </p>
+            </div>
+            <button 
+              onClick={() => onNavigate('check_in')} 
+              className="btn-apple-primary bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 self-start sm:self-center cursor-pointer transition shrink-0 shadow-md border-0"
+            >
+              <span>{language === 'it' ? 'Carica Documenti Ora' : 'Upload Documents Now'}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {pass && pass.documentsUploaded && !isCheckinConfirmed && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-md">
+            <Clock3 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <h3 className="text-xs font-bold text-white">
+                {language === 'it' ? 'Documenti in fase di verifica' : 'Documents under review'}
+              </h3>
+              <p className="text-[11px] text-white/75 leading-relaxed">
+                {language === 'it' 
+                  ? 'Hai caricato i documenti con successo! Il tuo host Nino li sta verificando per abilitare l\'apertura della porta e il Wi-Fi ad alta velocità.' 
+                  : 'You successfully submitted your documents! Your host Nino is reviewing them shortly to enable door unlocking and high-speed Wi-Fi.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Departure Reminder Nudge (if today is checkout) */}
         {isCheckoutDay && (
           <button className="stay-nudge" onClick={() => setSheet('luggage')}>

@@ -1370,6 +1370,28 @@ function setupCms() {
   // Reset button
   const btnResetCms = document.getElementById('btnResetCms');
   if (btnResetCms) btnResetCms.addEventListener('click', handleResetCms);
+
+  // Search filter for CMS fields
+  const filterInput = document.getElementById('inputFilterCmsFields');
+  const btnClearFilter = document.getElementById('btnClearCmsFilter');
+  
+  if (filterInput) {
+    filterInput.addEventListener('input', () => {
+      const q = filterInput.value.toLowerCase().trim();
+      if (q.length > 0) {
+        renderGlobalCmsSearch(q);
+      } else {
+        renderCmsFields();
+      }
+    });
+  }
+  
+  if (btnClearFilter && filterInput) {
+    btnClearFilter.addEventListener('click', () => {
+      filterInput.value = '';
+      renderCmsFields();
+    });
+  }
 }
 
 async function loadCmsData() {
@@ -1426,6 +1448,12 @@ function renderCmsFields() {
   const preview = document.getElementById('cmsPreview');
   const previewTitle = document.getElementById('cmsPreviewTitle');
   if (!container) return;
+
+  const filterInput = document.getElementById('inputFilterCmsFields');
+  if (filterInput && filterInput.value.trim().length > 0) {
+    renderGlobalCmsSearch(filterInput.value);
+    return;
+  }
 
   const { sectionKey, data: sectionData } = getActiveSectionData();
 
@@ -1601,6 +1629,169 @@ function renderCmsFields() {
 
   updateCmsPreview();
 }
+
+function renderGlobalCmsSearch(query) {
+  const container = document.getElementById('cmsFieldsContainer');
+  if (!container) return;
+
+  const q = query.toLowerCase().trim();
+  const matchedFields = [];
+
+  // Loop through ALL sections of the active language
+  const langData = cmsContentData[currentCmsLang] || {};
+  for (const [sectionKey, sectionData] of Object.entries(langData)) {
+    if (typeof sectionData !== 'object' || sectionData === null) continue;
+
+    function searchFields(prefix, obj) {
+      for (const [k, v] of Object.entries(obj)) {
+        const pathKey = prefix ? `${prefix}.${k}` : k;
+        if (v === null || v === undefined) continue;
+
+        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+          const strVal = String(v);
+          if (pathKey.toLowerCase().includes(q) || strVal.toLowerCase().includes(q)) {
+            matchedFields.push({ sectionKey, pathKey, value: strVal, type: 'simple' });
+          }
+        } else if (Array.isArray(v)) {
+          v.forEach((item, idx) => {
+            if (typeof item === 'object' && item !== null) {
+              for (const [subK, subV] of Object.entries(item)) {
+                const strVal = String(subV || '');
+                const fullPath = `${pathKey}.${idx}.${subK}`;
+                if (fullPath.toLowerCase().includes(q) || strVal.toLowerCase().includes(q)) {
+                  matchedFields.push({ sectionKey, pathKey: fullPath, value: strVal, type: 'array-object', subK, idx, arrayKey: pathKey });
+                }
+              }
+            } else {
+              const strVal = String(item || '');
+              const fullPath = `${pathKey}.${idx}`;
+              if (fullPath.toLowerCase().includes(q) || strVal.toLowerCase().includes(q)) {
+                matchedFields.push({ sectionKey, pathKey: fullPath, value: strVal, type: 'array-simple', idx, arrayKey: pathKey });
+              }
+            }
+          });
+        } else if (typeof v === 'object') {
+          searchFields(pathKey, v);
+        }
+      }
+    }
+
+    searchFields('', sectionData);
+  }
+
+  if (matchedFields.length === 0) {
+    container.innerHTML = `
+      <div class="apple-card p-6 text-center text-xs text-[#86868b]">
+        Nessun campo trovato corrispondente alla ricerca "${query}" nella lingua corrente.
+      </div>
+    `;
+    return;
+  }
+
+  const fieldItems = [];
+  fieldItems.push(`
+    <div class="p-3 rounded-xl bg-[#ff9f0a]/10 border border-[#ff9f0a]/20 text-[#ff9f0a] text-xs font-semibold mb-3">
+      🔍 Trovati ${matchedFields.length} risultati globali per "${query}"
+    </div>
+  `);
+
+  matchedFields.forEach(item => {
+    const isMultiline = item.value.length > 55 || item.value.includes('\n');
+    const isSubKDesc = item.subK && (item.subK.toLowerCase().includes('desc') || item.subK.toLowerCase().includes('text') || item.subK.toLowerCase().includes('message') || item.subK.toLowerCase().includes('note'));
+    const isTextarea = isMultiline || isSubKDesc;
+    const showTranslate = !item.pathKey.toLowerCase().includes('phone') && !item.pathKey.toLowerCase().includes('url') && !item.pathKey.toLowerCase().includes('email') && !item.pathKey.toLowerCase().includes('color') && !item.pathKey.toLowerCase().includes('font');
+
+    fieldItems.push(`
+      <div class="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5" data-global-section="${item.sectionKey}">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="px-2 py-0.5 rounded-full bg-white/[0.08] text-white text-[10px] font-mono border border-white/[0.1]">${item.sectionKey.toUpperCase()}</span>
+            <label class="block text-xs font-mono text-[#ff9f0a] font-semibold">${item.pathKey}</label>
+          </div>
+          ${showTranslate ? `
+            <button type="button" data-global-section="${item.sectionKey}" data-translate-path="${item.pathKey}" class="btn-cms-translate text-[9px] px-2 py-0.5 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/25 transition flex items-center gap-0.5 cursor-pointer">
+              ✨ Traduci
+            </button>
+          ` : ''}
+        </div>
+        ${isTextarea ? `
+          <textarea data-global-section="${item.sectionKey}" data-field-path="${item.pathKey}" rows="3" class="cms-field-input w-full text-xs p-2.5 rounded-xl resize-y bg-[#1c1c1e] text-white border border-white/10">${item.value}</textarea>
+        ` : `
+          <input type="text" data-global-section="${item.sectionKey}" data-field-path="${item.pathKey}" value="${item.value.replace(/"/g, '&quot;')}" class="cms-field-input w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+        `}
+      </div>
+    `);
+  });
+
+  container.innerHTML = fieldItems.join('');
+
+  // Attach live input listeners for real-time preview (and updating global state)
+  container.querySelectorAll('.cms-field-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const fieldPath = input.getAttribute('data-field-path');
+      const sKey = input.getAttribute('data-global-section');
+      if (!cmsContentData[currentCmsLang]) cmsContentData[currentCmsLang] = {};
+      if (!cmsContentData[currentCmsLang][sKey]) cmsContentData[currentCmsLang][sKey] = {};
+      setDeepValue(cmsContentData[currentCmsLang][sKey], fieldPath, input.value);
+      updateCmsPreview();
+    });
+  });
+
+  // Attach translation buttons listeners for global search results
+  container.querySelectorAll('.btn-cms-translate').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const fieldPath = btn.getAttribute('data-translate-path');
+      const sKey = btn.getAttribute('data-global-section');
+      const text = getDeepValue(cmsContentData[currentCmsLang]?.[sKey], fieldPath);
+      
+      if (!text || String(text).trim().length < 2) {
+        showToast('Inserisci del testo prima di richiedere la traduzione.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '⚡ Traduzione...';
+
+      showToast('Traduzione in corso con Google AI...', 'loading');
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/cms/translate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: String(text), sourceLang: currentCmsLang })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const json = await res.json();
+        if (!json.success || !json.translations) {
+          throw new Error(json.error || 'Errore risposta traduzione.');
+        }
+
+        const translationsDict = json.translations;
+        for (const [lang, translatedText] of Object.entries(translationsDict)) {
+          if (!cmsContentData[lang]) cmsContentData[lang] = {};
+          if (!cmsContentData[lang][sKey]) cmsContentData[lang][sKey] = {};
+          setDeepValue(cmsContentData[lang][sKey], fieldPath, translatedText);
+        }
+
+        showToast('Tradotto in tutte le lingue! Salva per confermare.', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Errore durante la traduzione automatica.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        renderGlobalCmsSearch(query); // re-render search results to show update
+      }
+    });
+  });
+}
+
 
 function updateCmsPreview() {
   const preview = document.getElementById('cmsPreview');
@@ -2130,10 +2321,15 @@ function renderScheduledMessages(messages) {
         </div>
 
         <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+          <a href="https://wa.me/${msg.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg.messageText)}" target="_blank" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-decoration-none text-[#30d158] hover:text-[#30d158]" style="text-decoration: none;">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#30d158]"></i>
+            <span>WhatsApp</span>
+          </a>
+
           ${!isSent ? `
             <button onclick="sendScheduledMessageNow('${msg.id}')" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
               <i data-lucide="send" class="w-3.5 h-3.5 text-[#30d158]"></i>
-              <span>${isFailed ? 'Riprova' : 'Invia Subito'}</span>
+              <span>${isFailed ? 'Riprova API' : 'Invia API'}</span>
             </button>
           ` : ''}
 

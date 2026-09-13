@@ -509,7 +509,7 @@ export function createApp() {
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni. Se un campo non è rilevabile dal documento, lascialo vuoto (""). Assicurati di convertire le date nel formato YYYY-MM-DD.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-lite',
+        model: 'gemini-2.5-flash',
         contents: [
           {
             parts: [

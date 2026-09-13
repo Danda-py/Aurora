@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
-import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, Trash2, Plus, ChevronRight } from 'lucide-react';
+import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
 
 interface Props {
   pass: GuestPass;
@@ -370,22 +370,12 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
                   <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border font-bold ${isCompleted ? 'text-[#62e6bd] bg-emerald-500/10 border-emerald-500/25' : 'text-slate-400 bg-white/[0.04] border-white/5'}`}>
                     {isCompleted ? (isIt ? "COMPLETATO" : "COMPLETED") : (isIt ? "DA COMPILARE" : "PENDING")}
                   </span>
-                  {g.id > 1 && (
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setGuests(guests.filter(item => item.id !== g.id)); }} className="w-6 h-6 rounded-lg bg-red-950/15 text-rose-400 flex items-center justify-center border border-red-500/10 cursor-pointer">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
               </div>
             );
           })}
         </div>
-
-        <button type="button" onClick={() => setGuests([...guests, { id: guests.length > 0 ? Math.max(...guests.map(g => g.id)) + 1 : 1, data: null, isCompleted: false }])} className="w-full py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-dashed border-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer">
-          <Plus className="w-3.5 h-3.5" />
-          <span>{isIt ? "Aggiungi altro ospite" : "Add another guest"}</span>
-        </button>
       </div>
 
       <div className="pt-2">

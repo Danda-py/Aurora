@@ -436,7 +436,7 @@ export function formatInvitationMessage(pass: GuestPass, fullUrl: string): strin
 
   return (
 `🌿 *APPARTAMENTO AURORA • MORBEGNO*
-Ciao ${fullName}, ti diamo un caloroso benvenuto!
+Ciao ${fullName}, felici di ospitarti ad Aurora in Valtellina!
 
 Abbiamo preparato tutto con cura per farti sentire coccolato e rilassato durante il tuo soggiorno ad Aurora:
 

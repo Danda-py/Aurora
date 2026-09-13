@@ -454,10 +454,6 @@ export const CheckinPage: React.FC<Props> = ({
               <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
                 {c.houseAccessTitle}
               </h4>
-              <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
-                <HandHeart className="w-3.5 h-3.5 text-[#62e6bd]" />
-                {t.checkInPage.inPersonWelcome}
-              </p>
             </div>
           </div>
 

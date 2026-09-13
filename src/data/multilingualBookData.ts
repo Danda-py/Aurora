@@ -954,7 +954,7 @@ export const BOOK_DATA: Record<Language, {
       keyboxCodeLabel: "REMISE EN PERSONNE PAR L'HÔTE",
       step1: "1. Les clés de l'appartement vous seront remises en main propre par votre hôte à votre arrivée.",
       step2: "2. Merci de nous envoyer un message sur WhatsApp pour nous indiquer votre heure d'arrivée estimée.",
-      step3: "3. À votre arrivée, nous vous accueillerons chaleureusement pour vous présenter l'appartement et vous remettre les clés.",
+      step3: "3. À votre arrivée, nous vous accueillerons pour vous présenter l'appartement et vous remettre les clés.",
       parkingTitle: "PARKING PRIVÉ RÉSERVÉ",
       parkingDesc: "La propriété dispose d'un parking privé avec une place toujours libre et réservée pour les hôtes de l'Appartement Aurora.",
       parkingNote: "Toujours à votre disposition sans frais supplémentaires."
