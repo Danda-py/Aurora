@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
 import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
+import { supabase } from '../../services/supabaseClient';
 
 const dTranslations: Record<Language, any> = {
   it: {
@@ -246,7 +247,15 @@ interface GuestDocument {
  * payload resta piccolo (tipicamente poche centinaia di KB) senza perdere leggibilità
  * per l'OCR.
  */
-async function resizeImageForOcr(file: File, maxDimension = 1800, quality = 0.85): Promise<string> {
+/**
+ * Le foto scattate con la fotocamera del telefono (capture="environment") sono spesso
+ * da 3 a 10+ MB. Le funzioni serverless di Vercel rifiutano qualunque richiesta sopra i
+ * 4.5MB con un errore 413, che a schermo si traduceva in "scansione fallita al 90%".
+ * Ridimensioniamo e ricomprimiamo l'immagine lato client prima di inviarla.
+ * Usiamo l'opzione rapida: maxDimension = 1400, quality = 0.7, e ricompressione a step
+ * finché la dimensione stimata del file non è inferiore a 2.5MB.
+ */
+async function resizeImageForOcr(file: File, maxDimension = 1400, quality = 0.7): Promise<string> {
   const originalDataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -263,20 +272,95 @@ async function resizeImageForOcr(file: File, maxDimension = 1800, quality = 0.85
       image.src = originalDataUrl;
     });
 
-    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
-    const targetWidth = Math.round(img.width * scale);
-    const targetHeight = Math.round(img.height * scale);
+    let currentDimension = maxDimension;
+    let currentQuality = quality;
+    let resultDataUrl = '';
+    const maxSteps = 5;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return originalDataUrl;
+    for (let step = 0; step < maxSteps; step++) {
+      const scale = Math.min(1, currentDimension / Math.max(img.width, img.height));
+      const targetWidth = Math.round(img.width * scale);
+      const targetHeight = Math.round(img.height * scale);
 
-    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-    return canvas.toDataURL('image/jpeg', quality);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resultDataUrl = originalDataUrl;
+        break;
+      }
+
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      resultDataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+
+      // Stima della dimensione in byte dal base64
+      const sizeInBytes = (resultDataUrl.length * 3) / 4;
+      if (sizeInBytes <= 2.5 * 1024 * 1024) {
+        break; // Sotto i 2.5MB, ottimo!
+      }
+
+      // Riduciamo la risoluzione del 15% e la qualità di 0.1 per il prossimo ciclo
+      currentDimension = Math.round(currentDimension * 0.85);
+      currentQuality = Math.max(0.3, currentQuality - 0.1);
+    }
+
+    return resultDataUrl || originalDataUrl;
   } catch {
     return originalDataUrl;
+  }
+}
+
+/**
+ * Converte un base64 Data URL in un Blob pronto per essere caricato.
+ */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(';base64,');
+  const contentType = parts[0].split(':')[1];
+  const raw = window.atob(parts[1]);
+  const rawLength = raw.length;
+  const uInt8Array = new Uint8Array(rawLength);
+  for (let i = 0; i < rawLength; ++i) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+  return new Blob([uInt8Array], { type: contentType });
+}
+
+/**
+ * Carica l'immagine su un bucket Supabase Storage se configurato (Opzione Robusta).
+ * In caso di errore o assenza del client Supabase, ritorna null per effettuare il fallback.
+ */
+async function uploadToSupabaseStorage(dataUrl: string, passToken: string): Promise<string | null> {
+  if (!supabase) return null;
+  try {
+    const blob = dataUrlToBlob(dataUrl);
+    const bucketName = 'ocr-documents';
+    
+    const fileExt = blob.type.split('/')[1] || 'jpg';
+    const fileName = `${passToken}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    const filePath = `ocr-scans/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, blob, {
+        contentType: blob.type,
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (error) {
+      console.warn('Errore upload Supabase Storage:', error.message);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (err) {
+    console.warn('Errore durante upload su Supabase Storage:', err);
+    return null;
   }
 }
 
@@ -381,12 +465,24 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       // sulle foto ad alta risoluzione scattate dalla fotocamera del telefono).
       const dataUrl = await resizeImageForOcr(file);
 
-      setState(s => ({ ...s, scanProgress: 50 }));
+      setState(s => ({ ...s, scanProgress: 45 }));
+
+      // Tentativo di upload su Supabase Storage (Opzione Robusta)
+      let imageUrl: string | null = null;
+      if (supabase) {
+        try {
+          imageUrl = await uploadToSupabaseStorage(dataUrl, pass.token);
+        } catch (storageErr) {
+          console.warn('Supabase storage upload failed, falling back to base64 payload:', storageErr);
+        }
+      }
+
+      setState(s => ({ ...s, scanProgress: 65 }));
 
       const res = await fetch('/api/guest/ocr-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataUrl, docType })
+        body: JSON.stringify({ dataUrl: imageUrl || dataUrl, docType })
       });
 
       clearInterval(progressInterval);

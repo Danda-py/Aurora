@@ -473,26 +473,52 @@ export function createApp() {
         res.status(400).json({ success: false, error: 'Dati immagine mancanti.' });
         return;
       }
-      // Le funzioni serverless di Vercel rifiutano richieste sopra i 4.5MB con un 413
-      // prima ancora che questo codice venga eseguito. Controlliamo comunque qui la
-      // dimensione per dare un errore chiaro nei casi in cui il body arrivi comunque
-      // (es. altri hosting) o quando il client non ha potuto comprimere l'immagine.
-      if (typeof dataUrl === 'string' && dataUrl.length > 4 * 1024 * 1024) {
-        res.status(413).json({ success: false, error: 'Immagine troppo pesante. Riprova con più luce o inquadrando solo il documento.' });
-        return;
-      }
-      // Parse base64 Data URL
-      const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+
+      let base64Data = '';
       let mimeType = 'image/jpeg';
-      let base64Data = dataUrl;
-      if (matches && matches.length === 3) {
-        mimeType = matches[1];
-        base64Data = matches[2];
-      } else if (dataUrl.includes(';base64,')) {
-        const parts = dataUrl.split(';base64,');
-        base64Data = parts[1];
-        if (parts[0].startsWith('data:')) {
-          mimeType = parts[0].substring(5);
+
+      if (typeof dataUrl === 'string' && (dataUrl.startsWith('http://') || dataUrl.startsWith('https://'))) {
+        // È un URL pubblico (es. caricato su Supabase Storage)
+        try {
+          const fetchRes = await fetch(dataUrl);
+          if (!fetchRes.ok) {
+            throw new Error(`Status HTTP ${fetchRes.status}`);
+          }
+          const arrayBuffer = await fetchRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          base64Data = buffer.toString('base64');
+          
+          const contentType = fetchRes.headers.get('content-type');
+          if (contentType) {
+            mimeType = contentType;
+          }
+        } catch (fetchErr: any) {
+          console.error('[OCR-SCAN] Errore durante il download dell\'immagine da Storage:', fetchErr);
+          res.status(400).json({ success: false, error: `Impossibile recuperare la foto da Storage: ${fetchErr.message}` });
+          return;
+        }
+      } else {
+        // Le funzioni serverless di Vercel rifiutano richieste sopra i 4.5MB con un 413
+        // prima ancora che questo codice venga eseguito. Controlliamo comunque qui la
+        // dimensione per dare un errore chiaro nei casi in cui il body arrivi comunque
+        // (es. altri hosting) o quando il client non ha potuto comprimere l'immagine.
+        if (typeof dataUrl === 'string' && dataUrl.length > 4 * 1024 * 1024) {
+          res.status(413).json({ success: false, error: 'Immagine troppo pesante. Riprova con più luce o inquadrando solo il documento.' });
+          return;
+        }
+
+        // Parse base64 Data URL
+        const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        base64Data = dataUrl;
+        if (matches && matches.length === 3) {
+          mimeType = matches[1];
+          base64Data = matches[2];
+        } else if (dataUrl.includes(';base64,')) {
+          const parts = dataUrl.split(';base64,');
+          base64Data = parts[1];
+          if (parts[0].startsWith('data:')) {
+            mimeType = parts[0].substring(5);
+          }
         }
       }
 
