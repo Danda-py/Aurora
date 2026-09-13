@@ -235,9 +235,11 @@ export function createApp() {
   }
   app.use('/assets', express.static(assetsStaticPath));
 
-  // Serve standalone Host Portal static site directly
-  const hostPortalStaticPath = path.join(process.cwd(), 'public', 'host-portal');
-  app.use('/host-portal', express.static(hostPortalStaticPath));
+  // NOTA: la versione statica standalone del Host Portal (public/host-portal)
+  // NON viene più servita live su /host-portal: non ha login e va usata solo
+  // scaricata via /api/download-host-portal-zip per uso offline. La route
+  // live /host-portal/* è gestita dalla SPA React (src/pages/host-portal),
+  // che richiede autenticazione reale.
 
   // Serve public directory static files
   app.use(express.static(path.join(process.cwd(), 'public')));

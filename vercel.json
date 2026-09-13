@@ -9,11 +9,7 @@
       "destination": "/api/index"
     },
     {
-      "source": "/host-portal",
-      "destination": "/host-portal/index.html"
-    },
-    {
-      "source": "/((?!api|host-portal|uploads).*)",
+      "source": "/((?!api|uploads).*)",
       "destination": "/index.html"
     }
   ]
