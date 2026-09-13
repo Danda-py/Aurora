@@ -235,11 +235,12 @@ export function createApp() {
   }
   app.use('/assets', express.static(assetsStaticPath));
 
-  // NOTA: la versione statica standalone del Host Portal (public/host-portal)
-  // NON viene più servita live su /host-portal: non ha login e va usata solo
-  // scaricata via /api/download-host-portal-zip per uso offline. La route
-  // live /host-portal/* è gestita dalla SPA React (src/pages/host-portal),
-  // che richiede autenticazione reale.
+  // NOTA: la versione statica standalone del Host Portal vive in
+  // standalone-host-portal/ (FUORI da public/, così Vite non la copia in
+  // dist/ e non puo' mai "vincere" sulla route della SPA). Non ha login ed è
+  // pensata solo per il download via /api/download-host-portal-zip (uso
+  // offline). La route live /host-portal/* è gestita dalla SPA React
+  // (src/pages/host-portal), che richiede autenticazione reale.
 
   // Serve public directory static files
   app.use(express.static(path.join(process.cwd(), 'public')));
@@ -1004,7 +1005,7 @@ export function createApp() {
   apiRouter.get('/download-host-portal-zip', async (_req, res) => {
     try {
       const zip = new JSZip();
-      const portalDir = path.join(process.cwd(), 'public', 'host-portal');
+      const portalDir = path.join(process.cwd(), 'standalone-host-portal');
 
       if (fs.existsSync(portalDir)) {
         const files = fs.readdirSync(portalDir);
