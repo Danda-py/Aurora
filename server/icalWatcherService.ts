@@ -164,6 +164,12 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
       }
 
       // 1. Verifica se abbiamo già generato un pass per questa specifica prenotazione (UID/Ref)
+      const globalDeletedRefs = (global as any).deletedBookingRefsRef || [];
+      if (bookingRef && globalDeletedRefs.includes(bookingRef)) {
+        console.log(`[iCal Engine] Booking reference ${bookingRef} was previously deleted/revoked by the host. Skipping.`);
+        continue;
+      }
+
       let existingPass = serverPasses.find(p => p.bookingRef === bookingRef);
       let newlyCreated = false;
 

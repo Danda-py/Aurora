@@ -69,14 +69,20 @@ let currentHassConfig: HomeAssistantConfig = {
 };
 
 let configHydration: Promise<void> | null = null;
+let lastConfigHydrationTime = 0;
+const CACHE_TTL_MS = 10000; // 10 seconds
 
-export function hydrateHomeAssistantConfig(): Promise<void> {
-  if (configHydration) return configHydration;
+export function hydrateHomeAssistantConfig(force = false): Promise<void> {
+  const now = Date.now();
+  if (!force && configHydration && (now - lastConfigHydrationTime < CACHE_TTL_MS)) {
+    return configHydration;
+  }
   configHydration = (async () => {
     if (!isSupabaseConfigured()) return;
     const remoteConfig = await loadDocument<Partial<HomeAssistantConfig>>(HASS_CONFIG_DOCUMENT_KEY);
     if (remoteConfig) {
       currentHassConfig = { ...currentHassConfig, ...remoteConfig };
+      lastConfigHydrationTime = Date.now();
     }
   })().catch(error => {
     configHydration = null;
@@ -106,6 +112,7 @@ export function updateHomeAssistantConfig(newConfig: Partial<HomeAssistantConfig
   }
   
   saveHassConfigToFile(currentHassConfig);
+  void hydrateHomeAssistantConfig(true);
   return { ...currentHassConfig };
 }
 

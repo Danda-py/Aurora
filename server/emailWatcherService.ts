@@ -130,7 +130,12 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
             // Check if pass already exists (to avoid duplicate generations on same booking reference)
             const exists = serverPasses.some(p => p.bookingRef === parsed.bookingRef && parsed.bookingRef !== '');
             
-            if (!exists) {
+            const globalDeletedRefs = (global as any).deletedBookingRefsRef || [];
+            const isDeleted = parsed.bookingRef && globalDeletedRefs.includes(parsed.bookingRef);
+
+            if (isDeleted) {
+              console.log(`[IMAP] Booking reference ${parsed.bookingRef} was previously deleted/revoked by the host. Skipping.`);
+            } else if (!exists) {
               const pinCode = generateRandomPin();
               const newPass: GuestPass = {
                 id: `pass-imap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,

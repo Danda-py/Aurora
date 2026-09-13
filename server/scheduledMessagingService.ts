@@ -29,19 +29,25 @@ const defaultMessages: ScheduledMessage[] = [];
 const serverScheduledMessages: ScheduledMessage[] = safeReadJsonSync<ScheduledMessage[]>(MESSAGES_REL_PATH, defaultMessages);
 
 let messagingHydration: Promise<void> | null = null;
+let lastMessagingHydrationTime = 0;
+const CACHE_TTL_MS = 10000; // 10 seconds cache TTL
 let scheduledMessagingInterval: NodeJS.Timeout | null = null;
 
 /**
  * Hydrate scheduled messages list from Supabase
  */
-export async function hydrateScheduledMessages(): Promise<void> {
-  if (messagingHydration) return messagingHydration;
+export async function hydrateScheduledMessages(force = false): Promise<void> {
+  const now = Date.now();
+  if (!force && messagingHydration && (now - lastMessagingHydrationTime < CACHE_TTL_MS)) {
+    return messagingHydration;
+  }
   messagingHydration = (async () => {
     if (!isSupabaseConfigured()) return;
     try {
       const remoteMessages = await loadDocument<ScheduledMessage[]>(MESSAGES_DOCUMENT_KEY);
       if (remoteMessages && Array.isArray(remoteMessages)) {
         serverScheduledMessages.splice(0, serverScheduledMessages.length, ...remoteMessages);
+        lastMessagingHydrationTime = Date.now();
         console.log(`[Scheduled Messages] Hydrated ${remoteMessages.length} messages from Supabase.`);
       }
     } catch (error) {
@@ -63,6 +69,7 @@ export async function persistScheduledMessages(): Promise<void> {
   if (isSupabaseConfigured()) {
     try {
       await saveDocument(MESSAGES_DOCUMENT_KEY, serverScheduledMessages);
+      void hydrateScheduledMessages(true);
     } catch (error) {
       console.error('[Scheduled Messages] Supabase save failed:', error);
     }

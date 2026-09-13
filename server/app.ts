@@ -35,7 +35,7 @@ import {
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs } from './supabaseStorage.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
 import { sendGuestNotification, sendHostNotification } from './notificationService.js';
 import {
@@ -76,17 +76,31 @@ const serverPasses: GuestPass[] = safeReadJsonSync<GuestPass[]>(PASSES_REL_PATH,
 const defaultLogs: any[] = [];
 const serverLogs: any[] = safeReadJsonSync<any[]>(LOGS_REL_PATH, defaultLogs);
 
+const DELETED_REFS_REL_PATH = path.join('data', 'deleted_booking_refs.json');
+const deletedBookingRefs: string[] = safeReadJsonSync<string[]>(DELETED_REFS_REL_PATH, []);
+
 let passesHydration: Promise<void> | null = null;
 let logsHydration: Promise<void> | null = null;
+let deletedRefsHydration: Promise<void> | null = null;
 
-async function hydrateLogsFromSupabase() {
-  if (logsHydration) return logsHydration;
+let lastPassesHydrationTime = 0;
+let lastLogsHydrationTime = 0;
+let lastDeletedRefsHydrationTime = 0;
+
+const CACHE_TTL_MS = 10000; // 10 seconds cache TTL
+
+async function hydrateLogsFromSupabase(force = false) {
+  const now = Date.now();
+  if (!force && logsHydration && (now - lastLogsHydrationTime < CACHE_TTL_MS)) {
+    return logsHydration;
+  }
   logsHydration = (async () => {
     if (!isSupabaseConfigured()) return;
     try {
       const remoteLogs = await loadDigitalKeyLogs();
       if (remoteLogs) {
         serverLogs.splice(0, serverLogs.length, ...remoteLogs);
+        lastLogsHydrationTime = Date.now();
       }
     } catch (error) {
       logsHydration = null;
@@ -100,14 +114,18 @@ function persistLogs() {
   safeWriteFileSync(LOGS_REL_PATH, JSON.stringify(serverLogs, null, 2));
 }
 
-async function hydratePassesFromSupabase() {
-  if (passesHydration) return passesHydration;
+async function hydratePassesFromSupabase(force = false) {
+  const now = Date.now();
+  if (!force && passesHydration && (now - lastPassesHydrationTime < CACHE_TTL_MS)) {
+    return passesHydration;
+  }
   passesHydration = (async () => {
     if (!isSupabaseConfigured()) return;
     try {
       const remotePasses = await loadPasses();
       if (remotePasses) {
         serverPasses.splice(0, serverPasses.length, ...remotePasses);
+        lastPassesHydrationTime = Date.now();
       }
     } catch (error) {
       passesHydration = null;
@@ -119,6 +137,28 @@ async function hydratePassesFromSupabase() {
 
 function persistPasses() {
   safeWriteFileSync(PASSES_REL_PATH, JSON.stringify(serverPasses, null, 2));
+  void hydratePassesFromSupabase(true);
+}
+
+async function hydrateDeletedRefsFromSupabase(force = false) {
+  const now = Date.now();
+  if (!force && deletedRefsHydration && (now - lastDeletedRefsHydrationTime < CACHE_TTL_MS)) {
+    return deletedRefsHydration;
+  }
+  deletedRefsHydration = (async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const remoteRefs = await loadDocument<string[]>('deleted_booking_refs');
+      if (remoteRefs && Array.isArray(remoteRefs)) {
+        deletedBookingRefs.splice(0, deletedBookingRefs.length, ...remoteRefs);
+        lastDeletedRefsHydrationTime = Date.now();
+      }
+    } catch (error) {
+      deletedRefsHydration = null;
+      console.error('Supabase deleted booking refs load failed:', error);
+    }
+  })();
+  return deletedRefsHydration;
 }
 
 function isPassCurrentlyValid(pass: GuestPass): boolean {
@@ -233,11 +273,13 @@ export function createApp() {
 
   void hydratePassesFromSupabase();
   void hydrateLogsFromSupabase();
+  void hydrateDeletedRefsFromSupabase();
   void hydrateHomeAssistantConfig();
   void hydrateIcalConfig();
 
   // Condividiamo l'array delle prenotazioni per l'engine iCal globale
   (global as any).serverPassesRef = serverPasses;
+  (global as any).deletedBookingRefsRef = deletedBookingRefs;
 
   // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
   startIcalWatcher();
@@ -294,6 +336,8 @@ export function createApp() {
 
   apiRouter.use(async (req, res, next) => {
     await hydratePassesFromSupabase();
+    await hydrateLogsFromSupabase();
+    await hydrateDeletedRefsFromSupabase();
     if (
       req.path === '/health' ||
       req.path === '/wifi/verify' ||
@@ -1099,6 +1143,23 @@ export function createApp() {
       const token = crypto.randomBytes(32).toString('base64url');
       newPass.token = token;
 
+      // If this bookingRef was in deletedBookingRefs, remove it so it is active again
+      if (bookingRef && deletedBookingRefs.includes(bookingRef)) {
+        const delIdx = deletedBookingRefs.indexOf(bookingRef);
+        if (delIdx !== -1) {
+          deletedBookingRefs.splice(delIdx, 1);
+          safeWriteFileSync(DELETED_REFS_REL_PATH, JSON.stringify(deletedBookingRefs, null, 2));
+          if (isSupabaseConfigured()) {
+            try {
+              await saveDocument('deleted_booking_refs', deletedBookingRefs);
+            } catch (error) {
+              console.error('Failed to save deleted booking refs to Supabase:', error);
+            }
+          }
+          void hydrateDeletedRefsFromSupabase(true);
+        }
+      }
+
       serverPasses.unshift(newPass);
       persistPasses();
       await upsertPass(newPass);
@@ -1205,6 +1266,23 @@ export function createApp() {
       const token = crypto.randomBytes(32).toString('base64url');
       newPass.token = token;
 
+      // If this bookingRef was in deletedBookingRefs, remove it so it is active again
+      if (bookingRef && deletedBookingRefs.includes(bookingRef)) {
+        const delIdx = deletedBookingRefs.indexOf(bookingRef);
+        if (delIdx !== -1) {
+          deletedBookingRefs.splice(delIdx, 1);
+          safeWriteFileSync(DELETED_REFS_REL_PATH, JSON.stringify(deletedBookingRefs, null, 2));
+          if (isSupabaseConfigured()) {
+            try {
+              await saveDocument('deleted_booking_refs', deletedBookingRefs);
+            } catch (error) {
+              console.error('Failed to save deleted booking refs to Supabase:', error);
+            }
+          }
+          void hydrateDeletedRefsFromSupabase(true);
+        }
+      }
+
       serverPasses.unshift(newPass);
       persistPasses();
       await upsertPass(newPass);
@@ -1300,6 +1378,25 @@ export function createApp() {
       const removed = serverPasses.splice(index, 1)[0];
       persistPasses();
       await deleteSupabasePass(id);
+
+      // Add bookingRef to deleted booking refs if it exists
+      if (removed.bookingRef) {
+        if (!deletedBookingRefs.includes(removed.bookingRef)) {
+          deletedBookingRefs.push(removed.bookingRef);
+          safeWriteFileSync(DELETED_REFS_REL_PATH, JSON.stringify(deletedBookingRefs, null, 2));
+          if (isSupabaseConfigured()) {
+            try {
+              await saveDocument('deleted_booking_refs', deletedBookingRefs);
+            } catch (error) {
+              console.error('Failed to save deleted booking refs to Supabase:', error);
+            }
+          }
+        }
+      }
+      
+      // Force immediate reload of deleted refs on this instance
+      void hydrateDeletedRefsFromSupabase(true);
+
       hassDoorState.logs.unshift({
         timestamp: new Date().toISOString(),
         guest: `${removed.guestName} ${removed.guestSurname}`.trim(),
