@@ -539,7 +539,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         }
       } else {
         // Fallback to local Tesseract OCR
-        console.log('[OCR] Using local Tesseract fallback...');
+        console.warn('[OCR] GEMINI_API_KEY non configurata: uso il fallback Tesseract (estrazione grezza, qualità inferiore). Imposta GEMINI_API_KEY nel file .env per un OCR affidabile.');
         const buffer = Buffer.from(base64Data, 'base64');
         const { data: { text } } = await Tesseract.recognize(buffer, 'ita');
         const lines = text.split('\n').map(l => l.trim()).filter(Boolean);

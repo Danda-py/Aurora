@@ -263,12 +263,25 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         const htmlContent = parsedEmail.html || '';
         const sender = parsedEmail.from?.value[0]?.address || '';
 
+        const TARGET_EMAIL_PATTERN = /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation|booking\.com|airbnb|vrbo|expedia/i;
         const isTargetEmail = 
-          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(sender) || 
-          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(subject) ||
-          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(textContent);
+          TARGET_EMAIL_PATTERN.test(sender) || 
+          TARGET_EMAIL_PATTERN.test(subject) ||
+          TARGET_EMAIL_PATTERN.test(textContent);
 
-        if (!isTargetEmail) continue;
+        if (!isTargetEmail) {
+          // Non marchiamo questa email come "Seen": non è una prenotazione, quindi non
+          // dobbiamo alterare lo stato di lettura della normale posta dell'host.
+          // La logghiamo comunque come "ignorata" così resta visibile nel pannello.
+          await addEmailLog({
+            sender,
+            subject,
+            status: 'ignored',
+            message: 'Email ignorata: non riconosciuta come prenotazione (mittente/oggetto/testo non corrispondono a nessuna piattaforma supportata)',
+            details: { snippet: textContent.substring(0, 300) }
+          });
+          continue;
+        }
 
         const isCancellation = 
           /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(subject) ||
