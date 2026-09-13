@@ -403,11 +403,23 @@ export function createApp() {
   });
 
   apiRouter.get('/guest/pass', (req, res) => {
-    const pass = findValidGuestPass(typeof req.query.token === 'string' ? req.query.token : undefined);
-    if (!pass) {
-      res.status(404).json({ success: false, error: 'Link ospite non valido o scaduto.' });
+    const token = typeof req.query.token === 'string' ? req.query.token : '';
+    const pass = serverPasses.find(item => item.token === token);
+    if (!pass || !pass.active) {
+      res.status(404).json({ success: false, error: 'Link ospite non valido.' });
       return;
     }
+    
+    // Se il soggiorno non è attualmente attivo, nascondi il PIN sensibile per la serratura
+    if (!isPassCurrentlyValid(pass)) {
+      const sanitized = {
+        ...pass,
+        pinCode: '••••'
+      };
+      res.json({ success: true, pass: sanitized });
+      return;
+    }
+    
     res.json({ success: true, pass });
   });
 

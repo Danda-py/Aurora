@@ -1,10 +1,10 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import crypto from 'crypto';
-import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin } from '../src/services/guestPassService.js';
+import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin, parseIReservationEmail } from '../src/services/guestPassService.js';
 import { upsertPass } from './supabaseStorage.js';
 import { GuestPass } from '../src/types.js';
-import { scheduleBookingMessages } from './scheduledMessagingService.js';
+import { scheduleBookingMessages, cancelAllMessagesForPass } from './scheduledMessagingService.js';
 
 let isPolling = false;
 let pollingInterval: NodeJS.Timeout | null = null;
@@ -89,98 +89,98 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
     // Select INBOX
     const lock = await client.getMailboxLock('INBOX');
     try {
-      // Find unread messages from Bedandbreakfast.it or similar
-      const messages = await client.search({ 
-        seen: false
-      });
+      console.log('[IMAP] Avvio sincronizzazione vecchie e nuove email...');
+      const unseen = (await client.search({ seen: false })) || [];
+      const pastBB = (await client.search({ header: { field: 'subject', value: 'ireservation' } })) || [];
+      const pastBB2 = (await client.search({ header: { field: 'subject', value: 'prenotazione' } })) || [];
+      const uids = Array.from(new Set([...unseen, ...pastBB, ...pastBB2]));
 
-      if (!messages || !Array.isArray(messages)) {
-        console.log(`[IMAP] No unread emails found.`);
-        return;
-      }
+      if (uids.length === 0) return;
+      console.log(`[IMAP] Trovate ${uids.length} email da esaminare.`);
+      const todayStr = new Date().toISOString().split('T')[0];
 
-      console.log(`[IMAP] Found ${messages.length} unread emails.`);
-
-      for (const uid of messages) {
-        // Fetch message source
+      for (const uid of uids) {
         const messageStream = await client.fetchOne(String(uid), { source: true });
         if (!messageStream || !messageStream.source) continue;
         const parsedEmail = await simpleParser(messageStream.source);
         
         const subject = parsedEmail.subject || '';
         const textContent = parsedEmail.text || parsedEmail.html || '';
+        const htmlContent = parsedEmail.html || '';
         const sender = parsedEmail.from?.value[0]?.address || '';
 
-        console.log(`[IMAP] Processing Email UID: ${uid} | Sender: ${sender} | Subject: ${subject}`);
+        const isTargetEmail = 
+          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(sender) || 
+          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(subject) ||
+          /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation/i.test(textContent);
 
-        // Check if it is a booking email from bed-and-breakfast.it, Bed & Breakfast, Airbnb, Booking.com or containing guest details
-        const isBookingEmail = 
-          /bed[- ]?and[- ]?breakfast\.it/i.test(sender) || 
-          /bed[- ]?and[- ]?breakfast\.it/i.test(subject) ||
-          /prenotazione/i.test(subject) || 
-          /booking/i.test(subject) ||
-          /nuova prenotazione/i.test(textContent) ||
-          /BB-\d{4,8}/.test(textContent);
+        if (!isTargetEmail) continue;
 
-        if (isBookingEmail) {
-          console.log(`[IMAP] Valid booking email found. Running AI/Regex parser...`);
-          const parsed = parseBedAndBreakfastBooking(textContent);
+        const isCancellation = 
+          /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(subject) ||
+          /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled/i.test(textContent.replace(/[\s\r\n\t]+/g, ' '));
 
-          if (parsed.guestName && parsed.checkInDate && parsed.checkOutDate) {
-            // Check if pass already exists (to avoid duplicate generations on same booking reference)
-            const exists = serverPasses.some(p => p.bookingRef === parsed.bookingRef && parsed.bookingRef !== '');
-            
-            const globalDeletedRefs = (global as any).deletedBookingRefsRef || [];
-            const isDeleted = parsed.bookingRef && globalDeletedRefs.includes(parsed.bookingRef);
-
-            if (isDeleted) {
-              console.log(`[IMAP] Booking reference ${parsed.bookingRef} was previously deleted/revoked by the host. Skipping.`);
-            } else if (!exists) {
-              const pinCode = generateRandomPin();
-              const newPass: GuestPass = {
-                id: `pass-imap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-                guestName: parsed.guestName,
-                guestSurname: parsed.guestSurname,
-                checkInDate: parsed.checkInDate,
-                checkInTime: '14:00',
-                checkOutDate: parsed.checkOutDate,
-                checkOutTime: '10:00',
-                phone: parsed.phone,
-                pinCode,
-                bookingRef: parsed.bookingRef || `BB-${Math.floor(10000 + Math.random() * 90000)}`,
-                guestsCount: parsed.guestsCount,
-                bookingSource: (parsed.bookingSource as any) || 'bed-and-breakfast.it',
-                notes: `Generato automaticamente da Email IMAP. Soggetto: ${subject}`,
-                createdAt: new Date().toISOString(),
-                active: true,
-                token: ''
-              };
-
-              const token = crypto.randomBytes(32).toString('base64url');
-              newPass.token = token;
-
-              // Save to list
-              serverPasses.unshift(newPass);
-              await upsertPass(newPass);
-              
-              const appUrl = (process.env.APP_URL || 'https://aurora-valtellina.app').replace(/\/$/, '');
-              const guestUrl = `${appUrl}/?pass=${token}`;
-
-              console.log(`[IMAP] SUCCESS! Generated VIP Pass for ${newPass.guestName} ${newPass.guestSurname}. Link: ${guestUrl}`);
-              
-              // Schedule automatic messages using the scheduled messaging service
-              await scheduleBookingMessages(newPass, appUrl);
-            } else {
-              console.log(`[IMAP] Booking reference ${parsed.bookingRef} already processed. Skipping.`);
+        if (isCancellation) {
+          const parsed = parseIReservationEmail(textContent, htmlContent);
+          const bookingRef = parsed.bookingRef;
+          if (bookingRef) {
+            const existingIdx = serverPasses.findIndex(p => p.bookingRef === bookingRef || p.id === `ires-${bookingRef}`);
+            if (existingIdx !== -1) {
+              const targetPass = serverPasses[existingIdx];
+              if (targetPass.active) {
+                targetPass.active = false;
+                targetPass.notes = `DISATTIVATO via IMAP Cancellazione il ${new Date().toISOString()}.\n${targetPass.notes || ''}`;
+                await upsertPass(targetPass);
+                await cancelAllMessagesForPass(targetPass.id);
+                console.log(`[IMAP] Soggiorno CANCELLATO per ID "${bookingRef}".`);
+              }
             }
-          } else {
-            console.log(`[IMAP] Email didn't contain complete guest data (Name, Check-In, Check-Out). Skipping pass generation.`);
           }
+          await client.messageFlagsAdd(String(uid), ['\\Seen']);
+          continue;
         }
 
-        // Mark as read after processing (so we don't process it again)
+        const isIReservation = /ireservation/i.test(sender) || /ireservation/i.test(subject) || /ireservation/i.test(textContent);
+        const parsed = isIReservation ? parseIReservationEmail(textContent, htmlContent) : parseBedAndBreakfastBooking(textContent);
+        const bookingRef = parsed.bookingRef;
+
+        if (parsed.guestName && parsed.checkInDate && parsed.checkOutDate && bookingRef) {
+          const existingIdx = serverPasses.findIndex(p => p.bookingRef === bookingRef || p.id === `ires-${bookingRef}`);
+          if ((global as any).deletedBookingRefsRef?.includes(bookingRef)) continue;
+
+          let targetPass: GuestPass;
+          if (existingIdx !== -1) {
+            const existingPass = serverPasses[existingIdx];
+            targetPass = {
+              ...existingPass,
+              guestName: parsed.guestName, guestSurname: parsed.guestSurname,
+              phone: parsed.phone || existingPass.phone, guestEmail: (parsed as any).guestEmail || existingPass.guestEmail,
+              checkInDate: parsed.checkInDate, checkOutDate: parsed.checkOutDate, guestsCount: parsed.guestsCount,
+              bookingSource: parsed.bookingSource || existingPass.bookingSource, amount: (parsed as any).amount || existingPass.amount,
+              apartmentName: (parsed as any).apartmentName || existingPass.apartmentName, nightsCount: (parsed as any).nightsCount || existingPass.nightsCount,
+              notes: `Sincronizzato da Email IMAP il ${new Date().toISOString()}.\n${existingPass.notes || ''}`
+            };
+            serverPasses[existingIdx] = targetPass;
+          } else {
+            const pinCode = generateRandomPin();
+            const token = crypto.randomBytes(32).toString('base64url');
+            targetPass = {
+              id: `ires-${bookingRef}`, guestName: parsed.guestName, guestSurname: parsed.guestSurname, phone: parsed.phone,
+              guestEmail: (parsed as any).guestEmail, checkInDate: parsed.checkInDate, checkInTime: '14:00',
+              checkOutDate: parsed.checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount: parsed.guestsCount,
+              bookingSource: parsed.bookingSource || 'other', amount: (parsed as any).amount, apartmentName: (parsed as any).apartmentName,
+              nightsCount: (parsed as any).nightsCount, notes: `Generato automaticamente via IMAP il ${new Date().toISOString()}`,
+              createdAt: new Date().toISOString(), active: true, token
+            };
+            serverPasses.unshift(targetPass);
+          }
+
+          await upsertPass(targetPass);
+          if (targetPass.checkOutDate >= todayStr) {
+            await scheduleBookingMessages(targetPass);
+          }
+        }
         await client.messageFlagsAdd(String(uid), ['\\Seen']);
-        console.log(`[IMAP] Marked email UID ${uid} as read.`);
       }
     } finally {
       lock.release();

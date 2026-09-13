@@ -28,6 +28,7 @@ import { FlagIcon } from './FlagIcon';
 import { useCms } from '../../context/CmsContext';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
+import { getStayTiming } from '../../services/guestPassService';
 
 interface Props {
   language: Language;
@@ -271,6 +272,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const guideSections = getLocalizedGuideSections(language, media, isPublic);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
   const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
+  const timing = pass ? getStayTiming(pass) : null;
+  const isStayActive = timing ? timing.isActive : false;
 
   const localStories = [
     { 
@@ -304,6 +307,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   }, []);
 
   const copyWifi = async () => {
+    if (!isStayActive) return;
     try {
       await navigator.clipboard?.writeText(APARTMENT_INFO.wifiPassword);
       setWifiCopied(true);
@@ -507,34 +511,48 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
             </div>
 
-            <button
-              className={`glass-key-button mt-2.5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
-              onPointerDown={startHold}
-              onPointerUp={cancelHold}
-              onPointerCancel={cancelHold}
-              onPointerLeave={cancelHold}
-              onPointerMove={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                const inside =
-                  event.clientX >= rect.left &&
-                  event.clientX <= rect.right &&
-                  event.clientY >= rect.top &&
-                  event.clientY <= rect.bottom;
-                if (!inside) cancelHold(event);
-              }}
-              disabled={doorState === 'opening'}
-            >
-              <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
-              <span className="flex items-center gap-2 relative z-10">
-                <KeyRound className="h-4 w-4" />
-                {t.concierge.doorOpeningState[doorState]}
-              </span>
-              <ArrowUpRight className="h-4 w-4 relative z-10" />
-            </button>
-            {doorMessage && (
-              <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
-                {doorMessage}
-              </p>
+            {!isStayActive ? (
+              <div className="mt-3 p-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-slate-400 text-xs flex flex-col gap-1 items-center justify-center text-center">
+                <ShieldAlert className="h-5 w-5 text-amber-500 animate-pulse" />
+                <span className="font-bold text-white">Chiavi digitali non attive</span>
+                <span>
+                  {timing?.isUpcoming 
+                    ? `Saranno disponibili dalle ore ${pass.checkInTime || '14:00'} del ${formatPassDate(pass.checkInDate)}`
+                    : "Il tuo soggiorno si è concluso. Le chiavi sono state disattivate."}
+                </span>
+              </div>
+            ) : (
+              <>
+                <button
+                  className={`glass-key-button mt-2.5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
+                  onPointerDown={startHold}
+                  onPointerUp={cancelHold}
+                  onPointerCancel={cancelHold}
+                  onPointerLeave={cancelHold}
+                  onPointerMove={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    const inside =
+                      event.clientX >= rect.left &&
+                      event.clientX <= rect.right &&
+                      event.clientY >= rect.top &&
+                      event.clientY <= rect.bottom;
+                    if (!inside) cancelHold(event);
+                  }}
+                  disabled={doorState === 'opening'}
+                >
+                  <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
+                  <span className="flex items-center gap-2 relative z-10">
+                    <KeyRound className="h-4 w-4" />
+                    {t.concierge.doorOpeningState[doorState]}
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 relative z-10" />
+                </button>
+                {doorMessage && (
+                  <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
+                    {doorMessage}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </section>
@@ -580,10 +598,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </>
             ) : (
               <>
-                <button onClick={copyWifi}>
+                <button 
+                  onClick={isStayActive ? copyWifi : undefined}
+                  className={!isStayActive ? "opacity-40 cursor-not-allowed" : ""}
+                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : ""}
+                >
                   <Wifi />
                   <span>{t.tiles.wifi}</span>
-                  <small>{wifiCopied ? t.actions.copied : t.actions.copy}</small>
+                  <small>{!isStayActive ? "Non attivo" : (wifiCopied ? t.actions.copied : t.actions.copy)}</small>
                 </button>
                 
                 <a 
