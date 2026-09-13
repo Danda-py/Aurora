@@ -732,10 +732,10 @@ export function parseIReservationEmail(text: string, html?: string): {
   const parseAnyDate = (dateStr: string): string => {
     if (!dateStr) return '';
     let s = dateStr.replace(/^(?:lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|monday|tuesday|wednesday|thursday|friday|saturday|sunday|lun|mar|mer|gio|ven|sab|dom|mon|tue|wed|thu|fri|sat|sun)\.?\s*,?\s*/i, '').trim();
-    const writtenMatch = s.match(/(\d{1,2})\s+([a-zA-ZÀ-ÿ]+)\s+(\d{2,4})/);
-    if (writtenMatch) {
+    const writtenMatch = s.match(/(\d{1,2})\s+([a-zA-ZÀ-ÿ]{3,10})\s+(\d{2,4})/);
+    if (writtenMatch && monthsMap[writtenMatch[2].toLowerCase().replace(/\./g, '')]) {
       const day = writtenMatch[1].padStart(2, '0');
-      const month = monthsMap[writtenMatch[2].toLowerCase().replace(/\./g, '')] || '01';
+      const month = monthsMap[writtenMatch[2].toLowerCase().replace(/\./g, '')];
       let year = writtenMatch[3];
       return `${year.length === 2 ? '20' + year : year}-${month}-${day}`;
     }
@@ -755,16 +755,30 @@ export function parseIReservationEmail(text: string, html?: string): {
     return fallback;
   };
 
-  const bookingRef = findField([
+  let bookingRef = findField([
     /(?:id[-_ ]*prenotazione|numero[-_ ]*prenotazione|prenotazione[-_ ]*n|codice[-_ ]*prenotazione|ireservation[-_ ]*id|reservation[-_ ]*id|booking[-_ ]*id|riferimento[-_ ]*prenotazione|booking[-_ ]*ref)\s*[:=–-]?\s*#?\s*(\d{8,15})/i,
+    /(?:codice|code|id)\s*[:=–-]?\s*(\d{8,15})/i,
     /\b(\d{10})\b/i
   ]);
 
   const rawSource = findField([/(?:provider|canale|origine|channel|source|booking[-_ ]*source|provenienza)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
   const bookingSource = /booking/i.test(rawSource || textToParse) ? 'booking.com' : /airbnb/i.test(rawSource || textToParse) ? 'airbnb' : /bed/i.test(rawSource || textToParse) ? 'bed-and-breakfast.it' : 'other';
 
-  const rawName = findField([/(?:nome[-_ ]*e[-_ ]*cognome|viaggiatore|ospite|guest|cliente|name|richiedente|intestatario)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
-  const nameParts = rawName.replace(/^(?:sig\.|sig\.ra|dott\.|mr\.|mrs\.|ms\.)\s*/i, '').split(/\s+/);
+  let rawName = findField([
+    /(?:nome[-_ ]*e[-_ ]*cognome|viaggiatore|ospite|guest|cliente|name|richiedente|intestatario)\s*[:=–-]?\s*([^\n\r<|]+)/i,
+    /prenotazione\s+(?:confermata\s+)?per\s+([^\r\n<|]+)/i,
+    /(?:^|\n)Nome[\r\n\s]+([^\r\n<|]+)/i,
+    /prenotazione\s+da\s+([a-zA-ZÀ-ÿ\s]+?)\s+dal\b/i
+  ]);
+  if (!rawName) {
+    const subjNameMatch = textToParse.match(/prenotazione\s+(?:da|per)\s+([a-zA-ZÀ-ÿ\s]+?)\s+dal\b/i) ||
+                          textToParse.match(/prenotazione\s+cancellata\s*-\s*([a-zA-ZÀ-ÿ\s]+?)\s*-\s*codice/i);
+    if (subjNameMatch && subjNameMatch[1]) {
+      rawName = subjNameMatch[1].trim();
+    }
+  }
+
+  const nameParts = rawName.replace(/^(?:sig\.|sig\.ra|dott\.|mr\.|mrs\.|ms\.)\s*/i, '').split(/\s+/).filter(Boolean);
   const guestName = nameParts[0] || '';
   const guestSurname = nameParts.slice(1).join(' ') || '';
 
@@ -773,14 +787,30 @@ export function parseIReservationEmail(text: string, html?: string): {
     /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/i
   ]);
 
-  const phone = findField([
-    /(?:telefono|cellulare|cell|tel|phone|mobile|whatsapp)\s*[:=–-]?\s*([+\d\s()-]{8,22})/i,
+  let phone = findField([
+    /(?:telefono|cellulare|cell|tel|phone|mobile|whatsapp)\s*[:=–-]?\s*([+\d\s()-]{8,25})/i,
     /(?:\+39|0039)?[\s\-\.]*3\d{2}[\s\-\.]*\d{6,7}/i
   ]);
+  // Clean phone from trailing dashes, newlines or extra symbols
+  phone = phone.replace(/[\r\n\t-]+$/, '').trim();
 
-  const apartmentName = findField([/(?:struttura|alloggio|appartamento|casa|property|apartment)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
-  const checkInDate = parseAnyDate(findField([/(?:check[-_ ]*in|arrivo|\bdal\b|data[-_ ]*arrivo|arrival)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i]));
-  const checkOutDate = parseAnyDate(findField([/(?:check[-_ ]*out|partenza|\bal\b|data[-_ ]*partenza|departure)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i]));
+  const apartmentName = findField([/(?:struttura|alloggio|appartamento|casa|property|apartment)\s*[:=–-]?\s*([^\n\r<|]+)/i]) || 'Appartamento Aurora in Valtellina';
+  let checkInDate = parseAnyDate(findField([
+    /(?:check[-_ ]*in|arrivo|\bdal\b|data[-_ ]*arrivo|arrival)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i,
+    /CHECK-IN[\r\n\s]+(?:lun|mar|mer|gio|ven|sab|dom)?\.?\s*([^\r\n<|]{6,30})/i
+  ]));
+  let checkOutDate = parseAnyDate(findField([
+    /(?:check[-_ ]*out|partenza|\bal\b|data[-_ ]*partenza|departure)\s*[:=–-]?\s*([^\n\r<|]{8,35})/i,
+    /CHECK-OUT[\r\n\s]+(?:lun|mar|mer|gio|ven|sab|dom)?\.?\s*([^\r\n<|]{6,30})/i
+  ]));
+
+  if (!checkInDate || !checkOutDate) {
+    const subjDatesMatch = textToParse.match(/dal\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+al\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
+    if (subjDatesMatch) {
+      if (!checkInDate) checkInDate = parseAnyDate(subjDatesMatch[1]);
+      if (!checkOutDate) checkOutDate = parseAnyDate(subjDatesMatch[2]);
+    }
+  }
 
   const nightsMatch = textToParse.match(/(?:(\d+)\s*(?:notti|nights|notte|night)|(?:notti|nights|notte|night)\s*[:=–-]?\s*(\d+))/i);
   const nightsCount = nightsMatch ? (parseInt(nightsMatch[1] || nightsMatch[2], 10) || 1) : 1;
@@ -788,7 +818,67 @@ export function parseIReservationEmail(text: string, html?: string): {
   const guestsMatch = textToParse.match(/(?:(\d+)\s*(?:ospiti|guests|ospite|guest|persone|adulti|pax|pers\.)|(?:ospiti|guests|ospite|guest|persone|adulti|pax|pers\.)\s*[:=–-]?\s*(\d+))/i);
   const guestsCount = guestsMatch ? (parseInt(guestsMatch[1] || guestsMatch[2], 10) || 2) : 2;
 
-  const amount = findField([/(?:totale[-_ ]*importo|importo[-_ ]*totale|importo|prezzo|tariffa|total|price|amount|totale)\s*[:=–-]?\s*([^\n\r<|]+)/i]);
+  let amount = findField([
+    /(?:totale[-_ ]*scontato|totale[-_ ]*importo|importo[-_ ]*totale|importo|prezzo|tariffa|total|price|amount|totale)\s*[:=–-]?\s*([^\n\r<|]+)/i,
+    /(?:totale\s*scontato|totale|totale\s*importo)[\r\n\s:]*(\d+[\s.,]?\d*\s*€)/i
+  ]);
+  amount = amount.replace(/[\r\n\t]+/g, ' ').trim();
+  if (amount === 'E' || amount === '€') amount = '';
 
   return { bookingRef, bookingSource, guestName, guestSurname, guestEmail, phone, apartmentName, checkInDate, checkOutDate, nightsCount, guestsCount, amount };
+}
+
+/**
+ * Ordina i VIP Pass ospite secondo la regola:
+ * 1. Pass ATTIVI (in corso oggi) SEMPRE IN CIMA!
+ * 2. Pass IN ARRIVO (futuri) disposti in ordine cronologico di check-in (il prossimo arrivo per primo)
+ * 3. Pass SCADUTI / PASSATI disposti in ordine cronologico decrescente (l'ultimo soggiorno terminato per primo)
+ * 4. Pass CANCELLATI / DISATTIVATI (active === false) in fondo
+ */
+export function sortGuestPasses(passes: GuestPass[]): GuestPass[] {
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  return [...passes].sort((a, b) => {
+    const aCancelled = a.active === false;
+    const bCancelled = b.active === false;
+    if (aCancelled !== bCancelled) {
+      return aCancelled ? 1 : -1;
+    }
+
+    // Un pass è attualmente attivo se la data odierna è compresa tra check-in e check-out
+    const aActive = Boolean(a.checkInDate && a.checkOutDate && a.checkInDate <= todayStr && a.checkOutDate >= todayStr);
+    const bActive = Boolean(b.checkInDate && b.checkOutDate && b.checkInDate <= todayStr && b.checkOutDate >= todayStr);
+
+    // 1. Gli attivi sempre in cima
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
+
+    // Se entrambi sono attivi, ordina per checkOutDate crescente (chi parte prima)
+    if (aActive && bActive) {
+      const cmpOut = (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+      if (cmpOut !== 0) return cmpOut;
+      return (a.checkInDate || '').localeCompare(b.checkInDate || '');
+    }
+
+    // 2. Futuri (in arrivo) vs Passati (scaduti)
+    const aUpcoming = Boolean(a.checkInDate && a.checkInDate > todayStr);
+    const bUpcoming = Boolean(b.checkInDate && b.checkInDate > todayStr);
+
+    if (aUpcoming !== bUpcoming) {
+      return aUpcoming ? -1 : 1;
+    }
+
+    // Se entrambi sono futuri: ordine cronologico crescente di check-in (il più vicino in data per primo)
+    if (aUpcoming && bUpcoming) {
+      const cmpIn = (a.checkInDate || '').localeCompare(b.checkInDate || '');
+      if (cmpIn !== 0) return cmpIn;
+      return (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+    }
+
+    // Se entrambi sono passati: ordine cronologico decrescente (i più recenti completati subito dopo)
+    const cmpPast = (b.checkOutDate || '').localeCompare(a.checkOutDate || '');
+    if (cmpPast !== 0) return cmpPast;
+    return (b.checkInDate || '').localeCompare(a.checkInDate || '');
+  });
 }

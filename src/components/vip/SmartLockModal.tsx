@@ -77,10 +77,16 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: guestFullName,
-          source: wifiCheck.verified ? 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)' : 'Pulsante Ospite VIP (Rete Mobile Backup)',
+          source: wifiCheck.verified 
+            ? (wifiCheck.method === 'gps' ? `Pulsante Ospite VIP (GPS ${wifiCheck.distanceMeters}m)` : 'Pulsante Ospite VIP (Wi-Fi Verificato)') 
+            : 'Pulsante Ospite VIP (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
-          guestToken: pass?.token
+          guestToken: pass?.token,
+          coords: wifiCheck.coords,
+          latitude: wifiCheck.coords?.latitude,
+          longitude: wifiCheck.coords?.longitude,
+          accuracy: wifiCheck.coords?.accuracy
         })
       });
 

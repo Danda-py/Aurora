@@ -115,10 +115,16 @@ export const CheckinPage: React.FC<Props> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: guestFullName,
-          source: wifiCheck.verified ? 'Check-in App (Wi-Fi Casa_Aurora Verificato)' : 'Check-in App (Rete Mobile Backup)',
+          source: wifiCheck.verified 
+            ? (wifiCheck.method === 'gps' ? `Check-in App (GPS ${wifiCheck.distanceMeters}m)` : 'Check-in App (Wi-Fi Verificato)') 
+            : 'Check-in App (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
           wifiSsid: 'Casa_Aurora',
-          guestToken: pass?.token
+          guestToken: pass?.token,
+          coords: wifiCheck.coords,
+          latitude: wifiCheck.coords?.latitude,
+          longitude: wifiCheck.coords?.longitude,
+          accuracy: wifiCheck.coords?.accuracy
         })
       });
 

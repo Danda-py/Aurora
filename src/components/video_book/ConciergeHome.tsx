@@ -348,9 +348,15 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guest: `${pass.guestName} ${pass.guestSurname}`.trim(),
-          source: wifiCheck.verified ? 'Aurora Glass Pass (Wi-Fi Verificato)' : 'Aurora Glass Pass (Rete Mobile Backup)',
+          source: wifiCheck.verified 
+            ? (wifiCheck.method === 'gps' ? `Aurora Glass Pass (GPS ${wifiCheck.distanceMeters}m)` : 'Aurora Glass Pass (Wi-Fi Verificato)') 
+            : 'Aurora Glass Pass (Rete Mobile Backup)',
           wifiConnected: wifiCheck.verified,
-          guestToken: pass.token
+          guestToken: pass.token,
+          coords: wifiCheck.coords,
+          latitude: wifiCheck.coords?.latitude,
+          longitude: wifiCheck.coords?.longitude,
+          accuracy: wifiCheck.coords?.accuracy
         })
       });
       const data = await res.json();

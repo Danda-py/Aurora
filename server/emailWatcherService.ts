@@ -58,6 +58,54 @@ let imapConfig: ImapConfig = {
 let inMemoryLogs: EmailLog[] = [];
 
 /**
+ * Ordina i pass ospite sul server:
+ * 1. ATTIVI (in corso oggi) sempre in cima!
+ * 2. FUTURI (in arrivo) in ordine cronologico crescente di check-in (il più vicino per primo)
+ * 3. PASSATI (scaduti) in ordine decrescente (il più recente per primo)
+ * 4. CANCELLATI (active === false) in fondo
+ */
+export function sortGuestPassesInPlace(passes: GuestPass[]) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  passes.sort((a, b) => {
+    const aCancelled = a.active === false;
+    const bCancelled = b.active === false;
+    if (aCancelled !== bCancelled) {
+      return aCancelled ? 1 : -1;
+    }
+
+    const aActive = Boolean(a.checkInDate && a.checkOutDate && a.checkInDate <= todayStr && a.checkOutDate >= todayStr);
+    const bActive = Boolean(b.checkInDate && b.checkOutDate && b.checkInDate <= todayStr && b.checkOutDate >= todayStr);
+
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
+
+    if (aActive && bActive) {
+      const cmpOut = (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+      if (cmpOut !== 0) return cmpOut;
+      return (a.checkInDate || '').localeCompare(b.checkInDate || '');
+    }
+
+    const aUpcoming = Boolean(a.checkInDate && a.checkInDate > todayStr);
+    const bUpcoming = Boolean(b.checkInDate && b.checkInDate > todayStr);
+
+    if (aUpcoming !== bUpcoming) {
+      return aUpcoming ? -1 : 1;
+    }
+
+    if (aUpcoming && bUpcoming) {
+      const cmpIn = (a.checkInDate || '').localeCompare(b.checkInDate || '');
+      if (cmpIn !== 0) return cmpIn;
+      return (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+    }
+
+    const cmpPast = (b.checkOutDate || '').localeCompare(a.checkOutDate || '');
+    if (cmpPast !== 0) return cmpPast;
+    return (b.checkInDate || '').localeCompare(a.checkInDate || '');
+  });
+}
+
+/**
  * Add a persistent log entry for email processing or webhooks
  */
 export async function addEmailLog(logEntry: Omit<EmailLog, 'id' | 'timestamp'>) {
@@ -107,7 +155,20 @@ export async function hydrateImapConfig(): Promise<void> {
     const remoteConfig = await loadDocument<Partial<ImapConfig>>('imap_config');
     if (remoteConfig) {
       imapConfig = { ...imapConfig, ...remoteConfig };
-      console.log('[IMAP] Configurazione caricata da Supabase.');
+      console.log('[IMAP] Configurazione caricata da Supabase. Enabled:', imapConfig.enabled);
+      // If enabled and credentials exist, ensure watcher is started!
+      if (imapConfig.enabled && imapConfig.user && imapConfig.pass && imapConfig.host) {
+        startEmailWatcher();
+      }
+    }
+
+    // Also hydrate processed email UIDs so they survive container redeployments
+    const remoteUids = await loadDocument<number[]>('processed_email_uids');
+    if (Array.isArray(remoteUids) && remoteUids.length > 0) {
+      for (const u of remoteUids) {
+        processedUids.add(u);
+      }
+      console.log(`[IMAP] Caricati ${remoteUids.length} UID email già elaborate da Supabase.`);
     }
   } catch (error) {
     console.error('[IMAP] Errore caricamento configurazione da Supabase:', error);
@@ -155,19 +216,34 @@ export function getImapConfig() {
 }
 
 /**
- * Persist the processed email UIDs to disk so they survive server restarts.
+ * Persist the processed email UIDs to disk and Supabase so they survive server restarts.
  * This prevents reprocessing of the entire inbox on every restart.
  */
-export function persistProcessedUids() {
-  safeWriteFileSync(PROCESSED_EMAILS_PATH, JSON.stringify(Array.from(processedUids)));
+export async function persistProcessedUids() {
+  const arr = Array.from(processedUids);
+  safeWriteFileSync(PROCESSED_EMAILS_PATH, JSON.stringify(arr));
+  if (isSupabaseConfigured()) {
+    try {
+      await saveDocument('processed_email_uids', arr.slice(-1000));
+    } catch (err) {
+      console.warn('[IMAP] Failed to save processed UIDs to Supabase:', err);
+    }
+  }
 }
 
 /**
  * Clear all processed UIDs (used by sync-now with full backfill).
  */
-export function clearProcessedUids() {
+export async function clearProcessedUids() {
   processedUids.clear();
   safeWriteFileSync(PROCESSED_EMAILS_PATH, JSON.stringify([]));
+  if (isSupabaseConfigured()) {
+    try {
+      await saveDocument('processed_email_uids', []);
+    } catch (err) {
+      console.warn('[IMAP] Failed to clear processed UIDs in Supabase:', err);
+    }
+  }
 }
 
 /**
@@ -297,11 +373,17 @@ Restituisci esclusivamente un oggetto JSON valido con le chiavi esatte qui indic
       guestsCount: Number(parsed.guestsCount) || 2,
       amount: String(parsed.amount || '').trim()
     };
-  } catch (error) {
-    console.error('[Gemini Parser] Errore durante l\'estrazione con Gemini:', error);
+  } catch (error: any) {
+    if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
+      console.warn('[Gemini Parser] Quota rate limit raggiunto (15 req/min). Verrà utilizzato il parser locale.');
+    } else {
+      console.error('[Gemini Parser] Errore durante l\'estrazione con Gemini:', error?.message || error);
+    }
     return null;
   }
 }
+
+let lastPollStartTime = 0;
 
 /**
  * Connect to IMAP, read messages, parse them, 
@@ -313,7 +395,13 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
     return;
   }
 
-    // For forced sync (sync-now button), always proceed regardless of isPolling.
+  // Safety watchdog: if isPolling was stuck for > 2 minutes (e.g. dropped socket), reset it
+  if (isPolling && Date.now() - lastPollStartTime > 120000) {
+    console.warn('[IMAP] Previous polling cycle exceeded 2 minutes. Resetting isPolling lock.');
+    isPolling = false;
+  }
+
+  // For forced sync (sync-now button), always proceed regardless of isPolling.
   // For normal polling, skip if another check is already running to avoid
   // concurrent IMAP connections and race conditions.
   if (!forceAll && isPolling) {
@@ -324,10 +412,11 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
   if (forceAll) {
     console.log('[IMAP] Sincronizzazione forzata: pulizia dei messaggi già elaborati.');
     processedUids.clear();
-    clearProcessedUids();
+    await clearProcessedUids();
   }
 
   isPolling = true;
+  lastPollStartTime = Date.now();
   console.log(`[IMAP] Checking email inbox ${imapConfig.user}...`);
 
   const client = new ImapFlow({
@@ -341,7 +430,10 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
     logger: false,
     tls: {
       rejectUnauthorized: false
-    }
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000
   });
 
   try {
@@ -350,65 +442,48 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
     // Select INBOX
     const lock = await client.getMailboxLock('INBOX');
     try {
-      console.log('[IMAP] Avvio sincronizzazione vecchie e nuove email...');
+      console.log('[IMAP] Avvio sincronizzazione email Bed-and-Breakfast & iReservation...');
       
-      let unseen: number[] = [];
-      let allUids: number[] = [];
+      let bbUids: number[] = [];
 
       try {
-        unseen = (await client.search({ seen: false }, { uid: true })) || [];
+        // Cerca specificamente le email con mittente noreply@bed-and-breakfast.it e oggetto contenente iReservation
+        bbUids = (await client.search({ from: 'noreply@bed-and-breakfast.it', subject: 'iReservation' }, { uid: true })) || [];
       } catch (err) {
-        console.warn('[IMAP] Search unseen failed:', err);
-      }
-      
-      try {
-        allUids = (await client.search({ all: true }, { uid: true })) || [];
-      } catch (err) {
-        console.warn('[IMAP] Search all failed:', err);
-      }
-
-      // Ricerca mirata: solo ed esclusivamente le email provenienti da noreply@bed-and-breakfast.it
-      let platformUids: number[] = [];
-      try {
-        const bySender = (await client.search({ from: 'noreply@bed-and-breakfast.it' }, { uid: true })) || [];
-        platformUids.push(...bySender);
-      } catch (err) {
-        console.warn('[IMAP] Search from:"noreply@bed-and-breakfast.it" failed:', err);
+        console.warn('[IMAP] Search combinata {from, subject} non supportata dal server IMAP, fallback con ricerca separata:', err);
+        try {
+          const fromUids = (await client.search({ from: 'noreply@bed-and-breakfast.it' }, { uid: true })) || [];
+          const subjUids = (await client.search({ subject: 'iReservation' }, { uid: true })) || [];
+          const subjSet = new Set(subjUids);
+          bbUids = fromUids.filter(id => subjSet.has(id));
+        } catch (err2) {
+          console.warn('[IMAP] Fallback search failed:', err2);
+        }
       }
 
-      // In sincronizzazione forzata (backfill manuale "Sincronizza ora") scansioniamo TUTTA
-      // la mailbox, per recuperare anche gli ospiti passati/scaduti. Nel polling periodico
-      // automatico invece ci limitiamo alle ultime 1000 email per non appesantire ogni ciclo.
-      const recentUids = forceAll ? allUids : allUids.slice(-1000);
-      
-      const uids = Array.from(new Set([
-        ...unseen,
-        ...recentUids,
-        ...platformUids
-      ])).sort((a, b) => a - b);
+      // Ordiniamo dal più recente al più vecchio (b - a) per processare immediatamente le nuove email!
+      const allRelevantUids = Array.from(new Set(bbUids)).sort((a, b) => b - a);
 
-      if (uids.length === 0) {
-        console.log('[IMAP] Nessuna email rilevata con i criteri di ricerca.');
+      if (allRelevantUids.length === 0) {
+        console.log('[IMAP] Nessuna email rilevata con i criteri di ricerca (noreply@bed-and-breakfast.it e iReservation).');
         return;
       }
       
-            const toProcess = uids.filter(uid => !processedUids.has(uid));
+      const toProcess = forceAll
+        ? allRelevantUids
+        : allRelevantUids.filter(uid => !processedUids.has(uid));
       
-      // Limit the number of emails processed per cycle to avoid blocking for too long.
-      // On the first run after a restart, there could be thousands of unprocessed emails.
-      // Without this limit, isPolling would be held for hours, blocking sync-now.
       const maxPerCycle = forceAll ? MAX_EMAILS_FORCED_CYCLE : MAX_EMAILS_PER_CYCLE;
       const toProcessLimited = toProcess.slice(0, maxPerCycle);
       
       if (toProcess.length > maxPerCycle) {
         console.log(`[IMAP] Limitando l'elaborazione a ${maxPerCycle} email di ${toProcess.length} da elaborare. Il resto sarà elaborato nei prossimi cicli.`);
       }
-      console.log(`[IMAP] Trovate ${uids.length} email, di cui ${toProcess.length} da elaborare (${toProcessLimited.length} in questo ciclo).`);
-      
+      console.log(`[IMAP] Trovate ${allRelevantUids.length} email rilevanti, di cui ${toProcess.length} da elaborare (${toProcessLimited.length} in questo ciclo).`);
       
       const todayStr = new Date().toISOString().split('T')[0];
 
-            for (const uid of toProcessLimited) {
+      for (const uid of toProcessLimited) {
         processedUids.add(uid);
         const messageStream = await client.fetchOne(String(uid), { source: true }, { uid: true });
         if (!messageStream || !messageStream.source) continue;
@@ -418,47 +493,78 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         const textContent = parsedEmail.text || parsedEmail.html || '';
         const htmlContent = parsedEmail.html || '';
         const sender = parsedEmail.from?.value[0]?.address || '';
+        const senderLower = sender.toLowerCase();
 
-        const isFromNoreplyBB = sender.toLowerCase() === 'noreply@bed-and-breakfast.it';
-        if (!isFromNoreplyBB) {
-          // Ignoriamo totalmente e senza loggare come errore/ignorata per non sporcare la lista log
+        // REQUISITO TASSATIVO: ESCLUSIVAMENTE mittente noreply@bed-and-breakfast.it e oggetto contenente "iReservation"
+        const isExactSender = senderLower === 'noreply@bed-and-breakfast.it' || senderLower.includes('noreply@bed-and-breakfast.it');
+        const hasIReservationSubject = /ireservation/i.test(subject);
+
+        if (!isExactSender || !hasIReservationSubject) {
           continue;
         }
 
-        const subjectLower = subject.toLowerCase();
-        const isBookingEmail = subjectLower.includes('ireservation');
         const isCancellation = 
-          /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(subject) ||
-          /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled/i.test(textContent.replace(/[\s\r\n\t]+/g, ' '));
+          /cancellat|annullat|cancelled|cancel/i.test(subject) ||
+          /prenotazione\s*(?:e\s*stata\s*)?(?:cancellata|annullata)|booking\s*cancelled/i.test(textContent.replace(/[\s\r\n\t]+/g, ' '));
 
-        if (!isBookingEmail && !isCancellation) {
-          // Solo mail con oggetto iReservation o annullamento da questo mittente
-          continue;
-        }
+        const isBookingEmail = !isCancellation;
 
         console.log(`[IMAP] Elaborazione email selezionata. Sender: "${sender}", Subject: "${subject}", Cancellazione: ${isCancellation}`);
 
-        // Parsiamo l'email usando l'API di Gemini per ottenere dati super accurati
-        let parsed = await parseEmailWithGemini(htmlContent || textContent, isCancellation);
+        // Eseguiamo prima il parser regex locale ultra-rapido
+        const localParsed = parseIReservationEmail(`${subject}\n${textContent}`, htmlContent);
+        let parsed = { ...localParsed };
 
-        // Fallback al parser regex se Gemini non è configurato o fallisce
-        if (!parsed) {
-          console.log('[IMAP] Gemini non disponibile o errore, uso il parser regex locale di fallback.');
-          const localParsed = parseIReservationEmail(textContent, htmlContent);
-          parsed = {
-            bookingRef: localParsed.bookingRef,
-            bookingSource: localParsed.bookingSource,
-            guestName: localParsed.guestName,
-            guestSurname: localParsed.guestSurname,
-            guestEmail: localParsed.guestEmail,
-            phone: localParsed.phone,
-            apartmentName: localParsed.apartmentName,
-            checkInDate: localParsed.checkInDate,
-            checkOutDate: localParsed.checkOutDate,
-            nightsCount: localParsed.nightsCount,
-            guestsCount: localParsed.guestsCount,
-            amount: localParsed.amount
-          };
+        // Se mancano campi essenziali e non è una cancellazione, tentiamo il fallback con Gemini
+        if ((!parsed.bookingRef || (!isCancellation && (!parsed.checkInDate || !parsed.checkOutDate))) && process.env.GEMINI_API_KEY) {
+          const safeHtmlContent = (htmlContent || textContent).slice(0, 25000);
+          const geminiParsed = await parseEmailWithGemini(safeHtmlContent, isCancellation);
+          if (geminiParsed && geminiParsed.bookingRef) {
+            parsed = {
+              bookingRef: geminiParsed.bookingRef || parsed.bookingRef,
+              bookingSource: geminiParsed.bookingSource || parsed.bookingSource,
+              guestName: geminiParsed.guestName || parsed.guestName,
+              guestSurname: geminiParsed.guestSurname || parsed.guestSurname,
+              guestEmail: geminiParsed.guestEmail || parsed.guestEmail,
+              phone: geminiParsed.phone || parsed.phone,
+              apartmentName: geminiParsed.apartmentName || parsed.apartmentName,
+              checkInDate: geminiParsed.checkInDate || parsed.checkInDate,
+              checkOutDate: geminiParsed.checkOutDate || parsed.checkOutDate,
+              nightsCount: geminiParsed.nightsCount || parsed.nightsCount,
+              guestsCount: geminiParsed.guestsCount || parsed.guestsCount,
+              amount: geminiParsed.amount || parsed.amount
+            };
+          }
+        }
+
+        // Se ancora manca il nome ospite o le date, controlliamo se sono presenti nell'oggetto
+        if (!parsed.guestName) {
+          const nameFromSubj = subject.match(/prenotazione\s+(?:da|per)\s+([a-zA-ZÀ-ÿ\s]+?)\s+dal\b/i) ||
+                               subject.match(/prenotazione\s+cancellata\s*-\s*([a-zA-ZÀ-ÿ\s]+?)\s*-/i);
+          if (nameFromSubj && nameFromSubj[1]) {
+            const parts = nameFromSubj[1].trim().split(/\s+/);
+            parsed.guestName = parts[0] || '';
+            if (parts.length > 1 && !parsed.guestSurname) {
+              parsed.guestSurname = parts.slice(1).join(' ');
+            }
+          }
+        }
+
+        if (!parsed.checkInDate || !parsed.checkOutDate) {
+          const datesFromSubj = subject.match(/dal\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+al\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/i);
+          if (datesFromSubj) {
+            const monthsMap: Record<string, string> = { gen: '01', feb: '02', mar: '03', apr: '04', mag: '05', giu: '06', lug: '07', ago: '08', set: '09', ott: '10', nov: '11', dic: '12' };
+            const parseSubjDate = (dStr: string) => {
+              const m = dStr.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+              if (m) {
+                let yr = m[3].length === 2 ? '20' + m[3] : m[3];
+                return `${yr}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+              }
+              return '';
+            };
+            if (!parsed.checkInDate) parsed.checkInDate = parseSubjDate(datesFromSubj[1]);
+            if (!parsed.checkOutDate) parsed.checkOutDate = parseSubjDate(datesFromSubj[2]);
+          }
         }
 
         const bookingRef = parsed.bookingRef;
@@ -472,6 +578,9 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
                 targetPass.active = false;
                 targetPass.notes = `DISATTIVATO via IMAP Cancellazione il ${new Date().toISOString()}.\n${targetPass.notes || ''}`;
                 await upsertPass(targetPass);
+                if (typeof (global as any).persistPassesRef === 'function') {
+                  (global as any).persistPassesRef();
+                }
                 await cancelAllMessagesForPass(targetPass.id);
                 console.log(`[IMAP] Soggiorno CANCELLATO per ID "${bookingRef}".`);
 
@@ -540,11 +649,17 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
             const existingPass = serverPasses[existingIdx];
             targetPass = {
               ...existingPass,
-              guestName: parsed.guestName, guestSurname: parsed.guestSurname,
-              phone: parsed.phone || existingPass.phone, guestEmail: parsed.guestEmail || existingPass.guestEmail,
-              checkInDate: parsed.checkInDate, checkOutDate: parsed.checkOutDate, guestsCount: parsed.guestsCount,
-              bookingSource: parsed.bookingSource || existingPass.bookingSource, amount: parsed.amount || existingPass.amount,
-              apartmentName: parsed.apartmentName || existingPass.apartmentName, nightsCount: parsed.nightsCount || existingPass.nightsCount,
+              guestName: parsed.guestName,
+              guestSurname: parsed.guestSurname || existingPass.guestSurname,
+              phone: parsed.phone || existingPass.phone,
+              guestEmail: parsed.guestEmail || existingPass.guestEmail,
+              checkInDate: parsed.checkInDate,
+              checkOutDate: parsed.checkOutDate,
+              guestsCount: parsed.guestsCount || existingPass.guestsCount,
+              bookingSource: parsed.bookingSource || existingPass.bookingSource,
+              amount: parsed.amount || existingPass.amount,
+              apartmentName: parsed.apartmentName || existingPass.apartmentName,
+              nightsCount: parsed.nightsCount || existingPass.nightsCount,
               notes: `Sincronizzato da Email IMAP il ${new Date().toISOString()}.\n${existingPass.notes || ''}`
             };
             serverPasses[existingIdx] = targetPass;
@@ -560,12 +675,27 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
             const pinCode = generateRandomPin();
             const token = crypto.randomBytes(32).toString('base64url');
             targetPass = {
-              id: `ires-${bookingRef}`, guestName: parsed.guestName, guestSurname: parsed.guestSurname, phone: parsed.phone,
-              guestEmail: parsed.guestEmail, checkInDate: parsed.checkInDate, checkInTime: '14:00',
-              checkOutDate: parsed.checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount: parsed.guestsCount,
-              bookingSource: parsed.bookingSource || 'other', amount: parsed.amount, apartmentName: parsed.apartmentName,
-              nightsCount: parsed.nightsCount, notes: `${isTestEmail ? 'Pass di Test generato' : 'Generato'} automaticamente via IMAP il ${new Date().toISOString()}`,
-              createdAt: new Date().toISOString(), active: true, checkInConfirmed: false, token
+              id: `ires-${bookingRef}`,
+              guestName: parsed.guestName,
+              guestSurname: parsed.guestSurname,
+              phone: parsed.phone,
+              guestEmail: parsed.guestEmail,
+              checkInDate: parsed.checkInDate,
+              checkInTime: '14:00',
+              checkOutDate: parsed.checkOutDate,
+              checkOutTime: '10:00',
+              pinCode,
+              bookingRef,
+              guestsCount: parsed.guestsCount || 2,
+              bookingSource: parsed.bookingSource || 'bed-and-breakfast.it',
+              amount: parsed.amount,
+              apartmentName: parsed.apartmentName || 'Appartamento Aurora in Valtellina',
+              nightsCount: parsed.nightsCount || 1,
+              notes: `${isTestEmail ? 'Pass di Test generato' : 'Generato'} automaticamente via IMAP il ${new Date().toISOString()}`,
+              createdAt: new Date().toISOString(),
+              active: true,
+              checkInConfirmed: false,
+              token
             };
             serverPasses.unshift(targetPass);
 
@@ -579,6 +709,9 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
           }
 
           await upsertPass(targetPass);
+          if (typeof (global as any).persistPassesRef === 'function') {
+            (global as any).persistPassesRef();
+          }
           if (targetPass.checkOutDate >= todayStr) {
             await scheduleBookingMessages(targetPass);
           }
@@ -593,16 +726,18 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         }
         await client.messageFlagsAdd(String(uid), ['\\Seen']);
       }
+      // Mantiene i pass ordinati cronologicamente con gli attivi sempre in cima
+      sortGuestPassesInPlace(serverPasses);
     } finally {
       lock.release();
     }
     
-        await client.logout();
+    await client.logout();
   } catch (error) {
     console.error('[IMAP] Error during checkNewEmailsAndGeneratePasses:', error);
   } finally {
     // Persist processed UIDs so they survive server restarts
-    persistProcessedUids();
+    await persistProcessedUids();
     isPolling = false;
   }
 }

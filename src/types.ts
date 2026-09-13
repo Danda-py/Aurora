@@ -127,11 +127,22 @@ export interface GuestPass {
   }>;
 }
 
+export type SmartLockProviderType = 'home_assistant' | 'shelly' | 'nuki' | 'generic_webhook';
+
 export interface SmartLockConfig {
+  provider?: SmartLockProviderType;
   webhookUrl: string; // Home Assistant or eWeLink Webhook
   apiBearerToken?: string;
   deviceEntityId?: string; // e.g. "lock.portone_principale"
   enabled: boolean;
+  // Shelly specific
+  shellyDeviceId?: string;
+  shellyAuthKey?: string;
+  shellyRelayIndex?: number;
+  shellyServer?: string;
+  // Nuki specific
+  nukiSmartlockId?: string;
+  nukiApiToken?: string;
 }
 
 export interface DigitalKeyLog {

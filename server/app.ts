@@ -50,6 +50,14 @@ import {
   retryScheduledMessage,
   startScheduledMessagingWatcher
 } from './scheduledMessagingService.js';
+import { 
+  getPropertyConfig, 
+  updatePropertyConfig, 
+  hydratePropertyConfig 
+} from './propertyConfigService.js';
+import { getSmartLockProvider } from './smartLockAdapter.js';
+import { verifyGuestProximity, Coordinates } from './proximityService.js';
+import { extractClientIps } from './clientIpUtils.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 const LOGS_REL_PATH = path.join('data', 'digital_key_logs.json');
@@ -130,7 +138,7 @@ async function hydratePassesFromSupabase(force = false) {
     try {
       const remotePasses = await loadPasses();
       if (remotePasses) {
-        serverPasses.splice(0, serverPasses.length, ...remotePasses);
+        serverPasses.splice(0, serverPasses.length, ...sortGuestPasses(remotePasses));
         lastPassesHydrationTime = Date.now();
       }
     } catch (error) {
@@ -165,6 +173,51 @@ async function hydrateDeletedRefsFromSupabase(force = false) {
     }
   })();
   return deletedRefsHydration;
+}
+
+function sortGuestPasses(passes: GuestPass[]): GuestPass[] {
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  return [...passes].sort((a, b) => {
+    const aCancelled = a.active === false;
+    const bCancelled = b.active === false;
+    if (aCancelled !== bCancelled) {
+      return aCancelled ? 1 : -1;
+    }
+
+    const aActive = Boolean(a.checkInDate && a.checkOutDate && a.checkInDate <= todayStr && a.checkOutDate >= todayStr);
+    const bActive = Boolean(b.checkInDate && b.checkOutDate && b.checkInDate <= todayStr && b.checkOutDate >= todayStr);
+
+    // 1. Pass attivi sempre in cima
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
+
+    if (aActive && bActive) {
+      const cmpOut = (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+      if (cmpOut !== 0) return cmpOut;
+      return (a.checkInDate || '').localeCompare(b.checkInDate || '');
+    }
+
+    // 2. Futuri (in arrivo)
+    const aUpcoming = Boolean(a.checkInDate && a.checkInDate > todayStr);
+    const bUpcoming = Boolean(b.checkInDate && b.checkInDate > todayStr);
+
+    if (aUpcoming !== bUpcoming) {
+      return aUpcoming ? -1 : 1;
+    }
+
+    if (aUpcoming && bUpcoming) {
+      const cmpIn = (a.checkInDate || '').localeCompare(b.checkInDate || '');
+      if (cmpIn !== 0) return cmpIn;
+      return (a.checkOutDate || '').localeCompare(b.checkOutDate || '');
+    }
+
+    // 3. Passati (scaduti)
+    const cmpPast = (b.checkOutDate || '').localeCompare(a.checkOutDate || '');
+    if (cmpPast !== 0) return cmpPast;
+    return (b.checkInDate || '').localeCompare(a.checkInDate || '');
+  });
 }
 
 function isPassCurrentlyValid(pass: GuestPass): boolean {
@@ -274,6 +327,35 @@ async function sendHomeAssistantOnInput(guest: string = 'Host', source: string =
   return result;
 }
 
+function verifyWifiConnection(req: express.Request, config: any): { verified: boolean; isMatchIp: boolean; isLocal: boolean; clientIp: string; homePublicIp: string } {
+  const ips = extractClientIps(req);
+  const clientIp = ips[0] || '';
+  const homePublicIp = (config?.homePublicIp || '').replace(/^::ffff:/, '').trim();
+
+  const isMatchIp = Boolean(homePublicIp && ips.some(ip => ip === homePublicIp));
+  const isLocal = ips.some(ip => 
+    ip.startsWith('192.168.') || 
+    ip.startsWith('10.') || 
+    ip.startsWith('172.16.') || 
+    ip.startsWith('172.17.') || 
+    ip.startsWith('172.18.') || 
+    ip.startsWith('172.19.') || 
+    ip.startsWith('172.2') || 
+    ip.startsWith('172.3') || 
+    ip.startsWith('127.') || 
+    ip === '::1' || 
+    ip === 'localhost'
+  );
+
+  return {
+    verified: isMatchIp || isLocal,
+    isMatchIp,
+    isLocal,
+    clientIp,
+    homePublicIp
+  };
+}
+
 export function createApp() {
   const app = express();
 
@@ -281,12 +363,14 @@ export function createApp() {
   void hydrateLogsFromSupabase();
   void hydrateDeletedRefsFromSupabase();
   void hydrateHomeAssistantConfig();
+  void hydratePropertyConfig();
   void hydrateIcalConfig();
   void hydrateImapConfig();
 
   // Condividiamo l'array delle prenotazioni per l'engine iCal globale
   (global as any).serverPassesRef = serverPasses;
   (global as any).deletedBookingRefsRef = deletedBookingRefs;
+  (global as any).persistPassesRef = persistPasses;
 
   // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
   startIcalWatcher();
@@ -348,9 +432,12 @@ export function createApp() {
     await hydratePassesFromSupabase();
     await hydrateLogsFromSupabase();
     await hydrateDeletedRefsFromSupabase();
+    await hydrateHomeAssistantConfig();
     if (
       req.path === '/health' ||
       req.path === '/wifi/verify' ||
+      req.path === '/proximity/verify' ||
+      (req.method === 'GET' && req.path === '/property/config') ||
       req.path.startsWith('/auth/') ||
       req.path === '/guest/pass' ||
       req.path === '/lock/status' ||
@@ -785,15 +872,22 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
   // Door Unlock Handler
   const handleDoorUnlock = async (req: express.Request, res: express.Response) => {
     try {
-      const { guestName, guest, source } = req.body || {};
+      const { guestName, guest, source, latitude, longitude, accuracy, coords } = req.body || {};
       const config = getHomeAssistantConfig();
-      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+      const guestCoords: Coordinates | undefined = (coords || (typeof latitude === 'number' && typeof longitude === 'number'))
+        ? { latitude: coords?.latitude ?? latitude, longitude: coords?.longitude ?? longitude, accuracy: coords?.accuracy ?? accuracy }
+        : undefined;
+
+      const proximity = verifyGuestProximity(req, config, guestCoords);
+      const clientIp = proximity.clientIp;
       
       const guestToken = req.get('x-guest-token') || req.body?.guestToken;
       const pass = findValidGuestPass(guestToken);
       
       const actualGuest = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : (guestName || guest || 'Ospite Aurora');
-      const actualSource = source || (pass ? 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)' : 'Pannello Host');
+      const actualSource = source || (pass 
+        ? `Pulsante Ospite VIP (${proximity.method === 'gps' ? `GPS Verificato a ${proximity.distanceMeters}m` : 'Wi-Fi Verificato'})` 
+        : 'Pannello Host');
 
       if (pass && !pass.checkInConfirmed) {
         const errorMsg = 'Accesso negato: il check-in deve essere prima confermato dall’host.';
@@ -819,15 +913,8 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         return;
       }
       
-      // Do not trust a `wifiConnected` flag sent by the browser: it can be
-      // forged and was the reason the first unlock could bypass the check.
-      const verifiedCasaAuroraWifi = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
-
-      if (!verifiedCasaAuroraWifi) {
-        const errorMsg = config.homePublicIp
-          ? 'Accesso negato: collega il dispositivo al Wi-Fi Casa_Aurora prima di aprire il portone.'
-          : 'Verifica Wi-Fi non configurata: l’host deve prima registrare l’IP pubblico di Casa_Aurora.';
-          
+      if (!proximity.verified) {
+        const errorMsg = proximity.reason;
         const logEntry = {
           timestamp: new Date().toISOString(),
           guestPassId: pass ? pass.id : null,
@@ -847,16 +934,24 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         res.status(403).json({
           success: false,
           wifiBlocked: true,
-          error: errorMsg
+          proximityBlocked: true,
+          error: errorMsg,
+          proximity
         });
         return;
       }
       
-      const result = await sendHomeAssistantOnInput(
-        actualGuest, 
-        actualSource, 
-        verifiedCasaAuroraWifi
-      );
+      const lockProvider = getSmartLockProvider({
+        provider: (config as any).provider || 'home_assistant',
+        ...config
+      });
+
+      const result = await lockProvider.unlock({
+        guestName: actualGuest,
+        source: actualSource,
+        guestPassId: pass ? pass.id : null,
+        verifiedProximity: proximity.verified
+      });
 
       const logEntry = {
         timestamp: new Date().toISOString(),
@@ -883,15 +978,16 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
             await upsertPass(pass);
           }
           
-          const arrivalMessage = `🔔 *Conferma Arrivo Ospite* 🔔\n\nL'ospite *${actualGuest}* ha effettuato il suo *primo ingresso* assoluto sbloccando il portone digitale!\n\n📅 Data: ${new Date(logEntry.timestamp).toLocaleDateString('it-IT')}\n⏰ Ora: ${new Date(logEntry.timestamp).toLocaleTimeString('it-IT')}\n🔑 Codice PIN dell'ospite: ${pass.pinCode || 'N/A'}`;
+          const arrivalMessage = `🔔 *Conferma Arrivo Ospite* 🔔\n\nL'ospite *${actualGuest}* ha effettuato il suo *primo ingresso* assoluto sbloccando il portone digitale!\n\nMetodo verifica: ${proximity.method === 'gps' ? `📍 GPS Prossimità (${proximity.distanceMeters}m)` : '📶 Rete Wi-Fi'}\n📅 Data: ${new Date(logEntry.timestamp).toLocaleDateString('it-IT')}\n⏰ Ora: ${new Date(logEntry.timestamp).toLocaleTimeString('it-IT')}\n🔑 Codice PIN dell'ospite: ${pass.pinCode || 'N/A'}`;
           
           await sendHostNotification(arrivalMessage);
         }
 
         res.json({
           success: true,
-          message: 'Portone sbloccato. Spingi la porta per entrare.',
-          timestamp: logEntry.timestamp
+          message: result.message || 'Portone sbloccato. Spingi la porta per entrare.',
+          timestamp: logEntry.timestamp,
+          proximityMethod: proximity.method
         });
       } else {
         const isWifiBlocked = (result as any).wifiBlocked;
@@ -913,28 +1009,36 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
   apiRouter.post('/hass/unlock', handleDoorUnlock);
   apiRouter.post('/ewelink/unlock', handleDoorUnlock);
 
-  // Home Assistant Checkout Scenario
+  // Home Assistant / Smart Lock Checkout Scenario
   apiRouter.post('/hass/checkout', async (req, res) => {
     try {
       const guestToken = req.get('x-guest-token') || req.body?.guestToken;
       const pass = findValidGuestPass(guestToken);
       const guestName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : 'Host';
       
-      const result = await triggerHomeAssistantCheckout(guestName);
+      const config = getHomeAssistantConfig();
+      const lockProvider = getSmartLockProvider({
+        provider: (config as any).provider || 'home_assistant',
+        ...config
+      });
+
+      const result = lockProvider.checkout 
+        ? await lockProvider.checkout(guestName)
+        : await triggerHomeAssistantCheckout(guestName);
       
       hassDoorState.logs.unshift({
         timestamp: new Date().toISOString(),
         guest: guestName,
         detail: result.success 
-          ? `Scenario Check-out attivato con successo: ${result.message}` 
-          : `Errore scenario Check-out: ${result.error}`
+          ? `Scenario Check-out attivato con successo: ${result.message || ''}` 
+          : `Errore scenario Check-out: ${result.error || ''}`
       });
       if (hassDoorState.logs.length > 25) {
         hassDoorState.logs.pop();
       }
 
       if (result.success) {
-        res.json({ success: true, message: result.message });
+        res.json({ success: true, message: result.message, provider: result.provider });
       } else {
         res.status(500).json({ success: false, error: result.error });
       }
@@ -945,39 +1049,62 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
   });
 
   // Wi-Fi Status
-  apiRouter.get('/wifi/status', (req, res) => {
+  apiRouter.get('/wifi/status', async (req, res) => {
+    await hydrateHomeAssistantConfig();
     const config = getHomeAssistantConfig();
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
-    const isLocal = clientIp.startsWith('192.168.') || clientIp.startsWith('10.') || clientIp.startsWith('127.') || clientIp === '::1';
-    const matchesHomePublicIp = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
+    const { verified, isMatchIp, isLocal, clientIp, homePublicIp } = verifyWifiConnection(req, config);
 
     res.json({
       configuredSsid: config.wifiSsidRequired || 'Casa_Aurora',
       clientIp,
-      homePublicIp: config.homePublicIp || 'Non configurato',
+      homePublicIp: homePublicIp || 'Non configurato',
       isLocalLan: isLocal,
-      isHomePublicIp: matchesHomePublicIp,
-      verified: isLocal || matchesHomePublicIp
+      isHomePublicIp: isMatchIp,
+      verified
     });
   });
 
-  // Wi-Fi Verify
-  apiRouter.post('/wifi/verify', (req, res) => {
+  // Proximity & Geofencing Verification Endpoint
+  apiRouter.post('/proximity/verify', async (req, res) => {
+    await hydrateHomeAssistantConfig();
+    await hydratePropertyConfig();
     const config = getHomeAssistantConfig();
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
-    const isMatchIp = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
-    const verified = isMatchIp;
+    const { latitude, longitude, accuracy } = req.body || {};
+    const coords: Coordinates | undefined = (typeof latitude === 'number' && typeof longitude === 'number')
+      ? { latitude, longitude, accuracy }
+      : undefined;
+
+    const proximity = verifyGuestProximity(req, config, coords);
+    res.json({
+      success: true,
+      ...proximity
+    });
+  });
+
+  // Wi-Fi Verify (with automatic GPS fallback if coordinates are provided)
+  apiRouter.post('/wifi/verify', async (req, res) => {
+    await hydrateHomeAssistantConfig();
+    await hydratePropertyConfig();
+    const config = getHomeAssistantConfig();
+    const { latitude, longitude, accuracy } = req.body || {};
+    const coords: Coordinates | undefined = (typeof latitude === 'number' && typeof longitude === 'number')
+      ? { latitude, longitude, accuracy }
+      : undefined;
+
+    const proximity = verifyGuestProximity(req, config, coords);
 
     res.json({
-      verified,
-      reason: verified 
-        ? 'Connessione a Casa_Aurora verificata con successo' 
-        : config.homePublicIp
-          ? 'Dispositivo non connesso alla rete Wi-Fi dell\'appartamento (Casa_Aurora)'
-          : 'Verifica Wi-Fi non configurata: l\'host deve registrare l\'IP pubblico di Casa_Aurora.',
+      verified: proximity.verified,
+      method: proximity.method,
+      clientIp: proximity.clientIp,
+      homePublicIp: proximity.homePublicIp,
+      distanceMeters: proximity.distanceMeters,
+      geofenceRadiusMeters: proximity.geofenceRadiusMeters,
+      reason: proximity.reason,
       details: {
         ssidExpected: config.wifiSsidRequired || 'Casa_Aurora',
-        matchedByPublicIp: isMatchIp
+        matchedByPublicIp: proximity.isMatchIp,
+        isLocalLan: proximity.isLocalLan
       }
     });
   });
@@ -999,6 +1126,26 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       message: `IP pubblico di Casa_Aurora impostato a: ${targetIp}`,
       homePublicIp: targetIp
     });
+  });
+
+  // Property Configuration Endpoints (Multi-Host / SaaS Ready)
+  apiRouter.get('/property/config', async (req, res) => {
+    await hydratePropertyConfig();
+    const config = getPropertyConfig();
+    res.json({ success: true, config });
+  });
+
+  apiRouter.put('/property/config', async (req, res) => {
+    try {
+      const updated = await updatePropertyConfig(req.body);
+      res.json({
+        success: true,
+        message: 'Configurazione struttura salvata con successo.',
+        config: updated
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // CMS Endpoints
@@ -1871,7 +2018,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
   apiRouter.get('/passes', (_req, res) => {
     res.json({
       success: true,
-      passes: serverPasses
+      passes: sortGuestPasses(serverPasses)
     });
   });
 

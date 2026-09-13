@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GuestPass, SmartLockConfig } from '../../types';
 import { 
   encodePassToToken, 
@@ -12,7 +12,8 @@ import {
   saveSmartLockConfig,
   triggerSmartLockAPI,
   getStayTiming,
-  createAutonomousGuestPass
+  createAutonomousGuestPass,
+  sortGuestPasses
 } from '../../services/guestPassService';
 import { 
   KeyRound, 
@@ -46,11 +47,14 @@ import {
   Image as ImageIcon,
   Battery,
   WifiOff,
-  ShieldCheck
+  ShieldCheck,
+  Building2,
+  Cpu
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { CmsMediaManager } from './CmsMediaManager';
 import { AlloggiatiManager } from './AlloggiatiManager';
+import { PropertySettingsManager } from './PropertySettingsManager';
 
 interface Props {
   isOpen: boolean;
@@ -63,8 +67,8 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Tabs: 'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'
-  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'>('create');
+  // Tabs: 'create' | 'list' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'>('create');
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   // Form state
@@ -87,6 +91,9 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
   // Stored passes
   const [storedPasses, setStoredPasses] = useState<GuestPass[]>([]);
+
+  // Pass ordinati: ATTIVI (in corso) sempre in cima, poi futuri in ordine cronologico di check-in, poi passati
+  const sortedPasses = useMemo(() => sortGuestPasses(storedPasses), [storedPasses]);
 
   // Smart lock config
   const [lockConfig, setLockConfig] = useState<SmartLockConfig>(getSmartLockConfig());
@@ -561,6 +568,18 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               </button>
 
               <button
+                onClick={() => setActiveTab('property_settings')}
+                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
+                  activeTab === 'property_settings'
+                    ? 'border-white text-gray-900 bg-gray-100'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                <span>Struttura & Geofence</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('webhook')}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
                   activeTab === 'webhook'
@@ -907,13 +926,14 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                     <span>Totale: {storedPasses.length}</span>
                   </div>
 
-                  {storedPasses.length === 0 ? (
+                  {sortedPasses.length === 0 ? (
                     <div className="p-8 text-center text-gray-500 font-mono text-xs">
                       Nessun pass presente. Generane uno dalla scheda "Nuovo Pass".
                     </div>
                   ) : (
-                    storedPasses.map((pass) => {
+                    sortedPasses.map((pass) => {
                       const timing = getStayTiming(pass);
+                      const isCancelled = pass.active === false;
                       return (
                         <div
                           key={pass.id}
@@ -927,14 +947,16 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                                 </span>
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                                    timing.isActive
+                                    isCancelled
+                                      ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                                      : timing.isActive
                                       ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                                       : timing.isUpcoming
                                       ? 'bg-sky-100 text-sky-700 border border-sky-200'
                                       : 'bg-gray-100 text-gray-500 border border-gray-200'
                                   }`}
                                 >
-                                  {timing.isActive ? 'ATTIVO' : timing.isUpcoming ? 'IN ARRIVO' : 'SCADUTO'}
+                                  {isCancelled ? 'CANCELLATO' : timing.isActive ? 'ATTIVO' : timing.isUpcoming ? 'IN ARRIVO' : 'SCADUTO'}
                                 </span>
                               </div>
                               <span className="text-[11px] sm:text-xs text-gray-500 font-mono block mt-0.5">
@@ -1012,6 +1034,11 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                     })
                   )}
                 </div>
+              )}
+
+              {/* TAB: IMPOSTAZIONI STRUTTURA & GEOFENCING */}
+              {activeTab === 'property_settings' && (
+                <PropertySettingsManager />
               )}
 
               {/* TAB: WEBHOOK & AUTONOMOUS ENGINE */}
@@ -1291,45 +1318,155 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-mono text-gray-600 mb-1">
-                        Webhook URL (Home Assistant / eWeLink API)
+                      <label className="block text-xs font-mono text-gray-600 mb-1.5 font-bold">
+                        Seleziona Hardware Smart Lock / Provider
                       </label>
-                      <input
-                        type="url"
-                        value={lockConfig.webhookUrl}
-                        onChange={(e) => setLockConfig({ ...lockConfig, webhookUrl: e.target.value })}
-                        placeholder="Es. https://homeassistant.tuodominio.it/api/webhook/aurora_smart_lock"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-300"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-mono text-gray-600 mb-1">
-                          API Bearer Token (Opzionale)
-                        </label>
-                        <input
-                          type="password"
-                          value={lockConfig.apiBearerToken || ''}
-                          onChange={(e) => setLockConfig({ ...lockConfig, apiBearerToken: e.target.value })}
-                          placeholder="Token autorizzazione se richiesto"
-                          className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-mono text-gray-600 mb-1">
-                          Entity ID Serratura (Opzionale)
-                        </label>
-                        <input
-                          type="text"
-                          value={lockConfig.deviceEntityId || ''}
-                          onChange={(e) => setLockConfig({ ...lockConfig, deviceEntityId: e.target.value })}
-                          placeholder="lock.aurora_portone"
-                          className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
-                        />
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: 'home_assistant', label: 'Home Assistant', desc: 'Webhook & REST' },
+                          { id: 'shelly', label: 'Shelly Cloud / Relè', desc: 'Gen1 / Gen2 / Pro' },
+                          { id: 'nuki', label: 'Nuki Smart Lock', desc: 'Nuki Web API' },
+                          { id: 'generic_webhook', label: 'Webhook / eWeLink', desc: 'Custom HTTP' }
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setLockConfig({ ...lockConfig, provider: p.id as any })}
+                            className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                              (lockConfig.provider || 'home_assistant') === p.id
+                                ? 'border-amber-500 bg-amber-50/60 text-amber-950 font-bold'
+                                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="text-xs">{p.label}</div>
+                            <div className="text-[10px] text-gray-500 font-normal">{p.desc}</div>
+                          </button>
+                        ))}
                       </div>
                     </div>
+
+                    {/* Shelly specific inputs */}
+                    {lockConfig.provider === 'shelly' && (
+                      <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-3">
+                        <span className="text-xs font-bold text-blue-900 block">Parametri Shelly Cloud API</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">Shelly Device ID</label>
+                            <input
+                              type="text"
+                              value={lockConfig.shellyDeviceId || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, shellyDeviceId: e.target.value })}
+                              placeholder="Es. 34987a12bc4f"
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">Auth Key (Cloud Token)</label>
+                            <input
+                              type="password"
+                              value={lockConfig.shellyAuthKey || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, shellyAuthKey: e.target.value })}
+                              placeholder="Shelly Auth Key"
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">Shelly Server URL</label>
+                            <input
+                              type="text"
+                              value={lockConfig.shellyServer || 'https://shelly-41-eu.shelly.cloud'}
+                              onChange={(e) => setLockConfig({ ...lockConfig, shellyServer: e.target.value })}
+                              placeholder="https://shelly-41-eu.shelly.cloud"
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">Indice Canale Relè</label>
+                            <input
+                              type="number"
+                              value={lockConfig.shellyRelayIndex ?? 0}
+                              onChange={(e) => setLockConfig({ ...lockConfig, shellyRelayIndex: parseInt(e.target.value, 10) || 0 })}
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nuki specific inputs */}
+                    {lockConfig.provider === 'nuki' && (
+                      <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200 space-y-3">
+                        <span className="text-xs font-bold text-amber-900 block">Parametri Nuki Web API</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">Smartlock ID Nuki</label>
+                            <input
+                              type="text"
+                              value={lockConfig.nukiSmartlockId || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, nukiSmartlockId: e.target.value })}
+                              placeholder="Es. 18274619"
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-mono text-gray-600 mb-1">API Token Nuki Web</label>
+                            <input
+                              type="password"
+                              value={lockConfig.nukiApiToken || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, nukiApiToken: e.target.value })}
+                              placeholder="Token generato su web.nuki.io"
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Home Assistant / Generic Webhook fields */}
+                    {(lockConfig.provider === 'home_assistant' || lockConfig.provider === 'generic_webhook' || !lockConfig.provider) && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-mono text-gray-600 mb-1">
+                            Webhook URL (Home Assistant / eWeLink API)
+                          </label>
+                          <input
+                            type="url"
+                            value={lockConfig.webhookUrl}
+                            onChange={(e) => setLockConfig({ ...lockConfig, webhookUrl: e.target.value })}
+                            placeholder="Es. https://homeassistant.tuodominio.it/api/webhook/aurora_smart_lock"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-300"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-mono text-gray-600 mb-1">
+                              API Bearer Token (Opzionale)
+                            </label>
+                            <input
+                              type="password"
+                              value={lockConfig.apiBearerToken || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, apiBearerToken: e.target.value })}
+                              placeholder="Token autorizzazione se richiesto"
+                              className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono text-gray-600 mb-1">
+                              Entity ID Serratura (Opzionale)
+                            </label>
+                            <input
+                              type="text"
+                              value={lockConfig.deviceEntityId || ''}
+                              onChange={(e) => setLockConfig({ ...lockConfig, deviceEntityId: e.target.value })}
+                              placeholder="lock.aurora_portone"
+                              className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <label className="block text-xs font-mono text-gray-600 mb-1">
@@ -1401,7 +1538,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               {/* TAB: ALLOGGIATI WEB GENERATION */}
               {activeTab === 'alloggiati' && (
                 <AlloggiatiManager 
-                  storedPasses={storedPasses} 
+                  storedPasses={sortedPasses} 
                   onUpdatePassList={async () => {
                     try {
                       const res = await fetch('/api/passes');

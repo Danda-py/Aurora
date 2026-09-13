@@ -1,6 +1,6 @@
 import { Amenity, Appliance, WasteCategory, NearbyPlace, Experience, GuestReview, Language } from '../types';
 
-export const APARTMENT_INFO = {
+const BASE_APARTMENT_INFO = {
   name: "Aurora in Valtellina",
   tagline: "Il tuo rifugio tra lago e montagne a Morbegno, Valtellina",
   address: "Via Serta 188D",
@@ -46,6 +46,23 @@ export const APARTMENT_INFO = {
   bathrooms: 1,
   floor: "Piano terra / Corte privata",
 };
+
+export const APARTMENT_INFO: typeof BASE_APARTMENT_INFO = new Proxy(BASE_APARTMENT_INFO, {
+  get(target, prop: string) {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('AURORA_PROPERTY_CONFIG');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && prop in parsed && parsed[prop] !== undefined && parsed[prop] !== '') {
+            return parsed[prop];
+          }
+        }
+      } catch (_) {}
+    }
+    return (target as any)[prop];
+  }
+});
 
 export const GALLERY_PHOTOS = [
   {
