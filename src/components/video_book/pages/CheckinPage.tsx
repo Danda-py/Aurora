@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { checkCasaAuroraWifi } from '../../../services/wifiDetectionService';
+import { DocumentUploadForm } from '../../vip/DocumentUploadForm';
 
 interface Props {
   language: Language;
@@ -31,13 +32,15 @@ interface Props {
   onSelectLanguage: (lang: Language) => void;
   pass?: GuestPass | null;
   onOpenSmartLock?: () => void;
+  onUpdatePass?: (pass: GuestPass) => void;
 }
 
 export const CheckinPage: React.FC<Props> = ({ 
   language, 
   onBackToMenu, 
   onSelectLanguage,
-  pass
+  pass,
+  onUpdatePass
 }) => {
   const { getPageData, media } = useCms();
   const cmsCheckIn = getPageData('checkIn') || {};
@@ -168,7 +171,8 @@ export const CheckinPage: React.FC<Props> = ({
 
         {/* HERO COMPONENT: Apple Home Key / Action Card (only for guests with pass) */}
         {pass ? (
-        <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
+          pass.documentsUploaded ? (
+            <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
           
           {/* Ambient Mint Glow */}
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 bg-[#62e6bd]/10 blur-3xl pointer-events-none rounded-full" />
@@ -376,6 +380,17 @@ export const CheckinPage: React.FC<Props> = ({
             </div>
           </div>
         </div>
+          ) : (
+            <DocumentUploadForm
+              pass={pass}
+              language={language}
+              onSaveSuccess={(updatedPass) => {
+                if (onUpdatePass) {
+                  onUpdatePass(updatedPass);
+                }
+              }}
+            />
+          )
         ) : (
           <div className="aurora-glass-card p-5 sm:p-6 flex items-start gap-3.5 border border-white/10 bg-white/[0.03]">
             <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 text-amber-300">

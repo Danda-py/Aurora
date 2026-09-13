@@ -69,3 +69,56 @@ export async function sendGuestNotification(
     return { sent: false, channel, error: err?.message || 'Errore sconosciuto' };
   }
 }
+
+/**
+ * Sends a notification to the host via Telegram Bot API or generic webhook.
+ */
+export async function sendHostNotification(message: string): Promise<boolean> {
+  const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+  const webhookUrl = process.env.HOST_NOTIFICATION_WEBHOOK_URL;
+
+  let success = false;
+
+  if (telegramToken && telegramChatId) {
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: telegramChatId, text: message })
+      });
+      if (res.ok) {
+        console.log('[Notifiche Host] Notifica Telegram inviata con successo.');
+        success = true;
+      } else {
+        console.error('[Notifiche Host] Errore Telegram:', await res.text());
+      }
+    } catch (err) {
+      console.error('[Notifiche Host] Errore invio Telegram:', err);
+    }
+  }
+
+  if (webhookUrl) {
+    try {
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, text: message, timestamp: new Date().toISOString() })
+      });
+      if (res.ok) {
+        console.log('[Notifiche Host] Notifica Webhook inviata con successo.');
+        success = true;
+      } else {
+        console.error('[Notifiche Host] Errore Webhook:', await res.text());
+      }
+    } catch (err) {
+      console.error('[Notifiche Host] Errore invio Webhook:', err);
+    }
+  }
+
+  if (!telegramToken && !webhookUrl) {
+    console.log(`[Notifiche Host] Nessun canale Telegram o Webhook configurato per l'host. Messaggio:\n${message}`);
+  }
+
+  return success;
+}

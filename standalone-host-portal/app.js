@@ -7,11 +7,23 @@
 const DEFAULT_API_BASE = window.location.origin;
 let API_BASE_URL = localStorage.getItem('AURORA_API_BASE_URL') || DEFAULT_API_BASE;
 
+// Intercept all fetch calls to always include session cookies (credentials) for authorization
+const originalFetch = window.fetch;
+window.fetch = function (url, options = {}) {
+  // If no credentials option is explicitly provided, set it to 'include'
+  if (!options.credentials) {
+    options.credentials = 'include';
+  }
+  return originalFetch(url, options);
+};
+
 let activePasses = [];
+let allScheduledMessages = [];
 let cmsContentData = {};
 let currentCmsLang = 'it';
 let currentCmsSection = 'welcome';
 let cmsMediaData = {};
+let lockStatusIntervalId = null;
 
 // Fallback SVG Icons Map (guarantees icons never fail to display)
 const SVG_ICONS = {
@@ -320,6 +332,12 @@ function setupTabs() {
         }
       });
 
+      // Clear lock polling if leaving the hass tab
+      if (lockStatusIntervalId) {
+        clearInterval(lockStatusIntervalId);
+        lockStatusIntervalId = null;
+      }
+
       // Lazy loads
       if (targetTab === 'passes') {
         fetchPasses();
@@ -327,10 +345,14 @@ function setupTabs() {
         fetchIcalConfig();
       } else if (targetTab === 'hass') {
         fetchSonoffConfig();
+        fetchLockStatus();
+        lockStatusIntervalId = setInterval(fetchLockStatus, 3000);
       } else if (targetTab === 'cms') {
         loadCmsData();
       } else if (targetTab === 'media') {
         loadMediaData();
+      } else if (targetTab === 'messages') {
+        fetchAndRenderScheduledMessages();
       }
 
       renderIcons();
@@ -440,9 +462,23 @@ function setupEventListeners() {
   const inputFilterPasses = document.getElementById('inputFilterPasses');
   if (inputFilterPasses) {
     inputFilterPasses.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase().trim();
-      filterAndRenderPasses(query);
+      filterAndRenderPasses(e.target.value);
     });
+  }
+
+  // Real-time Lock State Simulation Buttons
+  const btnSimulateClosed = document.getElementById('btnSimulateClosed');
+  const btnSimulateOpen = document.getElementById('btnSimulateOpen');
+  const btnSimulateOffline = document.getElementById('btnSimulateOffline');
+
+  if (btnSimulateClosed) {
+    btnSimulateClosed.addEventListener('click', () => handleStandaloneSimulateLockState('closed'));
+  }
+  if (btnSimulateOpen) {
+    btnSimulateOpen.addEventListener('click', () => handleStandaloneSimulateLockState('open'));
+  }
+  if (btnSimulateOffline) {
+    btnSimulateOffline.addEventListener('click', () => handleStandaloneSimulateLockState('offline'));
   }
 
   // Refresh Passes Button
@@ -694,11 +730,24 @@ async function handleCreatePass(e) {
 // ============================================================
 async function fetchPasses() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/passes`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    
-    activePasses = Array.isArray(data) ? data : (data.passes || []);
+    const [resPasses, resMessages] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/passes`),
+      fetch(`${API_BASE_URL}/api/scheduled-messages`).catch(err => {
+        console.warn('Errore precaricamento messaggi:', err);
+        return null;
+      })
+    ]);
+
+    if (!resPasses.ok) throw new Error(`HTTP ${resPasses.status}`);
+    const dataPasses = await resPasses.json();
+    activePasses = Array.isArray(dataPasses) ? dataPasses : (dataPasses.passes || []);
+
+    if (resMessages && resMessages.ok) {
+      const dataMessages = await resMessages.json();
+      if (dataMessages.success && Array.isArray(dataMessages.messages)) {
+        allScheduledMessages = dataMessages.messages;
+      }
+    }
 
     // Update counts
     const countEl = document.getElementById('statActiveCount');
@@ -758,14 +807,57 @@ function filterAndRenderPasses(filterQuery) {
     const bookingRef = escapeHtml(pass.bookingRef || '');
     const safeGuestLink = escapeHtml(guestLink);
 
+    // Calculate per-pass message status progress
+    const passMessages = allScheduledMessages.filter(m => m.passId === pass.id);
+    let msgProgressHtml = '';
+    if (passMessages.length > 0) {
+      const welcomeMsg = passMessages.find(m => m.triggerType === 'welcome');
+      const preCheckinMsg = passMessages.find(m => m.triggerType === 'pre_checkin');
+      const courtesyMsg = passMessages.find(m => m.triggerType === 'courtesy');
+      const checkoutMsg = passMessages.find(m => m.triggerType === 'checkout');
+
+      const getIcon = (msg) => {
+        if (!msg) return '<i data-lucide="minus-circle" class="w-3 h-3 opacity-30" title="Non programmato"></i>';
+        if (msg.status === 'sent') return '<i data-lucide="check-circle" class="w-3 h-3 text-[#30d158]" title="Inviato con successo"></i>';
+        if (msg.status === 'failed') return '<i data-lucide="alert-circle" class="w-3 h-3 text-[#ff453a]" title="Errore invio"></i>';
+        if (msg.status === 'sending') return '<i data-lucide="refresh-cw" class="w-3 h-3 text-[#ff9f0a] animate-spin" title="Invio in corso"></i>';
+        return '<i data-lucide="clock" class="w-3 h-3 text-[#86868b]" title="In coda"></i>';
+      };
+
+      const getLabelClass = (msg) => {
+        if (!msg) return 'opacity-30';
+        if (msg.status === 'sent') return 'text-[#30d158] font-semibold';
+        if (msg.status === 'failed') return 'text-[#ff453a] font-semibold';
+        return 'text-[#86868b]';
+      };
+
+      msgProgressHtml = `
+        <div class="mt-2.5 pt-2 border-t border-white/[0.04] flex items-center gap-3.5 flex-wrap text-[10px]">
+          <span class="text-[#86868b] font-medium uppercase tracking-wider text-[9px]">Messaggi automatici:</span>
+          <span class="flex items-center gap-1 ${getLabelClass(welcomeMsg)}">
+            ${getIcon(welcomeMsg)} Benvenuto
+          </span>
+          <span class="flex items-center gap-1 ${getLabelClass(preCheckinMsg)}">
+            ${getIcon(preCheckinMsg)} Check-in (3gg prima)
+          </span>
+          <span class="flex items-center gap-1 ${getLabelClass(courtesyMsg)}">
+            ${getIcon(courtesyMsg)} Cortesia
+          </span>
+          <span class="flex items-center gap-1 ${getLabelClass(checkoutMsg)}">
+            ${getIcon(checkoutMsg)} Check-out (sera prima)
+          </span>
+        </div>
+      `;
+    }
+
     return `
       <div class="apple-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Guest Details -->
-        <div class="flex items-start gap-3.5 min-w-0">
+        <div class="flex items-start gap-3.5 min-w-0 flex-1">
           <div class="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 text-white font-semibold flex items-center justify-center shrink-0 text-sm">
             ${guestInitial}
           </div>
-          <div class="min-w-0 space-y-1">
+          <div class="min-w-0 space-y-1 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
               <h4 class="font-semibold text-sm text-white tracking-tight">${guestName}</h4>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-mono ${isExpired ? 'bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20' : 'bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20'}">
@@ -780,6 +872,7 @@ function filterAndRenderPasses(filterQuery) {
               ${pass.phone ? `<span>• Tel: <strong class="text-white font-mono">${phone}</strong></span>` : ''}
               ${pass.bookingRef ? `<span>• Ref: <code class="font-mono text-white">${bookingRef}</code></span>` : ''}
             </div>
+            ${msgProgressHtml}
           </div>
         </div>
 
@@ -1575,3 +1668,301 @@ async function handleResetAllPhotos() {
   loadMediaData();
   showToast('Tutte le foto sono state ripristinate!', 'success');
 }
+
+// ============================================================
+// REAL-TIME LOCK STATUS TRACKING (STANDALONE PORTAL)
+// ============================================================
+async function fetchLockStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/lock/status`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.lockStatus) {
+      updateStandaloneLockUI(data.lockStatus);
+    }
+  } catch (err) {
+    console.warn('Error fetching lock status:', err);
+  }
+}
+
+function updateStandaloneLockUI(lockState) {
+  const container = document.getElementById('standaloneLockIconContainer');
+  const icon = document.getElementById('standaloneLockIcon');
+  const dot = document.getElementById('standaloneLockDot');
+  const text = document.getElementById('standaloneLockStateText');
+  const desc = document.getElementById('standaloneLockDescText');
+  const time = document.getElementById('standaloneLockTime');
+  const metrics = document.getElementById('standaloneLockMetrics');
+  const battery = document.getElementById('standaloneLockBatteryText');
+  const signal = document.getElementById('standaloneLockSignalText');
+
+  if (!text) return;
+
+  if (lockState.state === 'closed') {
+    if (container) container.className = 'w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border border-[#30d158]/20 bg-[#30d158]/10 text-[#30d158]';
+    if (icon) {
+      icon.setAttribute('data-lucide', 'lock');
+      icon.className = 'w-5 h-5 text-[#30d158]';
+    }
+    if (dot) dot.className = 'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#1c1c1e] bg-[#30d158]';
+    text.textContent = 'Chiusa';
+    if (desc) desc.textContent = 'Tutti gli accessi sono protetti.';
+  } else if (lockState.state === 'open') {
+    if (container) container.className = 'w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border border-[#ff9f0a]/20 bg-[#ff9f0a]/10 text-[#ff9f0a]';
+    if (icon) {
+      icon.setAttribute('data-lucide', 'unlock');
+      icon.className = 'w-5 h-5 text-[#ff9f0a]';
+    }
+    if (dot) dot.className = 'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#1c1c1e] bg-[#ff9f0a]';
+    text.textContent = 'Aperta / Socchiusa';
+    if (desc) desc.textContent = 'Attenzione: porta socchiusa.';
+  } else {
+    if (container) container.className = 'w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border border-white/10 bg-white/[0.04] text-neutral-400';
+    if (icon) {
+      icon.setAttribute('data-lucide', 'wifi-off');
+      icon.className = 'w-5 h-5 text-neutral-400';
+    }
+    if (dot) dot.className = 'absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#1c1c1e] bg-zinc-400';
+    text.textContent = 'Offline';
+    if (desc) desc.textContent = 'Modulo Wi-Fi non raggiungibile.';
+  }
+
+  if (lockState.lastUpdatedAt) {
+    if (time) {
+      time.classList.remove('hidden');
+      time.textContent = `Aggiornato: ${new Date(lockState.lastUpdatedAt).toLocaleTimeString()}`;
+    }
+  }
+
+  if (lockState.state !== 'offline') {
+    if (metrics) metrics.classList.remove('hidden');
+    if (battery) battery.textContent = `${lockState.battery ?? 100}%`;
+    if (signal) signal.textContent = `${lockState.signalStrength ?? -50} dBm`;
+  } else {
+    if (metrics) metrics.classList.add('hidden');
+  }
+
+  renderIcons();
+}
+
+async function handleStandaloneSimulateLockState(simState) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/webhook/lock-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: simState,
+        battery: simState === 'offline' ? undefined : Math.floor(75 + Math.random() * 20),
+        signal: simState === 'offline' ? undefined : -Math.floor(55 + Math.random() * 20)
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.lockStatus) {
+      updateStandaloneLockUI(data.lockStatus);
+      showToast(`Simulazione stato ${simState.toUpperCase()}`, 'success');
+    }
+  } catch (err) {
+    console.warn('Error simulating lock status:', err);
+  }
+}
+
+// ============================================================
+// SCHEDULED AUTOMATED MESSAGING MANAGEMENT
+// ============================================================
+window.fetchAndRenderScheduledMessages = async function() {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="text-center py-12 text-xs text-[#86868b]">Rilevamento messaggi programmati in corso...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/scheduled-messages`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    
+    if (data.success && Array.isArray(data.messages)) {
+      renderScheduledMessages(data.messages);
+    } else {
+      throw new Error('Formato risposta non valido');
+    }
+  } catch (err) {
+    container.innerHTML = `
+      <div class="p-4 rounded-xl bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20 text-xs font-mono text-center">
+        Errore caricamento messaggi: ${err.message}
+      </div>
+    `;
+  }
+};
+
+function renderScheduledMessages(messages) {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+
+  const statsContainer = document.getElementById('messagesStatsContainer');
+  if (statsContainer) {
+    if (messages.length === 0) {
+      statsContainer.innerHTML = '';
+    } else {
+      const total = messages.length;
+      const sent = messages.filter(m => m.status === 'sent').length;
+      const pending = messages.filter(m => m.status === 'pending' || m.status === 'sending').length;
+      const failed = messages.filter(m => m.status === 'failed').length;
+      const progressPercent = total > 0 ? Math.round((sent / total) * 100) : 0;
+
+      statsContainer.innerHTML = `
+        <div class="apple-card p-4 flex flex-col justify-between">
+          <span class="text-xs text-[#86868b] font-medium">Totale Messaggi</span>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span class="text-2xl font-semibold text-white tracking-tight">${total}</span>
+            <i data-lucide="message-square" class="w-5 h-5 text-[#86868b] opacity-60"></i>
+          </div>
+        </div>
+        <div class="apple-card p-4 flex flex-col justify-between">
+          <span class="text-xs text-[#86868b] font-medium">Spediti con Successo</span>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span class="text-2xl font-semibold text-[#30d158] tracking-tight">${sent}</span>
+            <i data-lucide="check-circle" class="w-5 h-5 text-[#30d158] opacity-80"></i>
+          </div>
+        </div>
+        <div class="apple-card p-4 flex flex-col justify-between">
+          <span class="text-xs text-[#86868b] font-medium">In Coda / Errore</span>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span class="text-2xl font-semibold text-[#0a84ff] tracking-tight">${pending}</span>
+            <span class="text-xs ${failed > 0 ? 'text-[#ff453a] font-bold' : 'text-[#86868b]'}">${failed} falliti</span>
+          </div>
+        </div>
+        <div class="apple-card p-4 flex flex-col justify-between">
+          <span class="text-xs text-[#86868b] font-medium">Avanzamento Inviati</span>
+          <div class="mt-2">
+            <div class="flex items-baseline justify-between mb-1.5">
+              <span class="text-sm font-semibold text-white">${progressPercent}%</span>
+              <span class="text-[10px] text-[#86868b]">${sent}/${total} inviati</span>
+            </div>
+            <div class="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+              <div class="bg-[#30d158] h-1.5 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (messages.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-xs text-[#86868b] space-y-2">
+        <i data-lucide="message-square" class="w-8 h-8 text-[#86868b] mx-auto opacity-50"></i>
+        <p>Nessun messaggio automatico programmato o inviato nel sistema.</p>
+        <p class="text-[10px]">I messaggi vengono generati automaticamente alla creazione di un nuovo Pass VIP.</p>
+      </div>
+    `;
+    renderIcons();
+    return;
+  }
+
+  container.innerHTML = messages.map((msg, index) => {
+    const isSent = msg.status === 'sent';
+    const isFailed = msg.status === 'failed';
+    const isSending = msg.status === 'sending';
+    const isPending = msg.status === 'pending';
+
+    let statusPillClass = 'bg-neutral-500/10 text-neutral-400 border border-neutral-500/20';
+    let statusLabel = 'In Coda';
+    if (isSent) {
+      statusPillClass = 'bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20';
+      statusLabel = 'Inviato';
+    } else if (isFailed) {
+      statusPillClass = 'bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20';
+      statusLabel = 'Fallito';
+    } else if (isSending) {
+      statusPillClass = 'bg-[#ff9f0a]/10 text-[#ff9f0a] border border-[#ff9f0a]/20 animate-pulse';
+      statusLabel = 'Invio in corso...';
+    }
+
+    const typeLabels = {
+      welcome: 'Benvenuto',
+      pre_checkin: 'Check-in (3gg prima)',
+      courtesy: 'Verifica Cortesia',
+      checkout: 'Check-out (sera prima)',
+      custom: 'Personalizzato'
+    };
+
+    const typeLabel = typeLabels[msg.triggerType] || msg.triggerType;
+    const formattedDate = new Date(msg.scheduledAt).toLocaleString('it-IT', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const sentAtLabel = msg.sentAt ? `• Spedito il: ${new Date(msg.sentAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : '';
+
+    return `
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition">
+        <div class="space-y-1.5 min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusPillClass}">${statusLabel}</span>
+            <span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-white text-[10px] font-mono border border-white/[0.08]">${typeLabel}</span>
+            <span class="text-xs text-[#86868b]">${msg.channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>
+            <span class="text-xs text-[#86868b] font-mono">${formattedDate} ${sentAtLabel}</span>
+          </div>
+
+          <div class="space-y-1">
+            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
+              <span>Destinatario: ${msg.guestName}</span>
+              <span class="font-mono text-xs text-[#86868b] font-normal">(${msg.phone})</span>
+            </h4>
+            <div class="text-xs text-[#86868b] bg-black/30 p-2.5 rounded-xl border border-white/[0.04] font-mono whitespace-pre-wrap max-h-[140px] overflow-y-auto no-scrollbar">${msg.messageText}</div>
+            ${msg.error ? `<p class="text-[11px] text-[#ff453a] font-semibold">Errore riscontrato: ${msg.error}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+          ${!isSent ? `
+            <button onclick="sendScheduledMessageNow('${msg.id}')" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="send" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span>${isFailed ? 'Riprova' : 'Invia Subito'}</span>
+            </button>
+          ` : ''}
+
+          <button onclick="deleteScheduledMessage('${msg.id}')" class="p-2 rounded-xl bg-[#ff453a]/10 hover:bg-[#ff453a]/20 text-[#ff453a] border border-[#ff453a]/20 transition cursor-pointer" title="Cancella messaggio programmato">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderIcons();
+}
+
+window.sendScheduledMessageNow = async function(id) {
+  showToast('Inviando messaggio immediato...', 'loading');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/scheduled-messages/${id}/send`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Messaggio inviato con successo!', 'success');
+      fetchAndRenderScheduledMessages();
+    } else {
+      throw new Error(data.error || 'Invio non riuscito');
+    }
+  } catch (err) {
+    showToast(`Errore invio: ${err.message}`, 'error');
+  }
+};
+
+window.deleteScheduledMessage = async function(id) {
+  if (!confirm('Sei sicuro di voler cancellare questo messaggio programmato dalla coda?')) {
+    return;
+  }
+  showToast('Cancellazione messaggio...', 'loading');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/scheduled-messages/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Messaggio programmato rimosso con successo', 'success');
+      fetchAndRenderScheduledMessages();
+    } else {
+      throw new Error(data.error || 'Cancellazione fallita');
+    }
+  } catch (err) {
+    showToast(`Errore: ${err.message}`, 'error');
+  }
+};

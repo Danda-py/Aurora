@@ -97,7 +97,11 @@ export function saveCmsData(newData: Record<Language, any>): boolean {
 
 export async function getCmsDataAsync(): Promise<Record<Language, any>> {
   const remote = await loadDocument<Record<Language, any>>('cms_content');
-  return remote || getCmsData();
+  if (remote) {
+    cachedCmsData = remote;
+    return remote;
+  }
+  return getCmsData();
 }
 
 export async function saveCmsDataAsync(newData: Record<Language, any>): Promise<boolean> {
@@ -157,7 +161,11 @@ export function saveCmsMedia(newMedia: CmsMediaMap): boolean {
 
 export async function getCmsMediaAsync(): Promise<CmsMediaMap> {
   const remote = await loadDocument<CmsMediaMap>('cms_media');
-  return remote ? { ...DEFAULT_MEDIA_MAP, ...remote } : getCmsMedia();
+  if (remote) {
+    cachedMediaData = { ...DEFAULT_MEDIA_MAP, ...remote };
+    return cachedMediaData;
+  }
+  return getCmsMedia();
 }
 
 export async function saveCmsMediaAsync(newMedia: CmsMediaMap): Promise<boolean> {

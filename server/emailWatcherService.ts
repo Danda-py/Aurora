@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin } from '../src/services/guestPassService.js';
 import { upsertPass } from './supabaseStorage.js';
 import { GuestPass } from '../src/types.js';
+import { scheduleBookingMessages } from './scheduledMessagingService.js';
 
 let isPolling = false;
 let pollingInterval: NodeJS.Timeout | null = null;
@@ -159,16 +160,11 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[])
               
               const appUrl = (process.env.APP_URL || 'https://aurora-valtellina.app').replace(/\/$/, '');
               const guestUrl = `${appUrl}/?pass=${token}`;
-              const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
 
               console.log(`[IMAP] SUCCESS! Generated VIP Pass for ${newPass.guestName} ${newPass.guestSurname}. Link: ${guestUrl}`);
               
-              // Here we send the SMS / WhatsApp automatically if a phone number exists
-              if (newPass.phone) {
-                await sendDirectSmsOrWhatsapp(newPass.phone, whatsappMessage);
-              } else {
-                console.log(`[IMAP] Warning: No phone number extracted for ${newPass.guestName}. Please send manually.`);
-              }
+              // Schedule automatic messages using the scheduled messaging service
+              await scheduleBookingMessages(newPass, appUrl);
             } else {
               console.log(`[IMAP] Booking reference ${parsed.bookingRef} already processed. Skipping.`);
             }

@@ -106,6 +106,20 @@ export interface GuestPass {
   token: string;
   createdAt: string;
   active: boolean;
+  firstUsedAt?: string;
+  documentsUploaded?: boolean;
+  documentsData?: Array<{
+    documentType: 'identita' | 'passaporto' | 'patente';
+    documentNumber: string;
+    name: string;
+    surname: string;
+    birthDate: string;
+    birthPlace: string;
+    nationality: string;
+    gender: 'M' | 'F';
+    issueDate?: string;
+    expiryDate?: string;
+  }>;
 }
 
 export interface SmartLockConfig {
@@ -113,4 +127,15 @@ export interface SmartLockConfig {
   apiBearerToken?: string;
   deviceEntityId?: string; // e.g. "lock.portone_principale"
   enabled: boolean;
+}
+
+export interface DigitalKeyLog {
+  id?: string;
+  timestamp: string; // ISO String
+  guestPassId: string | null;
+  guestName: string;
+  success: boolean;
+  errorMessage?: string;
+  source: string;
+  ipAddress?: string;
 }

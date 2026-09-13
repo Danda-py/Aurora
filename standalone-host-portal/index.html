@@ -384,6 +384,11 @@
         <i data-lucide="image" class="w-4 h-4 text-[#30d158]"></i>
         <span>Foto & Galleria</span>
       </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="messages">
+        <i data-lucide="message-square" class="w-4 h-4 text-[#ff453a]"></i>
+        <span>Messaggi Programmati</span>
+      </button>
     </div>
 
     <!-- ============================================================ -->
@@ -642,6 +647,69 @@
     <!-- ============================================================ -->
     <section id="tab-hass" class="tab-content hidden space-y-5">
       
+      <!-- Real-time Lock Status Card -->
+      <div class="apple-card p-5 flex flex-col md:flex-row items-center justify-between gap-4 border-white/[0.08] bg-white/[0.02]">
+        <div class="flex items-center gap-3.5 w-full md:w-auto">
+          <!-- State Icon Indicator with Pulsing Ring -->
+          <div id="standaloneLockIconContainer" class="w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border border-white/10 bg-white/[0.04]">
+            <i id="standaloneLockIcon" data-lucide="lock" class="w-5 h-5 text-neutral-400"></i>
+            <span id="standaloneLockDot" class="absolute -top-1 -right-1 w-3 h-3 rounded-full border border-[#1c1c1e] bg-zinc-400"></span>
+          </div>
+
+          <!-- State Text & Labels -->
+          <div class="min-w-0">
+            <span class="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider block font-mono">Stato Serratura Fisica</span>
+            <h4 id="standaloneLockStateText" class="font-bold text-sm sm:text-base text-white leading-tight">Caricamento...</h4>
+            <p class="text-[11px] text-[#86868b] mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span id="standaloneLockDescText">Interrogando lo stato in tempo reale...</span>
+              <span id="standaloneLockTime" class="text-[10px] bg-white/[0.06] text-neutral-400 px-1.5 py-0.5 rounded font-mono hidden"></span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Sensor Metrics (Battery / Signal) -->
+        <div id="standaloneLockMetrics" class="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-white/[0.08] shrink-0 hidden">
+          <div class="flex flex-col items-end text-right">
+            <span class="text-[10px] font-mono text-[#86868b]">Batteria</span>
+            <span class="font-bold text-xs text-white flex items-center gap-1">
+              <i data-lucide="battery" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span id="standaloneLockBatteryText">--%</span>
+            </span>
+          </div>
+          <div class="h-6 w-px bg-white/[0.08]"></div>
+          <div class="flex flex-col items-end text-right">
+            <span class="text-[10px] font-mono text-[#86868b]">Segnale</span>
+            <span id="standaloneLockSignalText" class="font-bold text-xs text-white font-mono">-- dBm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Lock Simulator Panel -->
+      <div class="apple-card p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 font-bold text-[#86868b] text-[10px] uppercase tracking-wider font-mono">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+            <span>Simulatore Real-Time</span>
+          </div>
+          <span class="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-mono font-bold">Pannello Test</span>
+        </div>
+        <p class="text-xs text-[#86868b]">Cambia lo stato fisico della serratura per simulare l'allineamento in tempo reale:</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" id="btnSimulateClosed" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+            <span>Chiusa</span>
+          </button>
+          <button type="button" id="btnSimulateOpen" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="unlock" class="w-3.5 h-3.5"></i>
+            <span>Aperta / Socch.</span>
+          </button>
+          <button type="button" id="btnSimulateOffline" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+            <span>Offline</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Primary Instant Door Trigger Card (Apple Clean Design) -->
       <div class="apple-card p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-3.5">
@@ -860,6 +928,7 @@
               <option value="info" class="bg-[#1c1c1e] text-white">ℹ️ 13. Informazioni Utili Morbegno (info)</option>
               <option value="emergency" class="bg-[#1c1c1e] text-white">🚨 14. Numeri Utili & Farmacie (emergency)</option>
               <option value="contacts" class="bg-[#1c1c1e] text-white">📞 15. Contatti Host Nino (contacts)</option>
+              <option value="siteSettings" class="bg-[#1c1c1e] text-white">🎨 16. Impostazioni Sito & Colori CSS (siteSettings)</option>
             </select>
           </div>
         </div>
@@ -935,6 +1004,29 @@
           <!-- Cards populated dynamically by app.js -->
         </div>
 
+      </div>
+    </section>
+
+    <!-- ========================== TAB MESSAGES ========================== -->
+    <section id="tab-messages" class="tab-content hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-white tracking-tight">Messaggi Automatici</h3>
+          <p class="text-xs text-[#86868b]">Visualizza e gestisci la coda di invio dei messaggi automatici collegati alle prenotazioni (Welcome, Pre-checkin, Checkout)</p>
+        </div>
+        <button onclick="fetchAndRenderScheduledMessages()" class="btn-apple-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>Aggiorna</span>
+        </button>
+      </div>
+
+      <!-- Section for progress statistics & overall progress bar -->
+      <div id="messagesStatsContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-4"></div>
+
+      <div class="apple-card p-4 sm:p-5">
+        <div id="messagesContainer" class="space-y-3">
+          <div class="text-center py-12 text-xs text-[#86868b]">Caricamento messaggi in corso...</div>
+        </div>
       </div>
     </section>
 

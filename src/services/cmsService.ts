@@ -306,6 +306,7 @@ export async function saveCmsContent(content: Record<Language, any>): Promise<{ 
       body: JSON.stringify({ content })
     });
     const data = await res.json();
+    if (!res.ok || !data.success) return { success: false, error: data.error || `HTTP ${res.status}` };
     return data;
   } catch (err: any) {
     return { success: false, error: err.message || 'Errore salvataggio server' };
@@ -334,7 +335,9 @@ export async function saveCmsSection(language: Language, section: string, conten
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ language, section, content })
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok || !data.success) return { success: false, error: data.error || `HTTP ${res.status}` };
+    return data;
   } catch (err: any) {
     return { success: false, error: err.message };
   }

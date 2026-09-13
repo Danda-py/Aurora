@@ -387,3 +387,107 @@ export async function triggerHomeAssistantOn(params?: {
     };
   }
 }
+
+/**
+ * Triggers the "Check-out Effettuato" automation scenario on Home Assistant.
+ */
+export async function triggerHomeAssistantCheckout(guestName: string): Promise<HassTriggerResult> {
+  const startTime = Date.now();
+  const config = currentHassConfig;
+
+  // Graceful simulation fallback when HA is disabled or not configured
+  const hasWebhook = config.mode === 'webhook' && Boolean(config.webhookUrl);
+  const hasRestApi = config.mode === 'rest_api' && Boolean(config.haUrl && config.accessToken);
+
+  if (!config.enabled || (!hasWebhook && !hasRestApi)) {
+    return {
+      success: true,
+      message: `[Simulazione] Scenario Check-out "Check-out Effettuato" eseguito per ${guestName}: tutte le luci spente, elettrodomestici in standby disattivati, riscaldamento impostato in modalità "Antigelo" (7°C).`
+    };
+  }
+
+  // A: Webhook scenario
+  if (hasWebhook) {
+    try {
+      const payload = {
+        action: 'checkout',
+        scenario: 'Check-out Effettuato',
+        guestName,
+        timestamp: new Date().toISOString(),
+        commands: [
+          { service: 'light.turn_off', entity_id: 'all' },
+          { service: 'switch.turn_off', entity_id: 'all' },
+          { service: 'climate.set_temperature', entity_id: 'all', temperature: 7 }
+        ],
+        details: {
+          lights: 'turn_off_all',
+          standby_appliances: 'turn_off_all',
+          climate_mode: 'Antigelo'
+        }
+      };
+      const res = await fetch(config.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        return { success: true, message: 'Scenario Check-out "Check-out Effettuato" inviato con successo via Webhook. Luci spente, Stand-by disattivati, Riscaldamento in Antigelo.' };
+      }
+      return { success: false, error: `HA Webhook returned HTTP ${res.status}` };
+    } catch (err: any) {
+      return { success: false, error: `Errore Webhook Checkout: ${err.message}` };
+    }
+  }
+
+  // B: REST API scenario
+  const cleanBaseUrl = config.haUrl.trim().replace(/\/+$/, '');
+  try {
+    // Fire event 'aurora_checkout' so HA can run any automation
+    const eventUrl = `${cleanBaseUrl}/api/events/aurora_checkout`;
+    try {
+      await fetch(eventUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.accessToken.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ guestName, timestamp: new Date().toISOString() })
+      });
+    } catch {}
+
+    // Also call individual services to ensure the lights/appliances are turned off and climate set to Antigelo
+    // 1. Turn off all lights
+    try {
+      await fetch(`${cleanBaseUrl}/api/services/light/turn_off`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_id: 'all' })
+      });
+    } catch {}
+
+    // 2. Turn off standby appliances (e.g. any configured switch group or entityId)
+    try {
+      await fetch(`${cleanBaseUrl}/api/services/switch/turn_off`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_id: 'all' })
+      });
+    } catch {}
+
+    // 3. Set climate to Antigelo mode (7°C or hvac_off)
+    try {
+      await fetch(`${cleanBaseUrl}/api/services/climate/set_temperature`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_id: 'all', temperature: 7 })
+      });
+    } catch {}
+
+    return {
+      success: true,
+      message: 'Scenario Check-out inviato. Luci spente, stand-by disattivati e clima in Antigelo (7°C).'
+    };
+  } catch (err: any) {
+    return { success: false, error: `Errore REST API Checkout: ${err.message}` };
+  }
+}

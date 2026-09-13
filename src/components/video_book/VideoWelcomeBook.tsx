@@ -29,7 +29,7 @@ interface Props {
   initialLanguage?: Language;
 }
 
-export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
+export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
   const { language, setLanguage } = useCms();
   
@@ -187,6 +187,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
             onSelectLanguage={setLanguage}
             pass={pass}
             onOpenSmartLock={() => setIsSmartLockOpen(true)}
+            onUpdatePass={(updatedPass) => setPass(updatedPass)}
           />
         )}
 
@@ -283,6 +284,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }) => {
             language={language}
             onBackToMenu={handleBackToMenu}
             onSelectLanguage={setLanguage}
+            pass={pass}
           />
         )}
 

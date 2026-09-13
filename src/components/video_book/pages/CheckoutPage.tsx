@@ -1,20 +1,65 @@
 import React, { useState } from 'react';
-import { Language } from '../../../types';
+import { Language, GuestPass } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { useCms } from '../../../context/CmsContext';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { Clock, CheckSquare, Square, Heart, Star } from 'lucide-react';
+import { Clock, CheckSquare, Square, Heart, Star, LogOut, CheckCircle } from 'lucide-react';
 
 interface Props {
   language: Language;
   onBackToMenu: () => void;
   onSelectLanguage: (lang: Language) => void;
+  pass?: GuestPass | null;
 }
 
-export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
+const CHECKOUT_BUTTON_TRANSLATIONS: Record<Language, {
+  buttonText: string;
+  loadingText: string;
+  successText: string;
+  errorText: string;
+  subText: string;
+}> = {
+  it: {
+    buttonText: "Esegui Check-out",
+    loadingText: "Attivazione scenario...",
+    successText: "Check-out effettuato!",
+    errorText: "Errore durante il check-out",
+    subText: "Cliccando qui confermerai la tua partenza e attiverai l'automazione domotica dello scenario di spegnimento (luci, elettrodomestici in standby, riscaldamento in modalità antigelo)."
+  },
+  en: {
+    buttonText: "Perform Check-out",
+    loadingText: "Activating scenario...",
+    successText: "Check-out completed!",
+    errorText: "Error during check-out",
+    subText: "By clicking here you will confirm your departure and trigger the home automation scenario to turn off all lights, standby appliances, and set climate to frost protection."
+  },
+  de: {
+    buttonText: "Check-out durchführen",
+    loadingText: "Szenario wird aktiviert...",
+    successText: "Check-out abgeschlossen!",
+    errorText: "Fehler beim Check-out",
+    subText: "Mit dem Klick bestätigen Sie Ihre Abreise und aktivieren das Smart-Home-Szenario zum Ausschalten aller Lichter, Standby-Geräte und Einstellen der Heizung auf Frostschutz."
+  },
+  fr: {
+    buttonText: "Effectuer le départ",
+    loadingText: "Activation du scénario...",
+    successText: "Départ effectué !",
+    errorText: "Erreur lors du départ",
+    subText: "En cliquant ici, vous confirmerez votre départ et activerez le scénario domotique d'extinction (lumières, appareils en veille, chauffage en mode hors-gel)."
+  },
+  es: {
+    buttonText: "Realizar Check-out",
+    loadingText: "Activando escenario...",
+    successText: "¡Check-out completado!",
+    errorText: "Error durante el check-out",
+    subText: "Al hacer clic aquí confirmarás tu salida y activarás el escenario domótico de apagado (luces, electrodomésticos en standby, calefacción en modo antihielo)."
+  }
+};
+
+export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage, pass }: Props) => {
   const { getPageData, media } = useCms();
   const cmsCheckOut = getPageData('checkOut') || {};
   const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
@@ -22,12 +67,36 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [checkoutMessage, setCheckoutMessage] = useState<string>('');
 
   const toggleCheck = (idx: number) => {
-    setCheckedItems(prev => ({
+    setCheckedItems((prev: Record<number, boolean>) => ({
       ...prev,
       [idx]: !prev[idx]
     }));
+  };
+
+  const handleCheckoutClick = async () => {
+    setCheckoutStatus('loading');
+    setCheckoutMessage('');
+    try {
+      const res = await fetch('/api/hass/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestToken: pass?.token })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCheckoutStatus('success');
+        setCheckoutMessage(data.message || (language === 'it' ? 'Procedura di check-out completata con successo.' : 'Check-out completed successfully.'));
+      } else {
+        throw new Error(data.error || 'Errore di rete');
+      }
+    } catch (err: any) {
+      setCheckoutStatus('error');
+      setCheckoutMessage(err.message || (language === 'it' ? 'Errore imprevisto durante il check-out.' : 'Unexpected error during check-out.'));
+    }
   };
 
   return (
@@ -80,7 +149,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           </div>
 
           <div className="space-y-2.5">
-            {co.checklist.map((item, idx) => {
+            {(co.checklist as Array<{ title: string; desc: string }>).map((item: { title: string; desc: string }, idx: number) => {
               const isDone = !!checkedItems[idx];
               return (
                 <button
@@ -112,6 +181,61 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               );
             })}
           </div>
+        </div>
+
+        {/* Home Assistant Domotics Checkout Card */}
+        <div className="aurora-glass-card space-y-4 border border-rose-500/25 bg-rose-500/5">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 shrink-0">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                {language === 'it' && "Domotica di Fine Soggiorno"}
+                {language === 'en' && "End-of-Stay Smart Home Automation"}
+                {language === 'de' && "Smart-Home-Abreise-Automation"}
+                {language === 'fr' && "Domotique de Fin de Séjour"}
+                {language === 'es' && "Domótica de Fin de Estancia"}
+              </h4>
+              <p className="text-xs text-white/60 leading-relaxed mt-1">
+                {CHECKOUT_BUTTON_TRANSLATIONS[language].subText}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCheckoutClick}
+            disabled={checkoutStatus === 'loading' || checkoutStatus === 'success'}
+            className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+              checkoutStatus === 'loading'
+                ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
+                : checkoutStatus === 'success'
+                ? 'bg-emerald-600 border border-emerald-500 text-white cursor-default'
+                : checkoutStatus === 'error'
+                ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-[0_4px_12px_rgba(225,29,72,0.25)]'
+                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-[0_4px_12px_rgba(225,29,72,0.25)]'
+            }`}
+          >
+            {checkoutStatus === 'loading' && (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            )}
+            {checkoutStatus === 'success' && <CheckCircle className="w-4 h-4 text-white" />}
+            <span>
+              {checkoutStatus === 'loading'
+                ? CHECKOUT_BUTTON_TRANSLATIONS[language].loadingText
+                : checkoutStatus === 'success'
+                ? CHECKOUT_BUTTON_TRANSLATIONS[language].successText
+                : checkoutStatus === 'error'
+                ? CHECKOUT_BUTTON_TRANSLATIONS[language].errorText
+                : CHECKOUT_BUTTON_TRANSLATIONS[language].buttonText}
+            </span>
+          </button>
+
+          {checkoutMessage && (
+            <p className={`text-xs text-center font-semibold ${checkoutStatus === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {checkoutMessage}
+            </p>
+          )}
         </div>
 
         {/* Thank you note */}

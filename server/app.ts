@@ -16,7 +16,8 @@ import {
   updateHomeAssistantConfig,
   updateHomeAssistantConfigAsync,
   hydrateHomeAssistantConfig,
-  triggerHomeAssistantOn
+  triggerHomeAssistantOn,
+  triggerHomeAssistantCheckout
 } from './homeAssistantService.js';
 import {
   getCmsData,
@@ -34,11 +35,19 @@ import {
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass } from './supabaseStorage.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
-import { sendGuestNotification } from './notificationService.js';
+import { sendGuestNotification, sendHostNotification } from './notificationService.js';
+import {
+  scheduleBookingMessages,
+  getScheduledMessages,
+  cancelScheduledMessage,
+  retryScheduledMessage,
+  startScheduledMessagingWatcher
+} from './scheduledMessagingService.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
+const LOGS_REL_PATH = path.join('data', 'digital_key_logs.json');
 
 const defaultPasses: GuestPass[] = [
   {
@@ -64,7 +73,32 @@ const defaultPasses: GuestPass[] = [
 // Persistent list of passes on server
 const serverPasses: GuestPass[] = safeReadJsonSync<GuestPass[]>(PASSES_REL_PATH, defaultPasses);
 
+const defaultLogs: any[] = [];
+const serverLogs: any[] = safeReadJsonSync<any[]>(LOGS_REL_PATH, defaultLogs);
+
 let passesHydration: Promise<void> | null = null;
+let logsHydration: Promise<void> | null = null;
+
+async function hydrateLogsFromSupabase() {
+  if (logsHydration) return logsHydration;
+  logsHydration = (async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const remoteLogs = await loadDigitalKeyLogs();
+      if (remoteLogs) {
+        serverLogs.splice(0, serverLogs.length, ...remoteLogs);
+      }
+    } catch (error) {
+      logsHydration = null;
+      console.error('Supabase logs load failed; keeping local fallback:', error);
+    }
+  })();
+  return logsHydration;
+}
+
+function persistLogs() {
+  safeWriteFileSync(LOGS_REL_PATH, JSON.stringify(serverLogs, null, 2));
+}
 
 async function hydratePassesFromSupabase() {
   if (passesHydration) return passesHydration;
@@ -154,6 +188,14 @@ const hassDoorState = {
   ] as HassLog[]
 };
 
+// Home Assistant Real-time Lock & Door physical status
+const lockPhysicalState = {
+  state: 'closed' as 'closed' | 'open' | 'offline',
+  lastUpdatedAt: new Date().toISOString(),
+  battery: 88,
+  signalStrength: -65
+};
+
 /**
  * Sends an ON impulse to Home Assistant
  */
@@ -190,6 +232,7 @@ export function createApp() {
   const app = express();
 
   void hydratePassesFromSupabase();
+  void hydrateLogsFromSupabase();
   void hydrateHomeAssistantConfig();
   void hydrateIcalConfig();
 
@@ -198,6 +241,9 @@ export function createApp() {
 
   // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
   startIcalWatcher();
+
+  // Avvia l'engine di messaggistica programmata
+  startScheduledMessagingWatcher();
 
   // Middlewares for JSON and form-urlencoded webhooks (up to 25mb for high-res photo uploads)
   app.use(express.json({ limit: '25mb' }));
@@ -248,7 +294,14 @@ export function createApp() {
 
   apiRouter.use(async (req, res, next) => {
     await hydratePassesFromSupabase();
-    if (req.path === '/health' || req.path === '/wifi/verify' || req.path.startsWith('/auth/') || req.path === '/guest/pass') {
+    if (
+      req.path === '/health' ||
+      req.path === '/wifi/verify' ||
+      req.path.startsWith('/auth/') ||
+      req.path === '/guest/pass' ||
+      req.path === '/lock/status' ||
+      req.path === '/webhook/lock-status'
+    ) {
       next();
       return;
     }
@@ -272,7 +325,7 @@ export function createApp() {
       next();
       return;
     }
-    if (req.path === '/hass/unlock' || req.path === '/ewelink/unlock') {
+    if (req.path === '/hass/unlock' || req.path === '/ewelink/unlock' || req.path === '/hass/checkout') {
       const session = getHostSession(req);
       const guestToken = req.get('x-guest-token') || req.body?.guestToken;
       if (session || findValidGuestPass(guestToken)) {
@@ -309,6 +362,42 @@ export function createApp() {
       return;
     }
     res.json({ success: true, pass });
+  });
+
+  apiRouter.post('/guest/documents', async (req, res) => {
+    try {
+      const { token, documentsData } = req.body;
+      if (!token) {
+        res.status(400).json({ success: false, error: 'Token non valido.' });
+        return;
+      }
+      if (!Array.isArray(documentsData)) {
+        res.status(400).json({ success: false, error: 'Dati dei documenti non validi.' });
+        return;
+      }
+
+      // Trova il pass tramite token (anche se futuro, per pre-check-in)
+      const pass = serverPasses.find(item => item.token === token);
+      if (!pass || !pass.active) {
+        res.status(404).json({ success: false, error: 'Pass ospite non valido o scaduto.' });
+        return;
+      }
+
+      // Aggiorna i dati del pass
+      pass.documentsUploaded = true;
+      pass.documentsData = documentsData;
+
+      // Persisti i cambiamenti localmente e su Supabase
+      persistPasses();
+      if (isSupabaseConfigured()) {
+        await upsertPass(pass);
+      }
+
+      res.json({ success: true, pass });
+    } catch (err: any) {
+      console.error('Error saving guest documents:', err);
+      res.status(500).json({ success: false, error: err.message || 'Errore durante il salvataggio dei documenti.' });
+    }
   });
 
   apiRouter.post('/aurora-ai/chat', async (req, res) => {
@@ -410,25 +499,117 @@ export function createApp() {
     });
   });
 
+  // Persistent Digital Key Access Logs (requires host authorization)
+  apiRouter.get('/digital-key/logs', (req, res) => {
+    res.json({
+      success: true,
+      logs: serverLogs
+    });
+  });
+
+  // Real-time Lock physical status
+  apiRouter.get('/lock/status', (_req, res) => {
+    res.json({
+      success: true,
+      lockStatus: lockPhysicalState
+    });
+  });
+
+  // Webhook for receiving real-time lock status from Home Assistant or Local Gateway
+  apiRouter.post('/webhook/lock-status', (req, res) => {
+    try {
+      const { state, battery, signal } = req.body || {};
+      
+      let resolvedState: 'closed' | 'open' | 'offline' = 'closed';
+      const inputState = state ? String(state).toLowerCase().trim() : '';
+      
+      if (['closed', 'locked', 'secure', 'chiusa', 'chiuso'].includes(inputState)) {
+        resolvedState = 'closed';
+      } else if (['open', 'unlocked', 'ajar', 'opened', 'aperta', 'aperto', 'socchiusa'].includes(inputState)) {
+        resolvedState = 'open';
+      } else if (['offline', 'unreachable', 'disconnected', 'non raggiungibile'].includes(inputState)) {
+        resolvedState = 'offline';
+      } else {
+        resolvedState = lockPhysicalState.state;
+      }
+      
+      lockPhysicalState.state = resolvedState;
+      lockPhysicalState.lastUpdatedAt = new Date().toISOString();
+      if (typeof battery === 'number') {
+        lockPhysicalState.battery = battery;
+      }
+      if (typeof signal === 'number') {
+        lockPhysicalState.signalStrength = signal;
+      }
+      
+      const stateLabels = {
+        closed: 'CHIUSA',
+        open: 'APERTA/SOCCHIUSA',
+        offline: 'OFFLINE'
+      };
+      
+      hassDoorState.logs.unshift({
+        timestamp: new Date().toISOString(),
+        guest: 'Home Assistant Gateway',
+        detail: `Stato serratura aggiornato via Webhook a: ${stateLabels[resolvedState]} (Batt: ${lockPhysicalState.battery}%, Segnale: ${lockPhysicalState.signalStrength}dBm)`
+      });
+      
+      if (hassDoorState.logs.length > 25) {
+        hassDoorState.logs.pop();
+      }
+      
+      res.json({
+        success: true,
+        message: `Stato serratura aggiornato con successo a: ${stateLabels[resolvedState]}`,
+        lockStatus: lockPhysicalState
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Door Unlock Handler
   const handleDoorUnlock = async (req: express.Request, res: express.Response) => {
     try {
       const { guestName, guest, source } = req.body || {};
-      const actualGuest = guestName || guest || 'Ospite Aurora';
-      const actualSource = source || 'Pannello Host';
       const config = getHomeAssistantConfig();
       const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+      
+      const guestToken = req.get('x-guest-token') || req.body?.guestToken;
+      const pass = findValidGuestPass(guestToken);
+      
+      const actualGuest = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : (guestName || guest || 'Ospite Aurora');
+      const actualSource = source || (pass ? 'Pulsante Ospite VIP (Wi-Fi Casa_Aurora Verificato)' : 'Pannello Host');
+      
       // Do not trust a `wifiConnected` flag sent by the browser: it can be
       // forged and was the reason the first unlock could bypass the check.
       const verifiedCasaAuroraWifi = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
 
       if (!verifiedCasaAuroraWifi) {
+        const errorMsg = config.homePublicIp
+          ? 'Accesso negato: collega il dispositivo al Wi-Fi Casa_Aurora prima di aprire il portone.'
+          : 'Verifica Wi-Fi non configurata: l’host deve prima registrare l’IP pubblico di Casa_Aurora.';
+          
+        const logEntry = {
+          timestamp: new Date().toISOString(),
+          guestPassId: pass ? pass.id : null,
+          guestName: actualGuest,
+          success: false,
+          errorMessage: errorMsg,
+          source: actualSource,
+          ipAddress: clientIp
+        };
+        
+        serverLogs.unshift(logEntry);
+        persistLogs();
+        if (isSupabaseConfigured()) {
+          await logDigitalKeyAccess(logEntry);
+        }
+        
         res.status(403).json({
           success: false,
           wifiBlocked: true,
-          error: config.homePublicIp
-            ? 'Accesso negato: collega il dispositivo al Wi-Fi Casa_Aurora prima di aprire il portone.'
-            : 'Verifica Wi-Fi non configurata: l’host deve prima registrare l’IP pubblico di Casa_Aurora.'
+          error: errorMsg
         });
         return;
       }
@@ -439,17 +620,46 @@ export function createApp() {
         verifiedCasaAuroraWifi
       );
 
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        guestPassId: pass ? pass.id : null,
+        guestName: actualGuest,
+        success: result.success,
+        errorMessage: result.success ? undefined : (result.error || 'Errore di connessione o sblocco'),
+        source: actualSource,
+        ipAddress: clientIp
+      };
+      
+      serverLogs.unshift(logEntry);
+      persistLogs();
+      if (isSupabaseConfigured()) {
+        await logDigitalKeyAccess(logEntry);
+      }
+
       if (result.success) {
+        if (pass && !pass.firstUsedAt) {
+          pass.firstUsedAt = logEntry.timestamp;
+          
+          persistPasses();
+          if (isSupabaseConfigured()) {
+            await upsertPass(pass);
+          }
+          
+          const arrivalMessage = `🔔 *Conferma Arrivo Ospite* 🔔\n\nL'ospite *${actualGuest}* ha effettuato il suo *primo ingresso* assoluto sbloccando il portone digitale!\n\n📅 Data: ${new Date(logEntry.timestamp).toLocaleDateString('it-IT')}\n⏰ Ora: ${new Date(logEntry.timestamp).toLocaleTimeString('it-IT')}\n🔑 Codice PIN dell'ospite: ${pass.pinCode || 'N/A'}`;
+          
+          await sendHostNotification(arrivalMessage);
+        }
+
         res.json({
           success: true,
           message: 'Portone sbloccato. Spingi la porta per entrare.',
-          timestamp: new Date().toISOString()
+          timestamp: logEntry.timestamp
         });
       } else {
         const isWifiBlocked = (result as any).wifiBlocked;
         res.status(isWifiBlocked ? 403 : 500).json({
           success: false,
-          error: result.error,
+          error: result.error || 'Impossibile completare lo sblocco',
           wifiBlocked: isWifiBlocked
         });
       }
@@ -464,6 +674,37 @@ export function createApp() {
 
   apiRouter.post('/hass/unlock', handleDoorUnlock);
   apiRouter.post('/ewelink/unlock', handleDoorUnlock);
+
+  // Home Assistant Checkout Scenario
+  apiRouter.post('/hass/checkout', async (req, res) => {
+    try {
+      const guestToken = req.get('x-guest-token') || req.body?.guestToken;
+      const pass = findValidGuestPass(guestToken);
+      const guestName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : 'Host';
+      
+      const result = await triggerHomeAssistantCheckout(guestName);
+      
+      hassDoorState.logs.unshift({
+        timestamp: new Date().toISOString(),
+        guest: guestName,
+        detail: result.success 
+          ? `Scenario Check-out attivato con successo: ${result.message}` 
+          : `Errore scenario Check-out: ${result.error}`
+      });
+      if (hassDoorState.logs.length > 25) {
+        hassDoorState.logs.pop();
+      }
+
+      if (result.success) {
+        res.json({ success: true, message: result.message });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (err: any) {
+      console.error('Error handling checkout trigger:', err);
+      res.status(500).json({ success: false, error: err.message || 'Errore interno del server' });
+    }
+  });
 
   // Wi-Fi Status
   apiRouter.get('/wifi/status', (req, res) => {
@@ -553,7 +794,7 @@ export function createApp() {
         res.status(400).json({ success: false, error: 'Campi obbligatori mancanti: language, section, content' });
         return;
       }
-      const current = await getCmsDataAsync();
+      const current: any = await getCmsDataAsync();
       if (!current[language]) current[language] = {};
       current[language][section] = { ...(current[language][section] || {}), ...content };
       await saveCmsDataAsync(current);
@@ -864,19 +1105,17 @@ export function createApp() {
 
       const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
       const guestUrl = `${origin}/?pass=${token}`;
-      const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
-      const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
-      // Invia subito (il giorno stesso della prenotazione) il link univoco via WhatsApp o SMS.
-      // Fino al check-in, il link mostrera comunque il sito base (gating gia gestito da findValidGuestPass).
-      const requestedChannel = isStructuredPayload && payload.channel === 'sms' ? 'sms' : 'whatsapp';
-      let messageSent = false;
-      let messageChannel: 'whatsapp' | 'sms' = requestedChannel;
-      if (phone) {
-        const sendResult = await sendGuestNotification(phone, whatsappMessage, requestedChannel);
-        messageSent = sendResult.sent;
-        messageChannel = sendResult.channel;
-      }
+      // Schedule the welcome message (which sends immediately) + pre-checkin + checkout messages!
+      await scheduleBookingMessages(newPass, origin);
+
+      // Get the message status to return to the webhook client
+      const allScheduled = getScheduledMessages();
+      const welcomeMsg = allScheduled.find(m => m.passId === newPass.id && m.triggerType === 'welcome');
+      const messageSent = welcomeMsg ? (welcomeMsg.status === 'sent' || welcomeMsg.status === 'sending') : false;
+      const messageChannel = welcomeMsg?.channel || 'whatsapp';
+      const whatsappMessage = welcomeMsg?.messageText || formatInvitationMessage(newPass, guestUrl);
+      const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
       res.status(201).json({
         success: true,
@@ -972,7 +1211,13 @@ export function createApp() {
 
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
       const guestUrl = `${origin}/?pass=${token}`;
-      const whatsappMessage = formatInvitationMessage(newPass, guestUrl);
+
+      // Schedule automatic messages (Welcome, Pre-checkin, Checkout)
+      await scheduleBookingMessages(newPass, origin);
+
+      const allScheduled = getScheduledMessages();
+      const welcomeMsg = allScheduled.find(m => m.passId === newPass.id && m.triggerType === 'welcome');
+      const whatsappMessage = welcomeMsg?.messageText || formatInvitationMessage(newPass, guestUrl);
       const whatsappLink = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
 
       res.json({
@@ -997,6 +1242,56 @@ export function createApp() {
       passes: serverPasses
     });
   });
+
+  // Scheduled Messages Management
+  apiRouter.get('/scheduled-messages', (_req, res) => {
+    res.json({
+      success: true,
+      messages: getScheduledMessages()
+    });
+  });
+
+  apiRouter.post('/scheduled-messages/:id/send', async (req, res) => {
+    const id = req.params.id;
+    const success = await retryScheduledMessage(id);
+    if (success) {
+      res.json({ success: true, message: 'Messaggio inviato con successo!' });
+    } else {
+      res.status(500).json({ success: false, error: 'Impossibile inviare il messaggio' });
+    }
+  });
+
+  apiRouter.delete('/scheduled-messages/:id', async (req, res) => {
+    const id = req.params.id;
+    const success = await cancelScheduledMessage(id);
+    if (success) {
+      res.json({ success: true, message: 'Messaggio programmato cancellato con successo' });
+    } else {
+      res.status(404).json({ success: false, error: 'Messaggio programmato non trovato' });
+    }
+  });
+
+  apiRouter.post('/passes/:id/documents', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { documentsData } = req.body;
+      const pass = serverPasses.find(p => p.id === id);
+      if (!pass) {
+        res.status(404).json({ success: false, error: 'Pass non trovato.' });
+        return;
+      }
+      pass.documentsData = documentsData;
+      pass.documentsUploaded = Array.isArray(documentsData) && documentsData.length > 0;
+      persistPasses();
+      if (isSupabaseConfigured()) {
+        await upsertPass(pass);
+      }
+      res.json({ success: true, pass });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
 
   apiRouter.delete('/passes/:id', async (req, res) => {
     const id = req.params.id;

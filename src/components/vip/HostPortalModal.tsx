@@ -43,10 +43,14 @@ import {
   Globe,
   Download,
   FolderArchive,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Battery,
+  WifiOff,
+  ShieldCheck
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { CmsMediaManager } from './CmsMediaManager';
+import { AlloggiatiManager } from './AlloggiatiManager';
 
 interface Props {
   isOpen: boolean;
@@ -59,8 +63,8 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Tabs: 'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip'
-  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip'>('create');
+  // Tabs: 'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'>('create');
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   // Form state
@@ -89,6 +93,58 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   const [homePublicIp, setHomePublicIp] = useState('');
   const [testLockStatus, setTestLockStatus] = useState<string | null>(null);
   const [isTestingLock, setIsTestingLock] = useState(false);
+
+  // Real-time Lock physical status state
+  const [lockState, setLockState] = useState<{
+    state: 'closed' | 'open' | 'offline';
+    lastUpdatedAt: string;
+    battery?: number;
+    signalStrength?: number;
+  } | null>(null);
+
+  // Poll physical lock status from server every 3 seconds
+  useEffect(() => {
+    let intervalId: any;
+    if (isOpen) {
+      const fetchStatus = async () => {
+        try {
+          const res = await fetch('/api/lock/status');
+          const data = await res.json();
+          if (data.success && data.lockStatus) {
+            setLockState(data.lockStatus);
+          }
+        } catch (err) {
+          console.warn('Error fetching lock status:', err);
+        }
+      };
+      fetchStatus();
+      intervalId = setInterval(fetchStatus, 3000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen]);
+
+  // Handle local simulation of lock state changes
+  const handleSimulateLockState = async (simState: 'closed' | 'open' | 'offline') => {
+    try {
+      const res = await fetch('/api/webhook/lock-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          state: simState,
+          battery: simState === 'offline' ? undefined : Math.floor(75 + Math.random() * 20),
+          signal: simState === 'offline' ? undefined : -Math.floor(55 + Math.random() * 20)
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.lockStatus) {
+        setLockState(data.lockStatus);
+      }
+    } catch (err) {
+      console.warn('Error simulating lock status:', err);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -358,7 +414,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
     e.preventDefault();
     saveSmartLockConfig(lockConfig);
     try {
-      await fetch('/api/hass/config', {
+      const res = await fetch('/api/hass/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -369,10 +425,14 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
           enabled: lockConfig.enabled
         })
       });
-    } catch {
-      // ignore
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `HTTP ${res.status}`);
+      }
+      alert('Configurazione Smart Lock salvata con successo!');
+    } catch (err: any) {
+      alert(`Errore durante il salvataggio: ${err.message || 'Errore di connessione'}`);
     }
-    alert('Configurazione Smart Lock salvata con successo!');
   };
 
   const handleDetectHomePublicIp = async () => {
@@ -502,6 +562,18 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               >
                 <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
                 <span>Foto & CMS</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('alloggiati')}
+                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
+                  activeTab === 'alloggiati'
+                    ? 'border-white text-gray-900 bg-gray-100'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                <span>Alloggiati Web</span>
               </button>
 
               <button
@@ -1010,8 +1082,140 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
               {/* TAB 3: SMART LOCK (HOME ASSISTANT / EWELINK) */}
               {activeTab === 'smart_lock' && (
-                <form onSubmit={handleSaveLockConfig} className="space-y-5">
-                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
+                <div className="space-y-5">
+                  
+                  {/* Real-time Status Card */}
+                  <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-center gap-3.5 w-full md:w-auto">
+                      {/* State Icon Indicator with Pulsing Ring */}
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border ${
+                        lockState?.state === 'closed'
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          : lockState?.state === 'open'
+                          ? 'bg-amber-50 text-amber-600 border-amber-100'
+                          : 'bg-zinc-100 text-zinc-400 border-zinc-200'
+                      }`}>
+                        {lockState?.state === 'closed' ? (
+                          <Lock className="w-5.5 h-5.5 animate-pulse" />
+                        ) : lockState?.state === 'open' ? (
+                          <Unlock className="w-5.5 h-5.5" />
+                        ) : (
+                          <WifiOff className="w-5.5 h-5.5" />
+                        )}
+                        <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                          lockState?.state === 'closed'
+                            ? 'bg-emerald-500'
+                            : lockState?.state === 'open'
+                            ? 'bg-amber-500'
+                            : 'bg-zinc-400'
+                        }`} />
+                      </div>
+
+                      {/* State Text & Labels */}
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block font-mono">
+                          Stato Serratura Fisica
+                        </span>
+                        <h4 className="font-bold text-sm sm:text-base text-gray-900 leading-tight">
+                          {lockState?.state === 'closed' && 'Chiusa'}
+                          {lockState?.state === 'open' && 'Aperta / Socchiusa'}
+                          {lockState?.state === 'offline' && 'Offline (Wi-Fi non raggiungibile)'}
+                          {!lockState && 'Caricamento stato...'}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <span>
+                            {lockState?.state === 'closed' && 'Tutti gli accessi sono protetti.'}
+                            {lockState?.state === 'open' && 'Attenzione: porta socchiusa.'}
+                            {lockState?.state === 'offline' && 'Modulo Wi-Fi non raggiungibile.'}
+                          </span>
+                          {lockState?.lastUpdatedAt && (
+                            <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">
+                              Aggiornato: {new Date(lockState.lastUpdatedAt).toLocaleTimeString()}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Sensor Metrics (Battery / Signal) */}
+                    {lockState && lockState.state !== 'offline' && (
+                      <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 shrink-0">
+                        <div className="flex flex-col items-end text-right">
+                          <span className="text-[10px] font-mono text-gray-400">Batteria</span>
+                          <span className="font-bold text-xs text-gray-700 flex items-center gap-1">
+                            <Battery className="w-3.5 h-3.5 text-emerald-500" />
+                            {lockState.battery ?? 100}%
+                          </span>
+                        </div>
+                        <div className="h-6 w-px bg-gray-200" />
+                        <div className="flex flex-col items-end text-right">
+                          <span className="text-[10px] font-mono text-gray-400">Segnale</span>
+                          <span className="font-bold text-xs text-gray-700 font-mono">
+                            {lockState.signalStrength ?? -50} dBm
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Simulator Panel */}
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-gray-700 text-[10px] uppercase tracking-wider font-mono">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Simulatore Real-Time</span>
+                      </div>
+                      <span className="text-[9px] bg-amber-100 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full font-mono font-bold">
+                        Pannello Test
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Cambia lo stato fisico della serratura per testare l'interfaccia host e l'allineamento in tempo reale:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSimulateLockState('closed')}
+                        className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 ${
+                          lockState?.state === 'closed'
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                            : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Chiusa</span>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleSimulateLockState('open')}
+                        className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 ${
+                          lockState?.state === 'open'
+                            ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
+                            : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        <Unlock className="w-3.5 h-3.5" />
+                        <span>Aperta / Socch.</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSimulateLockState('offline')}
+                        className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 ${
+                          lockState?.state === 'offline'
+                            ? 'bg-zinc-600 border-zinc-600 text-white shadow-xs'
+                            : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        <WifiOff className="w-3.5 h-3.5" />
+                        <span>Offline</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveLockConfig} className="space-y-5 border-t border-gray-150 pt-5">
+                    <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
                         <Sliders className="w-4 h-4 text-gray-600" />
@@ -1133,11 +1337,32 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                   </div>
 
                 </form>
+                </div>
               )}
 
               {/* TAB 4: CMS FOTO & FILE UPLOAD DEFINITIVO */}
               {activeTab === 'cms_media' && (
                 <CmsMediaManager />
+              )}
+
+              {/* TAB: ALLOGGIATI WEB GENERATION */}
+              {activeTab === 'alloggiati' && (
+                <AlloggiatiManager 
+                  storedPasses={storedPasses} 
+                  onUpdatePassList={async () => {
+                    try {
+                      const res = await fetch('/api/passes');
+                      const data = await res.json();
+                      const serverList = Array.isArray(data) ? data : (data.passes || []);
+                      if (serverList.length > 0) {
+                        setStoredPasses(serverList);
+                        localStorage.setItem('AURORA_HOST_PASSES_V1', JSON.stringify(serverList));
+                      }
+                    } catch (err) {
+                      console.warn('Error syncing passes:', err);
+                    }
+                  }} 
+                />
               )}
 
               {/* TAB 5: EXPORT STANDALONE HOST SITE (.ZIP) */}

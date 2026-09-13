@@ -4,6 +4,7 @@ import { generateRandomPin, formatInvitationMessage } from '../src/services/gues
 import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 import { sendGuestNotification } from './notificationService.js';
 import { GuestPass } from '../src/types.js';
+import { scheduleBookingMessages } from './scheduledMessagingService.js';
 let icalPollingInterval: NodeJS.Timeout | null = null;
 let isIcalPolling = false;
 
@@ -106,9 +107,9 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
 
     for (const k in webEvents) {
       if (!Object.prototype.hasOwnProperty.call(webEvents, k)) continue;
-      const event = webEvents[k];
+      const event = webEvents[k] as any;
       
-      if (event.type !== 'VEVENT') continue;
+      if (!event || event.type !== 'VEVENT') continue;
 
       const checkInDateObj = parseIcalDate(event.start);
       const checkOutDateObj = parseIcalDate(event.end);
@@ -206,19 +207,11 @@ export async function syncReservationsFromIcal(serverPasses: GuestPass[]) {
         console.log(`[iCal Engine] Procedo all'invio istantaneo della notifica per ${guestName}.`);
 
         const appUrl = (process.env.APP_URL || 'https://aurora-valtellina.app').replace(/\/$/, '');
-        const guestUrl = `${appUrl}/?pass=${existingPass.token}`;
-        const whatsappMessage = formatInvitationMessage(existingPass, guestUrl);
-
-        let success = false;
-        if (existingPass.phone) {
-          const sendResult = await sendGuestNotification(existingPass.phone, whatsappMessage, 'whatsapp');
-          success = sendResult.sent;
-        } else {
-          console.warn(`[iCal Engine] Impossibile inviare notifica a ${guestName}: Telefono mancante nell'iCal.`);
-        }
+        
+        await scheduleBookingMessages(existingPass, appUrl);
 
         // Segna come inviato nelle note del pass per evitare doppi invii successivi
-        existingPass.notes = `${existingPass.notes || ''}\n[NOTIFICA_INVIATA] Notificato istantaneamente il ${new Date().toISOString()}.`.trim();
+        existingPass.notes = `${existingPass.notes || ''}\n[NOTIFICA_INVIATA] Notificato istantaneamente tramite Scheduled Messaging Engine il ${new Date().toISOString()}.`.trim();
         await upsertPass(existingPass);
       } else {
         console.log(`[iCal Engine] Notifica per ${guestName} già inviata in precedenza.`);
