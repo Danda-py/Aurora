@@ -413,14 +413,30 @@ export function createApp() {
   // Door Unlock Handler
   const handleDoorUnlock = async (req: express.Request, res: express.Response) => {
     try {
-      const { guestName, guest, source, wifiConnected, wifiSsid } = req.body || {};
+      const { guestName, guest, source } = req.body || {};
       const actualGuest = guestName || guest || 'Ospite Aurora';
       const actualSource = source || 'Pannello Host';
+      const config = getHomeAssistantConfig();
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+      // Do not trust a `wifiConnected` flag sent by the browser: it can be
+      // forged and was the reason the first unlock could bypass the check.
+      const verifiedCasaAuroraWifi = Boolean(config.homePublicIp && clientIp === config.homePublicIp);
+
+      if (!verifiedCasaAuroraWifi) {
+        res.status(403).json({
+          success: false,
+          wifiBlocked: true,
+          error: config.homePublicIp
+            ? 'Accesso negato: collega il dispositivo al Wi-Fi Casa_Aurora prima di aprire il portone.'
+            : 'Verifica Wi-Fi non configurata: l’host deve prima registrare l’IP pubblico di Casa_Aurora.'
+        });
+        return;
+      }
       
       const result = await sendHomeAssistantOnInput(
         actualGuest, 
         actualSource, 
-        wifiConnected !== undefined ? Boolean(wifiConnected) : true
+        verifiedCasaAuroraWifi
       );
 
       if (result.success) {
@@ -1041,4 +1057,3 @@ export function createApp() {
 
 const app = createApp();
 export default app;
-

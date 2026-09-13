@@ -138,6 +138,7 @@ export function isLocalLanAddress(targetUrl: string): boolean {
 
 export interface HassTriggerResult {
   success: boolean;
+  wifiBlocked?: boolean;
   message?: string;
   error?: string;
   httpStatus?: number;
@@ -171,6 +172,7 @@ export async function triggerHomeAssistantOn(params?: {
   if (params?.wifiConnected === false) {
     return {
       success: false,
+      wifiBlocked: true,
       error: `Accesso negato: Devi essere connesso alla rete Wi-Fi di casa (${config.wifiSsidRequired}) per aprire il portone.`
     };
   }
@@ -385,4 +387,3 @@ export async function triggerHomeAssistantOn(params?: {
     };
   }
 }
-
