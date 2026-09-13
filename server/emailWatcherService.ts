@@ -1,6 +1,7 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import crypto from 'crypto';
+import { GoogleGenAI } from '@google/genai';
 import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin, parseIReservationEmail } from '../src/services/guestPassService.js';
 import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 import { GuestPass } from '../src/types.js';
@@ -143,6 +144,139 @@ export function getImapConfig() {
 }
 
 /**
+ * Parsifica un'email in formato HTML usando l'API di Gemini per estrarre in modo strutturato i dati della prenotazione.
+ */
+export async function parseEmailWithGemini(htmlContent: string, isCancellation: boolean): Promise<{
+  bookingRef: string;
+  bookingSource: string;
+  guestName: string;
+  guestSurname: string;
+  guestEmail: string;
+  phone: string;
+  apartmentName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  nightsCount: number;
+  guestsCount: number;
+  amount: string;
+} | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('[Gemini Parser] GEMINI_API_KEY non configurata. Impossibile usare Gemini.');
+    return null;
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const prompt = isCancellation
+      ? `Analizza il codice HTML di questa email di CANCELLAZIONE di una prenotazione ed estrai i dati nel formato JSON specificato.
+Email HTML:
+"""
+${htmlContent}
+"""
+
+Restituisci esclusivamente un oggetto JSON valido con le seguenti chiavi (se un dato non è presente, usa stringa vuota o valori appropriati):
+{
+  "bookingRef": "Codice/ID della prenotazione da annullare (obbligatorio, stringa)",
+  "bookingSource": "Il portale da cui proviene la prenotazione originale (es. booking.com, airbnb, bed-and-breakfast.it, expedia, direct, o 'other')",
+  "guestName": "Nome dell'ospite",
+  "guestSurname": "Cognome dell'ospite",
+  "guestEmail": "Email dell'ospite",
+  "phone": "Numero di telefono completo dell'ospite",
+  "apartmentName": "Nome dell'appartamento/struttura",
+  "checkInDate": "Data di check-in in formato YYYY-MM-DD",
+  "checkOutDate": "Data di check-out in formato YYYY-MM-DD",
+  "nightsCount": 1,
+  "guestsCount": 2,
+  "amount": "Importo totale/prezzo della prenotazione"
+}`
+      : `Analizza il codice HTML di questa email di conferma prenotazione (iReservation / Bed-and-Breakfast.it) ed estrai i dati richiesti nel formato JSON specificato.
+Email HTML:
+"""
+${htmlContent}
+"""
+
+Dovrai mappare ed estrarre i seguenti dati:
+1. "bookingRef": il codice o ID della prenotazione (es. numeri lunghi o codici del portale).
+2. "bookingSource": il portale o canale dal quale è stata effettuata la prenotazione (es. booking.com, airbnb, bed-and-breakfast.it, expedia, o direct).
+3. "guestName": il nome proprio dell'ospite.
+4. "guestSurname": il cognome dell'ospite.
+5. "guestEmail": l'indirizzo email dell'ospite.
+6. "phone": il numero di telefono completo dell'ospite (includi prefisso internazionale come +39 se presente).
+7. "apartmentName": il nome della struttura o appartamento (es. Aurora).
+8. "checkInDate": la data di check-in (formato YYYY-MM-DD).
+9. "checkOutDate": la data di check-out (formato YYYY-MM-DD).
+10. "nightsCount": il numero di notti del soggiorno (intero).
+11. "guestsCount": il numero totale di ospiti (intero).
+12. "amount": l'importo totale o prezzo della prenotazione (stringa).
+
+Restituisci esclusivamente un oggetto JSON valido con le chiavi esatte qui indicate:
+{
+  "bookingRef": "Codice prenotazione",
+  "bookingSource": "booking.com | airbnb | bed-and-breakfast.it | expedia | direct | other",
+  "guestName": "Nome dell'ospite",
+  "guestSurname": "Cognome dell'ospite",
+  "guestEmail": "Email dell'ospite",
+  "phone": "Numero di telefono",
+  "apartmentName": "Nome appartamento",
+  "checkInDate": "YYYY-MM-DD",
+  "checkOutDate": "YYYY-MM-DD",
+  "nightsCount": 1,
+  "guestsCount": 2,
+  "amount": "Importo"
+}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash-lite',
+      contents: [
+        {
+          parts: [{ text: prompt }]
+        }
+      ],
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const responseText = response.text?.trim();
+    if (!responseText) {
+      throw new Error('Gemini ha restituito una risposta vuota.');
+    }
+
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (e) {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw e;
+      }
+    }
+
+    return {
+      bookingRef: String(parsed.bookingRef || '').trim(),
+      bookingSource: String(parsed.bookingSource || 'other').toLowerCase().trim(),
+      guestName: String(parsed.guestName || '').trim(),
+      guestSurname: String(parsed.guestSurname || '').trim(),
+      guestEmail: String(parsed.guestEmail || '').trim(),
+      phone: String(parsed.phone || '').trim(),
+      apartmentName: String(parsed.apartmentName || '').trim(),
+      checkInDate: String(parsed.checkInDate || '').trim(),
+      checkOutDate: String(parsed.checkOutDate || '').trim(),
+      nightsCount: Number(parsed.nightsCount) || 1,
+      guestsCount: Number(parsed.guestsCount) || 2,
+      amount: String(parsed.amount || '').trim()
+    };
+  } catch (error) {
+    console.error('[Gemini Parser] Errore durante l\'estrazione con Gemini:', error);
+    return null;
+  }
+}
+
+/**
  * Connect to IMAP, read messages, parse them, 
  * generate pass and eventually flag them as read.
  */
@@ -202,33 +336,13 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         console.warn('[IMAP] Search all failed:', err);
       }
 
-      // Ricerche mirate per piattaforma, sia sul mittente che sull'oggetto, così le email
-      // storiche (anche molto vecchie) vengono trovate indipendentemente da quante email
-      // ci sono nella casella. IMAP SEARCH scansiona l'intera mailbox, non solo le recenti.
-      const platformSearchTerms = [
-        'bed-and-breakfast.it',
-        'ireservation',
-        'prenotazione',
-        'booking.com',
-        'airbnb',
-        'vrbo',
-        'expedia'
-      ];
-
+      // Ricerca mirata: solo ed esclusivamente le email provenienti da noreply@bed-and-breakfast.it
       let platformUids: number[] = [];
-      for (const term of platformSearchTerms) {
-        try {
-          const bySender = (await client.search({ from: term }, { uid: true })) || [];
-          platformUids.push(...bySender);
-        } catch (err) {
-          console.warn(`[IMAP] Search from:"${term}" failed:`, err);
-        }
-        try {
-          const bySubject = (await client.search({ subject: term }, { uid: true })) || [];
-          platformUids.push(...bySubject);
-        } catch (err) {
-          console.warn(`[IMAP] Search subject:"${term}" failed:`, err);
-        }
+      try {
+        const bySender = (await client.search({ from: 'noreply@bed-and-breakfast.it' }, { uid: true })) || [];
+        platformUids.push(...bySender);
+      } catch (err) {
+        console.warn('[IMAP] Search from:"noreply@bed-and-breakfast.it" failed:', err);
       }
 
       // In sincronizzazione forzata (backfill manuale "Sincronizza ora") scansioniamo TUTTA
@@ -263,33 +377,51 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         const htmlContent = parsedEmail.html || '';
         const sender = parsedEmail.from?.value[0]?.address || '';
 
-        const TARGET_EMAIL_PATTERN = /bed[- ]?and[- ]?breakfast\.it|b&b\.it|ireservation|booking\.com|airbnb|vrbo|expedia/i;
-        const isTargetEmail = 
-          TARGET_EMAIL_PATTERN.test(sender) || 
-          TARGET_EMAIL_PATTERN.test(subject) ||
-          TARGET_EMAIL_PATTERN.test(textContent);
-
-        if (!isTargetEmail) {
-          // Non marchiamo questa email come "Seen": non è una prenotazione, quindi non
-          // dobbiamo alterare lo stato di lettura della normale posta dell'host.
-          // La logghiamo comunque come "ignorata" così resta visibile nel pannello.
-          await addEmailLog({
-            sender,
-            subject,
-            status: 'ignored',
-            message: 'Email ignorata: non riconosciuta come prenotazione (mittente/oggetto/testo non corrispondono a nessuna piattaforma supportata)',
-            details: { snippet: textContent.substring(0, 300) }
-          });
+        const isFromNoreplyBB = sender.toLowerCase() === 'noreply@bed-and-breakfast.it';
+        if (!isFromNoreplyBB) {
+          // Ignoriamo totalmente e senza loggare come errore/ignorata per non sporcare la lista log
           continue;
         }
 
+        const subjectLower = subject.toLowerCase();
+        const isBookingEmail = subjectLower.includes('ireservation');
         const isCancellation = 
           /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(subject) ||
           /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled/i.test(textContent.replace(/[\s\r\n\t]+/g, ' '));
 
+        if (!isBookingEmail && !isCancellation) {
+          // Solo mail con oggetto iReservation o annullamento da questo mittente
+          continue;
+        }
+
+        console.log(`[IMAP] Elaborazione email selezionata. Sender: "${sender}", Subject: "${subject}", Cancellazione: ${isCancellation}`);
+
+        // Parsiamo l'email usando l'API di Gemini per ottenere dati super accurati
+        let parsed = await parseEmailWithGemini(htmlContent || textContent, isCancellation);
+
+        // Fallback al parser regex se Gemini non è configurato o fallisce
+        if (!parsed) {
+          console.log('[IMAP] Gemini non disponibile o errore, uso il parser regex locale di fallback.');
+          const localParsed = parseIReservationEmail(textContent, htmlContent);
+          parsed = {
+            bookingRef: localParsed.bookingRef,
+            bookingSource: localParsed.bookingSource,
+            guestName: localParsed.guestName,
+            guestSurname: localParsed.guestSurname,
+            guestEmail: localParsed.guestEmail,
+            phone: localParsed.phone,
+            apartmentName: localParsed.apartmentName,
+            checkInDate: localParsed.checkInDate,
+            checkOutDate: localParsed.checkOutDate,
+            nightsCount: localParsed.nightsCount,
+            guestsCount: localParsed.guestsCount,
+            amount: localParsed.amount
+          };
+        }
+
+        const bookingRef = parsed.bookingRef;
+
         if (isCancellation) {
-          const parsed = parseIReservationEmail(textContent, htmlContent);
-          const bookingRef = parsed.bookingRef;
           if (bookingRef) {
             const existingIdx = serverPasses.findIndex(p => p.bookingRef === bookingRef || p.id === `ires-${bookingRef}`);
             if (existingIdx !== -1) {
@@ -339,12 +471,8 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
           continue;
         }
 
-        const isIReservation = /ireservation/i.test(sender) || /ireservation/i.test(subject) || /ireservation/i.test(textContent);
-        const parsed = isIReservation ? parseIReservationEmail(textContent, htmlContent) : parseBedAndBreakfastBooking(textContent);
-        const bookingRef = parsed.bookingRef;
-
-        // Se si tratta di una mail di test da Bed-and-Breakfast, completiamo i dati mancanti per far sì che crei comunque il pass!
-        const isTestEmail = /test/i.test(subject) || /test/i.test(textContent) || /test/i.test(htmlContent);
+        // Rilevamento sicuro dei test con limiti di parola per evitare falsi positivi (es. "testo", "intestatario")
+        const isTestEmail = /\btest\b/i.test(subject) || /\btest\b/i.test(textContent) || /\btest\b/i.test(htmlContent);
         if (bookingRef && isTestEmail) {
           if (!parsed.guestName) parsed.guestName = 'Ospite Test';
           if (!parsed.guestSurname) parsed.guestSurname = 'BB';
@@ -371,10 +499,10 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
             targetPass = {
               ...existingPass,
               guestName: parsed.guestName, guestSurname: parsed.guestSurname,
-              phone: parsed.phone || existingPass.phone, guestEmail: (parsed as any).guestEmail || existingPass.guestEmail,
+              phone: parsed.phone || existingPass.phone, guestEmail: parsed.guestEmail || existingPass.guestEmail,
               checkInDate: parsed.checkInDate, checkOutDate: parsed.checkOutDate, guestsCount: parsed.guestsCount,
-              bookingSource: parsed.bookingSource || existingPass.bookingSource, amount: (parsed as any).amount || existingPass.amount,
-              apartmentName: (parsed as any).apartmentName || existingPass.apartmentName, nightsCount: (parsed as any).nightsCount || existingPass.nightsCount,
+              bookingSource: parsed.bookingSource || existingPass.bookingSource, amount: parsed.amount || existingPass.amount,
+              apartmentName: parsed.apartmentName || existingPass.apartmentName, nightsCount: parsed.nightsCount || existingPass.nightsCount,
               notes: `Sincronizzato da Email IMAP il ${new Date().toISOString()}.\n${existingPass.notes || ''}`
             };
             serverPasses[existingIdx] = targetPass;
@@ -391,10 +519,10 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
             const token = crypto.randomBytes(32).toString('base64url');
             targetPass = {
               id: `ires-${bookingRef}`, guestName: parsed.guestName, guestSurname: parsed.guestSurname, phone: parsed.phone,
-              guestEmail: (parsed as any).guestEmail, checkInDate: parsed.checkInDate, checkInTime: '14:00',
+              guestEmail: parsed.guestEmail, checkInDate: parsed.checkInDate, checkInTime: '14:00',
               checkOutDate: parsed.checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount: parsed.guestsCount,
-              bookingSource: parsed.bookingSource || 'other', amount: (parsed as any).amount, apartmentName: (parsed as any).apartmentName,
-              nightsCount: (parsed as any).nightsCount, notes: `${isTestEmail ? 'Pass di Test generato' : 'Generato'} automaticamente via IMAP il ${new Date().toISOString()}`,
+              bookingSource: parsed.bookingSource || 'other', amount: parsed.amount, apartmentName: parsed.apartmentName,
+              nightsCount: parsed.nightsCount, notes: `${isTestEmail ? 'Pass di Test generato' : 'Generato'} automaticamente via IMAP il ${new Date().toISOString()}`,
               createdAt: new Date().toISOString(), active: true, checkInConfirmed: false, token
             };
             serverPasses.unshift(targetPass);

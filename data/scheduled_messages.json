@@ -1,5 +1,17 @@
 [
   {
+    "id": "msg-1789321332650-welcome",
+    "phone": "3892729804",
+    "passId": "ires-21d8s0-kvqwx8u4-8y",
+    "status": "sending",
+    "channel": "whatsapp",
+    "guestName": "Ospite Test BB",
+    "bookingRef": "21d8s0-kvqwx8u4-8y",
+    "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\nCiao Ospite Test BB, felici di ospitarti ad Aurora in Valtellina!\n\nAbbiamo preparato tutto con cura per farti sentire coccolato e rilassato durante il tuo soggiorno ad Aurora:\n\n📅 *Arrivo:* 2026-09-13 (accesso dalle ore 14:00 in poi / 2 PM)\n📅 *Partenza:* 2026-09-14 (entro le ore 10:00)\n🚪 *Apertura Portone:* 1-tap dal tuo link personale (Pulsante Smart Sonoff)\n🚗 *Parcheggio:* Posto auto riservato gratuito nel cortile privato\n\n📲 *La tua Guida Personale della Casa & di Morbegno:*\nhttps://casa-aurora-in-valtellina.vercel.app/?pass=MVnWq-MbgHUimpdcPqzlaXkgjzstSaWzwV--a0Lz6d4\n\nNella guida trovi la connessione 1-tap al Wi-Fi, il funzionamento degli elettrodomestici, la macchina del caffè con le capsule di benvenuto e i nostri consigli sinceri sui migliori crotti dove mangiare i veri pizzoccheri fatti a mano.\n\nPer qualsiasi consiglio o informazione prima e durante il viaggio, scrivimi pure qui.\nA presto e buon viaggio!\n*Antonino (Nino)* - Host Aurora\n📞 +39 391 778 4042",
+    "scheduledAt": "2026-09-13T17:42:11.401Z",
+    "triggerType": "welcome"
+  },
+  {
     "id": "msg-1789320964683-welcome",
     "phone": "",
     "passId": "ires-fe33b8b4-6c59-11e9-ae35-101f74",
@@ -163,17 +175,17 @@
   },
   {
     "id": "msg-1789320964683-pre-checkin",
+    "error": "Numero di telefono mancante",
     "phone": "",
     "passId": "ires-fe33b8b4-6c59-11e9-ae35-101f74",
+    "sentAt": "2026-09-13T17:36:25.709Z",
     "status": "failed",
     "channel": "whatsapp",
     "guestName": "Ospite Test BB",
     "bookingRef": "fe33b8b4-6c59-11e9-ae35-101f74",
     "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\n\nCiao Ospite Test, mancano 3 giorni al tuo arrivo! Di seguito trovi i dettagli importanti per il tuo check-in.\n\n📍 Indirizzo: Via San Rocco 16, Morbegno (SO)\n🚪 Ingresso automatico con Smart Lock\n🕒 Orario check-in: dalle ore 14:00 in poi\n\nPuoi trovare tutte le istruzioni dettagliate, foto per l'accesso e l'apertura intelligente della porta sul tuo link personale:\n📲 https://casa-aurora-in-valtellina.vercel.app/?pass=nje5laVeTAeKXI91OgN2WEs0YTp11_bLK2aNBDo_aAo\n\nNino, Host Aurora\n📞 +39 391 778 4042",
     "scheduledAt": "2026-09-10T08:00:00.000Z",
-    "triggerType": "pre_checkin",
-    "error": "Numero di telefono mancante",
-    "sentAt": "2026-09-13T17:36:25.709Z"
+    "triggerType": "pre_checkin"
   },
   {
     "id": "msg-1789320964683-courtesy",
@@ -189,13 +201,51 @@
   },
   {
     "id": "msg-1789320964683-checkout",
+    "error": "Numero di telefono mancante",
     "phone": "",
     "passId": "ires-fe33b8b4-6c59-11e9-ae35-101f74",
-    "status": "pending",
+    "sentAt": "2026-09-13T18:00:25.553Z",
+    "status": "failed",
     "channel": "whatsapp",
     "guestName": "Ospite Test BB",
     "bookingRef": "fe33b8b4-6c59-11e9-ae35-101f74",
     "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\n\nCiao Ospite Test, speriamo che il tuo soggiorno sia stato meraviglioso e rilassante!\n\nTi ricordiamo che domani è il giorno della partenza e il check-out è previsto entro le ore 10:00.\n\nEcco alcune semplici istruzioni per il rilascio dell'appartamento:\n🔑 Lascia le chiavi sul tavolo ed esci accostando la porta\n♻️ Ti chiediamo gentilmente di buttare i rifiuti negli appositi cassonetti\n📲 Puoi completare la procedura di check-out online in un click:\n📲 https://casa-aurora-in-valtellina.vercel.app/?pass=nje5laVeTAeKXI91OgN2WEs0YTp11_bLK2aNBDo_aAo\n\nGrazie di cuore per essere stato nostro ospite! Buon viaggio e a presto!\n\nNino, Host Aurora\n📞 +39 391 778 4042",
+    "scheduledAt": "2026-09-13T18:00:00.000Z",
+    "triggerType": "checkout"
+  },
+  {
+    "id": "msg-1789321332650-pre-checkin",
+    "phone": "3892729804",
+    "passId": "ires-21d8s0-kvqwx8u4-8y",
+    "status": "sending",
+    "channel": "whatsapp",
+    "guestName": "Ospite Test BB",
+    "bookingRef": "21d8s0-kvqwx8u4-8y",
+    "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\n\nCiao Ospite Test, mancano 3 giorni al tuo arrivo! Di seguito trovi i dettagli importanti per il tuo check-in.\n\n📍 Indirizzo: Via San Rocco 16, Morbegno (SO)\n🚪 Ingresso automatico con Smart Lock\n🕒 Orario check-in: dalle ore 14:00 in poi\n\nPuoi trovare tutte le istruzioni dettagliate, foto per l'accesso e l'apertura intelligente della porta sul tuo link personale:\n📲 https://casa-aurora-in-valtellina.vercel.app/?pass=MVnWq-MbgHUimpdcPqzlaXkgjzstSaWzwV--a0Lz6d4\n\nNino, Host Aurora\n📞 +39 391 778 4042",
+    "scheduledAt": "2026-09-10T08:00:00.000Z",
+    "triggerType": "pre_checkin"
+  },
+  {
+    "id": "msg-1789321332650-courtesy",
+    "phone": "3892729804",
+    "passId": "ires-21d8s0-kvqwx8u4-8y",
+    "status": "pending",
+    "channel": "whatsapp",
+    "guestName": "Ospite Test BB",
+    "bookingRef": "21d8s0-kvqwx8u4-8y",
+    "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\n\nCiao Ospite Test, spero che la tua prima notte ad Aurora sia stata piacevole e rigenerante!\n\nVolevo solo assicurarmi che sia tutto okay e che l'appartamento risponda alle tue aspettative. Se hai qualsiasi domanda o necessità, non esitare a contattarmi.\n\nTi ricordo che puoi consultare le istruzioni della casa e i consigli sui dintorni in qualsiasi momento tramite il tuo link:\n📲 https://casa-aurora-in-valtellina.vercel.app/?pass=MVnWq-MbgHUimpdcPqzlaXkgjzstSaWzwV--a0Lz6d4\n\nBuon soggiorno!\nNino, Host Aurora\n📞 +39 391 778 4042",
+    "scheduledAt": "2026-09-14T09:00:00.000Z",
+    "triggerType": "courtesy"
+  },
+  {
+    "id": "msg-1789321332650-checkout",
+    "phone": "3892729804",
+    "passId": "ires-21d8s0-kvqwx8u4-8y",
+    "status": "sending",
+    "channel": "whatsapp",
+    "guestName": "Ospite Test BB",
+    "bookingRef": "21d8s0-kvqwx8u4-8y",
+    "messageText": "🌿 *APPARTAMENTO AURORA • MORBEGNO*\n\nCiao Ospite Test, speriamo che il tuo soggiorno sia stato meraviglioso e rilassante!\n\nTi ricordiamo che domani è il giorno della partenza e il check-out è previsto entro le ore 10:00.\n\nEcco alcune semplici istruzioni per il rilascio dell'appartamento:\n🔑 Lascia le chiavi sul tavolo ed esci accostando la porta\n♻️ Ti chiediamo gentilmente di buttare i rifiuti negli appositi cassonetti\n📲 Puoi completare la procedura di check-out online in un click:\n📲 https://casa-aurora-in-valtellina.vercel.app/?pass=MVnWq-MbgHUimpdcPqzlaXkgjzstSaWzwV--a0Lz6d4\n\nGrazie di cuore per essere stato nostro ospite! Buon viaggio e a presto!\n\nNino, Host Aurora\n📞 +39 391 778 4042",
     "scheduledAt": "2026-09-13T18:00:00.000Z",
     "triggerType": "checkout"
   }

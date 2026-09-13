@@ -40,7 +40,7 @@ import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageU
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
 import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
-import { checkNewEmailsAndGeneratePasses, startEmailWatcher, addEmailLog, getEmailLogs, hydrateImapConfig, updateImapConfigAsync, getImapConfig } from './emailWatcherService.js';
+import { checkNewEmailsAndGeneratePasses, startEmailWatcher, addEmailLog, getEmailLogs, hydrateImapConfig, updateImapConfigAsync, getImapConfig, parseEmailWithGemini } from './emailWatcherService.js';
 import { sendGuestNotification, sendHostNotification } from './notificationService.js';
 import {
   scheduleBookingMessages,
@@ -1567,23 +1567,55 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       }
       console.log(`[iReservation] Payload. Sender: "${emailSender}", Subject: "${emailSubject}", Text: ${rawText.length}`);
 
-      // Filtro di sicurezza: Accetta SOLO email provenienti da bed-and-breakfast.it o ireservation
-      const isFromBBOrIRes = 
-        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(emailSender) ||
-        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(emailSubject) ||
-        /bed-and-breakfast\.it|b&b\.it|ireservation/i.test(rawText);
-
-      if (!isFromBBOrIRes) {
-        console.log(`[iReservation] Email ignorata (non appartiene a bed-and-breakfast o ireservation). Sender: "${emailSender}", Subject: "${emailSubject}"`);
-        res.json({ success: false, message: 'Email ignorata: sorgente non associata a Bed-and-Breakfast.it o iReservation.' });
+      // Filtro di sicurezza: Accetta SOLO email provenienti da noreply@bed-and-breakfast.it
+      const isFromNoreplyBB = emailSender.toLowerCase() === 'noreply@bed-and-breakfast.it';
+      if (!isFromNoreplyBB) {
+        console.log(`[iReservation Webhook] Email ignorata (mittente non è noreply@bed-and-breakfast.it). Sender: "${emailSender}", Subject: "${emailSubject}"`);
+        res.json({ success: false, message: 'Email ignorata: sorgente non autorizzata.' });
         return;
       }
 
-      const parsed = parseIReservationEmail(rawText, html);
+      const subjectLower = emailSubject.toLowerCase();
+      const isBookingEmail = subjectLower.includes('ireservation');
+      const isCancellation = 
+        /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(emailSubject) ||
+        /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled|status\s*[:=]\s*(?:cancellata|annullata|cancelled|deleted)/i.test(rawText.replace(/[\s\r\n\t]+/g, ' '));
+
+      if (!isBookingEmail && !isCancellation) {
+        console.log(`[iReservation Webhook] Email ignorata (non è iReservation e non è un annullamento). Sender: "${emailSender}", Subject: "${emailSubject}"`);
+        res.json({ success: false, message: 'Email ignorata: non è una mail di prenotazione iReservation né di annullamento.' });
+        return;
+      }
+
+      console.log(`[iReservation Webhook] Elaborazione webhook email. Sender: "${emailSender}", Subject: "${emailSubject}", Cancellazione: ${isCancellation}`);
+
+      // Parsiamo l'email usando l'API di Gemini per ottenere dati super accurati
+      let parsed = await parseEmailWithGemini(html || rawText, isCancellation);
+
+      // Fallback al parser regex locale se Gemini fallisce o non è configurato
+      if (!parsed) {
+        console.log('[iReservation Webhook] Gemini non disponibile o errore, uso il parser regex locale di fallback.');
+        const localParsed = parseIReservationEmail(rawText, html);
+        parsed = {
+          bookingRef: localParsed.bookingRef,
+          bookingSource: localParsed.bookingSource,
+          guestName: localParsed.guestName,
+          guestSurname: localParsed.guestSurname,
+          guestEmail: localParsed.guestEmail,
+          phone: localParsed.phone,
+          apartmentName: localParsed.apartmentName,
+          checkInDate: localParsed.checkInDate,
+          checkOutDate: localParsed.checkOutDate,
+          nightsCount: localParsed.nightsCount,
+          guestsCount: localParsed.guestsCount,
+          amount: localParsed.amount
+        };
+      }
+
       const bookingRef = parsed.bookingRef;
 
       // Se si tratta di una mail di test da Bed-and-Breakfast, completiamo i dati mancanti per far sì che crei comunque il pass!
-      const isTestEmail = /test/i.test(emailSubject) || /test/i.test(rawText) || /test/i.test(html || '');
+      const isTestEmail = /\btest\b/i.test(emailSubject) || /\btest\b/i.test(rawText) || /\btest\b/i.test(html || '');
       if (bookingRef && isTestEmail) {
         if (!parsed.guestName) parsed.guestName = 'Ospite Test';
         if (!parsed.guestSurname) parsed.guestSurname = 'BB';
@@ -1591,13 +1623,8 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         if (!parsed.checkOutDate) parsed.checkOutDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
       }
 
-      // Rileva se si tratta di una notifica di cancellazione (evitando le clausole standard dei messaggi di conferma)
-      const isCancellation = 
-        /cancellata|cancellazione|annullat[ao]|annullamento|cancelled|cancel/i.test(emailSubject) ||
-        /prenotazione\s*e\s*stata\s*cancellata|prenotazione\s*cancellata|prenotazione\s*annullata|booking\s*cancelled|status\s*[:=]\s*(?:cancellata|annullata|cancelled|deleted)/i.test(rawText.replace(/[\s\r\n\t]+/g, ' '));
-
       if (isCancellation) {
-        console.log(`[iReservation] Rilevata notifica di CANCELLAZIONE per ID "${bookingRef}"`);
+        console.log(`[iReservation Webhook] Rilevata notifica di CANCELLAZIONE per ID "${bookingRef}"`);
         if (!bookingRef) {
           await addEmailLog({
             sender: emailSender,
@@ -1620,7 +1647,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           await upsertPass(targetPass);
           const cancelledCount = await cancelAllMessagesForPass(targetPass.id);
           
-          console.log(`[iReservation] Soggiorno disattivato per ID "${bookingRef}". Cancellati ${cancelledCount} messaggi programmati.`);
+          console.log(`[iReservation Webhook] Soggiorno disattivato per ID "${bookingRef}". Cancellati ${cancelledCount} messaggi programmati.`);
           
           await addEmailLog({
             sender: emailSender,
@@ -1633,7 +1660,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           res.status(200).json({ success: true, message: 'Prenotazione disattivata e messaggi in coda rimossi.', pass: targetPass });
           return;
         } else {
-          console.warn(`[iReservation] Cancellazione ricevuta per ID "${bookingRef}" ma nessun pass corrisponde.`);
+          console.warn(`[iReservation Webhook] Cancellazione ricevuta per ID "${bookingRef}" ma nessun pass corrisponde.`);
           
           await addEmailLog({
             sender: emailSender,
@@ -1648,11 +1675,11 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         }
       }
 
-      console.log('[iReservation] Parsed:', parsed);
+      console.log('[iReservation Webhook] Parsed:', parsed);
 
       if (!bookingRef || !parsed.guestName || !parsed.checkInDate || !parsed.checkOutDate) {
         const errM = `Dati incompleti. ID: "${bookingRef}", Ospite: "${parsed.guestName}", Check-in: "${parsed.checkInDate}", Check-out: "${parsed.checkOutDate}"`;
-        console.error(`[iReservation] ${errM}`);
+        console.error(`[iReservation Webhook] ${errM}`);
         
         await addEmailLog({
           sender: emailSender,
