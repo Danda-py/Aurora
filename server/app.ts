@@ -1338,13 +1338,15 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     }
   });
 
-  apiRouter.post('/email/sync-now', async (_req, res) => {
+    apiRouter.post('/email/sync-now', async (_req, res) => {
     try {
+      // sync-now uses forceAll=true which bypasses the isPolling check
+      // and clears processed UIDs for a full backfill
       await checkNewEmailsAndGeneratePasses(serverPasses, true);
       persistPasses();
       res.json({
         success: true,
-        message: 'Sincronizzazione email iReservation completata con successo!',
+        message: 'Sincronizzazione email iReservation avviata con successo! Elaborati fino a 500 messaggi in questo ciclo. Se ne rimangono, riprova o attendi il prossimo polling.',
         totalPasses: serverPasses.length
       });
     } catch (err: any) {

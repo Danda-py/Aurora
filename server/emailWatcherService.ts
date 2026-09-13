@@ -6,6 +6,16 @@ import { parseBedAndBreakfastBooking, formatInvitationMessage, generateRandomPin
 import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 import { GuestPass } from '../src/types.js';
 import { scheduleBookingMessages, cancelAllMessagesForPass } from './scheduledMessagingService.js';
+import { safeReadJsonSync, safeWriteFileSync } from './storageUtils.js';
+
+// Path for persisting processed email UIDs across server restarts
+const PROCESSED_EMAILS_PATH = 'data/processed_email_uids.json';
+
+// Limit emails processed per polling cycle to avoid blocking for too long
+// The polling interval (every 2 min) should finish well before the next cycle
+const MAX_EMAILS_PER_CYCLE = 100;
+// Higher limit for forced sync (sync-now button) to backfill more emails at once
+const MAX_EMAILS_FORCED_CYCLE = 500;
 
 let isPolling = false;
 let pollingInterval: NodeJS.Timeout | null = null;
@@ -30,7 +40,8 @@ export interface EmailLog {
   details?: any;
 }
 
-const processedUids = new Set<number>();
+// Persist processed UIDs across server restarts so we don't reprocess the entire inbox
+const processedUids = new Set<number>(safeReadJsonSync<number[]>(PROCESSED_EMAILS_PATH, []));
 
 // Simple in-memory config for testing (normally populated via environment variables or host config)
 let imapConfig: ImapConfig = {
@@ -141,6 +152,22 @@ export function getImapConfig() {
     ...imapConfig,
     pass: imapConfig.pass ? '••••••••' : ''
   };
+}
+
+/**
+ * Persist the processed email UIDs to disk so they survive server restarts.
+ * This prevents reprocessing of the entire inbox on every restart.
+ */
+export function persistProcessedUids() {
+  safeWriteFileSync(PROCESSED_EMAILS_PATH, JSON.stringify(Array.from(processedUids)));
+}
+
+/**
+ * Clear all processed UIDs (used by sync-now with full backfill).
+ */
+export function clearProcessedUids() {
+  processedUids.clear();
+  safeWriteFileSync(PROCESSED_EMAILS_PATH, JSON.stringify([]));
 }
 
 /**
@@ -286,7 +313,10 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
     return;
   }
 
-  if (isPolling) {
+    // For forced sync (sync-now button), always proceed regardless of isPolling.
+  // For normal polling, skip if another check is already running to avoid
+  // concurrent IMAP connections and race conditions.
+  if (!forceAll && isPolling) {
     console.log('[IMAP] Check already in progress, skipping.');
     return;
   }
@@ -294,6 +324,7 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
   if (forceAll) {
     console.log('[IMAP] Sincronizzazione forzata: pulizia dei messaggi già elaborati.');
     processedUids.clear();
+    clearProcessedUids();
   }
 
   isPolling = true;
@@ -361,12 +392,23 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
         return;
       }
       
-      const toProcess = uids.filter(uid => !processedUids.has(uid));
-      console.log(`[IMAP] Trovate ${uids.length} email, di cui ${toProcess.length} da elaborare.`);
+            const toProcess = uids.filter(uid => !processedUids.has(uid));
+      
+      // Limit the number of emails processed per cycle to avoid blocking for too long.
+      // On the first run after a restart, there could be thousands of unprocessed emails.
+      // Without this limit, isPolling would be held for hours, blocking sync-now.
+      const maxPerCycle = forceAll ? MAX_EMAILS_FORCED_CYCLE : MAX_EMAILS_PER_CYCLE;
+      const toProcessLimited = toProcess.slice(0, maxPerCycle);
+      
+      if (toProcess.length > maxPerCycle) {
+        console.log(`[IMAP] Limitando l'elaborazione a ${maxPerCycle} email di ${toProcess.length} da elaborare. Il resto sarà elaborato nei prossimi cicli.`);
+      }
+      console.log(`[IMAP] Trovate ${uids.length} email, di cui ${toProcess.length} da elaborare (${toProcessLimited.length} in questo ciclo).`);
+      
       
       const todayStr = new Date().toISOString().split('T')[0];
 
-      for (const uid of toProcess) {
+            for (const uid of toProcessLimited) {
         processedUids.add(uid);
         const messageStream = await client.fetchOne(String(uid), { source: true }, { uid: true });
         if (!messageStream || !messageStream.source) continue;
@@ -555,10 +597,12 @@ export async function checkNewEmailsAndGeneratePasses(serverPasses: GuestPass[],
       lock.release();
     }
     
-    await client.logout();
+        await client.logout();
   } catch (error) {
     console.error('[IMAP] Error during checkNewEmailsAndGeneratePasses:', error);
   } finally {
+    // Persist processed UIDs so they survive server restarts
+    persistProcessedUids();
     isPolling = false;
   }
 }
