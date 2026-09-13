@@ -164,6 +164,8 @@ function setupAuthForm(registrationOpen, initialError = '') {
   const password = document.getElementById('authPassword');
   const confirmWrap = document.getElementById('authConfirmWrap');
   const confirm = document.getElementById('authConfirmPassword');
+  const bootstrapSecretWrap = document.getElementById('authBootstrapSecretWrap');
+  const bootstrapSecret = document.getElementById('authBootstrapSecret');
   const feedback = document.getElementById('authFeedback');
   const setFeedback = message => {
     feedback.textContent = message;
@@ -176,6 +178,8 @@ function setupAuthForm(registrationOpen, initialError = '') {
     password.autocomplete = 'new-password';
     confirmWrap.classList.remove('hidden');
     confirm.required = true;
+    bootstrapSecretWrap.classList.remove('hidden');
+    bootstrapSecret.required = true;
   }
   setFeedback(initialError);
   form.addEventListener('submit', async event => {
@@ -190,7 +194,11 @@ function setupAuthForm(registrationOpen, initialError = '') {
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/${registrationOpen ? 'bootstrap' : 'login'}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ email: document.getElementById('authEmail').value, password: password.value })
+        body: JSON.stringify({
+          email: document.getElementById('authEmail').value,
+          password: password.value,
+          ...(registrationOpen && { bootstrapSecret: bootstrapSecret.value })
+        })
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Operazione non riuscita.');
@@ -707,6 +715,12 @@ async function fetchPasses() {
   }
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
 function filterAndRenderPasses(filterQuery) {
   const container = document.getElementById('passesContainer');
   if (!container) return;
@@ -731,32 +745,40 @@ function filterAndRenderPasses(filterQuery) {
     return;
   }
 
-  container.innerHTML = list.map(pass => {
+  container.innerHTML = list.map((pass, index) => {
     const guestLink = `${window.location.origin}/guest/${pass.token}`;
     const cleanPhone = (pass.phone || '').replace(/[^0-9+]/g, '');
     const isExpired = new Date(pass.checkOutDate) < new Date(new Date().toDateString());
+    const guestName = escapeHtml(pass.guestName || 'Ospite');
+    const guestInitial = escapeHtml((pass.guestName || 'O')[0].toUpperCase());
+    const bookingSource = escapeHtml(pass.source || pass.bookingSource || 'bed-and-breakfast.it');
+    const checkInDate = escapeHtml(pass.checkInDate || '');
+    const checkOutDate = escapeHtml(pass.checkOutDate || '');
+    const phone = escapeHtml(pass.phone || '');
+    const bookingRef = escapeHtml(pass.bookingRef || '');
+    const safeGuestLink = escapeHtml(guestLink);
 
     return `
       <div class="apple-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Guest Details -->
         <div class="flex items-start gap-3.5 min-w-0">
           <div class="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 text-white font-semibold flex items-center justify-center shrink-0 text-sm">
-            ${(pass.guestName || 'O')[0].toUpperCase()}
+            ${guestInitial}
           </div>
           <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-semibold text-sm text-white tracking-tight">${pass.guestName}</h4>
+              <h4 class="font-semibold text-sm text-white tracking-tight">${guestName}</h4>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-mono ${isExpired ? 'bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20' : 'bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20'}">
                 ${isExpired ? 'Scaduto' : 'Attivo'}
               </span>
               <span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#86868b] text-[10px] border border-white/[0.08]">
-                ${pass.source || 'bed-and-breakfast.it'}
+                ${bookingSource}
               </span>
             </div>
             <div class="flex items-center gap-3 text-xs text-[#86868b] flex-wrap">
-              <span>Dal <strong>${pass.checkInDate}</strong> al <strong>${pass.checkOutDate}</strong></span>
-              ${pass.phone ? `<span>• Tel: <strong class="text-white font-mono">${pass.phone}</strong></span>` : ''}
-              ${pass.bookingRef ? `<span>• Ref: <code class="font-mono text-white">${pass.bookingRef}</code></span>` : ''}
+              <span>Dal <strong>${checkInDate}</strong> al <strong>${checkOutDate}</strong></span>
+              ${pass.phone ? `<span>• Tel: <strong class="text-white font-mono">${phone}</strong></span>` : ''}
+              ${pass.bookingRef ? `<span>• Ref: <code class="font-mono text-white">${bookingRef}</code></span>` : ''}
             </div>
           </div>
         </div>
@@ -764,19 +786,19 @@ function filterAndRenderPasses(filterQuery) {
         <!-- Actions -->
         <div class="flex items-center gap-2 flex-wrap shrink-0">
           <!-- Unlock Door Button with this pass -->
-          <button type="button" onclick="triggerDoorUnlock('${pass.guestName}', '${pass.token}')" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer" title="Test apertura portone per questo pass">
+          <button type="button" data-pass-action="unlock" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer" title="Test apertura portone per questo pass">
             <i data-lucide="unlock" class="w-3.5 h-3.5 text-[#30d158]"></i>
             <span>Apri Porta</span>
           </button>
 
           <!-- Copy Link -->
-          <button type="button" onclick="copyPassLink('${guestLink}', this)" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+          <button type="button" data-pass-action="copy" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
             <span>Copia</span>
           </button>
 
           <!-- Open Guide -->
-          <a href="${guestLink}" target="_blank" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5" title="Apri guida ospite">
+          <a href="${safeGuestLink}" target="_blank" rel="noopener noreferrer" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5" title="Apri guida ospite">
             <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
             <span>Guida</span>
           </a>
@@ -789,13 +811,24 @@ function filterAndRenderPasses(filterQuery) {
           ` : ''}
 
           <!-- Delete Pass -->
-          <button type="button" onclick="deletePass('${pass.id}', '${pass.guestName}')" class="p-2 rounded-xl bg-[#ff453a]/10 hover:bg-[#ff453a]/20 text-[#ff453a] border border-[#ff453a]/20 transition cursor-pointer" title="Revoca e cancella questo pass">
+          <button type="button" data-pass-action="delete" data-pass-index="${index}" class="p-2 rounded-xl bg-[#ff453a]/10 hover:bg-[#ff453a]/20 text-[#ff453a] border border-[#ff453a]/20 transition cursor-pointer" title="Revoca e cancella questo pass">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
         </div>
       </div>
     `;
   }).join('');
+
+  container.querySelectorAll('[data-pass-action]').forEach(button => {
+    button.addEventListener('click', () => {
+      const pass = list[Number(button.dataset.passIndex)];
+      if (!pass) return;
+      const guestLink = `${window.location.origin}/guest/${pass.token}`;
+      if (button.dataset.passAction === 'unlock') triggerDoorUnlock(pass.guestName || 'Host', pass.token);
+      if (button.dataset.passAction === 'copy') copyPassLink(guestLink, button);
+      if (button.dataset.passAction === 'delete') deletePass(pass.id, pass.guestName || 'questo ospite');
+    });
+  });
 
   renderIcons();
 }
@@ -945,10 +978,10 @@ async function fetchSonoffConfig() {
     const res = await fetch(`${API_BASE_URL}/api/hass/config`);
     if (!res.ok) return;
     const data = await res.json();
-    if (data.success && data.config) {
-      const cfg = data.config;
+    {
+      const cfg = data.config || data;
       if (cfg.webhookUrl) document.getElementById('inputSonoffWebhookUrl').value = cfg.webhookUrl;
-      if (cfg.hassUrl) document.getElementById('inputHassUrl').value = cfg.hassUrl;
+      if (cfg.haUrl) document.getElementById('inputHassUrl').value = cfg.haUrl;
       if (cfg.entityId) document.getElementById('inputHassEntityId').value = cfg.entityId;
       if (cfg.service) document.getElementById('selectHassService').value = cfg.service;
       if (cfg.deviceName) document.getElementById('inputSonoffDeviceName').value = cfg.deviceName;
@@ -976,11 +1009,11 @@ async function handleSaveSonoffConfig() {
 
   const payload = {
     webhookUrl: document.getElementById('inputSonoffWebhookUrl')?.value.trim() || '',
-    hassUrl: document.getElementById('inputHassUrl')?.value.trim() || '',
+    haUrl: document.getElementById('inputHassUrl')?.value.trim() || '',
     entityId: document.getElementById('inputHassEntityId')?.value.trim() || 'switch.portone',
     service: document.getElementById('selectHassService')?.value || 'switch.turn_on',
     deviceName: document.getElementById('inputSonoffDeviceName')?.value.trim() || 'Pulsante Portone Aurora',
-    token: document.getElementById('inputHassToken')?.value.trim() || '',
+    accessToken: document.getElementById('inputHassToken')?.value.trim() || '',
     homePublicIp: document.getElementById('inputHomePublicIp')?.value.trim() || '',
     lanGatewayIp: document.getElementById('inputLanGatewayIp')?.value.trim() || '192.168.0.1',
     localWebhookUrl: document.getElementById('inputLocalWebhookUrl')?.value.trim() || ''

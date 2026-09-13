@@ -7,6 +7,7 @@ const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const MAX_LOGIN_ATTEMPTS = 8;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const HOST_ACCOUNT_PATH = 'data/host_account.json';
+const UNCONFIGURED_SESSION_SECRET = crypto.randomBytes(32).toString('base64url');
 
 interface HostSession {
   email: string;
@@ -82,7 +83,13 @@ function parseCookies(header: string | undefined): Record<string, string> {
 }
 
 function sessionSecret(): string {
-  return process.env.HOST_SESSION_SECRET || configuredPasswordHash() || 'aurora-host-session';
+  return process.env.HOST_SESSION_SECRET || configuredPasswordHash() || UNCONFIGURED_SESSION_SECRET;
+}
+
+function safelyMatches(value: string, expected: string): boolean {
+  const actualBuffer = Buffer.from(value);
+  const expectedBuffer = Buffer.from(expected);
+  return actualBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(actualBuffer, expectedBuffer);
 }
 
 function signSession(payload: string): string {
@@ -147,6 +154,8 @@ export function logoutHost(req: Request, res: Response): void {
 }
 
 export function getHostSession(req: Request): HostSession | null {
+  // A host session cannot exist before the first account is configured.
+  if (!isHostConfigured()) return null;
   const session = readSession(parseCookies(req.headers.cookie)[SESSION_COOKIE]);
   return session;
 }
@@ -172,6 +181,18 @@ export function hostRegistrationOpen(): boolean {
 export function bootstrapHost(req: Request, res: Response): void {
   if (!hostRegistrationOpen()) {
     res.status(403).json({ success: false, error: 'L’account host è già stato creato. La registrazione è chiusa.' });
+    return;
+  }
+
+  const bootstrapSecret = (req.body?.bootstrapSecret || '').toString();
+  const expectedBootstrapSecret = process.env.HOST_BOOTSTRAP_SECRET || '';
+  if (!expectedBootstrapSecret || !safelyMatches(bootstrapSecret, expectedBootstrapSecret)) {
+    res.status(expectedBootstrapSecret ? 401 : 503).json({
+      success: false,
+      error: expectedBootstrapSecret
+        ? 'Codice di inizializzazione non valido.'
+        : 'Inizializzazione non disponibile: configura HOST_BOOTSTRAP_SECRET nel deploy.'
+    });
     return;
   }
 
