@@ -38,24 +38,37 @@ export const HostPortal: React.FC = () => {
     setLoading(true);
     setAuthError('');
 
-    try {
+        try {
       if (isLoginMode) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        
+        const user = data.user;
+        const role = user?.user_metadata?.role || '';
+        const emailLower = (user?.email || '').toLowerCase();
+        
+        const isHost = role === 'host' || emailLower.includes('host') || emailLower.includes('nino') || emailLower === 'info@aurora-valtellina.app' || emailLower === 'valtellina.aurora@gmail.com';
+        
+        if (!isHost) {
+          await supabase.auth.signOut();
+          throw new Error('Access denied. Only registered hosts can access the Host Portal.');
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // For Vercel deployment, ensure email confirmations go back to the right place if needed
             emailRedirectTo: `${window.location.origin}/host-portal`,
+            data: {
+              role: 'host'
+            }
           },
         });
         if (error) throw error;
-        setAuthError('Check your email for the confirmation link.'); // Not an error but a message
+        setAuthError('Registration request received. Check your email for confirmation.');
       }
     } catch (error: any) {
       setAuthError(error.message || 'An error occurred during authentication.');
