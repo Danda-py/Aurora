@@ -389,6 +389,11 @@
         <i data-lucide="message-square" class="w-4 h-4 text-[#ff453a]"></i>
         <span>Messaggi Programmati</span>
       </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="alloggiati">
+        <i data-lucide="shield-check" class="w-4 h-4 text-[#30d158]"></i>
+        <span>Alloggiati Web</span>
+      </button>
     </div>
 
     <!-- ============================================================ -->
@@ -1029,6 +1034,115 @@
         </div>
       </div>
     </section>
+
+    <!-- ========================== TAB ALLOGGIATI ========================== -->
+    <section id="tab-alloggiati" class="tab-content hidden space-y-5">
+      <!-- List View -->
+      <div id="alloggiati-list-view" class="space-y-4">
+        <div class="apple-card p-5 space-y-3">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="shield-check" class="w-5 h-5 text-[#30d158]"></i>
+            <h3 class="text-sm sm:text-base font-bold text-white">Generazione Schedine Alloggiati Web</h3>
+          </div>
+          <p class="text-xs sm:text-sm text-[#86868b] leading-relaxed">
+            Seleziona una prenotazione attiva per verificarne i documenti caricati dagli ospiti e generare il file <code>.txt</code> pronto per l'invio sul portale ministeriale della Polizia di Stato entro 24 ore dal check-in.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">Prenotazioni in archivio</h4>
+          <div id="alloggiati-passes-container" class="space-y-3">
+            <div class="text-center py-12 text-xs text-[#86868b]">Nessun pass ospite in memoria.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail View -->
+      <div id="alloggiati-detail-view" class="hidden space-y-5">
+        <div class="flex items-center justify-between gap-3">
+          <button type="button" onclick="showAlloggiatiList()" class="text-xs font-bold text-[#86868b] hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-white/[0.04] transition cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Indietro alla lista</span>
+          </button>
+          <span id="alloggiati-booking-ref" class="text-[10px] sm:text-xs font-mono font-bold text-[#86868b] bg-[#1c1c1e] px-2.5 py-1 rounded-lg border border-white/[0.08]">
+            Rif: N/A
+          </span>
+        </div>
+
+        <!-- Stay Info Card -->
+        <div class="p-4 rounded-xl bg-[#1c1c1e] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono">
+          <div class="space-y-1">
+            <p class="text-[#86868b] font-bold">DETTAGLI PRENOTAZIONE</p>
+            <p id="alloggiati-guest-title" class="text-white font-bold text-sm">Ospite Aurora</p>
+          </div>
+          <div class="grid grid-cols-2 sm:flex sm:items-center gap-4 text-[#86868b]">
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">ARRIVO</p>
+              <p id="alloggiati-checkin-val" class="font-bold text-white">N/A</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">PARTENZA</p>
+              <p id="alloggiati-checkout-val" class="font-bold text-white">N/A</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">GIORNI</p>
+              <input 
+                id="alloggiati-stay-days"
+                type="number" 
+                min="1" 
+                max="30"
+                value="1" 
+                class="w-14 px-1.5 py-0.5 bg-[#2c2c2e] border border-white/10 rounded font-bold text-white text-center focus:outline-none focus:ring-1 focus:ring-[#30d158]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Messages -->
+        <div id="alloggiati-feedback" class="hidden p-3.5 rounded-xl text-xs font-medium flex items-start gap-2 border leading-relaxed">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">Schedine Ospiti</h4>
+            <button
+              type="button"
+              onclick="addAlloggiatiGuestForm()"
+              class="py-1 px-3 rounded-lg border border-dashed border-white/20 hover:border-[#30d158] hover:bg-[#30d158]/10 text-[#86868b] hover:text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+            >
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Aggiungi Ospite</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Accordion Cards Container -->
+          <div id="alloggiati-guests-accordion-container" class="space-y-3"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-3">
+          <button
+            type="button"
+            onclick="saveAlloggiatiData()"
+            class="flex-1 py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <i data-lucide="save" class="w-4 h-4 text-[#86868b]"></i>
+            <span>Salva Modifiche</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="exportAlloggiatiTxt()"
+            class="flex-1 py-3 px-4 rounded-xl bg-[#30d158] hover:bg-[#28b84e] text-black font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Scarica File Alloggiati (.txt)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
 
   </div>
 

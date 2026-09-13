@@ -353,6 +353,8 @@ function setupTabs() {
         loadMediaData();
       } else if (targetTab === 'messages') {
         fetchAndRenderScheduledMessages();
+      } else if (targetTab === 'alloggiati') {
+        renderAlloggiatiTab();
       }
 
       renderIcons();
@@ -1966,3 +1968,749 @@ window.deleteScheduledMessage = async function(id) {
     showToast(`Errore: ${err.message}`, 'error');
   }
 };
+
+
+// ============================================================
+// ALLOGGIATI WEB (QUESTURA DECLARATION GENERATION)
+// ============================================================
+
+const ALLOGGIATI_COMUNI = [
+  { name: 'Morbegno (SO)', code: '101014045', province: 'SO' },
+  { name: 'Sondrio (SO)', code: '101014061', province: 'SO' },
+  { name: 'Cosio Valtellino (SO)', code: '101014024', province: 'SO' },
+  { name: 'Talamona (SO)', code: '101014063', province: 'SO' },
+  { name: 'Ardenno (SO)', code: '101014005', province: 'SO' },
+  { name: 'Delebio (SO)', code: '101014026', province: 'SO' },
+  { name: 'Colico (LC)', code: '101097023', province: 'LC' },
+  { name: 'Chiavenna (SO)', code: '101014018', province: 'SO' },
+  { name: 'Tirano (SO)', code: '101014066', province: 'SO' },
+  { name: 'Bormio (SO)', code: '101014009', province: 'SO' },
+  { name: 'Milano (MI)', code: '101015146', province: 'MI' },
+  { name: 'Roma (RM)', code: '101058091', province: 'RM' },
+  { name: 'Lecco (LC)', code: '101097042', province: 'LC' },
+  { name: 'Bergamo (BG)', code: '101016024', province: 'BG' },
+  { name: 'Monza (MB)', code: '101108055', province: 'MB' },
+  { name: 'Como (CO)', code: '101013075', province: 'CO' },
+];
+
+const ALLOGGIATI_COUNTRIES = [
+  { name: 'ITALIA', code: '100000100' },
+  { name: 'GERMANIA', code: '100000216' },
+  { name: 'SVIZZERA', code: '100000244' },
+  { name: 'REGNO UNITO', code: '100000219' },
+  { name: 'FRANCIA', code: '100000214' },
+  { name: 'STATI UNITI (USA)', code: '100000311' },
+  { name: 'PAESI BASSI', code: '100000231' },
+  { name: 'SPAGNA', code: '100000242' },
+  { name: 'BELGIO', code: '100000204' },
+  { name: 'AUSTRIA', code: '100000203' },
+  { name: 'POLONIA', code: '100000233' },
+  { name: 'REPUBBLICA CECA', code: '100000248' },
+  { name: 'CANADA', code: '100000302' },
+  { name: 'AUSTRALIA', code: '100000501' },
+  { name: 'CINA', code: '100000407' },
+];
+
+let selectedAlloggiatiPass = null;
+let alloggiatiGuestsState = [];
+
+function normalizeTextForAlloggiati(val) {
+  if (!val) return '';
+  return val
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g, "")
+    .trim();
+}
+
+function convertDateToItalian(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
+function mapNatToAlloggiatiCode(natStr) {
+  const norm = (natStr || '').trim().toUpperCase();
+  if (!norm) return '100000100';
+  if (norm.includes('ITA')) return '100000100';
+  if (norm.includes('GERM') || norm.includes('DEU') || norm.includes('TED')) return '100000216';
+  if (norm.includes('SVIZ') || norm.includes('SWIT') || norm.includes('CHE')) return '100000244';
+  if (norm.includes('FRAN') || norm.includes('FRA')) return '100000214';
+  if (norm.includes('REGN') || norm.includes('UNIT') || norm.includes('GBR') || norm.includes('UK')) return '100000219';
+  if (norm.includes('SPAG') || norm.includes('SPAI') || norm.includes('ESP')) return '100000242';
+  if (norm.includes('PAES') || norm.includes('OLAN') || norm.includes('NETH')) return '100000231';
+  if (norm.includes('AUSTRI') || norm.includes('AUT')) return '100000203';
+  if (norm.includes('BELG') || norm.includes('BEL')) return '100000204';
+  if (norm.includes('STAT') || norm.includes('USA') || norm.includes('AMER')) return '100000311';
+  return '100000100';
+}
+
+
+window.renderAlloggiatiTab = function() {
+  const container = document.getElementById('alloggiati-passes-container');
+  if (!container) return;
+
+  if (activePasses.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-xs text-[#86868b]">
+        Nessuna prenotazione o pass ospite presente in memoria.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = activePasses.map(pass => {
+    const uploadedCount = pass.documentsData ? pass.documentsData.length : 0;
+    const hasDocs = pass.documentsUploaded || uploadedCount > 0;
+    const badgeHtml = hasDocs 
+      ? `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#30d158] bg-[#30d158]/10 border border-[#30d158]/20 px-2.5 py-0.5 rounded-full">
+           <i data-lucide="check" class="w-3 h-3"></i> Documenti (${uploadedCount})
+         </span>`
+      : `<span class="inline-flex items-center gap-1 text-[11px] font-medium text-[#86868b] bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full">
+           <i data-lucide="info" class="w-3 h-3"></i> Da caricare
+         </span>`;
+
+    return `
+      <div 
+        onclick="selectAlloggiatiPass('${pass.id}')"
+        class="apple-card p-4 hover:border-[#30d158]/40 hover:shadow-xs transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+      >
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-white group-hover:text-[#30d158] transition">
+              ${pass.guestName} ${pass.guestSurname}
+            </span>
+            ${pass.bookingRef ? `
+              <span class="text-[10px] font-mono bg-white/5 text-[#86868b] border border-white/10 px-1.5 py-0.5 rounded">
+                ${pass.bookingRef}
+              </span>
+            ` : ''}
+          </div>
+          <div class="text-xs text-[#86868b] flex flex-wrap items-center gap-3 font-mono">
+            <span>Check-in: ${convertDateToItalian(pass.checkInDate)}</span>
+            <span>•</span>
+            <span>Check-out: ${convertDateToItalian(pass.checkOutDate)}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+          ${badgeHtml}
+          <button class="py-1.5 px-3 rounded-lg bg-[#2c2c2e] group-hover:bg-[#30d158] group-hover:text-black text-white font-bold text-xs transition cursor-pointer">
+            Seleziona
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderIcons();
+};
+
+window.showAlloggiatiList = function() {
+  document.getElementById('alloggiati-list-view').classList.remove('hidden');
+  document.getElementById('alloggiati-detail-view').classList.add('hidden');
+  window.renderAlloggiatiTab();
+};
+
+window.selectAlloggiatiPass = function(passId) {
+  const pass = activePasses.find(p => p.id === passId);
+  if (!pass) return;
+
+  selectedAlloggiatiPass = pass;
+  
+  // Toggle Views
+  document.getElementById('alloggiati-list-view').classList.add('hidden');
+  document.getElementById('alloggiati-detail-view').classList.remove('hidden');
+  document.getElementById('alloggiati-feedback').classList.add('hidden');
+
+  // Fill booking header info
+  document.getElementById('alloggiati-booking-ref').textContent = `Rif: ${pass.bookingRef || 'N/A'}`;
+  document.getElementById('alloggiati-guest-title').textContent = `${pass.guestName} ${pass.guestSurname}`;
+  document.getElementById('alloggiati-checkin-val').textContent = convertDateToItalian(pass.checkInDate);
+  document.getElementById('alloggiati-checkout-val').textContent = convertDateToItalian(pass.checkOutDate);
+
+  // Set default stay days
+  let days = 1;
+  if (pass.checkInDate && pass.checkOutDate) {
+    const diff = new Date(pass.checkOutDate).getTime() - new Date(pass.checkInDate).getTime();
+    days = Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24)));
+  }
+  document.getElementById('alloggiati-stay-days').value = days;
+
+  // Map guests state
+  if (pass.documentsData && pass.documentsData.length > 0) {
+    alloggiatiGuestsState = pass.documentsData.map((d, index) => ({
+      tipoAlloggiato: d.tipoAlloggiato || (index === 0 ? '16' : '17'),
+      name: d.name || '',
+      surname: d.surname || '',
+      gender: d.gender || 'M',
+      birthDate: d.birthDate || '',
+      citizenshipCode: d.citizenshipCode || mapNatToAlloggiatiCode(d.nationality),
+      birthPlaceCode: d.birthPlaceCode || (d.birthPlace && d.birthPlace.length === 9 ? d.birthPlace : '101014045'),
+      birthPlaceProvince: d.birthPlaceProvince || 'SO',
+      documentType: d.documentType === 'passaporto' ? 'PASSA' : d.documentType === 'patente' ? 'PATEN' : 'IDENT',
+      documentNumber: d.documentNumber || '',
+      documentIssuingPlace: d.documentIssuingPlace || '101014045',
+    }));
+  } else {
+    alloggiatiGuestsState = [{
+      tipoAlloggiato: '16',
+      name: pass.guestName || '',
+      surname: pass.guestSurname || '',
+      gender: 'M',
+      birthDate: '',
+      citizenshipCode: '100000100',
+      birthPlaceCode: '101014045',
+      birthPlaceProvince: 'SO',
+      documentType: 'IDENT',
+      documentNumber: '',
+      documentIssuingPlace: '101014045',
+    }];
+
+    const totalCount = pass.guestsCount || 1;
+    for (let i = 1; i < totalCount; i++) {
+      alloggiatiGuestsState.push({
+        tipoAlloggiato: '17',
+        name: '',
+        surname: '',
+        gender: 'M',
+        birthDate: '',
+        citizenshipCode: '100000100',
+        birthPlaceCode: '101014045',
+        birthPlaceProvince: 'SO',
+        documentType: 'IDENT',
+        documentNumber: '',
+        documentIssuingPlace: '101014045',
+      });
+    }
+  }
+
+  renderAlloggiatiGuestsList();
+};
+
+window.renderAlloggiatiGuestsList = function() {
+  const container = document.getElementById('alloggiati-guests-accordion-container');
+  if (!container) return;
+
+  if (alloggiatiGuestsState.length === 0) {
+    container.innerHTML = `<div class="text-center py-6 text-xs text-[#86868b]">Nessun ospite inserito.</div>`;
+    return;
+  }
+
+  container.innerHTML = alloggiatiGuestsState.map((g, idx) => {
+    const isCapogruppo = g.tipoAlloggiato === '16';
+    const fullName = (g.surname || g.name) 
+      ? `${g.surname.toUpperCase()} ${g.name.toUpperCase()}` 
+      : `Ospite #${idx + 1} (Da compilare)`;
+    const typeLabel = isCapogruppo ? 'Capogruppo/Capofamiglia' : g.tipoAlloggiato === '17' ? 'Familiare' : 'Membro gruppo';
+    
+    const countryOptions = ALLOGGIATI_COUNTRIES.map(c => `
+      <option value="${c.code}" ${g.citizenshipCode === c.code ? 'selected' : ''}>${c.name} (${c.code})</option>
+    `).join('');
+
+    const comuneOptions = ALLOGGIATI_COMUNI.map(c => `
+      <option value="${c.code}" ${g.birthPlaceCode === c.code ? 'selected' : ''}>${c.name}</option>
+    `).join('');
+
+    const isCustomCountry = ALLOGGIATI_COUNTRIES.every(c => c.code !== g.citizenshipCode);
+    const isCustomComune = ALLOGGIATI_COMUNI.every(c => c.code !== g.birthPlaceCode);
+    const isPassport = g.documentType === 'PASSA';
+
+    return `
+      <div class="apple-card border border-white/[0.08] rounded-xl overflow-hidden" id="alloggiati-card-${idx}">
+        <!-- Header -->
+        <div 
+          onclick="toggleAlloggiatiAccordion(${idx})"
+          class="p-4 bg-white/[0.02] hover:bg-white/[0.04] transition flex items-center justify-between gap-3 cursor-pointer select-none"
+        >
+          <div class="flex items-center gap-3">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${isCapogruppo ? 'bg-[#30d158] text-black' : 'bg-[#2c2c2e] text-[#86868b]'}">
+              ${idx + 1}
+            </span>
+            <div>
+              <span class="font-bold text-white">${fullName}</span>
+              <span class="text-[10px] font-mono text-[#86868b] ml-2 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+                ${typeLabel}
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${alloggiatiGuestsState.length > 1 ? `
+              <button 
+                type="button" 
+                onclick="event.stopPropagation(); removeAlloggiatiGuest(${idx})" 
+                class="p-1.5 rounded-lg text-[#86868b] hover:text-[#ff453a] hover:bg-[#ff453a]/10 transition"
+              >
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+            <i data-lucide="chevron-down" class="w-4 h-4 text-[#86868b] transform transition-transform" id="alloggiati-arrow-${idx}"></i>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div id="alloggiati-body-${idx}" class="hidden p-4 border-t border-white/[0.06] grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <!-- Tipo Alloggiato -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Tipo Alloggiato *</label>
+            <select
+              onchange="updateAlloggiatiField(${idx}, 'tipoAlloggiato', this.value); renderAlloggiatiGuestsList();"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none focus:ring-1 focus:ring-[#30d158]"
+            >
+              <option value="16" ${g.tipoAlloggiato === '16' ? 'selected' : ''}>Capofamiglia / Capogruppo / Ospite Singolo</option>
+              <option value="17" ${g.tipoAlloggiato === '17' ? 'selected' : ''}>Familiare</option>
+              <option value="18" ${g.tipoAlloggiato === '18' ? 'selected' : ''}>Membro del gruppo</option>
+            </select>
+          </div>
+
+          <!-- Sesso -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Sesso *</label>
+            <select
+              onchange="updateAlloggiatiField(${idx}, 'gender', this.value)"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+            >
+              <option value="M" ${g.gender === 'M' ? 'selected' : ''}>Maschio (M)</option>
+              <option value="F" ${g.gender === 'F' ? 'selected' : ''}>Femmina (F)</option>
+            </select>
+          </div>
+
+          <!-- Cognome -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Cognome *</label>
+            <input
+              type="text"
+              value="${g.surname}"
+              oninput="updateAlloggiatiField(${idx}, 'surname', this.value.toUpperCase())"
+              placeholder="ES. ROSSI"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+            />
+          </div>
+
+          <!-- Nome -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Nome *</label>
+            <input
+              type="text"
+              value="${g.name}"
+              oninput="updateAlloggiatiField(${idx}, 'name', this.value.toUpperCase())"
+              placeholder="ES. MARIO"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+            />
+          </div>
+
+          <!-- Data Nascita -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Data di Nascita *</label>
+            <input
+              type="date"
+              value="${g.birthDate}"
+              onchange="updateAlloggiatiField(${idx}, 'birthDate', this.value)"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+            />
+          </div>
+
+          <!-- Cittadinanza -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Cittadinanza Stato *</label>
+            <select
+              onchange="updateAlloggiatiField(${idx}, 'citizenshipCode', this.value); renderAlloggiatiGuestsList();"
+              class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+            >
+              ${countryOptions}
+              <option value="custom" ${isCustomCountry ? 'selected' : ''}>--- Inserisci codice manuale ---</option>
+            </select>
+            ${isCustomCountry ? `
+              <input
+                type="text"
+                maxLength="9"
+                value="${g.citizenshipCode === 'custom' ? '' : g.citizenshipCode}"
+                oninput="updateAlloggiatiField(${idx}, 'citizenshipCode', this.value.replace(/[^0-9]/g, ''))"
+                placeholder="Codice Paese (9 cifre)"
+                class="w-full mt-1.5 bg-[#1c1c1e] text-white px-3 py-1.5 rounded-lg border border-white/10 font-mono text-center focus:outline-none"
+              />
+            ` : ''}
+          </div>
+
+          <!-- Luogo di Nascita -->
+          <div>
+            <label class="block text-[#86868b] font-mono mb-1">Luogo di Nascita *</label>
+            ${g.citizenshipCode === '100000100' ? `
+              <select
+                onchange="updateAlloggiatiComune(${idx}, this.value)"
+                class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+              >
+                ${comuneOptions}
+                <option value="custom" ${isCustomComune ? 'selected' : ''}>--- Inserisci codice manuale ---</option>
+              </select>
+              ${isCustomComune ? `
+                <div class="grid grid-cols-2 gap-2 mt-1.5">
+                  <input
+                    type="text"
+                    maxLength="9"
+                    value="${g.birthPlaceCode === 'custom' ? '' : g.birthPlaceCode}"
+                    oninput="updateAlloggiatiField(${idx}, 'birthPlaceCode', this.value.replace(/[^0-9]/g, ''))"
+                    placeholder="Codice Comune (9 cifre)"
+                    class="bg-[#1c1c1e] text-white px-3 py-1.5 rounded-lg border border-white/10 font-mono text-center focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    maxLength="2"
+                    value="${g.birthPlaceProvince}"
+                    oninput="updateAlloggiatiField(${idx}, 'birthPlaceProvince', this.value.toUpperCase().replace(/[^A-Z]/g, ''))"
+                    placeholder="Provincia (ES. SO)"
+                    class="bg-[#1c1c1e] text-white px-3 py-1.5 rounded-lg border border-white/10 font-bold text-center focus:outline-none"
+                  />
+                </div>
+              ` : ''}
+            ` : `
+              <select
+                onchange="updateAlloggiatiField(${idx}, 'birthPlaceCode', this.value); renderAlloggiatiGuestsList();"
+                class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+              >
+                ${countryOptions}
+                <option value="custom" ${isCustomComune ? 'selected' : ''}>--- Inserisci codice manuale ---</option>
+              </select>
+              ${isCustomComune ? `
+                <input
+                  type="text"
+                  maxLength="9"
+                  value="${g.birthPlaceCode === 'custom' ? '' : g.birthPlaceCode}"
+                  oninput="updateAlloggiatiField(${idx}, 'birthPlaceCode', this.value.replace(/[^0-9]/g, ''))"
+                  placeholder="Codice Paese (9 cifre)"
+                  class="w-full mt-1.5 bg-[#1c1c1e] text-white px-3 py-1.5 rounded-lg border border-white/10 font-mono text-center focus:outline-none"
+                />
+              ` : ''}
+            `}
+          </div>
+
+          <!-- DOCUMENT DETAILS - ONLY REQUIRED FOR CAPOGRUPPO -->
+          ${isCapogruppo ? `
+            <div class="md:col-span-2 border-t border-white/[0.06] pt-4 mt-2 space-y-4">
+              <h5 class="font-mono font-bold text-[11px] text-[#30d158] tracking-wider uppercase">
+                Dettagli Documento Identità (Solo Capogruppo)
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-[#86868b] font-mono mb-1">Tipo Documento *</label>
+                  <select
+                    onchange="updateAlloggiatiField(${idx}, 'documentType', this.value); renderAlloggiatiGuestsList();"
+                    class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+                  >
+                    <option value="IDENT" ${g.documentType === 'IDENT' ? 'selected' : ''}>Carta d'Identità (IDENT)</option>
+                    <option value="PASSA" ${g.documentType === 'PASSA' ? 'selected' : ''}>Passaporto (PASSA)</option>
+                    <option value="PATEN" ${g.documentType === 'PATEN' ? 'selected' : ''}>Patente di Guida (PATEN)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[#86868b] font-mono mb-1">Numero Documento *</label>
+                  <input
+                    type="text"
+                    value="${g.documentNumber}"
+                    oninput="updateAlloggiatiField(${idx}, 'documentNumber', this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))"
+                    placeholder="ES. CA12345AB"
+                    class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-[#86868b] font-mono mb-1">Luogo Rilascio Documento *</label>
+                  ${isPassport ? `
+                    <select
+                      onchange="updateAlloggiatiField(${idx}, 'documentIssuingPlace', this.value); renderAlloggiatiGuestsList();"
+                      class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+                    >
+                      ${countryOptions}
+                      <option value="custom" ${ALLOGGIATI_COUNTRIES.every(c => c.code !== g.documentIssuingPlace) ? 'selected' : ''}>--- Inserisci codice manuale ---</option>
+                    </select>
+                  ` : `
+                    <select
+                      onchange="updateAlloggiatiField(${idx}, 'documentIssuingPlace', this.value); renderAlloggiatiGuestsList();"
+                      class="w-full bg-[#1c1c1e] text-white px-3 py-2 rounded-xl border border-white/10 font-bold focus:outline-none"
+                    >
+                      ${comuneOptions}
+                      <option value="custom" ${ALLOGGIATI_COMUNI.every(c => c.code !== g.documentIssuingPlace) ? 'selected' : ''}>--- Inserisci codice manuale ---</option>
+                    </select>
+                  `}
+                  ${(g.documentIssuingPlace === 'custom' || (isPassport ? ALLOGGIATI_COUNTRIES.every(c => c.code !== g.documentIssuingPlace) : ALLOGGIATI_COMUNI.every(c => c.code !== g.documentIssuingPlace))) ? `
+                    <input
+                      type="text"
+                      maxLength="9"
+                      value="${g.documentIssuingPlace === 'custom' ? '' : g.documentIssuingPlace}"
+                      oninput="updateAlloggiatiField(${idx}, 'documentIssuingPlace', this.value.replace(/[^0-9]/g, ''))"
+                      placeholder="Codice 9 cifre"
+                      class="w-full mt-1.5 bg-[#1c1c1e] text-white px-3 py-1.5 rounded-lg border border-white/10 font-mono text-center focus:outline-none"
+                    />
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          ` : ''}
+
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (expandedIndex !== null && expandedIndex < alloggiatiGuestsState.length) {
+    toggleAlloggiatiAccordion(expandedIndex, true);
+  }
+
+  renderIcons();
+};
+
+
+window.toggleAlloggiatiAccordion = function(idx, forceExpand = false) {
+  const body = document.getElementById(`alloggiati-body-${idx}`);
+  const arrow = document.getElementById(`alloggiati-arrow-${idx}`);
+  const card = document.getElementById(`alloggiati-card-${idx}`);
+  if (!body || !arrow || !card) return;
+
+  const isExpanded = forceExpand || body.classList.contains('hidden');
+
+  // Collapse all bodies first
+  alloggiatiGuestsState.forEach((_, i) => {
+    const b = document.getElementById(`alloggiati-body-${i}`);
+    const a = document.getElementById(`alloggiati-arrow-${i}`);
+    const c = document.getElementById(`alloggiati-card-${i}`);
+    if (b && a && c) {
+      b.classList.add('hidden');
+      a.classList.remove('rotate-180');
+      c.classList.remove('border-[#30d158]/30', 'bg-white/[0.01]');
+    }
+  });
+
+  if (isExpanded) {
+    body.classList.remove('hidden');
+    arrow.classList.add('rotate-180');
+    card.classList.add('border-[#30d158]/30', 'bg-white/[0.01]');
+    expandedIndex = idx;
+  } else {
+    expandedIndex = null;
+  }
+};
+
+window.updateAlloggiatiField = function(idx, field, value) {
+  if (idx >= 0 && idx < alloggiatiGuestsState.length) {
+    alloggiatiGuestsState[idx][field] = value;
+    
+    // Smart Defaults
+    if (field === 'citizenshipCode' && value !== '100000100') {
+      alloggiatiGuestsState[idx].birthPlaceProvince = '';
+      alloggiatiGuestsState[idx].birthPlaceCode = value;
+    }
+  }
+};
+
+window.updateAlloggiatiComune = function(idx, value) {
+  if (idx >= 0 && idx < alloggiatiGuestsState.length) {
+    alloggiatiGuestsState[idx].birthPlaceCode = value;
+    const selected = ALLOGGIATI_COMUNI.find(c => c.code === value);
+    if (selected) {
+      alloggiatiGuestsState[idx].birthPlaceProvince = selected.province;
+    }
+    renderAlloggiatiGuestsList();
+  }
+};
+
+window.addAlloggiatiGuestForm = function() {
+  alloggiatiGuestsState.push({
+    tipoAlloggiato: '17',
+    name: '',
+    surname: '',
+    gender: 'M',
+    birthDate: '',
+    citizenshipCode: '100000100',
+    birthPlaceCode: '101014045',
+    birthPlaceProvince: 'SO',
+    documentType: 'IDENT',
+    documentNumber: '',
+    documentIssuingPlace: '101014045',
+  });
+  expandedIndex = alloggiatiGuestsState.length - 1;
+  renderAlloggiatiGuestsList();
+};
+
+window.removeAlloggiatiGuest = function(idx) {
+  if (alloggiatiGuestsState.length <= 1) {
+    showAlloggiatiFeedback('Deve esserci almeno un ospite (Capogruppo).', 'error');
+    return;
+  }
+  alloggiatiGuestsState = alloggiatiGuestsState.filter((_, i) => i !== idx);
+  expandedIndex = Math.max(0, idx - 1);
+  renderAlloggiatiGuestsList();
+};
+
+
+function showAlloggiatiFeedback(msg, type) {
+  const container = document.getElementById('alloggiati-feedback');
+  if (!container) return;
+
+  container.className = `p-3.5 rounded-xl text-xs font-medium flex items-start gap-2 border leading-relaxed ${
+    type === 'success' 
+      ? 'bg-[#30d158]/10 border-[#30d158]/20 text-[#30d158]' 
+      : type === 'error' 
+      ? 'bg-[#ff453a]/10 border-[#ff453a]/20 text-[#ff453a]' 
+      : 'bg-[#0a84ff]/10 border-[#0a84ff]/20 text-[#0a84ff]'
+  }`;
+
+  const iconClass = type === 'error' ? 'alert-triangle' : 'check';
+  container.innerHTML = `
+    <i data-lucide="${iconClass}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+    <span>${msg}</span>
+  `;
+  container.classList.remove('hidden');
+  renderIcons();
+}
+
+window.saveAlloggiatiData = async function() {
+  if (!selectedAlloggiatiPass) return;
+  showAlloggiatiFeedback('Salvataggio in corso...', 'loading');
+
+  const documentsDataToSave = alloggiatiGuestsState.map(g => ({
+    documentType: g.documentType === 'PASSA' ? 'passaporto' : g.documentType === 'PATEN' ? 'patente' : 'identita',
+    documentNumber: g.documentNumber,
+    name: g.name,
+    surname: g.surname,
+    birthDate: g.birthDate,
+    birthPlace: g.birthPlaceCode,
+    nationality: g.citizenshipCode === '100000100' ? 'ITALIANA' : 'ESTERA',
+    gender: g.gender,
+    tipoAlloggiato: g.tipoAlloggiato,
+    citizenshipCode: g.citizenshipCode,
+    birthPlaceCode: g.birthPlaceCode,
+    birthPlaceProvince: g.birthPlaceProvince,
+    documentIssuingPlace: g.documentIssuingPlace
+  }));
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/passes/${selectedAlloggiatiPass.id}/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ documentsData: documentsDataToSave })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Errore di salvataggio.');
+    }
+
+    // Update in local activePasses array
+    const idx = activePasses.findIndex(p => p.id === selectedAlloggiatiPass.id);
+    if (idx !== -1) {
+      activePasses[idx].documentsData = documentsDataToSave;
+      activePasses[idx].documentsUploaded = true;
+    }
+
+    showAlloggiatiFeedback('Dati degli ospiti salvati con successo!', 'success');
+  } catch (err) {
+    showAlloggiatiFeedback(`Errore: ${err.message}`, 'error');
+  }
+};
+
+
+window.exportAlloggiatiTxt = function() {
+  if (!selectedAlloggiatiPass) return;
+
+  const stayDays = parseInt(document.getElementById('alloggiati-stay-days').value) || 1;
+
+  for (let i = 0; i < alloggiatiGuestsState.length; i++) {
+    const g = alloggiatiGuestsState[i];
+    if (!g.name.trim() || !g.surname.trim()) {
+      showAlloggiatiFeedback(`Ospite #${i + 1}: Nome e Cognome sono obbligatori.`, 'error');
+      window.toggleAlloggiatiAccordion(i, true);
+      return;
+    }
+    if (!g.birthDate) {
+      showAlloggiatiFeedback(`Ospite #${i + 1}: Data di nascita è obbligatoria.`, 'error');
+      window.toggleAlloggiatiAccordion(i, true);
+      return;
+    }
+    if (!g.citizenshipCode) {
+      showAlloggiatiFeedback(`Ospite #${i + 1}: Codice cittadinanza obbligatorio.`, 'error');
+      window.toggleAlloggiatiAccordion(i, true);
+      return;
+    }
+    if (!g.birthPlaceCode) {
+      showAlloggiatiFeedback(`Ospite #${i + 1}: Comune o Stato di nascita obbligatorio.`, 'error');
+      window.toggleAlloggiatiAccordion(i, true);
+      return;
+    }
+    if (g.citizenshipCode === '100000100' && !g.birthPlaceProvince.trim()) {
+      showAlloggiatiFeedback(`Ospite #${i + 1}: Provincia di nascita obbligatoria per cittadini italiani.`, 'error');
+      window.toggleAlloggiatiAccordion(i, true);
+      return;
+    }
+
+    if (g.tipoAlloggiato === '16') {
+      if (!g.documentNumber.trim()) {
+        showAlloggiatiFeedback(`Ospite #${i + 1} (Capogruppo): Il numero di documento è obbligatorio.`, 'error');
+        window.toggleAlloggiatiAccordion(i, true);
+        return;
+      }
+      if (!g.documentIssuingPlace) {
+        showAlloggiatiFeedback(`Ospite #${i + 1} (Capogruppo): Il luogo di rilascio del documento è obbligatorio.`, 'error');
+        window.toggleAlloggiatiAccordion(i, true);
+        return;
+      }
+    }
+  }
+
+  try {
+    let fileContent = '';
+
+    alloggiatiGuestsState.forEach(g => {
+      const pTipo = g.tipoAlloggiato;
+      const pDataArrivo = convertDateToItalian(selectedAlloggiatiPass.checkInDate);
+      const pGiorni = String(stayDays).padStart(2, '0');
+      
+      const pCognome = normalizeTextForAlloggiati(g.surname).substring(0, 50).padEnd(50, ' ');
+      const pNome = normalizeTextForAlloggiati(g.name).substring(0, 30).padEnd(30, ' ');
+      const pSesso = (g.gender === 'F' ? 'F' : 'M') + ' ';
+      
+      const pDataNascita = convertDateToItalian(g.birthDate);
+      const pComuneNascita = g.birthPlaceCode.padStart(9, ' ').substring(0, 9);
+      const pProvNascita = (g.citizenshipCode === '100000100' ? g.birthPlaceProvince.toUpperCase().substring(0, 2) : '  ').padEnd(2, ' ');
+      const pCittadinanza = g.citizenshipCode.padStart(9, ' ').substring(0, 9);
+
+      let pDocTipo = '     ';
+      let pDocNum = '                    ';
+      let pDocRilascio = '         ';
+
+      if (g.tipoAlloggiato === '16') {
+        pDocTipo = g.documentType.padEnd(5, ' ').substring(0, 5);
+        pDocNum = g.documentNumber.toUpperCase().replace(/[^A-Z0-9]/g, '').padEnd(20, ' ').substring(0, 20);
+        pDocRilascio = g.documentIssuingPlace.padStart(9, ' ').substring(0, 9);
+      }
+
+      const line = `${pTipo}${pDataArrivo}${pGiorni}${pCognome}${pNome}${pSesso}${pDataNascita}${pComuneNascita}${pProvNascita}${pCittadinanza}${pDocTipo}${pDocNum}${pDocRilascio}`;
+      
+      if (line.length !== 160) {
+        throw new Error(`Errore interno: riga generata di lunghezza ${line.length} anziché 160 caratteri.`);
+      }
+
+      fileContent += line + '\r\n';
+    });
+
+    const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const cleanRef = selectedAlloggiatiPass.bookingRef ? selectedAlloggiatiPass.bookingRef.replace(/[^A-Za-z0-9_-]/g, '') : 'booking';
+    a.href = url;
+    a.download = `alloggiati_web_${selectedAlloggiatiPass.checkInDate}_${cleanRef}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showAlloggiatiFeedback('File .txt Alloggiati Web scaricato correttamente! Puoi ora importarlo nel portale della Polizia di Stato.', 'success');
+  } catch (err) {
+    showAlloggiatiFeedback(`Errore: ${err.message}`, 'error');
+  }
+};
+
+
