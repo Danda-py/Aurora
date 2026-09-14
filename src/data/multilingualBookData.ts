@@ -260,7 +260,9 @@ export const BOOK_DATA: Record<Language, {
         { title: "FRIGORIFERO & CONGELATORE", desc: "Capiente con scomparto freezer" },
         { title: "LAVATRICE & STENDIBIANCHERIA", desc: "Detersivo e stendibiancheria forniti" },
         { title: "KIT CORTESIA BAGNO", desc: "Asciugacapelli potente, sapone e docciaschiuma" },
-        { title: "PARCHEGGIO PRIVATO RISERVATO", desc: "Posto auto privato dell'abitazione sempre libero e riservato" }
+        { title: "PARCHEGGIO PRIVATO RISERVATO", desc: "Posto auto privato dell'abitazione sempre libero e riservato" },
+        { title: "QUADRO ELETTRICO & SALVAVITA", desc: "All'ingresso a parete. In caso di sovraccarico (induzione + forno), spegnere un carico e rialzare la levetta." },
+        { title: "TERMOSTATO & CLIMATIZZATORE", desc: "Termostato touch a parete (20-21°C) e telecomando clima con selezione rapida fresco/caldo." }
       ],
       notice: "Tutti i servizi sono a vostro uso esclusivo. Vi chiediamo di spegnere luci ed elettrodomestici quando uscite per rispettare l'ambiente."
     },
@@ -658,7 +660,9 @@ export const BOOK_DATA: Record<Language, {
         { title: "REFRIGERATOR & FREEZER", desc: "Spacious fridge with freezer box" },
         { title: "WASHING MACHINE & DRYING RACK", desc: "Detergent and drying rack provided" },
         { title: "BATHROOM COURTESY SET", desc: "Hair dryer, soap, body wash and fresh towels" },
-        { title: "RESERVED PRIVATE PARKING", desc: "Dedicated space always free and reserved on the property" }
+        { title: "RESERVED PRIVATE PARKING", desc: "Dedicated space always free and reserved on the property" },
+        { title: "ELECTRICAL BREAKER PANEL", desc: "Wall panel at the entrance. In case of overload (induction + oven), turn off an appliance and reset the switch." },
+        { title: "THERMOSTAT & AIR CONDITIONING", desc: "Wall touch thermostat (20-21°C) and AC remote with instant cooling/heating control." }
       ],
       notice: "All amenities are for your exclusive use. Please help us conserve energy by turning off appliances and lights when leaving the house."
     },
@@ -1036,7 +1040,9 @@ export const BOOK_DATA: Record<Language, {
         { title: "RÉFRIGÉRATEUR & CONGÉLATEUR", desc: "Grand modèle avec compartiment congélateur" },
         { title: "LAVE-LINGE & ÉTENDOIR", desc: "Lessive et étendoir fournis" },
         { title: "ARTICLES DE TOILETTE", desc: "Sèche-cheveux puissant, serviettes et gel douche" },
-        { title: "PARKING PRIVÉ RÉSERVÉ", desc: "Parking privé de l'habitation avec place toujours réservée" }
+        { title: "PARKING PRIVÉ RÉSERVÉ", desc: "Parking privé de l'habitation avec place toujours réservée" },
+        { title: "TABLEAU ÉLECTRIQUE & DISJONCTEUR", desc: "Dans le couloir d'entrée. En cas de coupure pour surcharge, éteindre un appareil et relever le levier." },
+        { title: "THERMOSTAT & CLIMATISATION", desc: "Thermostat tactile mural (20-21°C) et télécommande climatiseur pour régulation rapide." }
       ],
       notice: "Tous les équipements sont réservés à votre usage exclusif. Merci d'éteindre les appareils et lumières en quittant les lieux."
     },
@@ -1414,7 +1420,9 @@ export const BOOK_DATA: Record<Language, {
         { title: "FRIGORÍFICO Y CONGELADOR", desc: "Nevera espaciosa con congelador" },
         { title: "LAVADORA Y TENDEDERO", desc: "Detergente y tendedero disponibles" },
         { title: "KIT DE BAÑO DE CORTESÍA", desc: "Secador de pelo potente, toallas y gel de ducha" },
-        { title: "APARCAMIENTO PRIVADO RESERVADO", desc: "Aparcamiento privado de la vivienda con plaza reservada" }
+        { title: "APARCAMIENTO PRIVADO RESERVADO", desc: "Aparcamiento privado de la vivienda con plaza reservada" },
+        { title: "CUADRO ELÉCTRICO Y DIFERENCIAL", desc: "En el pasillo de entrada. En caso de sobrecarga (inducción + horno), apagar un aparato y subir la palanca." },
+        { title: "TERMOSTATO Y AIRE ACONDICIONADO", desc: "Termostato táctil de pared (20-21°C) y mando a distancia para calor o frío rápido." }
       ],
       notice: "Todos los servicios son de uso exclusivo. Ayúdanos a cuidar el entorno apagando electrodomésticos y luces al salir."
     },
@@ -1792,7 +1800,9 @@ export const BOOK_DATA: Record<Language, {
         { title: "KÜHLSCHRANK & GEFRIERFACH", desc: "Großer Kühlschrank mit Eisfach" },
         { title: "WASCHMASCHINE & WÄSCHESTÄNDER", desc: "Waschmittel und Wäscheständer vorhanden" },
         { title: "BAD-KOMFORTSET", desc: "Leistungsstarker Föhn, Handtücher und Duschgel vorhanden" },
-        { title: "RESERVIERTER PRIVATPARKPLATZ", desc: "Privater Parkplatz des Hauses mit stets reserviertem Stellplatz" }
+        { title: "RESERVIERTER PRIVATPARKPLATZ", desc: "Privater Parkplatz des Hauses mit stets reserviertem Stellplatz" },
+        { title: "SICHERUNGSKASTEN & SCHUTZSCHALTER", desc: "Im Eingangsflur. Bei Überlastung (Induktion + Ofen) ein Gerät ausschalten und Schalter nach oben drücken." },
+        { title: "RAUMTHERMOSTAT & KLIMAANLAGE", desc: "Touch-Wandthermostat (20-21°C) und Fernbedienung für schnelle Kühlung oder Heizung." }
       ],
       notice: "Alle Ausstattungen stehen Ihnen exklusiv zur Verfügung. Bitte schalten Sie beim Verlassen Geräte und Lichter aus."
     },

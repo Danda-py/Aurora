@@ -7,6 +7,7 @@ import {
   Flame, 
   Tv, 
   Coffee, 
+  Zap,
   HelpCircle, 
   ChevronDown, 
   ChevronUp, 
@@ -45,6 +46,7 @@ export const HouseGuideTab: React.FC<Props> = ({
 
   const getApplianceIcon = (icon: string) => {
     switch (icon) {
+      case 'Zap': return <Zap className="w-5 h-5 text-amber-600" />;
       case 'Wifi': return <Wifi className="w-5 h-5" />;
       case 'Thermometer': return <Thermometer className="w-5 h-5" />;
       case 'Sparkles': return <Sparkles className="w-5 h-5" />;

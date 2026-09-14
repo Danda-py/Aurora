@@ -1473,6 +1473,47 @@ function renderCmsFields() {
     return;
   }
 
+  const HUMAN_LABELS_MAP = {
+    'welcome.title': 'Titolo Card Benvenuto',
+    'welcome.greeting': 'Intestazione Ospite / Nome Struttura',
+    'welcome.message': 'Messaggio Personale dell\'Host',
+    'welcome.viewTitle': 'Titolo Vista Panoramica',
+    'welcome.viewDesc': 'Descrizione Servizi Struttura',
+    'welcome.livingTitle': 'Zona Soggiorno & Living',
+    'welcome.livingDesc': 'Dettagli Salotto',
+    'welcome.bedroomTitle': 'Zona Notte & Letto',
+    'welcome.bedroomDesc': 'Dettagli Camera da Letto',
+    'welcome.kitchenTitle': 'Cucina & Induzione',
+    'welcome.kitchenDesc': 'Istruzioni Cucina',
+    'wifi.networkLabel': 'Nome Rete Wi-Fi (SSID)',
+    'wifi.passwordLabel': 'Password Rete Wi-Fi',
+    'wifi.speedNotice': 'Velocità Connessione Fibra',
+    'rules.title': 'Regole della Casa',
+    'checkIn.title': 'Istruzioni Check-in',
+    'checkIn.parkingTitle': 'Parcheggio Riservato',
+    'checkIn.parkingDesc': 'Istruzioni Parcheggio Cortile',
+    'title': 'Titolo Card di Benvenuto',
+    'greeting': 'Intestazione Ospite / Nome Struttura',
+    'message': 'Messaggio Personale dell\'Host',
+    'viewTitle': 'Titolo Vista Panoramica',
+    'viewDesc': 'Descrizione Servizi Struttura',
+    'livingTitle': 'Zona Living & Salotto',
+    'livingDesc': 'Dettagli Zona Giorno',
+    'bedroomTitle': 'Zona Notte & Letto',
+    'bedroomDesc': 'Dettagli Camera da Letto',
+    'kitchenTitle': 'Cucina & Induzione',
+    'kitchenDesc': 'Istruzioni Cucina & Elettrodomestici',
+    'networkLabel': 'Nome Rete Wi-Fi (SSID)',
+    'passwordLabel': 'Password Wi-Fi',
+    'speedNotice': 'Velocità Connessione Fibra',
+    'cin': 'Codice Identificativo Nazionale (CIN)',
+    'cir': 'Codice Identificativo Regionale (CIR)'
+  };
+
+  const getFriendlyLabel = (key) => {
+    return HUMAN_LABELS_MAP[key] || HUMAN_LABELS_MAP[key.split('.').pop()] || key;
+  };
+
   const fieldItems = [];
 
   function walkFields(prefix, obj) {
@@ -1484,10 +1525,14 @@ function renderCmsFields() {
         const strVal = String(v);
         const isMultiline = strVal.length > 55 || strVal.includes('\n');
         const showTranslate = typeof v === 'string' && strVal.trim().length > 2 && !pathKey.toLowerCase().includes('phone') && !pathKey.toLowerCase().includes('url') && !pathKey.toLowerCase().includes('email') && !pathKey.toLowerCase().includes('color') && !pathKey.toLowerCase().includes('font');
+        const friendlyName = getFriendlyLabel(pathKey);
         fieldItems.push(`
           <div class="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
             <div class="flex items-center justify-between gap-2">
-              <label class="block text-xs font-mono text-[#ff9f0a] font-semibold">${pathKey}</label>
+              <div class="flex items-center gap-2">
+                <span class="block text-xs text-white font-bold">${friendlyName}</span>
+                <span class="text-[10px] font-mono text-white/40">(${pathKey})</span>
+              </div>
               ${showTranslate ? `
                 <button type="button" data-translate-path="${pathKey}" class="btn-cms-translate text-[10px] px-2 py-1 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/20 transition flex items-center gap-1 cursor-pointer">
                   ✨ Traduci con IA

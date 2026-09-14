@@ -4,7 +4,6 @@ import { generateRandomPin, formatInvitationMessage } from '../src/services/gues
 import { upsertPass, isSupabaseConfigured, loadDocument, saveDocument } from './supabaseStorage.js';
 import { sendGuestNotification } from './notificationService.js';
 import { GuestPass } from '../src/types.js';
-import { scheduleBookingMessages } from './scheduledMessagingService.js';
 let icalPollingInterval: NodeJS.Timeout | null = null;
 let isIcalPolling = false;
 

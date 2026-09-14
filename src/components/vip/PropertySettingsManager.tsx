@@ -15,7 +15,9 @@ import {
   AlertCircle,
   Navigation,
   Sliders,
-  Info
+  Info,
+  Zap,
+  Thermometer
 } from 'lucide-react';
 import { 
   fetchPropertyConfig, 
@@ -50,7 +52,46 @@ export const PropertySettingsManager: React.FC = () => {
     const res = await savePropertyConfig(config);
     if (res.success && res.config) {
       setConfig(res.config);
-      setStatusMessage({ type: 'success', text: 'Impostazioni della struttura salvate con successo!' });
+
+      if (config.breakerBoxInstructions || config.climateInstructions) {
+        try {
+          // Import dynamic appliances reference or fallback
+          const raw = localStorage.getItem('aurora_cms_appliances_override');
+          let list = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(list) || list.length === 0) {
+            list = [
+              {
+                id: 'breaker_box',
+                title: { it: 'Quadro Elettrico & Salvavita', en: 'Electrical Breaker Box' },
+                icon: 'Zap',
+                instructions: { it: config.breakerBoxInstructions ? config.breakerBoxInstructions.split('\n').filter(Boolean) : [] },
+                tips: { it: 'Evita sovraccarichi spegnendo un elettrodomestico prima di riarmare la levetta.' }
+              },
+              {
+                id: 'thermostat',
+                title: { it: 'Riscaldamento, Termostato & Condizionatore', en: 'Heating, Thermostat & Air Conditioning' },
+                icon: 'Thermometer',
+                instructions: { it: config.climateInstructions ? config.climateInstructions.split('\n').filter(Boolean) : [] },
+                tips: { it: 'Tieni finestre chiuse con riscaldamento o climatizzatore in funzione.' }
+              }
+            ];
+          } else {
+            const b = list.find((x: any) => x.id === 'breaker_box');
+            if (b && config.breakerBoxInstructions) {
+              b.instructions.it = config.breakerBoxInstructions.split('\n').filter(Boolean);
+            }
+            const c = list.find((x: any) => x.id === 'thermostat');
+            if (c && config.climateInstructions) {
+              c.instructions.it = config.climateInstructions.split('\n').filter(Boolean);
+            }
+          }
+          localStorage.setItem('aurora_cms_appliances_override', JSON.stringify(list));
+        } catch (e) {
+          console.warn('Sync override fallback:', e);
+        }
+      }
+
+      setStatusMessage({ type: 'success', text: 'Impostazioni della struttura e istruzioni impianti salvate con successo!' });
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Errore durante il salvataggio.' });
     }
@@ -450,11 +491,16 @@ export const PropertySettingsManager: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 5: Normativa & Imposta di Soggiorno */}
+      {/* SECTION 5: Normativa Obbligatoria (CIN & CIR) */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
-        <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
-          <ShieldCheck className="w-4 h-4 text-indigo-600" />
-          <span>Codici Normativi Obbligatori & Tassa di Soggiorno</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
+            <ShieldCheck className="w-4 h-4 text-indigo-600" />
+            <span>Codici Normativi Obbligatori (Ministero del Turismo)</span>
+          </div>
+          <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-medium">
+            Tassa di soggiorno gestita direttamente dal portale
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -476,39 +522,6 @@ export const PropertySettingsManager: React.FC = () => {
               value={config.cirCode}
               onChange={(e) => setConfig({ ...config, cirCode: e.target.value })}
               placeholder="014045-CNI-00042"
-              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-600 mb-1">Tariffa Imposta Soggiorno (€/persona/notte)</label>
-            <input
-              type="number"
-              step="0.10"
-              value={config.touristTax?.ratePerNight ?? 1.50}
-              onChange={(e) => setConfig({
-                ...config,
-                touristTax: {
-                  ...config.touristTax,
-                  ratePerNight: parseFloat(e.target.value) || 0
-                }
-              })}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-gray-600 mb-1">Esenzione Minori di Anni</label>
-            <input
-              type="number"
-              value={config.touristTax?.exemptUnderAge ?? 12}
-              onChange={(e) => setConfig({
-                ...config,
-                touristTax: {
-                  ...config.touristTax,
-                  exemptUnderAge: parseInt(e.target.value, 10) || 0
-                }
-              })}
               className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
             />
           </div>
@@ -564,6 +577,53 @@ export const PropertySettingsManager: React.FC = () => {
               onChange={(e) => setConfig({ ...config, parkingSpot: e.target.value })}
               placeholder="Es. Box N. 4 interno cortile (telecomando o chiave in salotto)"
               className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-xs focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 7: Guida Impianti & Elettrodomestici (CMS Modificabile) */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
+            <Zap className="w-4 h-4 text-amber-600" />
+            <span>Istruzioni Salvavita, Quadro Elettrico & Riscaldamento/Clima</span>
+          </div>
+          <span className="text-[11px] text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 font-medium">
+            CMS Guida Casa
+          </span>
+        </div>
+
+        <p className="text-xs text-gray-500">
+          Questi testi compaiono direttamente nella guida della casa per gli ospiti quando selezionano gli elettrodomestici e gli impianti.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-mono text-gray-700 mb-1 flex items-center gap-1.5 font-bold">
+              <Zap className="w-3.5 h-3.5 text-amber-600" />
+              <span>Posizione Quadro Elettrico / Salvavita (Blackout & Sovraccarico Induzione/Forno)</span>
+            </label>
+            <textarea
+              rows={3}
+              value={config.breakerBoxInstructions || ''}
+              onChange={(e) => setConfig({ ...config, breakerBoxInstructions: e.target.value })}
+              placeholder="Es. Il quadro elettrico si trova all'ingresso. Se salta per induzione+forno..."
+              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-amber-200 leading-relaxed"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono text-gray-700 mb-1 flex items-center gap-1.5 font-bold">
+              <Thermometer className="w-3.5 h-3.5 text-rose-600" />
+              <span>Come Usare Riscaldamento, Termostato & Climatizzatore</span>
+            </label>
+            <textarea
+              rows={3}
+              value={config.climateInstructions || ''}
+              onChange={(e) => setConfig({ ...config, climateInstructions: e.target.value })}
+              placeholder="Es. Termostato a parete corridoio (20-21°C) e telecomando clima per fresco o caldo..."
+              className="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200 leading-relaxed"
             />
           </div>
         </div>

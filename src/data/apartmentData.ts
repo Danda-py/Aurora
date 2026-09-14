@@ -368,7 +368,67 @@ export const AMENITIES: Amenity[] = [
   },
 ];
 
-export const APPLIANCES: Appliance[] = [
+export const DEFAULT_APPLIANCES: Appliance[] = [
+  {
+    id: "breaker_box",
+    title: {
+      it: "Quadro Elettrico & Salvavita",
+      en: "Electrical Breaker Box (Power Overload)",
+      de: "Sicherungskasten & Schutzschalter",
+      fr: "Tableau Électrique & Disjoncteur",
+      es: "Cuadro Eléctrico & Diferencial",
+    },
+    icon: "Zap",
+    instructions: {
+      it: [
+        "Posizione: Il quadro elettrico generale dell'appartamento si trova all'ingresso / corridoio, all'interno dello sportellino a parete.",
+        "Se salta la corrente: Accade se si usano contemporaneamente elettrodomestici a forte assorbimento (es. piano a induzione alla massima potenza insieme a forno elettrico o lavatrice).",
+        "1. Spegni prima uno dei due elettrodomestici energivori (es. abbassa l'induzione o spegni il forno).",
+        "2. Apri lo sportello a parete del quadro elettrico.",
+        "3. Solleva con decisione verso l'alto la levetta dell'interruttore generale scattato in basso (posizione 'I' / ON).",
+        "4. Se la luce non torna subito o se è scattato il contatore generale esterno, contatta subito Nino al 391 7784042.",
+      ],
+      en: [
+        "Location: The main breaker box is located at the apartment entrance/hallway inside the wall cabinet door.",
+        "If power trips: It typically occurs when using heavy power appliances together (e.g. induction hob on high together with the oven or washer).",
+        "1. Turn off one of the high-power appliances first.",
+        "2. Open the wall panel door in the hallway.",
+        "3. Push the tripped breaker switch firmly UP to 'I' / ON position.",
+        "4. If power doesn't restore, call Nino immediately at +39 391 7784042.",
+      ],
+      de: [
+        "Standort: Der Sicherungskasten befindet sich im Eingangsbereich/Flur hinter der Wandklappe.",
+        "Bei Stromausfall: Tritt auf, wenn mehrere Großverbraucher gleichzeitig laufen (z.B. Induktionsfeld + Backofen).",
+        "1. Schalten Sie zuerst eines der Geräte aus.",
+        "2. Öffnen Sie die Abdeckung des Sicherungskastens.",
+        "3. Drücken Sie den nach unten gesprungenen Hauptschalter fest nach OBEN auf 'I' / ON.",
+        "4. Falls der Strom nicht angeht, rufen Sie Nino an: +39 391 7784042.",
+      ],
+      fr: [
+        "Emplacement : Le tableau électrique principal se trouve dans le couloir de l'entrée, derrière le panneau mural.",
+        "En cas de coupure de courant : Provoqué par l'utilisation simultanée d'appareils gourmands (ex. plaques induction + four).",
+        "1. Éteignez d'abord l'un des appareils énergivores.",
+        "2. Ouvrez la trappe murale du tableau électrique.",
+        "3. Relevez fermement vers le HAUT le levier du disjoncteur général (position 'I' / ON).",
+        "4. Si le courant ne revient pas, contactez Nino au +39 391 7784042.",
+      ],
+      es: [
+        "Ubicación: El cuadro eléctrico general está en el pasillo de entrada, dentro de la trampilla de pared.",
+        "Si se corta la luz: Suele ocurrir por sobrecarga al usar varios electrodomésticos a la vez (ej. placa de inducción + horno).",
+        "1. Apague primero uno de los aparatos de alto consumo.",
+        "2. Abra la tapa del cuadro eléctrico.",
+        "3. Suba con firmeza hacia ARRIBA la palanca del interruptor general (posición 'I' / ON).",
+        "4. Si la luz no vuelve, contacte a Nino al +39 391 7784042.",
+      ],
+    },
+    tips: {
+      it: "Per evitare che salti il salvavita, evita di impostare i fuochi dell'induzione a potenza 9 mentre usi il forno elettrico.",
+      en: "To prevent power trips, avoid setting induction to max boost level while the oven is running.",
+      de: "Vermeiden Sie es, das Induktionskochfeld auf Stufe 9 zu betreiben, während der Backofen heizt.",
+      fr: "Pour éviter les disjonctions, évitez la puissance maximale de l'induction lorsque le four fonctionne.",
+      es: "Para evitar que salte el automático, evite usar la inducción al máximo mientras el horno está encendido.",
+    },
+  },
   {
     id: "wifi_router",
     title: {
@@ -422,51 +482,51 @@ export const APPLIANCES: Appliance[] = [
   {
     id: "thermostat",
     title: {
-      it: "Riscaldamento & Termostato",
-      en: "Heating & Thermostat",
-      de: "Heizung & Raumthermostat",
-      fr: "Chauffage & Thermostat",
-      es: "Calefacción & Termostato",
+      it: "Riscaldamento, Termostato & Condizionatore",
+      en: "Heating, Thermostat & Air Conditioning",
+      de: "Heizung, Raumthermostat & Klimaanlage",
+      fr: "Chauffage, Thermostat & Climatisation",
+      es: "Calefacción, Termostato & Aire Acondicionado",
     },
     icon: "Thermometer",
     instructions: {
       it: [
-        "Il termostato a parete si trova nella zona giorno / corridoio.",
-        "È pre-impostato su una temperatura di comfort di 20°C - 21°C.",
-        "Per alzare o abbassare temporaneamente la temperatura, tocca le frecce '+' o '-'.",
-        "Per favore, abbassa a 18°C quando esci per escursioni e durante la notte per evitare sprechi.",
+        "Termostato a parete (Riscaldamento): Si trova nel corridoio/soggiorno. Mostra la temperatura dell'ambiente. Premi i tasti touch '+' o '-' per impostare la temperatura desiderata (consigliati 20°C - 21°C d'inverno).",
+        "Climatizzatore / Condizionatore: Usa il telecomando sul mobile della zona giorno. Premi il tasto rosso Power per accendere/spegnere.",
+        "Modalità Clima: Premi 'MODE' per selezionare COOL (fiocco di neve per il fresco estivo) o HEAT (sole per il riscaldamento). Regola la temperatura con 'TEMP' e la ventilazione con 'FAN'.",
+        "Risparmio energetico: Ti preghiamo di tenere chiuse finestre e balconi quando l'aria condizionata o il riscaldamento sono accesi.",
       ],
       en: [
-        "The wall thermostat is located in the living area / hallway.",
-        "It is pre-set to a comfortable temperature of 20°C - 21°C.",
-        "Use the '+' or '-' buttons to adjust as needed.",
-        "Please lower to 18°C when leaving for day trips to save energy.",
+        "Wall Thermostat (Heating): Located in the hallway/living area. Displays current room temperature. Tap '+' or '-' to set desired temperature (recommended 20°C - 21°C in winter).",
+        "Air Conditioner / Heat Pump: Use the remote control on the living room unit. Press the red Power button to turn on/off.",
+        "Climate Modes: Press 'MODE' to select COOL (snowflake icon for summer cooling) or HEAT (sun icon for heating). Adjust temperature with 'TEMP' arrows and fan speed with 'FAN'.",
+        "Energy Conservation: Please keep all windows and balcony doors closed while heating or AC is running.",
       ],
       de: [
-        "Das Wandthermostat befindet sich im Wohnbereich / Flur.",
-        "Es ist auf angenehme 20°C - 21°C voreingestellt.",
-        "Mit '+' und '-' können Sie die Temperatur regulieren.",
-        "Bitte bei Tagesausflügen die Temperatur auf 18°C absenken.",
+        "Wandthermostat (Heizung): Im Flur/Wohnbereich. Tippen Sie auf '+' oder '-', um die Solltemperatur einzustellen (empfohlen 20°C - 21°C).",
+        "Klimaanlage: Nutzen Sie die Fernbedienung im Wohnzimmer. Rote Power-Taste zum Ein-/Ausschalten.",
+        "Modi: Mit 'MODE' zwischen COOL (Schneeflocke) und HEAT (Sonne) wählen. Temperatur mit 'TEMP' regulieren.",
+        "Bitte halten Sie Fenster und Balkontüren bei laufender Klimaanlage/Heizung geschlossen.",
       ],
       fr: [
-        "Le thermostat mural est situé dans le couloir / séjour.",
-        "Il est pré-réglé à une température agréable de 20°C - 21°C.",
-        "Utilisez les touches '+' ou '-' pour ajuster.",
-        "Merci de baisser à 18°C lors de vos sorties en journée pour économiser l'énergie.",
+        "Thermostat mural (Chauffage) : Situé dans le couloir/séjour. Touchez '+' ou '-' pour régler la température (20°C - 21°C recommandés).",
+        "Climatisation réversible : Utilisez la télécommande dans le séjour. Bouton rouge Power pour allumer.",
+        "Modes : Touche 'MODE' pour choisir COOL (flocon de neige) ou HEAT (soleil). Réglez la température avec 'TEMP'.",
+        "Merci de garder fenêtres et portes fermées lorsque le chauffage ou la climatisation est en marche.",
       ],
       es: [
-        "El termostato de pared se encuentra en el pasillo / sala de estar.",
-        "Está preajustado a una temperatura de confort de 20°C - 21°C.",
-        "Use los botones '+' o '-' para ajustar según sea necesario.",
-        "Por favor, baje a 18°C al salir de excursión para ahorrar energía.",
+        "Termostato de pared (Calefacción): Ubicado en el pasillo/salón. Toque '+' o '-' para fijar la temperatura (20°C - 21°C recomendados).",
+        "Aire acondicionado: Utilice el mando a distancia en el salón. Botón rojo Power para encender/apagar.",
+        "Modos: Pulse 'MODE' para seleccionar COOL (copo de nieve) o HEAT (sol). Ajuste la temperatura con 'TEMP'.",
+        "Por favor, mantenga ventanas y puertas cerradas mientras la climatización esté encendida.",
       ],
     },
     tips: {
-      it: "I termosifoni scaldano in modo rapido e silenzioso.",
-      en: "Radiators warm up quickly and quietly.",
-      de: "Die Heizkörper heizen zügig und geräuschlos auf.",
-      fr: "Les radiateurs chauffent rapidement et sans bruit.",
-      es: "Los radiadores calientan de forma rápida y silenciosa.",
+      it: "Il termostato regola l'impianto in modo silenzioso e omogeneo.",
+      en: "The climate system provides even and silent comfort throughout the apartment.",
+      de: "Das System sorgt für gleichmäßige und geräuschlose Raumtemperierung.",
+      fr: "Le système régule la température de manière douce et silencieuse.",
+      es: "El sistema regula la temperatura de manera uniforme y silenciosa.",
     },
   },
   {
@@ -637,6 +697,25 @@ export const APPLIANCES: Appliance[] = [
     },
   },
 ];
+
+export const APPLIANCES: Appliance[] = new Proxy(DEFAULT_APPLIANCES, {
+  get(target, prop, receiver) {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('aurora_cms_appliances_override');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return Reflect.get(parsed, prop, receiver);
+          }
+        }
+      } catch {
+        // Fallback to default
+      }
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});
 
 export const WASTE_GUIDE: WasteCategory[] = [
   {

@@ -103,6 +103,7 @@ export interface GuestPass {
   bookingRef?: string;
   guestsCount?: number;
   bookingSource?: 'bed-and-breakfast.it' | 'direct' | 'booking.com' | 'airbnb' | 'other' | string;
+  channelSource?: string;
   guestEmail?: string;
   amount?: string;
   apartmentName?: string;

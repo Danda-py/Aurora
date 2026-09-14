@@ -44,6 +44,10 @@ export interface PropertyConfig {
 
   // Proximity validation policy
   proximityPolicy: 'wifi_or_gps' | 'wifi_only' | 'gps_only';
+
+  // Specific editable instructions (CMS)
+  breakerBoxInstructions?: string;
+  climateInstructions?: string;
 }
 
 export const FALLBACK_PROPERTY_CONFIG: PropertyConfig = {
@@ -58,7 +62,7 @@ export const FALLBACK_PROPERTY_CONFIG: PropertyConfig = {
   fullAddress: APARTMENT_INFO.fullAddress,
   latitude: 46.1345,
   longitude: 9.5742,
-  geofenceRadiusMeters: 80,
+  geofenceRadiusMeters: 50,
 
   hostName: APARTMENT_INFO.hostName,
   hostPhone: APARTMENT_INFO.hostPhone,
@@ -69,11 +73,14 @@ export const FALLBACK_PROPERTY_CONFIG: PropertyConfig = {
   cirCode: APARTMENT_INFO.cirCode,
   cinCode: APARTMENT_INFO.cinCode,
   touristTax: {
-    enabled: true,
-    ratePerNight: 1.50,
+    enabled: false,
+    ratePerNight: 0,
     exemptUnderAge: 12,
     maxNights: 7
   },
+
+  breakerBoxInstructions: "Posizione: Il quadro elettrico generale si trova all'ingresso/corridoio nello sportellino a parete. Se salta la corrente per uso simultaneo di induzione e forno/lavatrice: spegni prima uno dei due elettrodomestici, apri lo sportello e solleva con decisione verso l'alto la levetta dell'interruttore generale scattato verso il basso (posizione I / ON). Se persiste, contatta Nino.",
+  climateInstructions: "Termostato a parete (Riscaldamento): Si trova nel corridoio/soggiorno. Premi + o - per impostare la temperatura desiderata (consigliati 20°C - 21°C).\nClimatizzatore / Condizionatore: Usa il telecomando in soggiorno. Tasto POWER per accendere, tasto MODE per scegliere COOL (fresco) o HEAT (caldo). Tenere chiuse porte e finestre durante l'uso.",
 
   wifiSSID: APARTMENT_INFO.wifiSSID,
   wifiPassword: APARTMENT_INFO.wifiPassword,

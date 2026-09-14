@@ -283,6 +283,14 @@
         {
           "desc": "Privater Parkplatz des Hauses mit stets reserviertem Stellplatz",
           "title": "RESERVIERTER PRIVATPARKPLATZ"
+        },
+        {
+          "title": "SICHERUNGSKASTEN & SCHUTZSCHALTER",
+          "desc": "Im Eingangsflur. Bei Überlastung (Induktion + Ofen) ein Gerät ausschalten und Schalter nach oben drücken."
+        },
+        {
+          "title": "RAUMTHERMOSTAT & KLIMAANLAGE",
+          "desc": "Touch-Wandthermostat (20-21°C) und Fernbedienung für schnelle Kühlung oder Heizung."
         }
       ],
       "title": "AUSSTATTUNG & SERVICE",
@@ -761,6 +769,14 @@
         {
           "desc": "Dedicated space always free and reserved on the property",
           "title": "RESERVED PRIVATE PARKING"
+        },
+        {
+          "title": "ELECTRICAL BREAKER PANEL",
+          "desc": "Wall panel at the entrance. In case of overload (induction + oven), turn off an appliance and reset the switch."
+        },
+        {
+          "title": "THERMOSTAT & AIR CONDITIONING",
+          "desc": "Wall touch thermostat (20-21°C) and AC remote with instant cooling/heating control."
         }
       ],
       "title": "AMENITIES & COMFORTS",
@@ -1232,6 +1248,14 @@
         {
           "desc": "Aparcamiento privado de la vivienda con plaza reservada",
           "title": "APARCAMIENTO PRIVADO RESERVADO"
+        },
+        {
+          "title": "CUADRO ELÉCTRICO Y DIFERENCIAL",
+          "desc": "En el pasillo de entrada. En caso de sobrecarga (inducción + horno), apagar un aparato y subir la palanca."
+        },
+        {
+          "title": "TERMOSTATO Y AIRE ACONDICIONADO",
+          "desc": "Termostato táctil de pared (20-21°C) y mando a distancia para calor o frío rápido."
         }
       ],
       "title": "SERVICIOS Y EQUIPAMIENTO",
@@ -1703,6 +1727,14 @@
         {
           "desc": "Parking privé de l'habitation avec place toujours réservée",
           "title": "PARKING PRIVÉ RÉSERVÉ"
+        },
+        {
+          "title": "TABLEAU ÉLECTRIQUE & DISJONCTEUR",
+          "desc": "Dans le couloir d entrée. En cas de coupure pour surcharge, éteindre un appareil et relever le levier."
+        },
+        {
+          "title": "THERMOSTAT & CLIMATISATION",
+          "desc": "Thermostat tactile mural (20-21°C) et télécommande climatiseur pour régulation rapide."
         }
       ],
       "title": "ÉQUIPEMENTS & SERVICES",
@@ -2163,6 +2195,14 @@
         {
           "desc": "Posto auto privato dell'abitazione sempre libero e riservato",
           "title": "PARCHEGGIO PRIVATO RISERVATO"
+        },
+        {
+          "title": "QUADRO ELETTRICO & SALVAVITA",
+          "desc": "All ingresso a parete. In caso di sovraccarico (induzione + forno), spegnere un carico e rialzare la levetta."
+        },
+        {
+          "title": "TERMOSTATO & CLIMATIZZATORE",
+          "desc": "Termostato touch a parete (20-21°C) e telecomando clima con selezione rapida fresco/caldo."
         }
       ],
       "title": "SERVIZI & DOTAZIONI",

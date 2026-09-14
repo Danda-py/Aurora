@@ -202,8 +202,8 @@ export function bootstrapHost(req: Request, res: Response): void {
     res.status(400).json({ success: false, error: 'Inserisci un indirizzo email valido.' });
     return;
   }
-  if (password.length < 12 || password.length > 256) {
-    res.status(400).json({ success: false, error: 'La password deve contenere da 12 a 256 caratteri.' });
+  if (password.length < 10 || password.length > 256) {
+    res.status(400).json({ success: false, error: 'La password deve contenere da 10 a 256 caratteri.' });
     return;
   }
 

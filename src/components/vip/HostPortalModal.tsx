@@ -55,6 +55,8 @@ import { APARTMENT_INFO } from '../../data/apartmentData';
 import { CmsMediaManager } from './CmsMediaManager';
 import { AlloggiatiManager } from './AlloggiatiManager';
 import { PropertySettingsManager } from './PropertySettingsManager';
+import { ChannelManagerTab } from './ChannelManagerTab';
+import { HostCmsTab } from './HostCmsTab';
 
 interface Props {
   isOpen: boolean;
@@ -67,8 +69,8 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Tabs: 'create' | 'list' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'
-  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_media' | 'export_zip' | 'alloggiati'>('create');
+  // Tabs: 'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_builder' | 'cms_media' | 'export_zip' | 'alloggiati'
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_builder' | 'cms_media' | 'export_zip' | 'alloggiati'>('create');
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   // Form state
@@ -568,6 +570,18 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               </button>
 
               <button
+                onClick={() => setActiveTab('channels')}
+                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
+                  activeTab === 'channels'
+                    ? 'border-white text-gray-900 bg-gray-100'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                <span>Channel Manager (iCal)</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('property_settings')}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
                   activeTab === 'property_settings'
@@ -604,6 +618,18 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               </button>
 
               <button
+                onClick={() => setActiveTab('cms_builder')}
+                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
+                  activeTab === 'cms_builder'
+                    ? 'border-amber-400 text-amber-500 bg-amber-500/10'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                <span>Visual CMS Builder</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('cms_media')}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
                   activeTab === 'cms_media'
@@ -612,7 +638,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                 }`}
               >
                 <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
-                <span>Foto & CMS</span>
+                <span>Foto & Media</span>
               </button>
 
               <button
@@ -854,33 +880,29 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                         </button>
                       </div>
 
-                      {/* Action Buttons: WhatsApp, SMS, Copy Message */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                        {/* Send on WhatsApp */}
+                      {/* Action Buttons: Copia Link & Anteprima */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                         <button
-                          onClick={() => handleSendWhatsApp(generatedPass)}
-                          className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md"
+                          onClick={() => handleCopyLink(generatedPass)}
+                          className="py-2.5 px-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md"
                         >
-                          <MessageSquare className="w-4 h-4" />
-                          <span>Invia su WhatsApp</span>
+                          {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          <span>{copiedLink ? 'Link Copiato negli Appunti!' : 'Copia Link Univoco'}</span>
                         </button>
 
-                        {/* Send via SMS */}
                         <button
-                          onClick={() => handleSendSMS(generatedPass)}
-                          className="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md"
+                          onClick={() => {
+                            if (onSelectPassToView) {
+                              onSelectPassToView(generatedPass);
+                              onClose();
+                            } else {
+                              window.open(buildPassUrl(generatedPass.token), '_blank');
+                            }
+                          }}
+                          className="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-gray-300"
                         >
-                          <Send className="w-4 h-4" />
-                          <span>Invia via SMS</span>
-                        </button>
-
-                        {/* Copy Full Message */}
-                        <button
-                          onClick={() => handleCopyMessage(generatedPass)}
-                          className="py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-gray-200"
-                        >
-                          {copiedMessage ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                          <span>{copiedMessage ? 'Copiato!' : 'Copia Messaggio'}</span>
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Apri Schermata Ospite</span>
                         </button>
                       </div>
 
@@ -990,14 +1012,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                               </button>
 
                               <button
-                                onClick={() => handleSendWhatsApp(pass)}
-                                className="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:hover:bg-emerald-200 border border-emerald-200 transition flex items-center gap-1 cursor-pointer text-xs"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                <span>WhatsApp</span>
-                              </button>
-
-                              <button
                                 onClick={() => handleCopyLink(pass)}
                                 className="px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-900 transition flex items-center gap-1 cursor-pointer text-xs"
                               >
@@ -1034,6 +1048,25 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                     })
                   )}
                 </div>
+              )}
+
+              {/* TAB: CHANNEL MANAGER (iCal) */}
+              {activeTab === 'channels' && (
+                <ChannelManagerTab 
+                  onSyncComplete={async () => {
+                    try {
+                      const res = await fetch('/api/passes');
+                      const data = await res.json();
+                      const serverList = Array.isArray(data) ? data : (data.passes || []);
+                      if (serverList.length > 0) {
+                        setStoredPasses(serverList);
+                        localStorage.setItem('AURORA_HOST_PASSES_V1', JSON.stringify(serverList));
+                      }
+                    } catch (err) {
+                      console.warn('Error refreshing passes from channel sync:', err);
+                    }
+                  }} 
+                />
               )}
 
               {/* TAB: IMPOSTAZIONI STRUTTURA & GEOFENCING */}
@@ -1527,6 +1560,13 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                   </div>
 
                 </form>
+                </div>
+              )}
+
+              {/* TAB: VISUAL CMS BUILDER WYSIWYG */}
+              {activeTab === 'cms_builder' && (
+                <div className="p-0 -m-4 sm:-m-6">
+                  <HostCmsTab />
                 </div>
               )}
 

@@ -51,13 +51,14 @@ export function calculateHaversineDistanceMeters(
 
 /**
  * Verifies proximity to the property using either:
- * 1. Wi-Fi IP match or local subnet
- * 2. GPS Geolocation within configured radius
+ * 1. Wi-Fi IP match or local subnet (always allowed)
+ * 2. GPS Geolocation within 50 meters (ONLY for the first entry)
  */
 export function verifyGuestProximity(
   req: express.Request,
   haConfig: any,
-  guestCoords?: Coordinates | null
+  guestCoords?: Coordinates | null,
+  isFirstEntry: boolean = true
 ): ProximityVerificationResult {
   const property = getPropertyConfig();
   const ips = extractClientIps(req);
@@ -83,14 +84,14 @@ export function verifyGuestProximity(
   const wifiVerified = isMatchIp || isLocalLan;
   const policy = property.proximityPolicy || 'wifi_or_gps';
 
-  // If Wi-Fi is verified and policy allows Wi-Fi:
+  // If Wi-Fi is verified: always allow!
   if (wifiVerified && (policy === 'wifi_or_gps' || policy === 'wifi_only')) {
     return {
       verified: true,
       method: 'wifi',
       clientIp,
       homePublicIp,
-      geofenceRadiusMeters: property.geofenceRadiusMeters || 80,
+      geofenceRadiusMeters: 50,
       isLocalLan,
       isMatchIp,
       reason: isLocalLan 
@@ -100,8 +101,22 @@ export function verifyGuestProximity(
     };
   }
 
-  // 2. Check GPS Geolocation (if provided and policy allows GPS)
+  // 2. Check GPS Geolocation (strictly ONLY allowed for the very FIRST entry within 50m)
   if (guestCoords && typeof guestCoords.latitude === 'number' && typeof guestCoords.longitude === 'number') {
+    if (!isFirstEntry) {
+      return {
+        verified: false,
+        method: 'none',
+        clientIp,
+        homePublicIp,
+        geofenceRadiusMeters: 50,
+        isLocalLan,
+        isMatchIp,
+        reason: `Il primo ingresso è già avvenuto con successo. Per i successivi sblocchi della porta, connettiti alla rete Wi-Fi "${property.wifiSSID}".`,
+        propertyName: property.name
+      };
+    }
+
     if (policy === 'wifi_or_gps' || policy === 'gps_only') {
       const distance = calculateHaversineDistanceMeters(
         guestCoords.latitude,
@@ -110,9 +125,9 @@ export function verifyGuestProximity(
         property.longitude
       );
 
-      const maxRadius = property.geofenceRadiusMeters || 80;
-      // Allow slight GPS jitter if accuracy is reported (max accuracy tolerance: 50m)
-      const allowedDistance = maxRadius + Math.min(guestCoords.accuracy ? guestCoords.accuracy * 0.5 : 0, 40);
+      const maxRadius = 50; // Strictly 50 meters as requested for Casa Aurora
+      // Allow slight GPS accuracy tolerance (max 15m extra if accuracy reported)
+      const allowedDistance = maxRadius + Math.min(guestCoords.accuracy ? guestCoords.accuracy * 0.3 : 0, 15);
 
       if (distance <= allowedDistance) {
         return {
@@ -124,7 +139,7 @@ export function verifyGuestProximity(
           geofenceRadiusMeters: maxRadius,
           isLocalLan,
           isMatchIp,
-          reason: `Posizione GPS confermata: ti trovi a circa ${distance} metri dall'ingresso di ${property.name}`,
+          reason: `Posizione GPS primo ingresso confermata: ti trovi a ${distance}m dall'ingresso di ${property.name} (raggio consentito: ${maxRadius}m).`,
           propertyName: property.name
         };
       } else {
@@ -137,7 +152,7 @@ export function verifyGuestProximity(
           geofenceRadiusMeters: maxRadius,
           isLocalLan,
           isMatchIp,
-          reason: `Sei a ${distance} metri da ${property.name} (raggio massimo consentito: ${maxRadius}m). Avvicinati all'ingresso o connettiti al Wi-Fi.`,
+          reason: `Ti trovi a ${distance} metri da ${property.name}. Per il primo ingresso tramite GPS devi trovarti entro ${maxRadius} metri dall'ingresso.`,
           propertyName: property.name
         };
       }
@@ -150,12 +165,12 @@ export function verifyGuestProximity(
     method: 'none',
     clientIp,
     homePublicIp,
-    geofenceRadiusMeters: property.geofenceRadiusMeters || 80,
+    geofenceRadiusMeters: 50,
     isLocalLan,
     isMatchIp,
-    reason: homePublicIp
-      ? `Non sei connesso al Wi-Fi "${property.wifiSSID}" né rilevato in prossimità GPS dell'ingresso.`
-      : `Verifica Wi-Fi/GPS non ancora completata. Connettiti al Wi-Fi dell'appartamento o abilita la geolocalizzazione sul tuo dispositivo.`,
+    reason: isFirstEntry
+      ? `Per il primo sblocco della porta, avvicinati all'ingresso entro 50 metri con GPS attivo, oppure connettiti al Wi-Fi "${property.wifiSSID}".`
+      : `Non sei connesso alla rete Wi-Fi "${property.wifiSSID}". Connettiti al Wi-Fi dell'appartamento per aprire la porta.`,
     propertyName: property.name
   };
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GuestPass } from '../../types';
 import { 
   ArrowLeft, 
@@ -11,7 +11,12 @@ import {
   ShieldCheck, 
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  UploadCloud,
+  Settings,
+  Key,
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 
 interface ComunePreset {
@@ -131,6 +136,71 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'loading' | null; message: string }>({ type: null, message: '' });
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [stayDays, setStayDays] = useState<number>(1);
+
+  // Web Service Credentials & Config
+  const [showConfig, setShowConfig] = useState(false);
+  const [wsConfig, setWsConfig] = useState({
+    utente: '',
+    password: '',
+    wsKey: '',
+    autoSubmitOnCheckin: false,
+    testMode: false,
+    lastSubmitDate: '',
+    lastResult: undefined as any
+  });
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [isTestingConfig, setIsTestingConfig] = useState(false);
+  const [configMessage, setConfigMessage] = useState<string | null>(null);
+  const [isSubmittingDirectly, setIsSubmittingDirectly] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/alloggiati/config')
+      .then(r => r.json())
+      .then(data => {
+        if (data.config) {
+          setWsConfig(data.config);
+        }
+      })
+      .catch(err => console.warn('Errore caricamento config alloggiati:', err));
+  }, []);
+
+  const handleSaveConfig = async () => {
+    setIsSavingConfig(true);
+    setConfigMessage(null);
+    try {
+      const res = await fetch('/api/alloggiati/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(wsConfig)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Errore salvataggio credenziali');
+      setWsConfig(data.config);
+      setConfigMessage('Configurazione Alloggiati Web salvata con successo!');
+    } catch (err: any) {
+      setConfigMessage(`Errore: ${err.message}`);
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsTestingConfig(true);
+    setConfigMessage(null);
+    try {
+      const res = await fetch('/api/alloggiati/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || data.error);
+      setConfigMessage(`Connessione riuscita! ${data.message}`);
+    } catch (err: any) {
+      setConfigMessage(`Test fallito: ${err.message}`);
+    } finally {
+      setIsTestingConfig(false);
+    }
+  };
 
   const handleSelectPass = (pass: GuestPass) => {
     setSelectedPass(pass);
@@ -289,86 +359,81 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
   };
 
 
-  const handleExportTxt = () => {
-    if (!selectedPass) return;
+  const buildMinisterialLines = (): string[] => {
+    if (!selectedPass) return [];
 
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
       if (!g.name.trim() || !g.surname.trim()) {
-        setFeedback({ type: 'error', message: `Ospite #${i + 1}: Nome e Cognome sono obbligatori.` });
-        setExpandedIndex(i);
-        return;
+        throw new Error(`Ospite #${i + 1}: Nome e Cognome sono obbligatori.`);
       }
       if (!g.birthDate) {
-        setFeedback({ type: 'error', message: `Ospite #${i + 1}: Data di nascita è obbligatoria.` });
-        setExpandedIndex(i);
-        return;
+        throw new Error(`Ospite #${i + 1}: Data di nascita è obbligatoria.`);
       }
       if (!g.citizenshipCode) {
-        setFeedback({ type: 'error', message: `Ospite #${i + 1}: Codice cittadinanza obbligatorio.` });
-        setExpandedIndex(i);
-        return;
+        throw new Error(`Ospite #${i + 1}: Codice cittadinanza obbligatorio.`);
       }
       if (!g.birthPlaceCode) {
-        setFeedback({ type: 'error', message: `Ospite #${i + 1}: Comune o Stato di nascita obbligatorio.` });
-        setExpandedIndex(i);
-        return;
+        throw new Error(`Ospite #${i + 1}: Comune o Stato di nascita obbligatorio.`);
       }
       if (g.citizenshipCode === '100000100' && !g.birthPlaceProvince.trim()) {
-        setFeedback({ type: 'error', message: `Ospite #${i + 1}: Provincia di nascita obbligatoria per cittadini italiani.` });
-        setExpandedIndex(i);
-        return;
+        throw new Error(`Ospite #${i + 1}: Provincia di nascita obbligatoria per cittadini italiani.`);
       }
 
-      if (g.tipoAlloggiato === '16') {
+      if (['16', '17', '18'].includes(g.tipoAlloggiato)) {
         if (!g.documentNumber.trim()) {
-          setFeedback({ type: 'error', message: `Ospite #${i + 1} (Capogruppo): Il numero di documento è obbligatorio.` });
-          setExpandedIndex(i);
-          return;
+          throw new Error(`Ospite #${i + 1} (Capogruppo/Singolo): Il numero di documento è obbligatorio.`);
         }
         if (!g.documentIssuingPlace) {
-          setFeedback({ type: 'error', message: `Ospite #${i + 1} (Capogruppo): Il comune o stato di rilascio del documento è obbligatorio.` });
-          setExpandedIndex(i);
-          return;
+          throw new Error(`Ospite #${i + 1} (Capogruppo/Singolo): Il comune o stato di rilascio del documento è obbligatorio.`);
         }
       }
     }
 
+    const lines: string[] = [];
+
+    guests.forEach(g => {
+      const pTipo = g.tipoAlloggiato;
+      const pDataArrivo = formatToItalianDate(selectedPass.checkInDate);
+      const pGiorni = String(stayDays).padStart(2, '0');
+      
+      const pCognome = normalizeAlloggiatiText(g.surname).substring(0, 50).padEnd(50, ' ');
+      const pNome = normalizeAlloggiatiText(g.name).substring(0, 30).padEnd(30, ' ');
+      const pSesso = (g.gender === 'F' ? 'F' : 'M') + ' ';
+      
+      const pDataNascita = formatToItalianDate(g.birthDate);
+      const pComuneNascita = g.birthPlaceCode.padStart(9, ' ').substring(0, 9);
+      const pProvNascita = (g.citizenshipCode === '100000100' ? g.birthPlaceProvince.toUpperCase().substring(0, 2) : '  ').padEnd(2, ' ');
+      const pCittadinanza = g.citizenshipCode.padStart(9, ' ').substring(0, 9);
+
+      let pDocTipo = '     ';
+      let pDocNum = '                    ';
+      let pDocRilascio = '         ';
+
+      if (['16', '17', '18'].includes(g.tipoAlloggiato)) {
+        pDocTipo = g.documentType.padEnd(5, ' ').substring(0, 5);
+        pDocNum = g.documentNumber.toUpperCase().replace(/[^A-Z0-9]/g, '').padEnd(20, ' ').substring(0, 20);
+        pDocRilascio = g.documentIssuingPlace.padStart(9, ' ').substring(0, 9);
+      }
+
+      const line = `${pTipo}${pDataArrivo}${pGiorni}${pCognome}${pNome}${pSesso}${pDataNascita}${pComuneNascita}${pProvNascita}${pCittadinanza}${pDocTipo}${pDocNum}${pDocRilascio}`;
+      
+      if (line.length !== 160) {
+        throw new Error(`Errore tracciato: riga generata di ${line.length} caratteri invece di 160.`);
+      }
+
+      lines.push(line);
+    });
+
+    return lines;
+  };
+
+  const handleExportTxt = () => {
+    if (!selectedPass) return;
+
     try {
-      let fileContent = '';
-
-      guests.forEach(g => {
-        const pTipo = g.tipoAlloggiato;
-        const pDataArrivo = formatToItalianDate(selectedPass.checkInDate);
-        const pGiorni = String(stayDays).padStart(2, '0');
-        
-        const pCognome = normalizeAlloggiatiText(g.surname).substring(0, 50).padEnd(50, ' ');
-        const pNome = normalizeAlloggiatiText(g.name).substring(0, 30).padEnd(30, ' ');
-        const pSesso = (g.gender === 'F' ? 'F' : 'M') + ' ';
-        
-        const pDataNascita = formatToItalianDate(g.birthDate);
-        const pComuneNascita = g.birthPlaceCode.padStart(9, ' ').substring(0, 9);
-        const pProvNascita = (g.citizenshipCode === '100000100' ? g.birthPlaceProvince.toUpperCase().substring(0, 2) : '  ').padEnd(2, ' ');
-        const pCittadinanza = g.citizenshipCode.padStart(9, ' ').substring(0, 9);
-
-        let pDocTipo = '     ';
-        let pDocNum = '                    ';
-        let pDocRilascio = '         ';
-
-        if (g.tipoAlloggiato === '16') {
-          pDocTipo = g.documentType.padEnd(5, ' ').substring(0, 5);
-          pDocNum = g.documentNumber.toUpperCase().replace(/[^A-Z0-9]/g, '').padEnd(20, ' ').substring(0, 20);
-          pDocRilascio = g.documentIssuingPlace.padStart(9, ' ').substring(0, 9);
-        }
-
-        const line = `${pTipo}${pDataArrivo}${pGiorni}${pCognome}${pNome}${pSesso}${pDataNascita}${pComuneNascita}${pProvNascita}${pCittadinanza}${pDocTipo}${pDocNum}${pDocRilascio}`;
-        
-        if (line.length !== 160) {
-          throw new Error(`Errore interno: riga generata di lunghezza ${line.length} anziché 160 caratteri.`);
-        }
-
-        fileContent += line + '\r\n';
-      });
+      const lines = buildMinisterialLines();
+      const fileContent = lines.join('\r\n') + '\r\n';
 
       const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -390,21 +455,188 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
     }
   };
 
+  const handleDirectSubmit = async () => {
+    if (!selectedPass) return;
+
+    try {
+      const lines = buildMinisterialLines();
+      setIsSubmittingDirectly(true);
+      setFeedback({ type: 'loading', message: 'Trasmissione telematica in corso al portale Alloggiati Web (Polizia di Stato)...' });
+
+      const res = await fetch('/api/alloggiati/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lines })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Errore durante la trasmissione delle schedine.');
+      }
+
+      setFeedback({
+        type: 'success',
+        message: `Schedine caricate e trasmesse con successo alla Polizia di Stato! Ricevuta: ${data.protocol || 'OK'}`
+      });
+      onUpdatePassList();
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Errore durante l\'invio ad Alloggiati Web.' });
+    } finally {
+      setIsSubmittingDirectly(false);
+    }
+  };
+
 
   if (!selectedPass) {
     return (
       <div className="space-y-5">
         <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-gray-50 to-gray-50 border border-emerald-100 space-y-3">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-            <h3 className="text-sm sm:text-base font-bold text-gray-900">
-              Generazione Schedine Alloggiati Web
-            </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                  Portale Alloggiati Web (Polizia di Stato)
+                </h3>
+                <p className="text-xs text-emerald-700 font-medium">
+                  Invio schedine alloggiati autonomo via Web Service o manuale (.txt)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowConfig(!showConfig)}
+              className="px-3 py-1.5 rounded-xl bg-white border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 text-gray-700 hover:text-emerald-800 text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>{showConfig ? 'Chiudi Configurazione' : 'Configura Web Service'}</span>
+            </button>
           </div>
+
           <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-            Seleziona una prenotazione attiva per verificarne i documenti caricati dagli ospiti e generare il file <code>.txt</code> pronto per l'invio sul portale ministeriale della Polizia di Stato entro 24 ore dal check-in.
+            I dati degli ospiti vengono elaborati e formattati secondo il tracciato ufficiale ministeriale (160 caratteri). Puoi configurare le credenziali Web Service per inviare automaticamente le schedine in autonomia non appena gli ospiti eseguono il check-in, oppure inviarle con un click o scaricare il file <code>.txt</code>.
           </p>
+
+          {/* Web Service Status pill */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold ${
+              wsConfig.utente && wsConfig.wsKey ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
+            }`}>
+              <Key className="w-3 h-3" />
+              {wsConfig.utente && wsConfig.wsKey ? 'Web Service Configurato' : 'Credenziali Ministeriali Mancanti'}
+            </span>
+
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold ${
+              wsConfig.autoSubmitOnCheckin ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-gray-100 text-gray-700 border border-gray-200'
+            }`}>
+              <UploadCloud className="w-3 h-3" />
+              {wsConfig.autoSubmitOnCheckin ? 'Invio Autonomo al Check-in: ATTIVO' : 'Invio Autonomo: DISATTIVATO'}
+            </span>
+          </div>
         </div>
+
+        {/* Configuration Panel */}
+        {showConfig && (
+          <div className="p-5 rounded-2xl bg-white border-2 border-emerald-200 shadow-md space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-emerald-600" />
+                <h4 className="font-bold text-gray-900 text-sm">Credenziali Web Service (Alloggiati Web)</h4>
+              </div>
+              <span className="text-[11px] text-gray-500">WS Polizia di Stato</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Utente Alloggiati</label>
+                <input
+                  type="text"
+                  value={wsConfig.utente}
+                  onChange={e => setWsConfig({ ...wsConfig, utente: e.target.value })}
+                  placeholder="es. SO12345"
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={wsConfig.password}
+                  onChange={e => setWsConfig({ ...wsConfig, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Chiave WsKey (Web Service)</label>
+                <input
+                  type="text"
+                  value={wsConfig.wsKey}
+                  onChange={e => setWsConfig({ ...wsConfig, wsKey: e.target.value })}
+                  placeholder="Chiave generata dal portale"
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={wsConfig.autoSubmitOnCheckin}
+                    onChange={e => setWsConfig({ ...wsConfig, autoSubmitOnCheckin: e.target.checked })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Carica direttamente i dati nel portale Alloggiati Web in autonomia (al Check-in)</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={wsConfig.testMode}
+                    onChange={e => setWsConfig({ ...wsConfig, testMode: e.target.checked })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Modalità Test / Simulazione (senza trasmettere alla Questura reale)</span>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={isTestingConfig}
+                  className="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isTestingConfig ? 'animate-spin' : ''}`} />
+                  <span>Verifica Connessione</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveConfig}
+                  disabled={isSavingConfig}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSavingConfig ? 'Salvataggio...' : 'Salva Credenziali'}</span>
+                </button>
+              </div>
+            </div>
+
+            {configMessage && (
+              <div className={`p-2.5 rounded-lg text-xs font-semibold ${
+                configMessage.includes('Errore') || configMessage.includes('fallito') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              }`}>
+                {configMessage}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="space-y-3">
           <h4 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-wider">
@@ -839,18 +1071,31 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
       <div className="flex flex-col sm:flex-row gap-3 pt-3">
         <button
           onClick={handleSaveData}
-          className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          className="py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
         >
           <Save className="w-4 h-4 text-gray-500" />
           <span>Salva Modifiche</span>
         </button>
 
         <button
-          onClick={handleExportTxt}
-          className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shadow-emerald-500/10 active:scale-[0.98]"
+          onClick={handleDirectSubmit}
+          disabled={isSubmittingDirectly}
+          className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-50"
         >
-          <Download className="w-4 h-4" />
-          <span>Scarica File Alloggiati (.txt)</span>
+          {isSubmittingDirectly ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <UploadCloud className="w-4 h-4" />
+          )}
+          <span>Invia Direttamente ad Alloggiati Web (Polizia)</span>
+        </button>
+
+        <button
+          onClick={handleExportTxt}
+          className="py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+        >
+          <Download className="w-4 h-4 text-gray-600" />
+          <span>Scarica File .txt</span>
         </button>
       </div>
     </div>

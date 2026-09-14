@@ -498,3 +498,68 @@ export async function triggerHomeAssistantCheckout(guestName: string): Promise<H
     return { success: false, error: `Errore REST API Checkout: ${err.message}` };
   }
 }
+
+let ipSyncInterval: NodeJS.Timeout | null = null;
+
+/**
+ * Automatically detects and updates the dynamic public IP of Casa Aurora
+ * without requiring the host to click any button.
+ */
+export async function detectAndUpdatePublicIp(incomingClientIp?: string): Promise<string | null> {
+  try {
+    const config = getHomeAssistantConfig();
+
+    // 1. If an incoming client IP from the home network/LAN or router is provided
+    if (incomingClientIp && !isLocalLanAddress(incomingClientIp) && incomingClientIp !== config.homePublicIp) {
+      console.log(`[HomeAssistant] IP pubblico dinamico aggiornato automaticamente da traffico locale a: ${incomingClientIp}`);
+      await updateHomeAssistantConfigAsync({ homePublicIp: incomingClientIp });
+      return incomingClientIp;
+    }
+
+    // 2. Query Home Assistant REST API for WAN/external IP sensor if configured
+    if (config.haUrl && config.accessToken) {
+      const cleanUrl = config.haUrl.replace(/\/$/, '');
+      const sensors = ['sensor.external_ip', 'sensor.wan_ip', 'sensor.myip', 'sensor.public_ip', 'sensor.router_wan_ip'];
+      for (const s of sensors) {
+        try {
+          const res = await fetch(`${cleanUrl}/api/states/${s}`, {
+            headers: { 'Authorization': `Bearer ${config.accessToken.trim()}` },
+            signal: AbortSignal.timeout(3000)
+          });
+          if (res.ok) {
+            const data: any = await res.json();
+            const ip = data?.state;
+            if (ip && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+              if (ip !== config.homePublicIp) {
+                console.log(`[HomeAssistant] IP pubblico rilevato automaticamente via HA (${s}): ${ip}`);
+                await updateHomeAssistantConfigAsync({ homePublicIp: ip });
+                return ip;
+              }
+              return ip;
+            }
+          }
+        } catch {}
+      }
+    }
+  } catch (err: any) {
+    console.warn('[HomeAssistant] Auto IP sync error:', err.message);
+  }
+  return null;
+}
+
+/**
+ * Starts automatic background dynamic IP sync every 3 minutes
+ */
+export function startAutoPublicIpSync(intervalMinutes = 3): void {
+  if (ipSyncInterval) clearInterval(ipSyncInterval);
+  
+  // Initial background detection after 5 seconds
+  setTimeout(() => {
+    detectAndUpdatePublicIp().catch(() => {});
+  }, 5000);
+
+  ipSyncInterval = setInterval(() => {
+    detectAndUpdatePublicIp().catch(() => {});
+  }, intervalMinutes * 60 * 1000);
+}
+

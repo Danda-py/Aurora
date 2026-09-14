@@ -20,7 +20,9 @@ import {
   updateHomeAssistantConfigAsync,
   hydrateHomeAssistantConfig,
   triggerHomeAssistantOn,
-  triggerHomeAssistantCheckout
+  triggerHomeAssistantCheckout,
+  detectAndUpdatePublicIp,
+  startAutoPublicIpSync
 } from './homeAssistantService.js';
 import {
   getCmsData,
@@ -39,17 +41,22 @@ import {
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
-import { startIcalWatcher, getIcalConfig, updateIcalConfig, hydrateIcalConfig, syncReservationsFromIcal } from './icalWatcherService.js';
-import { checkNewEmailsAndGeneratePasses, startEmailWatcher, addEmailLog, getEmailLogs, hydrateImapConfig, updateImapConfigAsync, getImapConfig, parseEmailWithGemini } from './emailWatcherService.js';
-import { sendGuestNotification, sendHostNotification } from './notificationService.js';
 import {
-  scheduleBookingMessages,
-  getScheduledMessages,
-  cancelScheduledMessage,
-  cancelAllMessagesForPass,
-  retryScheduledMessage,
-  startScheduledMessagingWatcher
-} from './scheduledMessagingService.js';
+  getChannelManagerConfig,
+  updateChannelManagerConfig,
+  syncAllChannels,
+  hydrateChannelManagerConfig,
+  startChannelAutoSync,
+  setGlobalPassesReference
+} from './channelManagerService.js';
+import {
+  getAlloggiatiConfig,
+  updateAlloggiatiConfig,
+  sendSchedineDirectly,
+  validateAlloggiatiLines,
+  hydrateAlloggiatiConfig,
+  autoSubmitPassIfEligible
+} from './alloggiatiWebService.js';
 import { 
   getPropertyConfig, 
   updatePropertyConfig, 
@@ -364,22 +371,20 @@ export function createApp() {
   void hydrateDeletedRefsFromSupabase();
   void hydrateHomeAssistantConfig();
   void hydratePropertyConfig();
-  void hydrateIcalConfig();
-  void hydrateImapConfig();
+  setGlobalPassesReference(serverPasses);
+  void hydrateChannelManagerConfig();
+  void hydrateAlloggiatiConfig();
 
   // Condividiamo l'array delle prenotazioni per l'engine iCal globale
   (global as any).serverPassesRef = serverPasses;
   (global as any).deletedBookingRefsRef = deletedBookingRefs;
   (global as any).persistPassesRef = persistPasses;
 
-  // Avvia l'engine di polling iCal (se abilitato nelle variabili d'ambiente)
-  startIcalWatcher();
+  // Avvia l'engine di polling Channel Manager iCal (multicanale B&B/Airbnb/Booking)
+  startChannelAutoSync();
 
-  // Avvia l'engine di polling email IMAP (se abilitato nelle variabili d'ambiente)
-  startEmailWatcher();
-
-  // Avvia l'engine di messaggistica programmata
-  startScheduledMessagingWatcher();
+  // Avvia il sync automatico dell'IP pubblico dinamico di Casa Aurora
+  startAutoPublicIpSync();
 
   // Middlewares for JSON and form-urlencoded webhooks (up to 25mb for high-res photo uploads)
   app.use(express.json({ limit: '25mb' }));
@@ -545,6 +550,9 @@ export function createApp() {
       if (isSupabaseConfigured()) {
         await upsertPass(pass);
       }
+
+      // Prova invio autonomo Alloggiati Web se configurato
+      autoSubmitPassIfEligible(pass).catch(err => console.warn('[Alloggiati AutoSubmit Error]:', err));
 
       res.json({ success: true, pass });
     } catch (err: any) {
@@ -878,15 +886,19 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         ? { latitude: coords?.latitude ?? latitude, longitude: coords?.longitude ?? longitude, accuracy: coords?.accuracy ?? accuracy }
         : undefined;
 
-      const proximity = verifyGuestProximity(req, config, guestCoords);
-      const clientIp = proximity.clientIp;
-      
       const guestToken = req.get('x-guest-token') || req.body?.guestToken;
       const pass = findValidGuestPass(guestToken);
       
+      // GPS verification within 50m is ONLY allowed for the very FIRST entry!
+      const hasPreviousUnlock = pass ? serverLogs.some(l => l.guestPassId === pass.id && l.success) : false;
+      const isFirstEntry = pass ? (!hasPreviousUnlock && !pass.firstUsedAt) : false;
+
+      const proximity = verifyGuestProximity(req, config, guestCoords, pass ? isFirstEntry : true);
+      const clientIp = proximity.clientIp;
+      
       const actualGuest = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : (guestName || guest || 'Ospite Aurora');
       const actualSource = source || (pass 
-        ? `Pulsante Ospite VIP (${proximity.method === 'gps' ? `GPS Verificato a ${proximity.distanceMeters}m` : 'Wi-Fi Verificato'})` 
+        ? `Pulsante Ospite VIP (${proximity.method === 'gps' ? `GPS Verificato (1° ingresso) a ${proximity.distanceMeters}m` : 'Wi-Fi Verificato'})` 
         : 'Pannello Host');
 
       if (pass && !pass.checkInConfirmed) {
@@ -977,10 +989,6 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           if (isSupabaseConfigured()) {
             await upsertPass(pass);
           }
-          
-          const arrivalMessage = `🔔 *Conferma Arrivo Ospite* 🔔\n\nL'ospite *${actualGuest}* ha effettuato il suo *primo ingresso* assoluto sbloccando il portone digitale!\n\nMetodo verifica: ${proximity.method === 'gps' ? `📍 GPS Prossimità (${proximity.distanceMeters}m)` : '📶 Rete Wi-Fi'}\n📅 Data: ${new Date(logEntry.timestamp).toLocaleDateString('it-IT')}\n⏰ Ora: ${new Date(logEntry.timestamp).toLocaleTimeString('it-IT')}\n🔑 Codice PIN dell'ospite: ${pass.pinCode || 'N/A'}`;
-          
-          await sendHostNotification(arrivalMessage);
         }
 
         res.json({
@@ -1038,7 +1046,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       }
 
       if (result.success) {
-        res.json({ success: true, message: result.message, provider: result.provider });
+        res.json({ success: true, message: result.message, provider: (result as any).provider });
       } else {
         res.status(500).json({ success: false, error: result.error });
       }
@@ -1109,7 +1117,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     });
   });
 
-  // Set Home IP
+  // Set Home IP (Manual fallback & Automatic Ping)
   apiRouter.post('/wifi/set-home-ip', async (req, res) => {
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
     const { ip } = req.body || {};
@@ -1125,6 +1133,20 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       success: true,
       message: `IP pubblico di Casa_Aurora impostato a: ${targetIp}`,
       homePublicIp: targetIp
+    });
+  });
+
+  // Automated Public IP detection (Invoked automatically without clicking buttons)
+  apiRouter.all(['/wifi/auto-detect-ip', '/wifi/ping', '/ha/ping'], async (req, res) => {
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+    const detected = await detectAndUpdatePublicIp(clientIp);
+    const config = getHomeAssistantConfig();
+    res.json({
+      success: true,
+      autoUpdated: Boolean(detected),
+      homePublicIp: config.homePublicIp,
+      detectedIp: detected,
+      clientIp
     });
   });
 
@@ -1455,83 +1477,57 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     }
   });
 
-  // Email & IMAP Config and Log endpoints
-  apiRouter.get('/email/config', (req, res) => {
+  // Channel Manager & Multi-Platform iCal Endpoints (B&B.it, Airbnb, Booking.com)
+  apiRouter.get('/channels/config', (_req, res) => {
     res.json({
       success: true,
-      config: getImapConfig()
+      config: getChannelManagerConfig()
     });
   });
 
-  apiRouter.post('/email/config', async (req, res) => {
+  apiRouter.post('/channels/config', async (req, res) => {
     try {
-      const { host, port, secure, user, pass, enabled, intervalMs } = req.body;
-      await updateImapConfigAsync({
-        ...(host !== undefined && { host: String(host) }),
-        ...(port !== undefined && { port: Number(port) }),
-        ...(secure !== undefined && { secure: Boolean(secure) }),
-        ...(user !== undefined && { user: String(user) }),
-        ...(pass !== undefined && { pass: String(pass) }),
-        ...(enabled !== undefined && { enabled: Boolean(enabled) }),
-        ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) })
-      });
+      const updated = await updateChannelManagerConfig(req.body);
       res.json({
         success: true,
-        message: 'Configurazione Email (IMAP) aggiornata con successo',
-        config: getImapConfig()
+        message: 'Configurazione Channel Manager aggiornata con successo',
+        config: updated
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
   });
 
-    apiRouter.post('/email/sync-now', async (_req, res) => {
+  apiRouter.post('/channels/sync-now', async (_req, res) => {
     try {
-      // sync-now uses forceAll=true which bypasses the isPolling check
-      // and clears processed UIDs for a full backfill
-      await checkNewEmailsAndGeneratePasses(serverPasses, true);
+      const result = await syncAllChannels(serverPasses);
       persistPasses();
       res.json({
         success: true,
-        message: 'Sincronizzazione email iReservation avviata con successo! Elaborati fino a 500 messaggi in questo ciclo. Se ne rimangono, riprova o attendi il prossimo polling.',
-        totalPasses: serverPasses.length
+        message: `Sincronizzazione completata! ${result.totalImported} prenotazioni importate da tutti i canali iCal.`,
+        totalPasses: serverPasses.length,
+        result
       });
     } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione email' });
+      res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione canali' });
     }
   });
 
-  apiRouter.get('/email/logs', async (_req, res) => {
-    try {
-      const logs = await getEmailLogs();
-      res.json({
-        success: true,
-        logs
-      });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message || 'Errore durante il recupero dei log' });
-    }
-  });
-
-  // Backward compatibility alias for deprecated iCal endpoints mapping to Email Sync
-  apiRouter.get('/ical/config', (req, res) => {
+  // iCal Backward Compatibility & Aliases
+  apiRouter.get('/ical/config', (_req, res) => {
     res.json({
       success: true,
-      config: getImapConfig()
+      config: getChannelManagerConfig()
     });
   });
 
   apiRouter.post('/ical/config', async (req, res) => {
     try {
-      const { enabled, intervalMs } = req.body;
-      await updateImapConfigAsync({
-        ...(enabled !== undefined && { enabled: Boolean(enabled) }),
-        ...(intervalMs !== undefined && { intervalMs: Number(intervalMs) })
-      });
+      const updated = await updateChannelManagerConfig(req.body);
       res.json({
         success: true,
-        message: 'Configurazione aggiornata',
-        config: getImapConfig()
+        message: 'Configurazione iCal aggiornata',
+        config: updated
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -1540,16 +1536,58 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
 
   apiRouter.post('/ical/sync-now', async (_req, res) => {
     try {
-      await syncReservationsFromIcal(serverPasses);
+      const result = await syncAllChannels(serverPasses);
       persistPasses();
       res.json({
         success: true,
-        message: 'Sincronizzazione iCal completata con successo!',
-        totalPasses: serverPasses.length
+        message: `Sincronizzazione completata! ${result.totalImported} prenotazioni sincronizzate.`,
+        totalPasses: serverPasses.length,
+        result
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message || 'Errore durante la sincronizzazione iCal' });
     }
+  });
+
+  // Alloggiati Web (Polizia di Stato) Ministerial Transmission Endpoints
+  apiRouter.get('/alloggiati/config', (_req, res) => {
+    res.json({
+      success: true,
+      config: getAlloggiatiConfig()
+    });
+  });
+
+  apiRouter.post('/alloggiati/config', async (req, res) => {
+    try {
+      const updated = await updateAlloggiatiConfig(req.body);
+      res.json({
+        success: true,
+        message: 'Configurazione Alloggiati Web aggiornata con successo',
+        config: updated
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.post('/alloggiati/submit', async (req, res) => {
+    try {
+      const { lines } = req.body;
+      if (!Array.isArray(lines) || lines.length === 0) {
+        res.status(400).json({ success: false, error: 'Nessuna riga schedina fornita.' });
+        return;
+      }
+      const result = await sendSchedineDirectly(lines);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message || 'Errore trasmissione schedine' });
+    }
+  });
+
+  apiRouter.post('/alloggiati/validate', (req, res) => {
+    const { lines } = req.body;
+    const validation = validateAlloggiatiLines(lines || []);
+    res.json(validation);
   });
 
   // Webhook Booking Receiver
@@ -1630,16 +1668,10 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
       const guestUrl = `${origin}/?pass=${token}`;
 
-      // Schedule the welcome message (which sends immediately) + pre-checkin + checkout messages!
-      await scheduleBookingMessages(newPass, origin);
-
-      // Get the message status to return to the webhook client
-      const allScheduled = getScheduledMessages();
-      const welcomeMsg = allScheduled.find(m => m.passId === newPass.id && m.triggerType === 'welcome');
-      const messageSent = welcomeMsg ? (welcomeMsg.status === 'sent' || welcomeMsg.status === 'sending') : false;
-      const messageChannel = welcomeMsg?.channel || 'whatsapp';
-      const whatsappMessage = welcomeMsg?.messageText || formatInvitationMessage(newPass, guestUrl);
-      const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
+      const messageSent = false;
+      const messageChannel = 'none';
+      const whatsappMessage = '';
+      const whatsappUrl = null;
 
       res.status(201).json({
         success: true,
@@ -1738,28 +1770,21 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
 
       console.log(`[iReservation Webhook] Elaborazione webhook email. Sender: "${emailSender}", Subject: "${emailSubject}", Cancellazione: ${isCancellation}`);
 
-      // Parsiamo l'email usando l'API di Gemini per ottenere dati super accurati
-      let parsed = await parseEmailWithGemini(html || rawText, isCancellation);
-
-      // Fallback al parser regex locale se Gemini fallisce o non è configurato
-      if (!parsed) {
-        console.log('[iReservation Webhook] Gemini non disponibile o errore, uso il parser regex locale di fallback.');
-        const localParsed = parseIReservationEmail(rawText, html);
-        parsed = {
-          bookingRef: localParsed.bookingRef,
-          bookingSource: localParsed.bookingSource,
-          guestName: localParsed.guestName,
-          guestSurname: localParsed.guestSurname,
-          guestEmail: localParsed.guestEmail,
-          phone: localParsed.phone,
-          apartmentName: localParsed.apartmentName,
-          checkInDate: localParsed.checkInDate,
-          checkOutDate: localParsed.checkOutDate,
-          nightsCount: localParsed.nightsCount,
-          guestsCount: localParsed.guestsCount,
-          amount: localParsed.amount
-        };
-      }
+      const localParsed = parseIReservationEmail(rawText, html);
+      let parsed = {
+        bookingRef: localParsed.bookingRef,
+        bookingSource: localParsed.bookingSource,
+        guestName: localParsed.guestName,
+        guestSurname: localParsed.guestSurname,
+        guestEmail: localParsed.guestEmail,
+        phone: localParsed.phone,
+        apartmentName: localParsed.apartmentName,
+        checkInDate: localParsed.checkInDate,
+        checkOutDate: localParsed.checkOutDate,
+        nightsCount: localParsed.nightsCount,
+        guestsCount: localParsed.guestsCount,
+        amount: localParsed.amount
+      };
 
       const bookingRef = parsed.bookingRef;
 
@@ -1775,13 +1800,6 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       if (isCancellation) {
         console.log(`[iReservation Webhook] Rilevata notifica di CANCELLAZIONE per ID "${bookingRef}"`);
         if (!bookingRef) {
-          await addEmailLog({
-            sender: emailSender,
-            subject: emailSubject,
-            status: 'error',
-            message: `Ricevuto webhook di cancellazione ma impossibile estrarre l'ID prenotazione`,
-            details: { emailSubject, snippet: rawText.substring(0, 300) }
-          });
           res.status(400).json({ success: false, error: 'Cancellazione ignorata: ID Prenotazione non identificato.' });
           return;
         }
@@ -1790,35 +1808,16 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         if (existingIdx !== -1) {
           const targetPass = serverPasses[existingIdx];
           targetPass.active = false;
-          targetPass.notes = `DISATTIVATO via Email di Cancellazione iReservation il ${new Date().toISOString()}.\n${targetPass.notes || ''}`;
+          targetPass.notes = `DISATTIVATO via Cancellazione il ${new Date().toISOString()}.\n${targetPass.notes || ''}`;
           
           persistPasses();
           await upsertPass(targetPass);
-          const cancelledCount = await cancelAllMessagesForPass(targetPass.id);
           
-          console.log(`[iReservation Webhook] Soggiorno disattivato per ID "${bookingRef}". Cancellati ${cancelledCount} messaggi programmati.`);
-          
-          await addEmailLog({
-            sender: emailSender,
-            subject: emailSubject,
-            status: 'success',
-            message: `Annullata prenotazione per ${targetPass.guestName} ${targetPass.guestSurname} (ID: ${bookingRef}) via Webhook`,
-            details: { bookingRef, parsed }
-          });
+          console.log(`[iReservation Webhook] Soggiorno disattivato per ID "${bookingRef}".`);
 
-          res.status(200).json({ success: true, message: 'Prenotazione disattivata e messaggi in coda rimossi.', pass: targetPass });
+          res.status(200).json({ success: true, message: 'Prenotazione disattivata.', pass: targetPass });
           return;
         } else {
-          console.warn(`[iReservation Webhook] Cancellazione ricevuta per ID "${bookingRef}" ma nessun pass corrisponde.`);
-          
-          await addEmailLog({
-            sender: emailSender,
-            subject: emailSubject,
-            status: 'warning',
-            message: `Annullamento Webhook ricevuto per ID ${bookingRef} ma nessun pass corrispondente trovato`,
-            details: { bookingRef, parsed }
-          });
-
           res.status(200).json({ success: true, message: 'Ricevuto annullamento per prenotazione non esistente.' });
           return;
         }
@@ -1829,15 +1828,6 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       if (!bookingRef || !parsed.guestName || !parsed.checkInDate || !parsed.checkOutDate) {
         const errM = `Dati incompleti. ID: "${bookingRef}", Ospite: "${parsed.guestName}", Check-in: "${parsed.checkInDate}", Check-out: "${parsed.checkOutDate}"`;
         console.error(`[iReservation Webhook] ${errM}`);
-        
-        await addEmailLog({
-          sender: emailSender,
-          subject: emailSubject,
-          status: 'warning',
-          message: `Webhook iReservation ignorato per dati incompleti. ID: "${bookingRef || 'Mancante'}", Ospite: "${parsed.guestName || 'Mancante'}", Check-in: "${parsed.checkInDate || 'Mancante'}", Check-out: "${parsed.checkOutDate || 'Mancante'}"`,
-          details: { bookingRef, parsed, snippet: rawText.substring(0, 300) }
-        });
-
         res.status(400).json({ success: false, error: errM, parsed });
         return;
       }
@@ -1851,24 +1841,16 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         targetPass = {
           ...existingPass, guestName, guestSurname, phone: phone || existingPass.phone, guestEmail: guestEmail || existingPass.guestEmail,
           checkInDate, checkOutDate, guestsCount, bookingSource, amount, apartmentName, nightsCount, active: true,
-          notes: `Aggiornato da Email iReservation il ${new Date().toISOString()}.\nOriginale: ${existingPass.notes || ''}`
+          notes: `Aggiornato via Webhook il ${new Date().toISOString()}.\nOriginale: ${existingPass.notes || ''}`
         };
         serverPasses[existingIdx] = targetPass;
-
-        await addEmailLog({
-          sender: emailSender,
-          subject: emailSubject,
-          status: 'success',
-          message: `Aggiornato pass ospite per ${parsed.guestName} ${parsed.guestSurname} (ID: ${bookingRef}) via Webhook`,
-          details: { bookingRef, parsed }
-        });
       } else {
         const pinCode = generateRandomPin();
         const token = crypto.randomBytes(32).toString('base64url');
         targetPass = {
           id: `ires-${bookingRef}`, guestName, guestSurname, phone, guestEmail, checkInDate, checkInTime: '14:00',
           checkOutDate, checkOutTime: '10:00', pinCode, bookingRef, guestsCount, bookingSource, amount,
-          apartmentName, nightsCount, notes: `Generato da Email iReservation il ${new Date().toISOString()}`,
+          apartmentName, nightsCount, notes: `Generato via Webhook il ${new Date().toISOString()}`,
           createdAt: new Date().toISOString(), active: true, checkInConfirmed: false, token
         };
         serverPasses.unshift(targetPass);
@@ -1880,13 +1862,9 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       const origin = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
       const guestUrl = `${origin}/?pass=${targetPass.token}`;
 
-      await scheduleBookingMessages(targetPass, origin);
-
-      const allScheduled = getScheduledMessages();
-      const welcomeMsg = allScheduled.find(m => m.passId === targetPass.id && m.triggerType === 'welcome');
-      const messageSent = welcomeMsg ? (welcomeMsg.status === 'sent' || welcomeMsg.status === 'sending') : false;
-      const messageChannel = welcomeMsg?.channel || 'whatsapp';
-      const welcomeMessageText = welcomeMsg?.messageText || formatInvitationMessage(targetPass, guestUrl);
+      const messageSent = false;
+      const messageChannel = 'none';
+      const welcomeMessageText = formatInvitationMessage(targetPass, guestUrl);
 
       res.status(existingIdx !== -1 ? 200 : 201).json({
         success: true, message: existingIdx !== -1 ? 'Prenotazione aggiornata!' : 'Prenotazione creata!',
@@ -1991,23 +1969,12 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
       const guestUrl = `${origin}/?pass=${token}`;
 
-      // Schedule automatic messages (Welcome, Pre-checkin, Checkout)
-      await scheduleBookingMessages(newPass, origin);
-
-      const allScheduled = getScheduledMessages();
-      const welcomeMsg = allScheduled.find(m => m.passId === newPass.id && m.triggerType === 'welcome');
-      const whatsappMessage = welcomeMsg?.messageText || formatInvitationMessage(newPass, guestUrl);
-      const whatsappLink = phone ? `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(whatsappMessage)}` : null;
-
       res.json({
         success: true,
         pass: newPass,
         token,
         link: guestUrl,
-        guestUrl,
-        whatsappUrl: whatsappLink,
-        whatsappMessage,
-        whatsappLink
+        guestUrl
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -2022,32 +1989,20 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     });
   });
 
-  // Scheduled Messages Management
+  // Scheduled Messages Management (Deactivated per host preference)
   apiRouter.get('/scheduled-messages', (_req, res) => {
     res.json({
       success: true,
-      messages: getScheduledMessages()
+      messages: []
     });
   });
 
-  apiRouter.post('/scheduled-messages/:id/send', async (req, res) => {
-    const id = req.params.id;
-    const success = await retryScheduledMessage(id);
-    if (success) {
-      res.json({ success: true, message: 'Messaggio inviato con successo!' });
-    } else {
-      res.status(500).json({ success: false, error: 'Impossibile inviare il messaggio' });
-    }
+  apiRouter.post('/scheduled-messages/:id/send', async (_req, res) => {
+    res.json({ success: true, message: 'Integrazione messaggi disattivata' });
   });
 
-  apiRouter.delete('/scheduled-messages/:id', async (req, res) => {
-    const id = req.params.id;
-    const success = await cancelScheduledMessage(id);
-    if (success) {
-      res.json({ success: true, message: 'Messaggio programmato cancellato con successo' });
-    } else {
-      res.status(404).json({ success: false, error: 'Messaggio programmato non trovato' });
-    }
+  apiRouter.delete('/scheduled-messages/:id', async (_req, res) => {
+    res.json({ success: true, message: 'Messaggio rimosso' });
   });
 
   apiRouter.post('/passes/:id/documents', async (req, res) => {
@@ -2065,6 +2020,10 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       if (isSupabaseConfigured()) {
         await upsertPass(pass);
       }
+
+      // Prova invio autonomo Alloggiati Web se configurato
+      autoSubmitPassIfEligible(pass).catch(err => console.warn('[Alloggiati AutoSubmit Error]:', err));
+
       res.json({ success: true, pass });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -2085,6 +2044,12 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       if (isSupabaseConfigured()) {
         await upsertPass(pass);
       }
+
+      // Se check-in confermato, prova invio autonomo Alloggiati Web se abilitato
+      if (pass.checkInConfirmed) {
+        autoSubmitPassIfEligible(pass).catch(err => console.warn('[Alloggiati AutoSubmit Error]:', err));
+      }
+
       res.json({ success: true, pass });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
