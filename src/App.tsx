@@ -27,6 +27,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/host-portal/*" element={<HostPortal />} />
+        <Route path="/host-portal-react/*" element={<HostPortal />} />
         <Route path="/guest/:token" element={<GuestRedirect />} />
         <Route path="/*" element={<MainApp />} />
       </Routes>

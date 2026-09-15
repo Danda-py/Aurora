@@ -422,17 +422,21 @@ export function createApp() {
   }
   app.use('/assets', express.static(assetsStaticPath));
 
-  // Il portale host con dark theme Apple HIG è servito su /host-portal/
-  const standalonePortalDir = path.join(process.cwd(), 'standalone-host-portal');
-  app.get(['/host-portal', '/host-portal/'], (_req, res) => {
-    res.sendFile(path.join(standalonePortalDir, 'index.html'));
+  // Portale Host con Apple Black design: servito direttamente su /host-portal/
+  // Redirect automatico da /standalone-host-portal a /host-portal/ per eliminare la duplicazione
+  app.use('/standalone-host-portal', (_req, res) => {
+    res.redirect(301, '/host-portal/');
   });
-  app.use('/host-portal', express.static(standalonePortalDir));
-  app.get(['/standalone-portal', '/standalone-portal/', '/standalone-host-portal', '/standalone-host-portal/'], (_req, res) => {
-    res.sendFile(path.join(standalonePortalDir, 'index.html'));
-  });
-  app.use('/standalone-portal', express.static(standalonePortalDir));
-  app.use('/standalone-host-portal', express.static(standalonePortalDir));
+
+  app.use('/host-portal', express.static(path.join(process.cwd(), 'standalone-host-portal'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }
+  }));
 
   // Serve public directory static files
   app.use(express.static(path.join(process.cwd(), 'public')));
@@ -1520,6 +1524,42 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     }
   });
 
+  // Export Casa Aurora calendar in iCal (.ics) format for Airbnb, Booking, etc.
+  apiRouter.get(['/channels/export.ics', '/ical/export.ics'], (_req, res) => {
+    try {
+      const icsLines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Aurora in Valtellina//Channel Manager iCal//IT',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:Aurora in Valtellina - Calendario Prenotazioni'
+      ];
+      for (const pass of serverPasses) {
+        if (!pass.active) continue;
+        const start = (pass.checkInDate || '').replace(/[^0-9]/g, '');
+        const end = (pass.checkOutDate || '').replace(/[^0-9]/g, '');
+        if (!start || !end) continue;
+        const uid = `aurora-${pass.id || pass.bookingRef || Math.random().toString(36).substring(2)}@auroravaltellina.it`;
+        icsLines.push('BEGIN:VEVENT');
+        icsLines.push(`UID:${uid}`);
+        icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+        icsLines.push(`DTSTART;VALUE=DATE:${start}`);
+        icsLines.push(`DTEND;VALUE=DATE:${end}`);
+        icsLines.push(`SUMMARY:Prenotato (${pass.guestName} ${pass.guestSurname || ''})`);
+        icsLines.push(`DESCRIPTION:Rif: ${pass.bookingRef || 'N/D'} - Origine: ${pass.bookingSource || 'Diretto'}`);
+        icsLines.push('STATUS:CONFIRMED');
+        icsLines.push('END:VEVENT');
+      }
+      icsLines.push('END:VCALENDAR');
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="aurora-export.ics"');
+      res.send(icsLines.join('\r\n'));
+    } catch (err: any) {
+      res.status(500).send('Errore esportazione calendario');
+    }
+  });
+
   // iCal Backward Compatibility & Aliases
   apiRouter.get('/ical/config', (_req, res) => {
     res.json({
@@ -1595,6 +1635,45 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     const { lines } = req.body;
     const validation = validateAlloggiatiLines(lines || []);
     res.json(validation);
+  });
+
+  // Property Configuration & GPS Geofencing Endpoints
+  apiRouter.get('/property/config', async (_req, res) => {
+    try {
+      await hydratePropertyConfig();
+      res.json({
+        success: true,
+        config: getPropertyConfig()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.post('/property/config', async (req, res) => {
+    try {
+      const updated = await updatePropertyConfig(req.body);
+      res.json({
+        success: true,
+        message: 'Configurazione struttura aggiornata con successo',
+        config: updated
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.put('/property/config', async (req, res) => {
+    try {
+      const updated = await updatePropertyConfig(req.body);
+      res.json({
+        success: true,
+        message: 'Configurazione struttura aggiornata con successo',
+        config: updated
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // Webhook Booking Receiver

@@ -5,20 +5,28 @@ import path from 'path';
 import {defineConfig, type Plugin} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
-// Vercel serves files from dist before applying SPA rewrites. Emit the
-// standalone host portal explicitly so /host-portal/ is served with the dark Apple HIG design.
-function hostPortalStaticFiles(): Plugin {
+// Host Portal with Apple Black design: served directly on /host-portal/
+// Redirect /standalone-host-portal/ to /host-portal/ to ensure a single unified portal.
+function standalonePortalStaticFiles(): Plugin {
   const portalDir = path.resolve(__dirname, 'standalone-host-portal');
   const portalFile = (requestUrl: string | undefined) => {
     const pathname = (requestUrl || '').split('?')[0];
-    if (pathname === '/host-portal' || pathname === '/host-portal/') return 'index.html';
+    if (pathname === '/host-portal' || pathname === '/host-portal/' || pathname === '/host-portal/index.html') return 'index.html';
     if (pathname === '/host-portal/app.js') return 'app.js';
+    if (pathname === '/standalone-host-portal' || pathname === '/standalone-host-portal/' || pathname === '/standalone-host-portal/index.html') return 'index.html';
+    if (pathname === '/standalone-host-portal/app.js') return 'app.js';
     return null;
   };
   return {
-    name: 'aurora-host-portal-static-files',
+    name: 'aurora-standalone-portal-static-files',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        const pathname = (req.url || '').split('?')[0];
+        if (pathname === '/standalone-host-portal' || pathname === '/standalone-host-portal/') {
+          res.statusCode = 302;
+          res.setHeader('Location', '/host-portal/');
+          return res.end();
+        }
         const fileName = portalFile(req.url);
         if (!fileName) return next();
         res.statusCode = 200;
@@ -28,10 +36,16 @@ function hostPortalStaticFiles(): Plugin {
     },
     generateBundle() {
       for (const fileName of ['index.html', 'app.js']) {
+        const content = fs.readFileSync(path.join(portalDir, fileName));
         this.emitFile({
           type: 'asset',
           fileName: `host-portal/${fileName}`,
-          source: fs.readFileSync(path.join(portalDir, fileName)),
+          source: content,
+        });
+        this.emitFile({
+          type: 'asset',
+          fileName: `standalone-host-portal/${fileName}`,
+          source: content,
         });
       }
     },
@@ -43,7 +57,7 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
-      hostPortalStaticFiles(),
+      standalonePortalStaticFiles(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],

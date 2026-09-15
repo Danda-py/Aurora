@@ -24,7 +24,112 @@ export interface CmsBlock {
   visibilityRule: VisibilityCondition;
   customTitle?: string;
   data: Record<string, any>;
+  i18n?: Record<string, Record<string, any>>;
 }
+
+export interface CmsBlockPreset {
+  type: CmsBlockType;
+  title: string;
+  subtitle: string;
+  category: 'identity' | 'media' | 'network' | 'legal' | 'guide';
+  defaultRule: VisibilityCondition;
+  defaultData: Record<string, any>;
+}
+
+export const CMS_BLOCK_PRESETS: CmsBlockPreset[] = [
+  {
+    type: 'video_tutorial',
+    title: 'Video Tutorial YouTube',
+    subtitle: 'Embed interattivo per Smart Lock, parcheggio o elettrodomestici',
+    category: 'media',
+    defaultRule: 'pass_active',
+    defaultData: {
+      videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      videoTitle: 'Come aprire il portone principale e la porta blindata',
+      videoDescription: 'Guarda questo breve video di 30 secondi per vedere l\'apertura dello Smart Lock e l\'accesso al cortile privato.'
+    }
+  },
+  {
+    type: 'wifi',
+    title: 'Credenziali Wi-Fi & Copia Veloce',
+    subtitle: 'Nome rete, password con copia automatica negli appunti e avviso velocità',
+    category: 'network',
+    defaultRule: 'pass_active',
+    defaultData: {
+      networkLabel: 'Aurora_Valtellina_5G',
+      passwordLabel: 'AuroraMorbegno2025!',
+      speedNotice: 'Fibra ottica ultraveloce fino a 1 Gbps con copertura in ogni stanza.'
+    }
+  },
+  {
+    type: 'house_rules',
+    title: 'Regole della Casa & Rifiuti',
+    subtitle: 'Orari del silenzio, raccolta differenziata e divieti',
+    category: 'legal',
+    defaultRule: 'always',
+    defaultData: {
+      quietHours: '22:00 - 08:00 e 13:30 - 15:00 nel rispetto della quiete del condominio.',
+      wasteInfo: 'Raccolta differenziata obbligatoria: mastelli colorati nell\'area cortile interno. Carta (Giallo), Plastica (Blu), Umido (Marrone), Secco (Grigio).',
+      noSmoking: true,
+      noParties: true,
+      petsAllowed: false
+    }
+  },
+  {
+    type: 'breaker_thermostat',
+    title: 'Quadro Elettrico & Termostato',
+    subtitle: 'Istruzioni chiare per riarmare il salvavita e regolare la temperatura',
+    category: 'identity',
+    defaultRule: 'always',
+    defaultData: {
+      breakerLocation: 'Ingresso dell\'appartamento, a destra della porta principale dentro lo sportellino bianco. Se salta la corrente sollevare la levetta "GENERALE".',
+      thermostatInstructions: 'Termostato digitale in corridoio preimpostato a 20.5°C. Toccare + o - per regolare la temperatura.'
+    }
+  },
+  {
+    type: 'local_guide',
+    title: 'Guida Locale & Ristoranti Tipici',
+    subtitle: 'I migliori crotti, botteghe del Bitto e sentieri alpini consigliati dall\'Host',
+    category: 'guide',
+    defaultRule: 'always',
+    defaultData: {
+      recommendedRestaurants: 'Trattoria Valtellinese (pizzoccheri autentici a 400m), Crotto Caurga a Chiavenna, Birrificio Valtellinese.',
+      highlights: 'Sentiero del Bitto, Ponte nel Cielo in Val Tartano (a 20 min), Lago di Como e Colico (15 min in auto).'
+    }
+  },
+  {
+    type: 'legal_bureaucracy',
+    title: 'Codici CIN / CIR & Pubblica Sicurezza',
+    subtitle: 'Trasparenza ministeriale, conformità Alloggiati Web e identificativi regionali',
+    category: 'legal',
+    defaultRule: 'always',
+    defaultData: {
+      cin: 'IT014045B4A1B2C3D4',
+      cir: '014045-CNI-00042',
+      securityNotice: 'Struttura registrata e conforme a tutte le normative di pubblica sicurezza e Polizia di Stato (Alloggiati Web).'
+    }
+  },
+  {
+    type: 'welcome',
+    title: 'Card Benvenuto & Ambienti',
+    subtitle: 'Intestazione, messaggio caloroso e descrizione salotto/camera/cucina',
+    category: 'identity',
+    defaultRule: 'always',
+    defaultData: {
+      title: 'Benvenuti ad Aurora in Valtellina',
+      greeting: 'Siamo felici di ospitarvi a Morbegno!',
+      message: 'La vostra casa accogliente nel cuore delle Alpi, tra natura, gusto e relax.',
+      viewTitle: 'CORTE & VISTA ALPI',
+      viewDesc: 'Parcheggio privato riservato in cortile e vista aperta sulle cime Orobie.',
+      livingTitle: 'SALOTTO ACCOGLIENTE & RELAX',
+      livingDesc: 'Zona giorno luminosa con divano letto, Smart TV 55" e tavolo da pranzo.',
+      bedroomTitle: 'LETTO MATRIMONIALE KING SIZE',
+      bedroomDesc: 'Letto matrimoniale ergonomico, biancheria fresca in cotone e armadio capiente.',
+      kitchenTitle: 'CUCINA COMPLETA & INDUZIONE',
+      kitchenDesc: 'Piano cottura a induzione, forno, macchina caffè Nespresso e bollitore.'
+    }
+  }
+];
 
 export interface CmsThemeSettings {
   primaryColor: string;

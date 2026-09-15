@@ -342,15 +342,12 @@ function setupTabs() {
       // Lazy loads
       if (targetTab === 'passes') {
         fetchPasses();
-      } else if (targetTab === 'visual-cms') {
-        loadVisualCms();
-      } else if (targetTab === 'channels') {
-        loadChannelsConfig();
-      } else if (targetTab === 'property') {
-        loadPropertyConfig();
-      } else if (targetTab === 'ical') {
+      } else if (targetTab === 'channels' || targetTab === 'ical') {
+        fetchChannels();
         fetchEmailConfig();
         fetchEmailLogs();
+      } else if (targetTab === 'property') {
+        fetchPropertyConfig();
       } else if (targetTab === 'hass') {
         fetchSonoffConfig();
         fetchLockStatus();
@@ -566,6 +563,70 @@ function setupEventListeners() {
   const btnDetectHomeIp = document.getElementById('btnDetectHomeIp');
   if (btnDetectHomeIp) {
     btnDetectHomeIp.addEventListener('click', handleDetectHomeIp);
+  }
+
+  // ============================================================
+  // Channel Manager Listeners
+  // ============================================================
+  const btnOpenAddChannelModal = document.getElementById('btnOpenAddChannelModal');
+  const btnCloseAddChannelModal = document.getElementById('btnCloseAddChannelModal');
+  const btnCancelAddChannel = document.getElementById('btnCancelAddChannel');
+  const addChannelModal = document.getElementById('addChannelModal');
+  const formAddChannel = document.getElementById('formAddChannel');
+  const btnSyncAllChannelsNow = document.getElementById('btnSyncAllChannelsNow');
+  const btnCopyAuroraIcalUrl = document.getElementById('btnCopyAuroraIcalUrl');
+
+  if (btnOpenAddChannelModal && addChannelModal) {
+    btnOpenAddChannelModal.addEventListener('click', () => {
+      addChannelModal.classList.remove('hidden');
+    });
+  }
+
+  const closeChannelModal = () => {
+    if (addChannelModal) addChannelModal.classList.add('hidden');
+  };
+  if (btnCloseAddChannelModal) btnCloseAddChannelModal.addEventListener('click', closeChannelModal);
+  if (btnCancelAddChannel) btnCancelAddChannel.addEventListener('click', closeChannelModal);
+  if (formAddChannel) formAddChannel.addEventListener('submit', handleAddChannel);
+  if (btnSyncAllChannelsNow) btnSyncAllChannelsNow.addEventListener('click', handleSyncAllChannels);
+  if (btnCopyAuroraIcalUrl) btnCopyAuroraIcalUrl.addEventListener('click', copyAuroraIcalUrl);
+
+  // Accordion for IMAP Email Section in Channels Tab
+  const toggleEmailSection = document.getElementById('toggleEmailSection');
+  const emailSectionContent = document.getElementById('emailSectionContent');
+  const toggleEmailSectionLabel = document.getElementById('toggleEmailSectionLabel');
+  const toggleEmailChevron = document.getElementById('toggleEmailChevron');
+
+  if (toggleEmailSection && emailSectionContent) {
+    toggleEmailSection.addEventListener('click', () => {
+      const isHidden = emailSectionContent.classList.contains('hidden');
+      if (isHidden) {
+        emailSectionContent.classList.remove('hidden');
+        if (toggleEmailSectionLabel) toggleEmailSectionLabel.textContent = 'Nascondi';
+        if (toggleEmailChevron) toggleEmailChevron.style.transform = 'rotate(180deg)';
+      } else {
+        emailSectionContent.classList.add('hidden');
+        if (toggleEmailSectionLabel) toggleEmailSectionLabel.textContent = 'Mostra';
+        if (toggleEmailChevron) toggleEmailChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  // ============================================================
+  // Property Configuration & Geofence GPS Listeners
+  // ============================================================
+  const btnSavePropertyConfig = document.getElementById('btnSavePropertyConfig');
+  const formPropertyConfig = document.getElementById('formPropertyConfig');
+  const btnDetectCurrentGps = document.getElementById('btnDetectCurrentGps');
+
+  if (btnSavePropertyConfig) {
+    btnSavePropertyConfig.addEventListener('click', handleSavePropertyConfig);
+  }
+  if (formPropertyConfig) {
+    formPropertyConfig.addEventListener('submit', handleSavePropertyConfig);
+  }
+  if (btnDetectCurrentGps) {
+    btnDetectCurrentGps.addEventListener('click', handleDetectCurrentGps);
   }
 }
 
@@ -1006,6 +1067,418 @@ window.toggleCheckinConfirmation = async function(pass) {
     showToast(`Errore: ${err.message}`, 'error');
   }
 };
+
+// ============================================================
+// CHANNEL MANAGER & ICAL FEEDS (Airbnb, Booking, Vrbo, B&B)
+// ============================================================
+let channelManagerData = {
+  enabled: true,
+  autoSyncIntervalMinutes: 15,
+  channels: [],
+  lastGlobalSync: null
+};
+
+async function fetchChannels() {
+  const exportUrlEl = document.getElementById('auroraIcalExportUrl');
+  if (exportUrlEl) {
+    const origin = window.location.origin;
+    exportUrlEl.textContent = `${origin}/api/channels/export.ics`;
+  }
+
+  const container = document.getElementById('channelsListContainer');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/config`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data && data.config) {
+      channelManagerData = data.config;
+      renderChannelsList();
+    }
+  } catch (err) {
+    console.warn('Channel manager fetch notice:', err);
+    if (container) {
+      container.innerHTML = `
+        <div class="p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] text-center text-xs text-[#86868b]">
+          Nessun canale configurato o server offline. Aggiungi il tuo primo feed iCal con il pulsante in alto.
+        </div>
+      `;
+    }
+  }
+}
+
+function renderChannelsList() {
+  const container = document.getElementById('channelsListContainer');
+  const syncText = document.getElementById('channelsGlobalSyncText');
+  if (!container) return;
+
+  if (syncText && channelManagerData.lastGlobalSync) {
+    const d = new Date(channelManagerData.lastGlobalSync);
+    syncText.textContent = `Ultimo sync: ${d.toLocaleDateString('it-IT')} ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+  } else if (syncText) {
+    syncText.textContent = 'Ultimo sync: Mai';
+  }
+
+  const channels = channelManagerData.channels || [];
+  if (channels.length === 0) {
+    container.innerHTML = `
+      <div class="p-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center space-y-2">
+        <p class="text-xs text-[#86868b]">Nessun canale iCal configurato al momento.</p>
+        <p class="text-[11px] text-white/50">Collega Airbnb, Booking.com o Vrbo tramite iCal per importare automaticamente le prenotazioni e generare i pass digitali con codice Home Assistant.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const getProviderBadge = (type) => {
+    switch (type) {
+      case 'airbnb':
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FF385C]/15 text-[#FF385C] border border-[#FF385C]/30">Airbnb</span>';
+      case 'booking':
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#003580]/30 text-[#0080ff] border border-[#003580]">Booking.com</span>';
+      case 'vrbo':
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">Vrbo</span>';
+      case 'bed_and_breakfast':
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Bed-and-Breakfast</span>';
+      default:
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white border border-white/20">iCal Feed</span>';
+    }
+  };
+
+  container.innerHTML = channels.map(ch => {
+    const isSuccess = ch.lastStatus === 'success';
+    const isError = ch.lastStatus === 'error';
+    const statusDotClass = isSuccess ? 'bg-[#30d158]' : isError ? 'bg-[#ff453a]' : 'bg-amber-400';
+    const statusText = isSuccess ? 'Sincronizzato' : isError ? 'Errore Sync' : 'In Attesa';
+    const count = ch.importedReservationsCount || 0;
+
+    return `
+      <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${getProviderBadge(ch.channelType || 'custom')}
+            <h5 class="text-xs font-bold text-white tracking-tight">${ch.name}</h5>
+            <span class="inline-flex items-center gap-1 text-[10px] text-[#86868b]">
+              <span class="w-1.5 h-1.5 rounded-full ${statusDotClass}"></span>
+              <span>${statusText}</span>
+            </span>
+          </div>
+          <p class="text-[11px] text-[#86868b] font-mono truncate max-w-xl">${ch.url}</p>
+          <div class="flex items-center gap-3 text-[10px] text-white/50 pt-0.5">
+            <span>Prenotazioni importate: <strong class="text-white">${count}</strong></span>
+            ${ch.lastSync ? `<span>Ultimo sync: ${new Date(ch.lastSync).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}
+            ${ch.lastError ? `<span class="text-rose-400 font-mono truncate max-w-xs">Errore: ${ch.lastError}</span>` : ''}
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <button type="button" onclick="handleToggleChannel('${ch.id}')" class="p-2 rounded-xl text-xs ${ch.enabled ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-white/5 text-neutral-400 hover:bg-white/10'} cursor-pointer" title="${ch.enabled ? 'Disattiva Canale' : 'Attiva Canale'}">
+            <i data-lucide="${ch.enabled ? 'check-circle' : 'circle'}" class="w-4 h-4"></i>
+          </button>
+          <button type="button" onclick="handleDeleteChannel('${ch.id}')" class="p-2 rounded-xl text-xs bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 cursor-pointer" title="Elimina Feed">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderIcons();
+}
+
+async function handleAddChannel(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('inputNewChannelName');
+  const typeSelect = document.getElementById('selectNewChannelType');
+  const urlInput = document.getElementById('inputNewChannelUrl');
+  const modal = document.getElementById('addChannelModal');
+
+  const name = nameInput?.value.trim();
+  const channelType = typeSelect?.value || 'custom';
+  const url = urlInput?.value.trim();
+
+  if (!name || !url) {
+    showToast('Compila nome e URL del feed iCal', 'error');
+    return;
+  }
+
+  showToast('Aggiunta canale in corso...', 'loading');
+
+  const newChannel = {
+    id: `chan_${Date.now()}`,
+    name,
+    channelType,
+    url,
+    enabled: true,
+    importedReservationsCount: 0,
+    lastStatus: 'pending'
+  };
+
+  const updatedChannels = [...(channelManagerData.channels || []), newChannel];
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ channels: updatedChannels })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.config) channelManagerData = data.config;
+
+    showToast(`Canale "${name}" aggiunto con successo!`, 'success');
+    if (nameInput) nameInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (modal) modal.classList.add('hidden');
+    renderChannelsList();
+
+    // Trigger an immediate sync for this new channel
+    handleSyncAllChannels();
+  } catch (err) {
+    showToast(`Errore: ${err.message}`, 'error');
+  }
+}
+
+async function handleDeleteChannel(id) {
+  if (!confirm('Sei sicuro di voler rimuovere questo canale iCal?')) return;
+
+  const updatedChannels = (channelManagerData.channels || []).filter(c => c.id !== id);
+
+  showToast('Rimozione canale...', 'loading');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ channels: updatedChannels })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.config) channelManagerData = data.config;
+
+    showToast('Canale rimosso con successo', 'success');
+    renderChannelsList();
+  } catch (err) {
+    showToast(`Errore: ${err.message}`, 'error');
+  }
+}
+
+async function handleToggleChannel(id) {
+  const updatedChannels = (channelManagerData.channels || []).map(c => {
+    if (c.id === id) return { ...c, enabled: !c.enabled };
+    return c;
+  });
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ channels: updatedChannels })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.config) channelManagerData = data.config;
+      renderChannelsList();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function handleSyncAllChannels() {
+  const btn = document.getElementById('btnSyncAllChannelsNow');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin">⟳</span> <span>Sincronizzazione...</span>';
+  }
+
+  showToast('Sincronizzazione di tutti i canali iCal in corso...', 'loading');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/sync-now`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showToast(data.message || 'Sincronizzazione canali completata!', 'success');
+      await fetchChannels();
+      await fetchPasses();
+    } else {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+  } catch (err) {
+    showToast(`Errore sync canali: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span>Sincronizza Tutti</span>';
+      renderIcons();
+    }
+  }
+}
+
+function copyAuroraIcalUrl() {
+  const exportUrlEl = document.getElementById('auroraIcalExportUrl');
+  const url = exportUrlEl ? exportUrlEl.textContent.trim() : `${window.location.origin}/api/channels/export.ics`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Link iCal Casa Aurora copiato negli appunti!', 'success');
+    }).catch(() => {
+      prompt('Copia questo URL per esportare il calendario di Aurora:', url);
+    });
+  } else {
+    prompt('Copia questo URL per esportare il calendario di Aurora:', url);
+  }
+}
+
+// ============================================================
+// PROPERTY SETTINGS & GEOFENCE GPS (50m Raggio 1° Ingresso)
+// ============================================================
+let currentPropertyConfig = null;
+
+async function fetchPropertyConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/property/config`, { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.config) {
+      currentPropertyConfig = data.config;
+      const c = data.config;
+
+      // Geofence & GPS
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) el.value = val;
+      };
+
+      setVal('inputPropLat', c.latitude);
+      setVal('inputPropLng', c.longitude);
+      setVal('inputPropRadius', c.geofenceRadiusMeters || 50);
+      setVal('selectPropProximityPolicy', c.proximityPolicy || 'wifi_or_gps');
+
+      // Contact & Info
+      setVal('inputPropName', c.name || 'Aurora in Valtellina');
+      setVal('inputPropHostName', c.hostName || 'Nino');
+      setVal('inputPropAddress', c.address || 'Via Serta 188D');
+      setVal('inputPropCity', c.city || 'Morbegno');
+      setVal('inputPropZip', c.zip || '23017');
+      setVal('inputPropProvince', c.province || 'SO');
+      setVal('inputPropPhone', c.hostPhone || '+39 340 1234567');
+      setVal('inputPropWhatsApp', c.hostWhatsApp || '+39 340 1234567');
+      setVal('inputPropEmail', c.hostEmail || 'host@auroravaltellina.it');
+
+      // Check-in / out
+      setVal('inputPropCheckInStart', c.checkInStart || '14:00');
+      setVal('inputPropCheckInEnd', c.checkInEnd || '20:00');
+      setVal('inputPropCheckOutLimit', c.checkOutLimit || '10:00');
+
+      // Wi-Fi
+      setVal('inputPropWifiSsid', c.wifiSSID || 'Casa_Aurora');
+      setVal('inputPropWifiPassword', c.wifiPassword || '');
+
+      // Appliances
+      setVal('inputPropBreakerInstructions', c.breakerBoxInstructions || '');
+      setVal('inputPropClimateInstructions', c.climateInstructions || '');
+    }
+  } catch (err) {
+    console.warn('Property config fetch notice:', err);
+  }
+}
+
+async function handleSavePropertyConfig(e) {
+  if (e) e.preventDefault();
+
+  const getVal = (id) => document.getElementById(id)?.value?.trim() || '';
+  const getNum = (id, fallback) => {
+    const val = parseFloat(document.getElementById(id)?.value);
+    return isNaN(val) ? fallback : val;
+  };
+
+  const payload = {
+    latitude: getNum('inputPropLat', 46.1345),
+    longitude: getNum('inputPropLng', 9.5678),
+    geofenceRadiusMeters: getNum('inputPropRadius', 50),
+    proximityPolicy: getVal('selectPropProximityPolicy') || 'wifi_or_gps',
+    name: getVal('inputPropName') || 'Aurora in Valtellina',
+    hostName: getVal('inputPropHostName') || 'Nino',
+    address: getVal('inputPropAddress') || 'Via Serta 188D',
+    city: getVal('inputPropCity') || 'Morbegno',
+    zip: getVal('inputPropZip') || '23017',
+    province: getVal('inputPropProvince') || 'SO',
+    hostPhone: getVal('inputPropPhone'),
+    hostWhatsApp: getVal('inputPropWhatsApp'),
+    hostEmail: getVal('inputPropEmail'),
+    checkInStart: getVal('inputPropCheckInStart') || '14:00',
+    checkInEnd: getVal('inputPropCheckInEnd') || '20:00',
+    checkOutLimit: getVal('inputPropCheckOutLimit') || '10:00',
+    wifiSSID: getVal('inputPropWifiSsid') || 'Casa_Aurora',
+    wifiPassword: getVal('inputPropWifiPassword'),
+    breakerBoxInstructions: getVal('inputPropBreakerInstructions'),
+    climateInstructions: getVal('inputPropClimateInstructions')
+  };
+
+  showToast('Salvataggio impostazioni struttura...', 'loading');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/property/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentPropertyConfig = data.config;
+
+    showToast('Impostazioni struttura e Geofence (50m) salvate con successo!', 'success');
+
+    const feedback = document.getElementById('propertyFeedbackBox');
+    if (feedback) {
+      feedback.className = 'p-3.5 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
+      feedback.textContent = `✓ Coordinate salvate: ${payload.latitude}, ${payload.longitude} | Raggio Geofence: ${payload.geofenceRadiusMeters}m (Policy: ${payload.proximityPolicy})`;
+      setTimeout(() => { feedback.className = 'hidden'; }, 6000);
+    }
+  } catch (err) {
+    showToast(`Errore salvataggio: ${err.message}`, 'error');
+  }
+}
+
+function handleDetectCurrentGps() {
+  if (!navigator.geolocation) {
+    showToast('La geolocalizzazione non è supportata da questo browser', 'error');
+    return;
+  }
+
+  showToast('Rilevamento coordinate GPS dal dispositivo in corso...', 'loading');
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude.toFixed(6);
+      const lng = position.coords.longitude.toFixed(6);
+      const latEl = document.getElementById('inputPropLat');
+      const lngEl = document.getElementById('inputPropLng');
+      if (latEl) latEl.value = lat;
+      if (lngEl) lngEl.value = lng;
+      showToast(`Coordinate GPS rilevate con successo: ${lat}, ${lng}`, 'success');
+    },
+    (err) => {
+      showToast(`Impossibile rilevare la posizione GPS: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// Make functions globally accessible for inline onclick handlers
+window.handleToggleChannel = handleToggleChannel;
+window.handleDeleteChannel = handleDeleteChannel;
 
 // ============================================================
 // EMAIL SYNCHRONIZATION & IMAP CONFIG
@@ -1480,24 +1953,35 @@ function renderCmsFields() {
   }
 
   const HUMAN_LABELS_MAP = {
+    // Welcome & General
     'welcome.title': 'Titolo Card Benvenuto',
     'welcome.greeting': 'Intestazione Ospite / Nome Struttura',
     'welcome.message': 'Messaggio Personale dell\'Host',
     'welcome.viewTitle': 'Titolo Vista Panoramica',
     'welcome.viewDesc': 'Descrizione Servizi Struttura',
-    'welcome.livingTitle': 'Zona Soggiorno & Living',
-    'welcome.livingDesc': 'Dettagli Salotto',
+    'welcome.livingTitle': 'Zona Living & Salotto',
+    'welcome.livingDesc': 'Dettagli Salotto & Spazi Comuni',
     'welcome.bedroomTitle': 'Zona Notte & Letto',
     'welcome.bedroomDesc': 'Dettagli Camera da Letto',
     'welcome.kitchenTitle': 'Cucina & Induzione',
-    'welcome.kitchenDesc': 'Istruzioni Cucina',
+    'welcome.kitchenDesc': 'Istruzioni Cucina & Elettrodomestici',
+    'welcome.cin': 'Codice Identificativo Nazionale (CIN)',
+    'welcome.cir': 'Codice Identificativo Regionale (CIR)',
+    // Wi-Fi
     'wifi.networkLabel': 'Nome Rete Wi-Fi (SSID)',
     'wifi.passwordLabel': 'Password Rete Wi-Fi',
     'wifi.speedNotice': 'Velocità Connessione Fibra',
+    'wifi.instructions': 'Istruzioni di Connessione Wi-Fi',
+    // Rules & Check-in
     'rules.title': 'Regole della Casa',
+    'rules.quietHours': 'Orario del Silenzio',
+    'rules.smoking': 'Policy Fumo',
+    'rules.pets': 'Animali Domestici',
     'checkIn.title': 'Istruzioni Check-in',
     'checkIn.parkingTitle': 'Parcheggio Riservato',
     'checkIn.parkingDesc': 'Istruzioni Parcheggio Cortile',
+    'checkIn.keyInstructions': 'Istruzioni Consegna Chiavi (Nino)',
+    // Standard keys fallback
     'title': 'Titolo Card di Benvenuto',
     'greeting': 'Intestazione Ospite / Nome Struttura',
     'message': 'Messaggio Personale dell\'Host',
@@ -1513,11 +1997,38 @@ function renderCmsFields() {
     'passwordLabel': 'Password Wi-Fi',
     'speedNotice': 'Velocità Connessione Fibra',
     'cin': 'Codice Identificativo Nazionale (CIN)',
-    'cir': 'Codice Identificativo Regionale (CIR)'
+    'cir': 'Codice Identificativo Regionale (CIR)',
+    'name': 'Nome Elemento / Servizio',
+    'description': 'Descrizione Dettagliata',
+    'desc': 'Descrizione Dettagliata',
+    'text': 'Testo Informativo',
+    'note': 'Note e Suggerimenti Host',
+    'notes': 'Note e Suggerimenti Host',
+    'address': 'Indirizzo Completo',
+    'phone': 'Numero di Telefono',
+    'category': 'Categoria',
+    'time': 'Orari',
+    'hours': 'Orari di Apertura',
+    'icon': 'Icona Simbolo',
+    'distance': 'Distanza a Piedi / in Auto',
+    'url': 'Link Web o Mappa',
+    'tip': 'Consiglio dell\'Host',
+    'items': 'Elementi della Sezione',
+    'places': 'Luoghi e Punti di Interesse',
+    'restaurants': 'Ristoranti & Osterie Tipiche',
+    'services': 'Numeri Utili & Emergenze'
   };
 
   const getFriendlyLabel = (key) => {
-    return HUMAN_LABELS_MAP[key] || HUMAN_LABELS_MAP[key.split('.').pop()] || key;
+    if (HUMAN_LABELS_MAP[key]) return HUMAN_LABELS_MAP[key];
+    const lastPart = key.split('.').pop() || '';
+    if (HUMAN_LABELS_MAP[lastPart]) return HUMAN_LABELS_MAP[lastPart];
+    // Convert camelCase or snake_case to Human-Readable Title Case
+    const spaced = lastPart
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .trim();
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
   };
 
   const fieldItems = [];
@@ -1536,11 +2047,10 @@ function renderCmsFields() {
           <div class="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <span class="block text-xs text-white font-bold">${friendlyName}</span>
-                <span class="text-[10px] font-mono text-white/40">(${pathKey})</span>
+                <span class="block text-xs text-white font-bold tracking-wide">${friendlyName}</span>
               </div>
               ${showTranslate ? `
-                <button type="button" data-translate-path="${pathKey}" class="btn-cms-translate text-[10px] px-2 py-1 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/20 transition flex items-center gap-1 cursor-pointer">
+                <button type="button" data-translate-path="${pathKey}" class="btn-cms-translate text-[10px] px-2.5 py-1 rounded-lg bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/20 transition flex items-center gap-1 cursor-pointer">
                   ✨ Traduci con IA
                 </button>
               ` : ''}
@@ -1556,7 +2066,7 @@ function renderCmsFields() {
         fieldItems.push(`
           <div class="p-3.5 rounded-xl bg-black/50 border border-white/[0.08] space-y-3">
             <div class="flex items-center justify-between border-b border-white/[0.06] pb-2">
-              <span class="text-xs font-mono text-[#30d158] font-bold uppercase tracking-wider">${pathKey} (${v.length} elementi)</span>
+              <span class="text-xs text-[#30d158] font-bold uppercase tracking-wider">${getFriendlyLabel(pathKey)} (${v.length} elementi)</span>
             </div>
             <div class="space-y-3">
               ${v.map((item, idx) => {
@@ -1569,7 +2079,7 @@ function renderCmsFields() {
                     return `
                     <div>
                       <div class="flex items-center justify-between gap-1.5">
-                        <label class="block text-[11px] font-mono text-[#86868b]">${subK}</label>
+                        <label class="block text-[11px] font-medium text-white/70">${getFriendlyLabel(subK)}</label>
                         ${showTranslate ? `
                           <button type="button" data-translate-path="${fullSubPath}" class="btn-cms-translate text-[9px] px-1.5 py-0.5 rounded bg-[#30d158]/10 text-[#30d158] hover:bg-[#30d158]/20 border border-[#30d158]/15 transition flex items-center gap-0.5 cursor-pointer">
                             ✨ Traduci
@@ -1586,7 +2096,7 @@ function renderCmsFields() {
                   }).join('');
                   return `
                     <div class="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-2">
-                      <span class="text-[10px] font-mono text-[#ff9f0a] font-semibold">Elemento #${idx + 1}</span>
+                      <span class="text-[10px] font-semibold text-[#ff9f0a]">Scheda #${idx + 1}</span>
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         ${subFields}
                       </div>
@@ -3174,557 +3684,5 @@ window.exportAlloggiatiTxt = function() {
     showAlloggiatiFeedback(`Errore: ${err.message}`, 'error');
   }
 };
-
-// ============================================================================
-// VISUAL CMS (WYSIWYG & IPHONE PWA SIMULATOR)
-// ============================================================================
-let currentVisualLang = 'it';
-let visualBlocksMeta = [
-  { id: 'welcome', name: 'Benvenuto & Greeting', icon: 'home', color: '#ff9f0a', desc: 'Intestazione, saluto e messaggio personale per l\'ospite' },
-  { id: 'wifi', name: 'Wi-Fi Fibra Alta Velocità', icon: 'wifi', color: '#0071e3', desc: 'Nome della rete (SSID), password e velocità fibra' },
-  { id: 'checkIn', name: 'Check-in & Apertura Portone', icon: 'key', color: '#30d158', desc: 'Istruzioni accesso, tastierino e parcheggio cortile' },
-  { id: 'rules', name: 'Regole della Casa', icon: 'shield-check', color: '#bf5af2', desc: 'Orari di silenzio, fumo, animali e raccolta differenziata' },
-  { id: 'checkOut', name: 'Check-out & Riconsegna', icon: 'log-out', color: '#ff453a', desc: 'Orario limite di partenza e riconsegna chiavi' },
-  { id: 'restaurants', name: 'Ristoranti & Crotti Tipici', icon: 'utensils', color: '#ff9f0a', desc: 'Consigli gastronomici e specialità valtellinesi' },
-  { id: 'amenities', name: 'Elettrodomestici & Comfort', icon: 'tv', color: '#64d2ff', desc: 'Istruzioni termostato, clima, piano induzione e TV' },
-  { id: 'emergency', name: 'Emergenze & Farmacie', icon: 'phone-call', color: '#ff453a', desc: 'Guardia medica, farmacie di turno Morbegno e 112' },
-  { id: 'contacts', name: 'Contatti Host Nino', icon: 'user', color: '#30d158', desc: 'Recapiti diretti dell\'host, WhatsApp e assistenza' }
-];
-
-async function loadVisualCms() {
-  const container = document.getElementById('visualBlocksContainer');
-  if (!container) return;
-
-  try {
-    if (!cmsContentData || Object.keys(cmsContentData).length === 0) {
-      const res = await fetch(`${API_BASE_URL}/api/cms/content`);
-      if (res.ok) {
-        const json = await res.json();
-        cmsContentData = json.data || json.content || json || {};
-      }
-    }
-  } catch (e) {
-    console.warn('Visual CMS data fetch error:', e);
-  }
-
-  renderVisualBlocks();
-}
-
-function switchVisualLanguage(lang) {
-  currentVisualLang = lang;
-  const buttons = document.querySelectorAll('.visual-lang-btn');
-  buttons.forEach(b => {
-    if (b.textContent.trim().toLowerCase() === lang.toLowerCase()) {
-      b.className = 'visual-lang-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-[#ff9f0a] text-black';
-    } else {
-      b.className = 'visual-lang-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-white/5 text-[#86868b] hover:text-white';
-    }
-  });
-  renderVisualBlocks();
-}
-
-function renderVisualBlocks() {
-  const container = document.getElementById('visualBlocksContainer');
-  if (!container) return;
-
-  const countEl = document.getElementById('visualBlocksCount');
-  if (countEl) countEl.textContent = visualBlocksMeta.length;
-
-  const langData = (cmsContentData && cmsContentData[currentVisualLang]) ? cmsContentData[currentVisualLang] : {};
-
-  container.innerHTML = visualBlocksMeta.map((block, idx) => {
-    const sectionData = langData[block.id] || {};
-    const hasData = Object.keys(sectionData).length > 0;
-
-    // Determine primary label and subtitle
-    let titleVal = sectionData.title || sectionData.heading || sectionData.name || block.name;
-    let descVal = sectionData.message || sectionData.greeting || sectionData.description || sectionData.desc || block.desc;
-
-    return `
-      <div class="p-4 rounded-2xl bg-black/40 border border-white/[0.08] hover:border-white/20 transition space-y-3" id="vblock-${block.id}">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border border-white/10" style="background-color: ${block.color}15; color: ${block.color}">
-              <i data-lucide="${block.icon}" class="w-4 h-4"></i>
-            </span>
-            <div class="min-w-0">
-              <h5 class="text-xs font-bold text-white truncate">${block.name}</h5>
-              <p class="text-[11px] text-[#86868b] truncate">${block.desc}</p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2 shrink-0">
-            <button 
-              type="button" 
-              onclick="toggleBlockDetails('${block.id}')" 
-              class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-neutral-300 flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-              <span>Modifica</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Inline editor for this block (collapsible) -->
-        <div id="vblock-details-${block.id}" class="space-y-3 pt-3 border-t border-white/[0.06] hidden">
-          <div>
-            <label class="block text-[10px] uppercase font-semibold text-[#86868b] mb-1">Titolo Blocco (${currentVisualLang.toUpperCase()})</label>
-            <input 
-              type="text" 
-              value="${escapeHtml(String(titleVal || ''))}" 
-              oninput="updateVisualBlockField('${block.id}', 'title', this.value)"
-              class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10 outline-none focus:border-[#ff9f0a]"
-            />
-          </div>
-
-          ${block.id === 'wifi' ? `
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[10px] uppercase font-semibold text-[#86868b] mb-1">Nome Rete Wi-Fi (SSID)</label>
-                <input 
-                  type="text" 
-                  value="${escapeHtml(String(sectionData.networkLabel || sectionData.ssid || ''))}" 
-                  oninput="updateVisualBlockField('${block.id}', 'networkLabel', this.value)"
-                  class="w-full text-xs p-2.5 rounded-xl font-mono bg-[#1c1c1e] text-white border border-white/10 outline-none"
-                />
-              </div>
-              <div>
-                <label class="block text-[10px] uppercase font-semibold text-[#86868b] mb-1">Password Wi-Fi</label>
-                <input 
-                  type="text" 
-                  value="${escapeHtml(String(sectionData.passwordLabel || sectionData.password || ''))}" 
-                  oninput="updateVisualBlockField('${block.id}', 'passwordLabel', this.value)"
-                  class="w-full text-xs p-2.5 rounded-xl font-mono bg-[#1c1c1e] text-white border border-white/10 outline-none"
-                />
-              </div>
-            </div>
-          ` : `
-            <div>
-              <label class="block text-[10px] uppercase font-semibold text-[#86868b] mb-1">Descrizione / Testo (${currentVisualLang.toUpperCase()})</label>
-              <textarea 
-                rows="2"
-                oninput="updateVisualBlockField('${block.id}', 'message', this.value)"
-                class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10 outline-none focus:border-[#ff9f0a]"
-              >${escapeHtml(String(descVal || ''))}</textarea>
-            </div>
-          `}
-
-          <div class="flex items-center justify-between gap-2 pt-1 text-[11px]">
-            <div class="flex items-center gap-2">
-              <span class="text-[#86868b]">Regola Visibilità:</span>
-              <select class="p-1 rounded-lg bg-[#1c1c1e] text-white text-[11px] border border-white/10">
-                <option value="always">Sempre Visibile</option>
-                <option value="after_checkin">Solo dopo Check-in</option>
-                <option value="during_stay">Durante il Soggiorno</option>
-              </select>
-            </div>
-
-            <button 
-              type="button" 
-              onclick="saveVisualCms()" 
-              class="px-3 py-1 rounded-lg bg-[#ff9f0a] hover:bg-[#e08e08] text-black font-semibold text-[11px] flex items-center gap-1 transition cursor-pointer"
-            >
-              <i data-lucide="check" class="w-3 h-3"></i>
-              <span>Applica</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  renderIcons();
-}
-
-function toggleBlockDetails(blockId) {
-  const el = document.getElementById(`vblock-details-${blockId}`);
-  if (el) {
-    el.classList.toggle('hidden');
-  }
-}
-
-function updateVisualBlockField(blockId, fieldKey, val) {
-  if (!cmsContentData) cmsContentData = {};
-  if (!cmsContentData[currentVisualLang]) cmsContentData[currentVisualLang] = {};
-  if (!cmsContentData[currentVisualLang][blockId]) cmsContentData[currentVisualLang][blockId] = {};
-  cmsContentData[currentVisualLang][blockId][fieldKey] = val;
-}
-
-function setVisualPalette(primary, accent) {
-  if (!cmsContentData) cmsContentData = {};
-  if (!cmsContentData.siteSettings) cmsContentData.siteSettings = {};
-  cmsContentData.siteSettings.primaryColor = primary;
-  cmsContentData.siteSettings.accentColor = accent;
-  saveVisualCms();
-}
-
-function refreshPwaIframe() {
-  const iframe = document.getElementById('pwaSimulatorIframe');
-  if (iframe) {
-    iframe.src = `/?preview=host_simulator&t=${Date.now()}`;
-  }
-}
-
-async function saveVisualCms() {
-  const feedback = document.getElementById('visualCmsFeedback');
-  const saveBtn = document.getElementById('btnSaveVisualCms');
-  
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Salvataggio...</span>`;
-    renderIcons();
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/cms/content`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: cmsContentData })
-    });
-
-    if (res.ok) {
-      if (feedback) {
-        feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
-        feedback.textContent = 'Contenuti PWA pubblicati con successo! Anteprima aggiornata.';
-      }
-      refreshPwaIframe();
-    } else {
-      throw new Error('Errore durante il salvataggio dei contenuti');
-    }
-  } catch (err) {
-    if (feedback) {
-      feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20 block';
-      feedback.textContent = `Errore: ${err.message}`;
-    }
-  } finally {
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Pubblica Online</span>`;
-      renderIcons();
-    }
-    setTimeout(() => {
-      if (feedback) feedback.className = 'hidden';
-    }, 4000);
-  }
-}
-
-// ============================================================================
-// CHANNEL MANAGER (iCAL MULTI-PLATFORM SYNC)
-// ============================================================================
-let channelManagerConfig = {
-  enabled: true,
-  autoSyncIntervalMinutes: 15,
-  channels: []
-};
-
-async function loadChannelsConfig() {
-  const exportInput = document.getElementById('auroraIcalExportInput');
-  if (exportInput) {
-    exportInput.value = `${window.location.origin}/api/ical/export.ics`;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/channels/config`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.config) {
-        channelManagerConfig = data.config;
-      }
-    }
-  } catch (err) {
-    console.warn('Channel Manager config notice:', err);
-  }
-
-  renderChannelsList();
-}
-
-function renderChannelsList() {
-  const container = document.getElementById('channelsListContainer');
-  if (!container) return;
-
-  const channels = channelManagerConfig.channels || [];
-  
-  if (channels.length === 0) {
-    container.innerHTML = `
-      <div class="apple-card p-6 text-center space-y-3">
-        <div class="w-10 h-10 mx-auto rounded-full bg-[#30d158]/10 text-[#30d158] flex items-center justify-center">
-          <i data-lucide="calendar" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h4 class="text-xs font-semibold text-white">Nessun canale iCal ancora collegato</h4>
-          <p class="text-[11px] text-[#86868b] max-w-md mx-auto mt-1">
-            Collega i link di esportazione iCal di Airbnb, Booking.com o Bed-and-Breakfast.it per importare automaticamente le prenotazioni e sincronizzare il calendario.
-          </p>
-        </div>
-        <button 
-          type="button" 
-          onclick="toggleAddChannelModal(true)" 
-          class="btn-apple-primary px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer shadow-md"
-        >
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-          <span>Collega Primo Canale</span>
-        </button>
-      </div>
-    `;
-    renderIcons();
-    return;
-  }
-
-  container.innerHTML = channels.map(channel => {
-    const badgeColor = channel.channelType === 'airbnb' ? '#ff385c' :
-                       channel.channelType === 'booking' ? '#003580' :
-                       channel.channelType === 'bed_and_breakfast' ? '#ff9f0a' : '#30d158';
-
-    const platformLabel = channel.channelType === 'airbnb' ? 'Airbnb' :
-                          channel.channelType === 'booking' ? 'Booking.com' :
-                          channel.channelType === 'bed_and_breakfast' ? 'Bed-and-Breakfast.it' :
-                          channel.channelType === 'vrbo' ? 'Vrbo / Expedia' : 'Canale iCal';
-
-    return `
-      <div class="p-4 rounded-2xl bg-black/40 border border-white/[0.08] hover:border-white/20 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-start gap-3 min-w-0">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-white/10" style="background-color: ${badgeColor}20; color: ${badgeColor}">
-            <i data-lucide="calendar" class="w-4 h-4"></i>
-          </div>
-          <div class="min-w-0 space-y-0.5">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h5 class="text-xs font-bold text-white truncate">${escapeHtml(channel.name)}</h5>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium border" style="background-color: ${badgeColor}15; color: ${badgeColor}; border-color: ${badgeColor}30">
-                ${platformLabel}
-              </span>
-            </div>
-            <p class="text-[11px] font-mono text-[#86868b] truncate max-w-sm sm:max-w-md">${escapeHtml(channel.url)}</p>
-            <div class="flex items-center gap-3 text-[10px] text-[#86868b] pt-1">
-              <span>Importate: <strong class="text-white">${channel.importedReservationsCount || 0}</strong></span>
-              <span>•</span>
-              <span>Ultimo sync: <strong class="text-white">${channel.lastSync ? new Date(channel.lastSync).toLocaleString('it-IT') : 'Mai'}</strong></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-          <button 
-            type="button" 
-            onclick="deleteChannel('${channel.id}')" 
-            class="p-2 rounded-xl bg-white/5 hover:bg-[#ff453a]/20 text-[#86868b] hover:text-[#ff453a] transition cursor-pointer"
-            title="Rimuovi Feed iCal"
-          >
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  renderIcons();
-}
-
-function copyAuroraIcalExport() {
-  const input = document.getElementById('auroraIcalExportInput');
-  const btn = document.getElementById('btnCopyAuroraIcal');
-  if (input) {
-    navigator.clipboard.writeText(input.value);
-    if (btn) {
-      const orig = btn.innerHTML;
-      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-white"></i><span>Copiato!</span>`;
-      renderIcons();
-      setTimeout(() => {
-        btn.innerHTML = orig;
-        renderIcons();
-      }, 2000);
-    }
-  }
-}
-
-function toggleAddChannelModal(show) {
-  const modal = document.getElementById('modalAddChannel');
-  if (modal) {
-    if (show) modal.classList.remove('hidden');
-    else modal.classList.add('hidden');
-  }
-}
-
-async function handleAddChannelSubmit(event) {
-  event.preventDefault();
-  const nameInput = document.getElementById('inputChannelName');
-  const typeInput = document.getElementById('inputChannelType');
-  const urlInput = document.getElementById('inputChannelUrl');
-
-  if (!nameInput || !urlInput) return;
-
-  const newChannel = {
-    id: `channel_${Date.now()}`,
-    name: nameInput.value.trim(),
-    channelType: typeInput.value,
-    url: urlInput.value.trim(),
-    enabled: true,
-    importedReservationsCount: 0
-  };
-
-  channelManagerConfig.channels = [...(channelManagerConfig.channels || []), newChannel];
-
-  toggleAddChannelModal(false);
-  nameInput.value = '';
-  urlInput.value = '';
-
-  await saveChannelsConfig();
-  await triggerChannelsSyncNow();
-}
-
-async function deleteChannel(channelId) {
-  if (!confirm('Sei sicuro di voler rimuovere questo canale iCal?')) return;
-  channelManagerConfig.channels = (channelManagerConfig.channels || []).filter(c => c.id !== channelId);
-  await saveChannelsConfig();
-}
-
-async function saveChannelsConfig() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/channels/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(channelManagerConfig)
-    });
-    if (res.ok) {
-      renderChannelsList();
-    }
-  } catch (err) {
-    console.error('Error saving channels config:', err);
-  }
-}
-
-async function triggerChannelsSyncNow() {
-  const syncBtn = document.getElementById('btnSyncChannelsNow');
-  const feedback = document.getElementById('channelsFeedbackBox');
-
-  if (syncBtn) {
-    syncBtn.disabled = true;
-    syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-[#30d158] animate-spin"></i><span>Sincronizzazione in corso...</span>`;
-    renderIcons();
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/channels/sync-now`, { method: 'POST' });
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      if (feedback) {
-        feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
-        feedback.textContent = data.message || 'Sincronizzazione completata con successo!';
-      }
-      const notice = document.getElementById('channelSyncStatusNotice');
-      if (notice) notice.textContent = `Ultima sincronizzazione: ${new Date().toLocaleTimeString('it-IT')}`;
-      await loadChannelsConfig();
-      fetchPasses(); // refresh passes list
-    } else {
-      throw new Error(data.error || 'Errore durante il sync');
-    }
-  } catch (err) {
-    if (feedback) {
-      feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20 block';
-      feedback.textContent = `Errore di sincronizzazione: ${err.message}`;
-    }
-  } finally {
-    if (syncBtn) {
-      syncBtn.disabled = false;
-      syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-[#30d158]"></i><span>Sincronizza Ora</span>`;
-      renderIcons();
-    }
-    setTimeout(() => {
-      if (feedback) feedback.className = 'hidden';
-    }, 5000);
-  }
-}
-
-// ============================================================================
-// PROPERTY SETTINGS & GEOFENCE
-// ============================================================================
-async function loadPropertyConfig() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/property/config`);
-    if (res.ok) {
-      const data = await res.json();
-      const cfg = data.config || data;
-
-      const setVal = (id, val) => {
-        const el = document.getElementById(id);
-        if (el && val !== undefined) el.value = val;
-      };
-
-      setVal('propName', cfg.propertyName || 'Aurora in Valtellina');
-      setVal('propAddress', cfg.address || 'Via Privata, Morbegno (SO)');
-      setVal('propCin', cfg.cin || '');
-      setVal('propCir', cfg.cir || '');
-      setVal('propLat', cfg.coordinates?.latitude || 46.1363);
-      setVal('propLng', cfg.coordinates?.longitude || 9.5705);
-      setVal('propRadius', cfg.maxAllowedRadiusMeters !== undefined ? cfg.maxAllowedRadiusMeters : 100);
-      setVal('propWifiSsid', cfg.propertyWifiSSID || 'Aurora-Guest-WiFi');
-      setVal('propWifiBssid', cfg.propertyWifiBSSID || '');
-    }
-  } catch (err) {
-    console.warn('Property config load notice:', err);
-  }
-}
-
-async function savePropertyConfig() {
-  const feedback = document.getElementById('propertyFeedbackBox');
-  const btn = document.getElementById('btnSaveProperty');
-
-  const getVal = (id) => {
-    const el = document.getElementById(id);
-    return el ? el.value.trim() : '';
-  };
-
-  const payload = {
-    propertyName: getVal('propName'),
-    address: getVal('propAddress'),
-    cin: getVal('propCin'),
-    cir: getVal('propCir'),
-    coordinates: {
-      latitude: parseFloat(getVal('propLat')) || 46.1363,
-      longitude: parseFloat(getVal('propLng')) || 9.5705
-    },
-    maxAllowedRadiusMeters: parseInt(getVal('propRadius'), 10) || 100,
-    propertyWifiSSID: getVal('propWifiSsid'),
-    propertyWifiBSSID: getVal('propWifiBssid')
-  };
-
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Salvataggio...</span>`;
-    renderIcons();
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/property/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (res.ok) {
-      if (feedback) {
-        feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
-        feedback.textContent = 'Parametri struttura e geofence salvati con successo!';
-      }
-    } else {
-      throw new Error('Errore nel salvataggio dei parametri');
-    }
-  } catch (err) {
-    if (feedback) {
-      feedback.className = 'p-3 rounded-xl text-xs font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20 block';
-      feedback.textContent = `Errore: ${err.message}`;
-    }
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Salva Parametri</span>`;
-      renderIcons();
-    }
-    setTimeout(() => {
-      if (feedback) feedback.className = 'hidden';
-    }, 4000);
-  }
-}
-
 
 

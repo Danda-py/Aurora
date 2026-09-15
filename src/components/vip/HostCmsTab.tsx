@@ -1,14 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  useCmsEditor 
-} from '../../hooks/useCmsEditor';
+import React, { useState, useRef } from 'react';
+import { useCmsEditor } from '../../hooks/useCmsEditor';
 import { PwaPhonePreview } from './PwaPhonePreview';
 import { 
   CmsBlock, 
   CmsBlockType, 
   HUMAN_LABELS, 
   VISIBILITY_RULES_OPTIONS, 
-  VisibilityCondition 
+  VisibilityCondition,
+  CMS_BLOCK_PRESETS
 } from '../../types/cmsBuilder';
 import { 
   Plus, 
@@ -35,10 +34,16 @@ import {
   FileText, 
   Zap, 
   X,
-  Sliders,
+  Search,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  ArrowRight,
+  Sliders,
+  Filter,
+  Loader2,
+  Globe
 } from 'lucide-react';
+import { Language } from '../../types';
 
 const COLOR_PALETTES = [
   { name: 'Ambra Valtellina', primary: '#f59e0b', accent: '#d97706' },
@@ -47,27 +52,47 @@ const COLOR_PALETTES = [
   { name: 'Rosso Crotto', primary: '#ef4444', accent: '#b91c1c' }
 ];
 
+const LANGUAGES: { code: Language; label: string; flag: string }[] = [
+  { code: 'it', label: 'IT', flag: '🇮🇹' },
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'de', label: 'DE', flag: '🇩🇪' },
+  { code: 'fr', label: 'FR', flag: '🇫🇷' },
+  { code: 'es', label: 'ES', flag: '🇪🇸' }
+];
+
 export const HostCmsTab: React.FC = () => {
   const {
     blocks,
+    filteredBlocks,
     theme,
+    activeLang,
+    simulatedGuestState,
+    searchQuery,
+    selectedCategory,
     activeBlockId,
     hoveredBlockId,
     activeFieldKey,
     isDirty,
     previewDevice,
     isPublishing,
+    translatingField,
     publishFeedback,
+    setActiveLang,
+    setSimulatedGuestState,
+    setSearchQuery,
+    setSelectedCategory,
     setActiveBlockId,
     setHoveredBlockId,
     setActiveFieldKey,
     setPreviewDevice,
+    getFieldValue,
     updateField,
+    translateFieldWithAi,
     updateTheme,
     updateBlockRule,
     toggleBlockEnabled,
     moveBlock,
-    addBlock,
+    addBlockFromPreset,
     removeBlock,
     saveDraft,
     publishLive,
@@ -89,7 +114,6 @@ export const HostCmsTab: React.FC = () => {
     const el = document.getElementById(`editor-block-${blockId}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // If field key is provided, try to focus input
       if (fieldKey) {
         setTimeout(() => {
           const inputEl = document.getElementById(`field-${blockId}-${fieldKey}`) as HTMLInputElement | HTMLTextAreaElement;
@@ -99,7 +123,17 @@ export const HostCmsTab: React.FC = () => {
     }
   };
 
-  // Drag and Drop handlers
+  // Jump to section via dropdown
+  const handleSectionJump = (blockId: string) => {
+    if (!blockId) return;
+    setActiveBlockId(blockId);
+    const el = document.getElementById(`editor-block-${blockId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedBlockId(id);
     e.dataTransfer.setData('text/plain', id);
@@ -146,10 +180,10 @@ export const HostCmsTab: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#0d1017] text-gray-100 font-sans">
-      {/* 5. TOP BAR PROFESSIONALE DA NO-CODE CMS (STILE WEBFLOW / GOOGLE SITES) */}
+      {/* 1. TOP BAR PROFESSIONALE NO-CODE CMS */}
       <header className="sticky top-0 z-30 bg-[#151922]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
-        {/* Left: Branding & Device Switcher */}
-        <div className="flex items-center gap-3 sm:gap-6">
+        {/* Left: Branding & Language Switcher */}
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <div 
               className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold shadow-sm"
@@ -159,7 +193,7 @@ export const HostCmsTab: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
-                Visual CMS Builder
+                Visual PWA Builder
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   WYSIWYG
                 </span>
@@ -168,118 +202,78 @@ export const HostCmsTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Device Switcher */}
-          <div className="flex items-center bg-[#0d1017] p-1 rounded-xl border border-white/[0.06]">
-            <button
-              type="button"
-              onClick={() => setPreviewDevice('mobile')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                previewDevice === 'mobile'
-                  ? 'bg-[#1f2430] text-white shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Vista Smartphone Ospite"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Mobile Ospite</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewDevice('desktop')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                previewDevice === 'desktop'
-                  ? 'bg-[#1f2430] text-white shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Vista Desktop / Tablet Widescreen"
-            >
-              <Laptop className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden sm:inline">Desktop / TV</span>
-            </button>
+          {/* Multilingual Selector: IT, EN, DE, FR, ES */}
+          <div className="flex items-center bg-[#0d1017] p-1 rounded-xl border border-white/[0.08] gap-0.5">
+            <span className="text-[10px] text-white/40 px-1.5 font-semibold flex items-center gap-1">
+              <Globe className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">Lingua:</span>
+            </span>
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => setActiveLang(lang.code)}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  activeLang === lang.code
+                    ? 'bg-amber-500 text-black shadow-sm font-extrabold'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                title={`Modifica contenuti in ${lang.label}`}
+              >
+                <span>{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Center: Quick Theme Picker */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowThemePicker(!showThemePicker)}
-            className="px-3 py-1.5 rounded-xl bg-[#0d1017] hover:bg-[#1a202c] border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-2 transition cursor-pointer"
-          >
-            <span 
-              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm"
-              style={{ backgroundColor: theme.primaryColor }}
+        {/* Center: Jump to Section & Search Filter */}
+        <div className="flex items-center gap-2 flex-1 max-w-md min-w-[240px]">
+          {/* Section jump dropdown */}
+          <div className="relative flex-1">
+            <select
+              value={activeBlockId || ''}
+              onChange={(e) => handleSectionJump(e.target.value)}
+              className="w-full bg-[#0d1017] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-amber-400 truncate"
+            >
+              <option value="">Sezione da modificare...</option>
+              {blocks.map((block, idx) => (
+                <option key={block.id} value={block.id}>
+                  {idx + 1}. {block.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quick search input */}
+          <div className="relative flex-1">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cerca campi o blocchi..."
+              className="w-full pl-8 pr-7 py-1.5 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
             />
-            <span className="hidden md:inline">Palette & Stile</span>
-            <Palette className="w-3.5 h-3.5 text-gray-400" />
-          </button>
-
-          {showThemePicker && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 p-3 bg-[#181d28] border border-white/10 rounded-2xl shadow-2xl z-50 space-y-3 animate-in fade-in zoom-in-95">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <span className="text-xs font-bold text-white">Palette Colori PWA</span>
-                <button 
-                  type="button" 
-                  onClick={() => setShowThemePicker(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="space-y-1.5">
-                {COLOR_PALETTES.map((pal) => (
-                  <button
-                    key={pal.name}
-                    type="button"
-                    onClick={() => updateTheme({ primaryColor: pal.primary, accentColor: pal.accent })}
-                    className={`w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-medium flex items-center justify-between transition cursor-pointer ${
-                      theme.primaryColor === pal.primary
-                        ? 'bg-white/10 text-white font-bold'
-                        : 'hover:bg-white/5 text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: pal.primary }}></span>
-                      <span>{pal.name}</span>
-                    </div>
-                    {theme.primaryColor === pal.primary && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-2 border-t border-white/10">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
-                  Modalità Sfondo PWA
-                </span>
-                <div className="grid grid-cols-3 gap-1">
-                  {(['dark', 'warm', 'slate'] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => updateTheme({ bgMode: mode })}
-                      className={`py-1 text-[11px] font-semibold rounded-lg capitalize transition cursor-pointer ${
-                        theme.bgMode === mode
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : 'bg-black/30 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Right: Status & Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Status Indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#0d1017] border border-white/[0.06]">
-            <span className={`w-2 h-2 rounded-full ${isDirty ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`}></span>
-            <span className={isDirty ? 'text-amber-300' : 'text-emerald-400'}>
-              {isDirty ? 'Modifiche non salvate' : 'Sincronizzato'}
+        {/* Right: Actions (Reset Default & Salva Modifiche) */}
+        <div className="flex items-center gap-2">
+          {/* Dirty indicator */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/[0.04] border border-white/[0.08]">
+            <span className={`w-2 h-2 rounded-full ${isDirty ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+            <span className="text-gray-400">
+              {isDirty ? 'Bozza modificata' : 'Tutto sincronizzato'}
             </span>
           </div>
 
@@ -287,439 +281,545 @@ export const HostCmsTab: React.FC = () => {
             type="button"
             onClick={revertChanges}
             disabled={!isDirty}
-            className="px-2.5 py-1.5 rounded-xl bg-transparent hover:bg-white/5 disabled:opacity-30 text-gray-400 hover:text-white text-xs font-medium transition cursor-pointer flex items-center gap-1"
-            title="Annulla modifiche"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-1.5 transition cursor-pointer"
+            title="Ripristina configurazione iniziale"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Ripristina</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={saveDraft}
-            className="px-3 py-1.5 rounded-xl bg-[#1e2330] hover:bg-[#252c3d] text-gray-200 border border-white/10 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-          >
-            <Save className="w-3.5 h-3.5 text-gray-400" />
-            <span>Salva Bozza</span>
+            <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
+            <span className="hidden sm:inline">Ripristina Default</span>
           </button>
 
           <button
             type="button"
             onClick={publishLive}
             disabled={isPublishing}
-            className="px-3.5 py-1.5 rounded-xl font-bold text-xs text-white transition-all shadow-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:brightness-110 active:scale-95"
-            style={{ backgroundColor: theme.primaryColor }}
+            className="px-3 sm:px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition-all transform active:scale-95 cursor-pointer disabled:opacity-50"
+            style={{ backgroundColor: theme.primaryColor, color: '#000000' }}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{isPublishing ? 'Pubblicazione...' : '🚀 Pubblica Live'}</span>
+            {isPublishing ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Salvataggio...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>💾 Salva Modifiche</span>
+              </>
+            )}
           </button>
         </div>
       </header>
 
-      {/* Notification Toast */}
+      {/* Alert / Feedback Notification Toast */}
       {publishFeedback && (
-        <div className={`mx-4 mt-3 p-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-3 shadow-lg animate-in slide-in-from-top duration-300 ${
-          publishFeedback.type === 'success'
-            ? 'bg-emerald-950/80 border border-emerald-500/30 text-emerald-200'
-            : 'bg-rose-950/80 border border-rose-500/30 text-rose-200'
-        }`}>
-          <div className="flex items-center gap-2">
+        <div 
+          className={`sticky top-[58px] z-40 px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-md transition-all ${
+            publishFeedback.type === 'success' 
+              ? 'bg-emerald-950/90 text-emerald-200 border-b border-emerald-500/40' 
+              : publishFeedback.type === 'info'
+                ? 'bg-blue-950/90 text-blue-200 border-b border-blue-500/40'
+                : 'bg-red-950/90 text-red-200 border-b border-red-500/40'
+          }`}
+        >
+          <div className="flex items-center gap-2 mx-auto">
             {publishFeedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            ) : publishFeedback.type === 'info' ? (
+              <Sparkles className="w-4 h-4 text-blue-400 animate-spin" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-red-400" />
             )}
             <span>{publishFeedback.message}</span>
           </div>
         </div>
       )}
 
-      {/* MAIN TWO-COLUMN SPLIT: CONTROLS & LIVE SIMULATOR */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-6">
-        
-        {/* LEFT COLUMN: BLOCK CONTROLS & ACCORDIONS */}
-        <section className="space-y-4" ref={containerRef}>
-          {/* Action Bar: "+ Aggiungi Blocco" */}
-          <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] flex items-center justify-between gap-3 shadow-sm">
-            <div>
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
-                Ecosistema Blocchi & Sezioni
-              </h2>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                Trascina con <GripVertical className="w-3 h-3 inline mx-0.5 text-gray-500" /> per riordinare o clicca su una scheda per modificarla.
-              </p>
+      {/* 2. SPLIT-SCREEN MAIN WORKSPACE */}
+      <div className="flex-1 flex flex-col xl:flex-row min-h-0 relative">
+        {/* LEFT COLUMN: VISUAL NO-CODE CONTROL PANEL */}
+        <div className="w-full xl:w-[56%] 2xl:w-[58%] flex flex-col min-h-0 border-r border-white/[0.08] bg-[#0d1017]">
+          {/* Sub-header Toolbar: + Aggiungi Blocco, Stile & Filtri */}
+          <div className="p-4 border-b border-white/[0.08] bg-[#11141e] flex flex-wrap items-center justify-between gap-3 sticky top-[57px] z-20">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-amber-400 hover:bg-amber-300 text-black flex items-center gap-1.5 shadow-md transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Aggiungi Blocco</span>
+              </button>
+
+              {/* Theme & Palette trigger */}
+              <button
+                type="button"
+                onClick={() => setShowThemePicker(!showThemePicker)}
+                className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-2 transition cursor-pointer"
+              >
+                <span 
+                  className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs"
+                  style={{ backgroundColor: theme.primaryColor }}
+                />
+                <span>Personalizza Tema</span>
+                <Palette className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+
+              {/* Theme Picker Popover */}
+              {showThemePicker && (
+                <div className="absolute top-full mt-2 left-4 w-72 p-4 bg-[#181d28] border border-white/10 rounded-2xl shadow-2xl z-50 space-y-3 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                    <span className="text-xs font-bold text-white">Palette Colori PWA</span>
+                    <button type="button" onClick={() => setShowThemePicker(false)} className="text-gray-400 hover:text-white">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {COLOR_PALETTES.map((pal) => (
+                      <button
+                        key={pal.name}
+                        type="button"
+                        onClick={() => updateTheme({ primaryColor: pal.primary, accentColor: pal.accent })}
+                        className={`p-2 rounded-xl border text-left flex items-center gap-2 transition cursor-pointer ${
+                          theme.primaryColor === pal.primary
+                            ? 'border-amber-400 bg-white/5'
+                            : 'border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: pal.primary }} />
+                        <span className="text-[11px] text-gray-300 truncate font-medium">{pal.name}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 border-t border-white/10 space-y-1.5">
+                    <span className="text-[11px] font-semibold text-gray-400 block">Sfondo PWA:</span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { id: 'dark', label: 'Dark' },
+                        { id: 'slate', label: 'Slate' },
+                        { id: 'warm', label: 'Caldo' }
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => updateTheme({ bgMode: m.id as any })}
+                          className={`py-1 text-[11px] font-medium rounded-lg border transition ${
+                            theme.bgMode === m.id
+                              ? 'border-amber-400 bg-amber-400/10 text-amber-300'
+                              : 'border-white/10 text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowAddModal(true)}
-              className="px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Aggiungi Blocco</span>
-            </button>
-          </div>
-
-          {/* List of Blocks (Drag and Drop Accordions) */}
-          <div className="space-y-3">
-            {blocks.map((block, index) => {
-              const isExpanded = activeBlockId === block.id;
-              const isHovered = hoveredBlockId === block.id;
-              const isLogicExpanded = expandedLogicBlockId === block.id;
-              const rule = VISIBILITY_RULES_OPTIONS.find((r) => r.value === block.visibilityRule);
-
-              return (
-                <div
-                  key={block.id}
-                  id={`editor-block-${block.id}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, block.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, block.id)}
-                  onMouseEnter={() => setHoveredBlockId(block.id)}
-                  onMouseLeave={() => setHoveredBlockId(null)}
-                  className={`rounded-2xl transition-all duration-200 border ${
-                    isExpanded
-                      ? 'bg-[#151925] border-amber-500/50 shadow-xl shadow-amber-500/5'
-                      : isHovered
-                        ? 'bg-[#131722] border-white/20'
-                        : 'bg-[#11141d] border-white/[0.06] hover:border-white/10'
+            {/* Category Filter Chips */}
+            <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+              {[
+                { id: 'all', label: 'Tutti' },
+                { id: 'identity', label: 'Identità' },
+                { id: 'network', label: 'Wi-Fi' },
+                { id: 'media', label: 'Media' },
+                { id: 'legal', label: 'Regole' },
+                { id: 'guide', label: 'Guida' }
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                    selectedCategory === cat.id
+                      ? 'bg-white/15 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  {/* Block Header */}
-                  <div 
-                    onClick={() => setActiveBlockId(isExpanded ? null : block.id)}
-                    className="p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none"
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Block List Container */}
+          <div ref={containerRef} className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto">
+            {filteredBlocks.length === 0 ? (
+              <div className="p-8 text-center bg-[#11141e] border border-white/10 rounded-2xl space-y-3">
+                <Search className="w-8 h-8 text-gray-500 mx-auto" />
+                <p className="text-sm text-gray-400 font-medium">Nessun blocco trovato per "{searchQuery}".</p>
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                  className="text-xs text-amber-400 hover:underline"
+                >
+                  Reimposta filtri
+                </button>
+              </div>
+            ) : (
+              filteredBlocks.map((block, index) => {
+                const isActive = activeBlockId === block.id;
+                const isHovered = hoveredBlockId === block.id;
+                const isExpandedLogic = expandedLogicBlockId === block.id;
+                const ruleInfo = VISIBILITY_RULES_OPTIONS.find((r) => r.value === block.visibilityRule);
+
+                return (
+                  <div
+                    key={block.id}
+                    id={`editor-block-${block.id}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, block.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, block.id)}
+                    onMouseEnter={() => setHoveredBlockId(block.id)}
+                    onMouseLeave={() => setHoveredBlockId(null)}
+                    className={`rounded-2xl transition-all duration-200 border ${
+                      isActive
+                        ? 'bg-[#151924] border-amber-400/90 shadow-xl shadow-amber-500/10'
+                        : isHovered
+                          ? 'bg-[#131722] border-white/20'
+                          : 'bg-[#11141e] border-white/[0.08] hover:border-white/15'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {/* Drag Handle */}
-                      <div 
-                        className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 p-1"
-                        title="Trascina per riordinare"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <GripVertical className="w-4 h-4" />
-                      </div>
-
-                      {/* Icon */}
-                      <div className="w-8 h-8 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0">
-                        {getBlockIcon(block.type)}
-                      </div>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-xs sm:text-sm font-bold text-white truncate">
-                            {block.title}
-                          </h3>
-                          {block.visibilityRule !== 'always' && rule && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                              {rule.badge}
-                            </span>
-                          )}
+                    {/* Card Header: Reorder handle, Title, Status & Actions */}
+                    <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Drag Handle */}
+                        <div 
+                          className="cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-white"
+                          title="Trascina per riordinare"
+                        >
+                          <GripVertical className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] text-gray-400 font-mono">
-                          Posizione: #{index + 1} • {block.enabled ? 'Attivo sulla PWA' : 'Disattivato'}
-                        </span>
+
+                        {/* Icon */}
+                        <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] shrink-0">
+                          {getBlockIcon(block.type)}
+                        </div>
+
+                        {/* Title & Type Badge */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-gray-500">{index + 1}.</span>
+                            <h3 className="text-xs sm:text-sm font-bold text-white truncate">
+                              {block.title}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {/* Visibility rule badge */}
+                            <span className="text-[10px] font-medium text-amber-300 bg-amber-500/10 px-2 py-0.2 rounded-full border border-amber-500/20">
+                              {ruleInfo?.badge || 'Sempre Visibile'}
+                            </span>
+                            {!block.enabled && (
+                              <span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.2 rounded-full border border-red-500/20">
+                                Disattivato
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Controls (Move Up/Down, Visibility, Expand) */}
-                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => moveBlock(block.id, 'up')}
-                        disabled={index === 0}
-                        className="p-1 rounded-lg text-gray-400 hover:text-white disabled:opacity-20 cursor-pointer"
-                        title="Sposta su"
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => moveBlock(block.id, 'down')}
-                        disabled={index === blocks.length - 1}
-                        className="p-1 rounded-lg text-gray-400 hover:text-white disabled:opacity-20 cursor-pointer"
-                        title="Sposta giù"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleBlockEnabled(block.id)}
-                        className={`p-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                          block.enabled
-                            ? 'text-emerald-400 hover:bg-emerald-950/30'
-                            : 'text-gray-500 hover:bg-white/5'
-                        }`}
-                        title={block.enabled ? 'Disattiva blocco' : 'Attiva blocco'}
-                      >
-                        {block.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      </button>
-
-                      {block.id.startsWith('block-') && !['block-welcome', 'block-wifi', 'block-rules'].includes(block.id) && (
+                      {/* Header Actions: Up/Down, Visibility, Delete */}
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() => removeBlock(block.id)}
-                          className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-950/30 transition cursor-pointer"
+                          onClick={() => moveBlock(block.id, 'up')}
+                          disabled={index === 0}
+                          className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-white/5 cursor-pointer"
+                          title="Sposta su"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveBlock(block.id, 'down')}
+                          disabled={index === blocks.length - 1}
+                          className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-white/5 cursor-pointer"
+                          title="Sposta giù"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleBlockEnabled(block.id)}
+                          className={`p-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition ${
+                            block.enabled ? 'text-emerald-400' : 'text-gray-500'
+                          }`}
+                          title={block.enabled ? 'Disattiva blocco' : 'Attiva blocco'}
+                        >
+                          {block.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Rimuovere il blocco "${block.title}"?`)) {
+                              removeBlock(block.id);
+                            }
+                          }}
+                          className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer transition"
                           title="Elimina blocco"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Expanded Accordion Body */}
-                  {isExpanded && (
-                    <div className="p-4 pt-1 border-t border-white/[0.06] space-y-4 animate-in fade-in duration-200">
-                      
-                      {/* Dynamic Inputs with Human-Readable Labels */}
-                      <div className="space-y-3.5">
-                        {Object.entries(block.data).map(([key, value]) => {
-                          if (typeof value === 'boolean') {
-                            return (
-                              <label key={key} className="flex items-center gap-2 cursor-pointer pt-1">
-                                <input
-                                  type="checkbox"
-                                  checked={value}
-                                  onChange={(e) => updateField(block.id, key, e.target.checked)}
-                                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-black/40 border-white/20"
-                                />
-                                <span className="text-xs text-gray-300 font-medium">
-                                  {HUMAN_LABELS[key]?.label || key}
-                                </span>
-                              </label>
-                            );
-                          }
+                    {/* Card Content: Human-Readable Inputs with AI Translate Buttons */}
+                    <div className="p-4 space-y-4">
+                      {Object.keys(block.data).map((fieldKey) => {
+                        const meta = HUMAN_LABELS[fieldKey] || {
+                          label: fieldKey,
+                          description: 'Configurazione contenuto per gli ospiti',
+                          type: 'text'
+                        };
+                        const value = getFieldValue(block, fieldKey);
+                        const isTranslating = translatingField === `${block.id}-${fieldKey}`;
+                        const isFieldFocused = activeBlockId === block.id && activeFieldKey === fieldKey;
 
-                          const meta = HUMAN_LABELS[key] || {
-                            label: key.charAt(0).toUpperCase() + key.slice(1),
-                            description: 'Campo di configurazione personalizzato.',
-                            type: 'text'
-                          };
-
+                        if (typeof block.data[fieldKey] === 'boolean') {
                           return (
-                            <div key={key} className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <label className="text-xs font-bold text-gray-200">
-                                  {meta.label}
-                                </label>
-                                {activeFieldKey === key && (
-                                  <span className="text-[10px] text-amber-400 font-semibold animate-pulse">
-                                    In Modifica
-                                  </span>
-                                )}
+                            <div 
+                              key={fieldKey} 
+                              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                            >
+                              <div>
+                                <span className="text-xs font-semibold text-gray-200 block">{meta.label}</span>
+                                <span className="text-[11px] text-gray-500">{meta.description}</span>
                               </div>
-                              <p className="text-[10px] text-gray-400 leading-tight">
-                                {meta.description}
-                              </p>
-
-                              {meta.type === 'textarea' ? (
-                                <textarea
-                                  id={`field-${block.id}-${key}`}
-                                  rows={3}
-                                  value={value || ''}
-                                  onChange={(e) => updateField(block.id, key, e.target.value)}
-                                  onFocus={() => setActiveFieldKey(key)}
-                                  placeholder={meta.placeholder || ''}
-                                  className="w-full text-xs p-3 rounded-xl bg-black/40 text-white border border-white/10 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
-                                />
-                              ) : (
-                                <input
-                                  id={`field-${block.id}-${key}`}
-                                  type="text"
-                                  value={value || ''}
-                                  onChange={(e) => updateField(block.id, key, e.target.value)}
-                                  onFocus={() => setActiveFieldKey(key)}
-                                  placeholder={meta.placeholder || ''}
-                                  className="w-full text-xs py-2 px-3 rounded-xl bg-black/40 text-white border border-white/10 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
-                                />
-                              )}
+                              <input
+                                type="checkbox"
+                                checked={Boolean(value)}
+                                onChange={(e) => updateField(block.id, fieldKey, e.target.checked)}
+                                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                              />
                             </div>
                           );
-                        })}
-                      </div>
+                        }
 
-                      {/* 4. INSPECTOR LOGIC ENGINE (REGOLE CONDIZIONALI PER BLOCCO) */}
+                        return (
+                          <div 
+                            key={fieldKey} 
+                            className={`space-y-1.5 p-3 rounded-xl transition-colors ${
+                              isFieldFocused ? 'bg-amber-500/[0.04] border border-amber-500/30' : 'bg-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <label 
+                                  htmlFor={`field-${block.id}-${fieldKey}`}
+                                  className="text-xs font-bold text-gray-200 block"
+                                >
+                                  {meta.label}
+                                </label>
+                                <span className="text-[11px] text-gray-400 leading-tight block">
+                                  {meta.description}
+                                </span>
+                              </div>
+
+                              {/* ✨ Traduci con IA Button (per i campi testuali) */}
+                              {typeof block.data[fieldKey] === 'string' && fieldKey !== 'videoUrl' && fieldKey !== 'cin' && fieldKey !== 'cir' && (
+                                <button
+                                  type="button"
+                                  onClick={() => translateFieldWithAi(block.id, fieldKey)}
+                                  disabled={isTranslating}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
+                                  title={`Traduci questo campo da ${activeLang.toUpperCase()} in tutte le altre lingue con IA`}
+                                >
+                                  {isTranslating ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                                      <span>Traduzione...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-3 h-3 text-amber-400" />
+                                      <span>✨ Traduci con IA</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Active Language Badge */}
+                            <div className="flex items-center justify-between text-[10px] text-gray-500">
+                              <span>Lingua attiva: <strong className="text-amber-400 uppercase">{activeLang}</strong></span>
+                              {activeLang !== 'it' && (
+                                <span className="text-gray-400 italic">
+                                  (Modifica traduzione specifica per {activeLang.toUpperCase()})
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Input or Textarea */}
+                            {meta.type === 'textarea' ? (
+                              <textarea
+                                id={`field-${block.id}-${fieldKey}`}
+                                rows={3}
+                                value={value}
+                                onChange={(e) => updateField(block.id, fieldKey, e.target.value)}
+                                onFocus={() => {
+                                  setActiveBlockId(block.id);
+                                  setActiveFieldKey(fieldKey);
+                                }}
+                                placeholder={meta.placeholder}
+                                className="w-full px-3 py-2 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all font-sans"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                id={`field-${block.id}-${fieldKey}`}
+                                value={value}
+                                onChange={(e) => updateField(block.id, fieldKey, e.target.value)}
+                                onFocus={() => {
+                                  setActiveBlockId(block.id);
+                                  setActiveFieldKey(fieldKey);
+                                }}
+                                placeholder={meta.placeholder}
+                                className="w-full px-3 py-2 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all font-sans"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* 3. LOGIC ENGINE PER SINGOLO BLOCCO (Accordion Regole di Visibilità) */}
                       <div className="pt-2 border-t border-white/[0.06]">
                         <button
                           type="button"
-                          onClick={() => setExpandedLogicBlockId(isLogicExpanded ? null : block.id)}
-                          className="w-full py-2 px-3 rounded-xl bg-[#0d1017] hover:bg-[#161a24] text-xs font-semibold text-gray-300 border border-white/5 flex items-center justify-between transition cursor-pointer"
+                          onClick={() => setExpandedLogicBlockId(isExpandedLogic ? null : block.id)}
+                          className="w-full py-2 px-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] flex items-center justify-between text-xs font-semibold text-gray-300 transition cursor-pointer"
                         >
                           <div className="flex items-center gap-2">
-                            <Settings2 className="w-3.5 h-3.5 text-amber-400" />
-                            <span>⚙️ Logica di Visibilità & Condizioni</span>
+                            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                            <span>⚙️ Logica & Condizioni di Visibilità</span>
+                            <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                              {ruleInfo?.badge}
+                            </span>
                           </div>
-                          <span className="text-[10px] text-amber-300 font-mono">
-                            {rule?.badge || 'Sempre Visibile'}
-                          </span>
+                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpandedLogic ? 'rotate-180' : ''}`} />
                         </button>
 
-                        {isLogicExpanded && (
-                          <div className="mt-2.5 p-3 rounded-xl bg-black/50 border border-white/10 space-y-2.5 animate-in fade-in duration-200">
-                            <div>
-                              <label className="text-[11px] font-bold text-gray-300 block mb-1">
-                                Condizione di attivazione per l'ospite:
-                              </label>
-                              <select
-                                value={block.visibilityRule}
-                                onChange={(e) => updateBlockRule(block.id, e.target.value as VisibilityCondition)}
-                                className="w-full text-xs py-2 px-3 rounded-xl bg-[#141824] text-white border border-white/10 outline-none focus:border-amber-400 cursor-pointer"
-                              >
-                                {VISIBILITY_RULES_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200">
-                              <strong className="block font-semibold mb-0.5">Effetto per l'ospite:</strong>
-                              <span>{rule?.description}</span>
+                        {isExpandedLogic && (
+                          <div className="mt-2 p-3.5 bg-[#0e111a] rounded-xl border border-white/[0.08] space-y-3 animate-in fade-in">
+                            <label className="text-[11px] font-bold text-gray-300 block">
+                              Regola di visualizzazione per l'Ospite:
+                            </label>
+                            <div className="space-y-2">
+                              {VISIBILITY_RULES_OPTIONS.map((opt) => (
+                                <label
+                                  key={opt.value}
+                                  className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
+                                    block.visibilityRule === opt.value
+                                      ? 'bg-amber-500/10 border-amber-400/60 text-white'
+                                      : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-gray-200'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`rule-${block.id}`}
+                                    value={opt.value}
+                                    checked={block.visibilityRule === opt.value}
+                                    onChange={() => updateBlockRule(block.id, opt.value)}
+                                    className="mt-0.5 accent-amber-500 cursor-pointer"
+                                  />
+                                  <div className="min-w-0 text-xs">
+                                    <span className="font-bold block text-white">{opt.label}</span>
+                                    <span className="text-[11px] text-gray-400 block mt-0.5">{opt.description}</span>
+                                  </div>
+                                </label>
+                              ))}
                             </div>
                           </div>
                         )}
                       </div>
-
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })
+            )}
           </div>
-        </section>
+        </div>
 
-        {/* RIGHT COLUMN: REALISTIC PWA PREVIEW & CLICK-TO-EDIT SIMULATOR */}
-        <aside className="lg:sticky lg:top-20 self-start">
-          <div className="p-4 rounded-3xl bg-[#141824] border border-white/[0.08] shadow-2xl space-y-3">
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  Anteprima Nativa PWA
-                </span>
-              </div>
-              <span className="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                Click-to-Edit Attivo
-              </span>
-            </div>
+        {/* RIGHT COLUMN: INTERACTIVE PWA SMARTPHONE SIMULATOR */}
+        <div className="w-full xl:w-[44%] 2xl:w-[42%] bg-[#080a0f] border-t xl:border-t-0 xl:border-l border-white/[0.08] flex flex-col items-center justify-start relative sticky top-[57px] xl:h-[calc(100vh-57px)] overflow-hidden">
+          <PwaPhonePreview
+            blocks={blocks}
+            theme={theme}
+            activeBlockId={activeBlockId}
+            hoveredBlockId={hoveredBlockId}
+            activeFieldKey={activeFieldKey}
+            activeLang={activeLang}
+            simulatedGuestState={simulatedGuestState}
+            previewDevice={previewDevice}
+            onSelectBlock={handleSelectBlockFromPreview}
+            onHoverBlock={setHoveredBlockId}
+            onLanguageChange={setActiveLang}
+            onSimulateGuestChange={setSimulatedGuestState}
+          />
+        </div>
+      </div>
 
-            <p className="text-[11px] text-gray-400 px-2 leading-tight">
-              Clicca direttamente su una card o sul testo nello smartphone per saltare al campo di modifica corrispondente.
-            </p>
-
-            {/* PWA Phone Preview */}
-            <PwaPhonePreview
-              blocks={blocks}
-              theme={theme}
-              activeBlockId={activeBlockId}
-              hoveredBlockId={hoveredBlockId}
-              previewDevice={previewDevice}
-              onSelectBlock={handleSelectBlockFromPreview}
-              onHoverBlock={setHoveredBlockId}
-            />
-          </div>
-        </aside>
-      </main>
-
-      {/* 3. MODAL "+ AGGIUNGI BLOCCO" */}
+      {/* 4. MODALE "+ AGGIUNGI BLOCCO" (CATALOGO PREDEFINITO NO-CODE) */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#161a25] border border-white/10 rounded-3xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-[#151922] border border-white/10 rounded-2xl shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
-                  <Plus className="w-4 h-4" />
+                <div 
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
+                  style={{ backgroundColor: theme.primaryColor }}
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
                 </div>
-                <h3 className="text-sm font-bold text-white">Aggiungi Blocco Componente</h3>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Catalogo Blocchi PWA</h3>
+                  <p className="text-[11px] text-gray-400">Scegli un modulo pre-costruito da aggiungere all'applicazione</p>
+                </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-gray-400">
-              Seleziona un blocco pre-costruito da aggiungere all'esperienza PWA dell'ospite:
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar">
+              {CMS_BLOCK_PRESETS.map((preset) => (
+                <div
+                  key={preset.type}
+                  onClick={() => {
+                    addBlockFromPreset(preset);
+                    setShowAddModal(false);
+                  }}
+                  className="p-3.5 rounded-xl border border-white/10 hover:border-amber-400/80 bg-white/[0.02] hover:bg-white/[0.05] transition-all cursor-pointer group flex flex-col justify-between"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="p-1.5 rounded-lg bg-white/5 text-amber-400 group-hover:scale-110 transition-transform">
+                        {getBlockIcon(preset.type)}
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                        {preset.category}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                      {preset.title}
+                    </h4>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      {preset.subtitle}
+                    </p>
+                  </div>
 
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => { addBlock('video_tutorial'); setShowAddModal(false); }}
-                className="w-full p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-red-500/40 text-left transition flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Tv className="w-5 h-5" />
+                  <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-amber-400 font-semibold">
+                    <span>Aggiungi alla PWA</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-                <div>
-                  <strong className="block text-xs text-white group-hover:text-red-300">Video Tutorial YouTube</strong>
-                  <span className="text-[11px] text-gray-400">Incorpora un video esplicativo (accesso, smart lock, cucina).</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { addBlock('wifi'); setShowAddModal(false); }}
-                className="w-full p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-blue-500/40 text-left transition flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Wifi className="w-5 h-5" />
-                </div>
-                <div>
-                  <strong className="block text-xs text-white group-hover:text-blue-300">Blocco Wi-Fi Veloce</strong>
-                  <span className="text-[11px] text-gray-400">Rete fibra, password e pulsante copia veloce.</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { addBlock('house_rules'); setShowAddModal(false); }}
-                className="w-full p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-emerald-500/40 text-left transition flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <strong className="block text-xs text-white group-hover:text-emerald-300">Regole della Casa</strong>
-                  <span className="text-[11px] text-gray-400">Orari del silenzio, raccolta differenziata e divieti.</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { addBlock('local_guide'); setShowAddModal(false); }}
-                className="w-full p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-amber-500/40 text-left transition flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div>
-                  <strong className="block text-xs text-white group-hover:text-amber-300">Guida Locale & Ristoranti</strong>
-                  <span className="text-[11px] text-gray-400">Crotti, cantine tipiche e sentieri montani.</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { addBlock('breaker_thermostat'); setShowAddModal(false); }}
-                className="w-full p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-amber-500/40 text-left transition flex items-center gap-3 cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <strong className="block text-xs text-white group-hover:text-amber-300">Impianti, Salvavita & Riscaldamento</strong>
-                  <span className="text-[11px] text-gray-400">Posizione quadro elettrico e regolazione termostato.</span>
-                </div>
-              </button>
+              ))}
             </div>
           </div>
         </div>

@@ -1,27 +1,1570 @@
-<!doctype html>
-<html lang="it">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Aurora in Valtellina - Morbegno | Guida Ospiti PWA</title>
-    <meta name="description" content="Guida digitale e concierge interattivo per gli ospiti di Aurora in Valtellina a Morbegno (Via Serta 188D)." />
-    <meta property="og:title" content="Aurora in Valtellina" />
-    <meta property="og:description" content="Guida digitale e concierge interattivo per gli ospiti di Aurora in Valtellina a Morbegno (Via Serta 188D)." />
-    <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#070a0e" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Aurora in Valtellina" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  </head>
-  <body class="bg-[#070a0e] text-slate-100 antialiased selection:bg-emerald-500/25 selection:text-emerald-200 font-sans">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Aurora Valtellina - Portale Host</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['"SF Mono"', 'ui-monospace', 'Menlo', 'Monaco', 'monospace']
+          },
+          colors: {
+            apple: {
+              bg: '#000000',
+              card: '#161618',
+              cardHover: '#1c1c1e',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderHover: 'rgba(255, 255, 255, 0.16)',
+              blue: '#0071e3',
+              blueHover: '#0077ed',
+              green: '#30d158',
+              amber: '#ff9f0a',
+              red: '#ff453a',
+              subtext: '#86868b',
+              text: '#f5f5f7'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      color-scheme: dark;
+      --bg: #000000;
+      --card: #161618;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f5f5f7;
+      --subtext: #86868b;
+      --accent: #0071e3;
+      --accent-green: #30d158;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", sans-serif;
+      background-color: #000000;
+      color: #f5f5f7;
+      letter-spacing: -0.012em;
+    }
+
+    /* Custom Scrollbar for Segmented Controls */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Apple Glass Card Utility */
+    .apple-card {
+      background: #161618;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Apple Segmented Tab Item */
+    .tab-btn {
+      color: #86868b;
+      background: transparent;
+      border-radius: 12px;
+      font-weight: 500;
+      transition: all 0.18s ease;
+    }
+    .tab-btn:hover {
+      color: #f5f5f7;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-btn.active {
+      color: #ffffff !important;
+      background: #2c2c2e !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      font-weight: 600;
+    }
+
+    /* Inputs Apple HIG Style */
+    html, body {
+      color-scheme: dark !important;
+    }
+    input, textarea, select {
+      border-radius: 12px !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #f5f5f7 !important;
+      color-scheme: dark !important;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    select {
+      background-color: #1c1c1e !important;
+      color: #ffffff !important;
+      color-scheme: dark !important;
+    }
+    option, optgroup {
+      background-color: #1c1c1e !important;
+      color: #ffffff !important;
+      color-scheme: dark !important;
+      padding: 8px 12px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      border-color: #0071e3 !important;
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.25) !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    /* Apple Buttons */
+    .btn-apple-primary {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    .btn-apple-primary:hover {
+      background: #e5e5ea;
+    }
+    .btn-apple-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-apple-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f5f5f7;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: all 0.15s ease;
+    }
+    .btn-apple-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .btn-apple-secondary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-apple-blue {
+      background: #0071e3;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: all 0.15s ease;
+    }
+    .btn-apple-blue:hover {
+      background: #0077ed;
+    }
+    .btn-apple-blue:active {
+      transform: scale(0.98);
+    }
+
+    /* Dynamic Island Toast */
+    #appleToast {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    }
+    #appleToast.toast-hidden {
+      transform: translate(-50%, -120%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #appleToast.toast-visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body class="bg-black text-[#f5f5f7] min-h-screen flex flex-col selection:bg-white/20 selection:text-white">
+
+  <!-- L'intera dashboard resta nascosta fino alla verifica della sessione. -->
+  <section id="hostAuthScreen" class="fixed inset-0 z-[100] flex min-h-screen items-center justify-center bg-black px-4">
+    <form id="hostAuthForm" class="w-full max-w-md rounded-3xl border border-white/10 bg-[#161618] p-7 shadow-2xl sm:p-9">
+      <div class="mb-7 text-center">
+        <div class="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10"><i data-lucide="key-round" class="h-5 w-5"></i></div>
+        <h1 id="authTitle" class="text-xl font-semibold text-white">Accesso Host Portal</h1>
+        <p id="authDescription" class="mt-2 text-sm leading-relaxed text-[#86868b]">Inserisci le credenziali dell'host per continuare.</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-neutral-300" for="authEmail">Email</label>
+          <input id="authEmail" type="email" required autocomplete="username" class="w-full px-4 py-3 text-sm" placeholder="host@example.com">
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-neutral-300" for="authPassword">Password</label>
+          <input id="authPassword" type="password" required minlength="10" autocomplete="current-password" class="w-full px-4 py-3 text-sm" placeholder="Almeno 10 caratteri">
+        </div>
+        <div id="authConfirmWrap" class="hidden">
+          <label class="mb-1.5 block text-xs font-medium text-neutral-300" for="authConfirmPassword">Conferma password</label>
+          <input id="authConfirmPassword" type="password" autocomplete="new-password" class="w-full px-4 py-3 text-sm" placeholder="Ripeti la password">
+        </div>
+        <div id="authBootstrapSecretWrap" class="hidden">
+          <label class="mb-1.5 block text-xs font-medium text-neutral-300" for="authBootstrapSecret">Codice di inizializzazione</label>
+          <input id="authBootstrapSecret" type="password" autocomplete="one-time-code" class="w-full px-4 py-3 text-sm" placeholder="Codice configurato nel deploy">
+        </div>
+        <p id="authFeedback" class="hidden rounded-xl bg-[#ff453a]/10 px-3 py-2 text-xs text-[#ff6961]"></p>
+        <button id="authSubmit" type="submit" class="btn-apple-blue w-full py-3 text-sm">Accedi</button>
+      </div>
+    </form>
+  </section>
+
+  <div id="hostPortalContent" class="hidden">
+
+  <!-- Apple Floating Notification Toast (Dynamic Island Style) -->
+  <div id="appleToast" class="toast-hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/15 text-xs text-white shadow-2xl flex items-center gap-2.5 min-w-[280px] max-w-md justify-between">
+    <div class="flex items-center gap-2 min-w-0">
+      <span id="toastDot" class="w-2 h-2 rounded-full bg-[#30d158] shrink-0 animate-pulse"></span>
+      <span id="toastMessage" class="truncate font-medium">Operazione completata</span>
+    </div>
+    <button id="btnCloseToast" type="button" class="text-neutral-400 hover:text-white text-xs px-1 cursor-pointer font-bold">✕</button>
+  </div>
+
+  <!-- Header: Apple Translucent Glass Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-[#000000]/80 backdrop-blur-2xl border-b border-white/[0.08] px-4 sm:px-8 py-3.5 transition-all">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand & Status -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-white shrink-0 shadow-inner">
+          <i data-lucide="key-round" class="w-4 h-4 text-white"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="font-semibold text-sm sm:text-base text-white tracking-tight truncate">Aurora Host Portal</h1>
+            <span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#86868b] text-[10px] font-medium border border-white/[0.08] shrink-0 hidden xs:inline-block">Host Studio</span>
+          </div>
+          <p class="text-[11px] text-[#86868b] truncate">Gestione autonoma chiavi digitali e contenuti</p>
+        </div>
+      </div>
+
+      <!-- Quick Action: Unlock Door + ZIP + React Version + API Status + Settings -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Quick Unlock Door Button in Header -->
+        <button id="btnForceDoorOpen" type="button" class="btn-apple-secondary px-3 sm:px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="power" class="w-3.5 h-3.5 text-[#30d158]"></i>
+          <span class="hidden sm:inline">Apri Porta</span>
+        </button>
+
+        <!-- Download ZIP Button -->
+        <a href="/api/download-host-portal-zip" download="aurora-host-portal.zip" class="btn-apple-secondary px-2.5 sm:px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 cursor-pointer text-white no-underline" title="Scarica Portale Standalone ZIP">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-[#30d158]"></i>
+          <span class="hidden md:inline">Scarica ZIP</span>
+        </a>
+
+        <!-- Status Pill -->
+        <div id="connectionBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#30d158]/10 border border-[#30d158]/25 text-[#30d158] text-xs font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#30d158] animate-pulse"></span>
+          <span id="connectionText" class="truncate font-mono">Connesso</span>
+        </div>
+
+        <!-- API Settings Modal Button -->
+        <button id="btnOpenApiConfig" type="button" class="w-8 h-8 rounded-xl bg-white/[0.06] hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 flex items-center justify-center transition cursor-pointer" title="Configura Endpoint API">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- API URL Modal Configuration (Apple Modal Sheet) -->
+  <div id="apiConfigModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="apple-card p-6 w-full max-w-md space-y-4 shadow-2xl border-white/15 bg-[#1c1c1e]">
+      <div class="flex justify-between items-center border-b border-white/[0.08] pb-3">
+        <h3 class="font-semibold text-white text-base tracking-tight">Endpoint API Server</h3>
+        <button id="btnCloseApiConfig" type="button" class="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center cursor-pointer transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-[#86868b] leading-relaxed">
+        Specifica l'indirizzo del server Aurora a cui inviare le chiamate REST per generazione pass, sblocco porte e sincronizzazione CMS.
+      </p>
+      <div>
+        <label class="block text-[11px] font-semibold text-[#86868b] uppercase tracking-wider mb-1.5">Aurora Backend Endpoint</label>
+        <input type="text" id="inputApiBaseUrl" class="w-full text-xs p-3 rounded-xl bg-black/40 border border-white/10 text-white font-mono" placeholder="http://localhost:3000" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btnSaveApiConfig" type="button" class="btn-apple-primary px-5 py-2.5 text-xs font-semibold shadow-md">Salva e Riconnetti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+
+    <!-- Top Status Cards (Home Assistant, Ospiti Attivi, Sincronizzazione iCal) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+      
+      <!-- Card 1: Home Assistant Status -->
+      <div class="apple-card p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-[#30d158]/10 border border-[#30d158]/20 text-[#30d158] flex items-center justify-center shrink-0">
+            <i data-lucide="unlock" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-semibold text-[#86868b] tracking-wider block">Home Assistant</span>
+            <span id="statHassStatus" class="text-sm font-semibold text-white block truncate">Online & Operativo</span>
+            <span id="statHassLastAction" class="text-[11px] text-[#30d158] block font-medium truncate">● Pronto per comando porta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Active Passes Count -->
+      <div class="apple-card p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-semibold text-[#86868b] tracking-wider block">Ospiti Registrati</span>
+            <div class="flex items-baseline gap-1.5">
+              <span id="statActiveCount" class="text-base sm:text-lg font-bold text-white">0</span>
+              <span class="text-[11px] text-[#86868b]">pass attivi</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="document.querySelector('[data-tab=passes]').click()" class="text-xs text-[#0071e3] hover:text-[#0077ed] font-medium flex items-center gap-1 shrink-0 p-1 cursor-pointer transition">
+          <span>Elenco</span>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Card 3: Autonomous Email Sincronizzazione -->
+      <div class="apple-card p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 border border-[#0071e3]/20 text-[#0071e3] flex items-center justify-center shrink-0">
+            <i data-lucide="mail" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-semibold text-[#86868b] tracking-wider block">Bed-and-Breakfast.it</span>
+            <span class="text-xs font-semibold text-white block truncate">Sincronizzazione Email</span>
+            <span id="emailOverviewStatus" class="text-[11px] text-[#86868b] block truncate font-mono">● Pronto</span>
+          </div>
+        </div>
+        <button id="btnOpenIcalModal" type="button" onclick="document.querySelector('[data-tab=ical]').click()" class="btn-apple-secondary px-3 py-1.5 text-xs font-medium shrink-0 cursor-pointer">
+          Gestisci
+        </button>
+      </div>
+    </div>
+
+    <!-- Apple Segmented Tab Bar -->
+    <div class="bg-[#161618] p-1.5 rounded-2xl border border-white/[0.08] flex items-center gap-1 overflow-x-auto no-scrollbar shadow-sm">
+      <button class="tab-btn active px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="create">
+        <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span>Crea Pass Ospite</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="passes">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-400"></i>
+        <span>Gestione Pass (<span id="tabCount">0</span>)</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="channels">
+        <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+        <span>Channel Manager (iCal)</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="property">
+        <i data-lucide="building-2" class="w-4 h-4 text-amber-400"></i>
+        <span>Struttura & Geofence GPS</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="hass">
+        <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+        <span>Smart Lock & Porta</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="cms">
+        <i data-lucide="layout-template" class="w-4 h-4 text-orange-400"></i>
+        <span>Visual CMS Builder</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="media">
+        <i data-lucide="image" class="w-4 h-4 text-teal-400"></i>
+        <span>Foto & Galleria</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="messages">
+        <i data-lucide="message-square" class="w-4 h-4 text-rose-400"></i>
+        <span>Messaggi Programmati</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="alloggiati">
+        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+        <span>Alloggiati Web</span>
+      </button>
+
+      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="export">
+        <i data-lucide="folder-archive" class="w-4 h-4 text-purple-400"></i>
+        <span>Esporta Standalone ZIP</span>
+      </button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: CREATE PASS FORM                                      -->
+    <!-- ============================================================ -->
+    <section id="tab-create" class="tab-content space-y-5">
+      
+      <!-- Smart Parser Box (Apple Clean Card) -->
+      <div class="apple-card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-[#30d158]"></i>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-white">Compilazione Rapida da Testo Notifica</h3>
+          </div>
+          <span class="text-[11px] text-[#86868b] hidden sm:inline">Incolla testo da email Booking, Bed-and-Breakfast.it, Airbnb o WhatsApp</span>
+        </div>
+
+        <div class="space-y-2.5">
+          <textarea 
+            id="inputRawText" 
+            rows="3"
+            placeholder="Incolla qui il testo di notifica prenotazione. Esempio:&#10;Nuova prenotazione da bed-and-breakfast.it per Mario Rossi&#10;Arrivo: 15/09/2026 - Partenza: 20/09/2026&#10;Telefono: +39 340 1234567 • 2 ospiti"
+            class="w-full text-xs p-3 rounded-xl resize-y"
+          ></textarea>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <button type="button" id="btnParseText" class="btn-apple-secondary px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+              <i data-lucide="clipboard-paste" class="w-3.5 h-3.5"></i>
+              <span>Analizza e Compila Modulo</span>
+            </button>
+            <div id="parseFeedback" class="hidden text-xs py-1.5 px-3 rounded-xl font-medium"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Creation Form -->
+      <form id="formCreatePass" class="apple-card p-5 sm:p-6 space-y-5">
+        <div class="border-b border-white/[0.08] pb-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Dettagli del Soggiorno</h3>
+            <p class="text-xs text-[#86868b]">Genera la chiave smart e il link personalizzato per l'ospite</p>
+          </div>
+          <span class="text-xs font-mono text-[#30d158] bg-[#30d158]/10 px-2.5 py-1 rounded-full border border-[#30d158]/20">Smart Lock Abilitata</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Nome Ospite *</label>
+            <input type="text" id="fieldGuestName" required placeholder="Es. Marco" class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Cognome Ospite</label>
+            <input type="text" id="fieldGuestSurname" placeholder="Es. Rossi" class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Telefono (WhatsApp / SMS)</label>
+            <input type="text" id="fieldPhone" placeholder="+39 340 123 4567" class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Data Check-in *</label>
+            <input type="date" id="fieldCheckInDate" required class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Data Check-out *</label>
+            <input type="date" id="fieldCheckOutDate" required class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Canale di Prenotazione</label>
+            <select id="fieldSource" class="w-full text-xs p-3 rounded-xl cursor-pointer bg-[#1c1c1e] text-white border border-white/10">
+              <option value="bed-and-breakfast.it" class="bg-[#1c1c1e] text-white">bed-and-breakfast.it</option>
+              <option value="booking.com" class="bg-[#1c1c1e] text-white">Booking.com</option>
+              <option value="airbnb" class="bg-[#1c1c1e] text-white">Airbnb</option>
+              <option value="diretto" class="bg-[#1c1c1e] text-white">Prenotazione Diretta</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Codice Prenotazione</label>
+            <input type="text" id="fieldBookingRef" placeholder="Es. BB-78901" class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Numero Ospiti</label>
+            <input type="number" min="1" max="8" id="fieldGuestsCount" value="2" class="w-full text-xs p-3 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">Canale Notifica Predefinito</label>
+            <select id="fieldMessageChannel" class="w-full text-xs p-3 rounded-xl cursor-pointer bg-[#1c1c1e] text-white border border-white/10">
+              <option value="whatsapp" class="bg-[#1c1c1e] text-white">WhatsApp</option>
+              <option value="sms" class="bg-[#1c1c1e] text-white">SMS</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button type="submit" id="btnSubmitGenerate" class="btn-apple-primary w-full sm:w-auto px-6 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-lg">
+            <i data-lucide="key" class="w-4 h-4"></i>
+            <span>Genera Link Univoco Ospite</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Pass Result Box (Appears after creation) -->
+      <div id="resultBox" class="hidden apple-card p-5 sm:p-6 space-y-4 border-white/20 shadow-2xl bg-[#1c1c1e]">
+        <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[#30d158]/15 text-[#30d158] flex items-center justify-center shrink-0">
+              <i data-lucide="check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold text-sm sm:text-base text-white">Link e Chiave Digitale Generati!</h4>
+              <span class="text-xs text-[#30d158] font-medium">Pronto per la condivisione con l'ospite</span>
+            </div>
+          </div>
+          <span id="resultExpiryText" class="text-xs text-[#86868b] font-mono"></span>
+        </div>
+
+        <!-- Generated Link Bar -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="resultLinkInput" readonly class="flex-1 text-xs p-3 rounded-xl font-mono" />
+          
+          <button type="button" id="btnCopyLink" class="btn-apple-primary px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span id="copyLinkText">Copia Link</span>
+          </button>
+          
+          <a id="btnTestOpenLink" href="#" target="_blank" class="btn-apple-secondary px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <span>Apri Guida</span>
+          </a>
+        </div>
+
+        <!-- Action Links: WhatsApp & SMS Direct -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <a id="btnSendWhatsApp" href="#" target="_blank" class="p-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-neutral-950 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>Invia Invito su WhatsApp</span>
+          </a>
+
+          <a id="btnSendSms" href="#" class="btn-apple-secondary p-3.5 text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Invia Invito via SMS</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: ACTIVE PASSES LIST                                    -->
+    <!-- ============================================================ -->
+    <section id="tab-passes" class="tab-content hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-semibold text-white">Lista Pass & Chiavi Elettroniche</h3>
+          <p class="text-xs text-[#86868b]">I pass consentono l'apertura del portone e la consultazione della guida smart</p>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- Search filter -->
+          <div class="relative min-w-[200px]">
+            <input type="text" id="inputFilterPasses" placeholder="Cerca ospite o telefono..." class="w-full text-xs py-2 px-3 pl-8 rounded-xl" />
+            <i data-lucide="search" class="w-3.5 h-3.5 text-[#86868b] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          </div>
+
+          <button id="btnRefreshPasses" type="button" class="btn-apple-secondary px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Aggiorna</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="passesContainer" class="space-y-3">
+        <div class="text-center py-12 text-xs text-[#86868b]">Caricamento pass in corso...</div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: CHANNEL MANAGER & ICAL FEEDS (Airbnb, Booking, Vrbo)  -->
+    <!-- ============================================================ -->
+    <section id="tab-channels" class="tab-content hidden space-y-5">
+      <!-- Channel Manager Dashboard Card -->
+      <div class="apple-card p-5 sm:p-6 space-y-5">
+        <div class="border-b border-white/[0.08] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="calendar" class="w-5 h-5 text-[#0071e3]"></i>
+              <span>Channel Manager Multi-Piattaforma (iCal)</span>
+            </h3>
+            <p class="text-xs text-[#86868b]">Sincronizza automaticamente le prenotazioni e genera chiavi per Airbnb, Booking.com, Vrbo, Bed-and-Breakfast.it</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btnOpenAddChannelModal" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="plus" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span>Aggiungi Feed</span>
+            </button>
+            <button type="button" id="btnSyncAllChannelsNow" class="btn-apple-primary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Sincronizza Tutti</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Export Casa Aurora iCal link -->
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-[#86868b] block">Calendario iCal di Esportazione (Casa Aurora)</span>
+            <p class="text-xs text-white truncate font-mono mt-0.5" id="auroraIcalExportUrl">Caricamento URL...</p>
+          </div>
+          <button type="button" id="btnCopyAuroraIcalUrl" class="btn-apple-secondary px-3 py-1.5 text-xs shrink-0 flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copia Link iCal</span>
+          </button>
+        </div>
+
+        <!-- Channels Feed List -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-[#86868b] font-mono">Canali Sincronizzati</h4>
+            <span id="channelsGlobalSyncText" class="text-[11px] text-[#86868b] font-mono">Ultimo sync: Mai</span>
+          </div>
+
+          <div id="channelsListContainer" class="space-y-2.5">
+            <div class="p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] text-center text-xs text-[#86868b]">
+              Caricamento canali in corso...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Section: IMAP Email Scraper & Logs -->
+      <div class="apple-card p-5 space-y-4">
+        <div class="flex items-center justify-between cursor-pointer" id="toggleEmailSection">
+          <div class="flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4 text-[#86868b]"></i>
+            <h4 class="text-xs font-semibold text-white tracking-tight">Integrazione Email IMAP (Bed-and-Breakfast.it) & Log</h4>
+          </div>
+          <button type="button" class="text-[#86868b] hover:text-white text-xs flex items-center gap-1">
+            <span id="toggleEmailSectionLabel">Mostra</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform" id="toggleEmailChevron"></i>
+          </button>
+        </div>
+
+        <div id="emailSectionContent" class="hidden space-y-4 pt-2 border-t border-white/[0.06]">
+          <form id="formEmailConfig" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Server IMAP Host</label>
+                <input type="text" id="inputImapHost" placeholder="Es. imap.gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Porta IMAP</label>
+                <input type="number" id="inputImapPort" placeholder="993" value="993" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Email / Utente IMAP</label>
+                <input type="email" id="inputImapUser" placeholder="Es. nome@gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Password / Password App</label>
+                <input type="password" id="inputImapPass" placeholder="••••••••" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Intervallo Polling (minuti)</label>
+                <input type="number" min="1" max="1440" id="inputImapInterval" value="2" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
+                  <input type="checkbox" id="checkboxImapSecure" checked class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
+                  <div class="text-xs">
+                    <span class="font-semibold text-white block">Connessione Sicura SSL/TLS (Consigliato)</span>
+                    <span class="text-[#86868b]">Usa crittografia SSL/TLS sicura per la porta IMAP (porta 993).</span>
+                  </div>
+                </label>
+              </div>
+              <div class="md:col-span-3">
+                <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
+                  <input type="checkbox" id="checkboxImapEnabled" class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
+                  <div class="text-xs">
+                    <span class="font-semibold text-white block">Abilita Polling in Background</span>
+                    <span class="text-[#86868b]">Controlla la casella di posta per importare automaticamente le prenotazioni ricevute via email.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+              <button type="button" id="btnForceEmailSync" class="btn-apple-secondary w-full sm:w-auto px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                <span>Sincronizza Email Ora</span>
+              </button>
+              <button type="submit" class="btn-apple-primary w-full sm:w-auto px-5 py-2.5 text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Salva Configurazione Email</span>
+              </button>
+            </div>
+          </form>
+
+          <div id="emailFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
+
+          <!-- Log Attività -->
+          <div class="pt-3 border-t border-white/[0.06]">
+            <div class="flex items-center justify-between mb-2">
+              <h5 class="text-xs font-semibold text-white">Log Attività Email</h5>
+              <button type="button" id="btnRefreshEmailLogs" class="p-1 rounded hover:bg-white/[0.08] text-[#86868b] hover:text-white" title="Ricarica Log">
+                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-[11px] text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-white/[0.08] text-[#86868b]">
+                    <th class="py-2 font-medium w-[130px]">Data e Ora</th>
+                    <th class="py-2 font-medium w-[90px]">Stato</th>
+                    <th class="py-2 font-medium">Mittente / Dettaglio</th>
+                  </tr>
+                </thead>
+                <tbody id="emailLogsTableBody" class="divide-y divide-white/[0.04]">
+                  <tr><td colspan="3" class="py-4 text-center text-[#86868b]">Caricamento log...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 4: PROPERTY SETTINGS & GPS GEOFENCE (50M)                -->
+    <!-- ============================================================ -->
+    <section id="tab-property" class="tab-content hidden space-y-5">
+      <div class="apple-card p-5 sm:p-6 space-y-6">
+        <div class="border-b border-white/[0.08] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="building-2" class="w-5 h-5 text-[#ff9f0a]"></i>
+              <span>Dati Struttura & Geofence GPS (50m)</span>
+            </h3>
+            <p class="text-xs text-[#86868b]">Configura le coordinate geografiche, il perimetro di prossimità GPS per il 1° check-in e le istruzioni per gli impianti</p>
+          </div>
+          <button type="button" id="btnSavePropertyConfig" class="btn-apple-primary px-5 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Salva Impostazioni Struttura</span>
+          </button>
+        </div>
+
+        <form id="formPropertyConfig" class="space-y-6">
+          <!-- Section 1: GPS & Proximity Geofence -->
+          <div class="p-4.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+                <h4 class="font-semibold text-white text-xs uppercase tracking-wider">Geofence GPS & Regole di Prossimità</h4>
+              </div>
+              <button type="button" id="btnDetectCurrentGps" class="btn-apple-secondary px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 cursor-pointer text-emerald-400">
+                <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+                <span>Rileva Posizione GPS dal Browser</span>
+              </button>
+            </div>
+            
+            <p class="text-xs text-[#86868b]">
+              L'apertura tramite GPS è abilitata nel raggio impostato <strong>esclusivamente per il primo ingresso</strong> dell'ospite. Successivamente l'ospite si connette alla rete Wi-Fi Casa_Aurora.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Latitudine GPS</label>
+                <input type="number" step="0.000001" id="inputPropLat" placeholder="46.1345" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Longitudine GPS</label>
+                <input type="number" step="0.000001" id="inputPropLng" placeholder="9.5678" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Raggio Geofence (Metri)</label>
+                <input type="number" min="10" max="500" id="inputPropRadius" value="50" class="w-full text-xs p-3 rounded-xl font-mono" />
+                <span class="text-[10px] text-emerald-400 mt-1 block">Raggio approvato: 50m (1° ingresso)</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">Policy di Validazione Prossimità</label>
+              <select id="selectPropProximityPolicy" class="w-full text-xs p-3 rounded-xl bg-[#1c1c1e] text-white border border-white/10">
+                <option value="wifi_or_gps">Wi-Fi Casa_Aurora OPPURE GPS (nel raggio di 50m per il 1° ingresso) [Consigliato]</option>
+                <option value="wifi_only">Solo Wi-Fi Casa_Aurora (Nessun sblocco tramite GPS)</option>
+                <option value="gps_only">Solo GPS (nel raggio di prossimità specificato)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 2: Property Identity & Address -->
+          <div class="p-4.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="home" class="w-4 h-4 text-[#0071e3]"></i>
+              <h4 class="font-semibold text-white text-xs uppercase tracking-wider">Dati Struttura & Contatti</h4>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Nome Struttura</label>
+                <input type="text" id="inputPropName" placeholder="Aurora in Valtellina" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Nome Host</label>
+                <input type="text" id="inputPropHostName" placeholder="Nino" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Indirizzo</label>
+                <input type="text" id="inputPropAddress" placeholder="Via Serta 188D" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Città</label>
+                <input type="text" id="inputPropCity" placeholder="Morbegno" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">CAP & Provincia</label>
+                <div class="flex gap-2">
+                  <input type="text" id="inputPropZip" placeholder="23017" class="w-2/3 text-xs p-3 rounded-xl" />
+                  <input type="text" id="inputPropProvince" placeholder="SO" class="w-1/3 text-xs p-3 rounded-xl uppercase" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Telefono Host</label>
+                <input type="text" id="inputPropPhone" placeholder="+39 340 1234567" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">WhatsApp Host</label>
+                <input type="text" id="inputPropWhatsApp" placeholder="+39 340 1234567" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Email Host</label>
+                <input type="email" id="inputPropEmail" placeholder="host@auroravaltellina.it" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Orario Check-in (Inizio)</label>
+                <input type="text" id="inputPropCheckInStart" placeholder="14:00" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Orario Check-in (Fine)</label>
+                <input type="text" id="inputPropCheckInEnd" placeholder="20:00" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Orario Check-out Limite</label>
+                <input type="text" id="inputPropCheckOutLimit" placeholder="10:00" class="w-full text-xs p-3 rounded-xl" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Wi-Fi Credentials -->
+          <div class="p-4.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="wifi" class="w-4 h-4 text-[#30d158]"></i>
+              <h4 class="font-semibold text-white text-xs uppercase tracking-wider">Rete Wi-Fi Casa_Aurora</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Nome Rete Wi-Fi (SSID)</label>
+                <input type="text" id="inputPropWifiSsid" placeholder="Casa_Aurora" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Password Wi-Fi</label>
+                <input type="text" id="inputPropWifiPassword" placeholder="Password Wi-Fi" class="w-full text-xs p-3 rounded-xl font-mono" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Utility Instructions (Quadro Elettrico & Climatizzazione) -->
+          <div class="p-4.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+              <h4 class="font-semibold text-white text-xs uppercase tracking-wider">Istruzioni Impianti (Quadro Elettrico & Clima)</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Istruzioni Quadro Elettrico / Salvavita</label>
+                <textarea id="inputPropBreakerInstructions" rows="3" placeholder="Il quadro elettrico principale si trova all'ingresso..." class="w-full text-xs p-3 rounded-xl font-sans"></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#86868b] mb-1">Istruzioni Termostato & Clima</label>
+                <textarea id="inputPropClimateInstructions" rows="3" placeholder="Il termostato ambiente si trova nella zona giorno..." class="w-full text-xs p-3 rounded-xl font-sans"></textarea>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div id="propertyFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 4: HOME ASSISTANT (APRIPORTA)                            -->
+    <!-- ============================================================ -->
+    <section id="tab-hass" class="tab-content hidden space-y-5">
+      
+      <!-- Real-time Lock Status Card -->
+      <div class="apple-card p-5 flex flex-col md:flex-row items-center justify-between gap-4 border-white/[0.08] bg-white/[0.02]">
+        <div class="flex items-center gap-3.5 w-full md:w-auto">
+          <!-- State Icon Indicator with Pulsing Ring -->
+          <div id="standaloneLockIconContainer" class="w-12 h-12 rounded-xl flex items-center justify-center relative shrink-0 shadow-sm border border-white/10 bg-white/[0.04]">
+            <i id="standaloneLockIcon" data-lucide="lock" class="w-5 h-5 text-neutral-400"></i>
+            <span id="standaloneLockDot" class="absolute -top-1 -right-1 w-3 h-3 rounded-full border border-[#1c1c1e] bg-zinc-400"></span>
+          </div>
+
+          <!-- State Text & Labels -->
+          <div class="min-w-0">
+            <span class="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider block font-mono">Stato Serratura Fisica</span>
+            <h4 id="standaloneLockStateText" class="font-bold text-sm sm:text-base text-white leading-tight">Caricamento...</h4>
+            <p class="text-[11px] text-[#86868b] mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span id="standaloneLockDescText">Interrogando lo stato in tempo reale...</span>
+              <span id="standaloneLockTime" class="text-[10px] bg-white/[0.06] text-neutral-400 px-1.5 py-0.5 rounded font-mono hidden"></span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Sensor Metrics (Battery / Signal) -->
+        <div id="standaloneLockMetrics" class="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-white/[0.08] shrink-0 hidden">
+          <div class="flex flex-col items-end text-right">
+            <span class="text-[10px] font-mono text-[#86868b]">Batteria</span>
+            <span class="font-bold text-xs text-white flex items-center gap-1">
+              <i data-lucide="battery" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span id="standaloneLockBatteryText">--%</span>
+            </span>
+          </div>
+          <div class="h-6 w-px bg-white/[0.08]"></div>
+          <div class="flex flex-col items-end text-right">
+            <span class="text-[10px] font-mono text-[#86868b]">Segnale</span>
+            <span id="standaloneLockSignalText" class="font-bold text-xs text-white font-mono">-- dBm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Lock Simulator Panel -->
+      <div class="apple-card p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 font-bold text-[#86868b] text-[10px] uppercase tracking-wider font-mono">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+            <span>Simulatore Real-Time</span>
+          </div>
+          <span class="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-mono font-bold">Pannello Test</span>
+        </div>
+        <p class="text-xs text-[#86868b]">Cambia lo stato fisico della serratura per simulare l'allineamento in tempo reale:</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" id="btnSimulateClosed" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+            <span>Chiusa</span>
+          </button>
+          <button type="button" id="btnSimulateOpen" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="unlock" class="w-3.5 h-3.5"></i>
+            <span>Aperta / Socch.</span>
+          </button>
+          <button type="button" id="btnSimulateOffline" class="btn-apple-secondary py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+            <span>Offline</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Primary Instant Door Trigger Card (Apple Clean Design) -->
+      <div class="apple-card p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-3.5">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#30d158] animate-pulse"></span>
+              <h3 class="text-base font-semibold text-white tracking-tight">Comando Elettroserratura Home Assistant</h3>
+            </div>
+            <p class="text-xs text-[#86868b]">Invia l'impulso ON per azionare la serratura del portoncino d'ingresso</p>
+          </div>
+          <span id="sonoffStatusBadge" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20">
+            Pronto
+          </span>
+        </div>
+
+        <!-- Big Trigger Button -->
+        <div class="p-6 rounded-2xl bg-black/40 border border-white/[0.06] text-center space-y-3">
+          <span class="text-[11px] uppercase font-semibold tracking-wider text-[#86868b] block font-mono">
+            Azionamento Elettroserratura
+          </span>
+
+          <div class="flex justify-center">
+            <button type="button" id="btnTestSonoffPulse" class="btn-apple-primary w-full sm:w-auto min-w-[280px] py-4 px-8 text-sm font-semibold flex items-center justify-center gap-3 shadow-xl cursor-pointer">
+              <i data-lucide="unlock" class="w-5 h-5"></i>
+              <span>APRI PORTA ADESSO (Input ON)</span>
+            </button>
+          </div>
+
+          <p class="text-xs text-[#86868b] max-w-md mx-auto">
+            Invia un impulso ON hardware di 1 secondo all'elettroserratura per consentire l'accesso immediato.
+          </p>
+
+          <div id="sonoffFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono max-w-xl mx-auto"></div>
+        </div>
+      </div>
+
+      <!-- Home Assistant Configuration Card -->
+      <div class="apple-card p-5 sm:p-6 space-y-4">
+        <div class="border-b border-white/[0.08] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 class="text-sm font-semibold text-white">Configurazione Integrazione</h4>
+            <p class="text-xs text-[#86868b]">Scegli tra Webhook (consigliato per Nabu Casa/DuckDNS) o REST API diretta con Token</p>
+          </div>
+          
+          <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/[0.08] text-xs">
+            <button type="button" id="btnModeWebhook" class="px-3 py-1 rounded-lg bg-white text-black font-semibold transition cursor-pointer">Webhook</button>
+            <button type="button" id="btnModeRest" class="px-3 py-1 rounded-lg text-[#86868b] hover:text-white font-medium transition cursor-pointer">REST API</button>
+          </div>
+        </div>
+
+        <!-- Section A: Webhook Mode -->
+        <div id="sectionHassWebhook" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1.5">
+              Webhook URL di Home Assistant (Nabu Casa Cloud o DuckDNS)
+            </label>
+            <input type="text" id="inputSonoffWebhookUrl" placeholder="es. https://xxxx.ui.nabu.casa/api/webhook/apriporta_aurora" class="w-full text-xs p-3 rounded-xl font-mono" />
+            <p class="text-[11px] text-[#86868b] mt-1">Alla pressione di "Apri Porta", il server invia una richiesta POST a questo URL.</p>
+          </div>
+        </div>
+
+        <!-- Section B: REST API Mode -->
+        <div id="sectionHassRest" class="hidden space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">URL Istanza Home Assistant</label>
+              <input type="text" id="inputHassUrl" placeholder="es. https://xxxx.ui.nabu.casa o https://miocasa.duckdns.org:8123" class="w-full text-xs p-3 rounded-xl font-mono" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">Entity ID Dispositivo / Relè</label>
+              <input type="text" id="inputHassEntityId" value="switch.portone" placeholder="es. switch.portone" class="w-full text-xs p-3 rounded-xl font-mono" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">Servizio Home Assistant</label>
+              <select id="selectHassService" class="w-full text-xs p-3 rounded-xl cursor-pointer bg-[#1c1c1e] text-white border border-white/10">
+                <option value="switch.turn_on" class="bg-[#1c1c1e] text-white">switch.turn_on (Interruttore / Relè)</option>
+                <option value="button.press" class="bg-[#1c1c1e] text-white">button.press (Pulsante)</option>
+                <option value="homeassistant.turn_on" class="bg-[#1c1c1e] text-white">homeassistant.turn_on (Generico)</option>
+                <option value="lock.unlock" class="bg-[#1c1c1e] text-white">lock.unlock (Serratura)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">Nome Dispositivo</label>
+              <input type="text" id="inputSonoffDeviceName" value="Pulsante Portone Aurora" class="w-full text-xs p-3 rounded-xl" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-[#86868b] mb-1.5">Long-Lived Access Token (Token di lunga durata da HA)</label>
+              <input type="password" id="inputHassToken" placeholder="•••••••••••••••• (Crea in Home Assistant ➔ Profilo ➔ Token di lunga durata)" class="w-full text-xs p-3 rounded-xl font-mono" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section C: Wi-Fi Casa_Aurora Verification & Network Rules -->
+        <div class="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="wifi" class="w-4 h-4 text-[#30d158]"></i>
+            <h5 class="font-semibold text-white text-xs uppercase tracking-wider">Verifica Presenza Wi-Fi Casa_Aurora</h5>
+          </div>
+          <p class="text-xs text-[#86868b]">
+            L'apertura è consentita solo quando il dispositivo dell'ospite è connesso alla rete Wi-Fi <strong>Casa_Aurora</strong>.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1">IP Pubblico Modem Casa_Aurora</label>
+              <input type="text" id="inputHomePublicIp" placeholder="es. 87.12.34.56" class="w-full text-xs p-3 rounded-xl font-mono" />
+              <div class="flex items-center justify-between mt-1 text-[11px]">
+                <span class="text-[#86868b]">IP rilevato: <strong id="currentDetectedIp" class="text-[#30d158] font-mono">-</strong></span>
+                <button type="button" id="btnDetectHomeIp" class="text-[#0071e3] hover:text-[#0077ed] font-medium cursor-pointer">
+                  Usa IP attuale
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#86868b] mb-1">IP Gateway Locale LAN (Sonda)</label>
+              <input type="text" id="inputLanGatewayIp" value="192.168.0.1" placeholder="192.168.0.1" class="w-full text-xs p-3 rounded-xl font-mono" />
+              <p class="text-[10px] text-[#86868b] mt-1">Usato dalla sonda browser per verificare la connessione alla LAN.</p>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-[#86868b] mb-1">URL Webhook Locale LAN (Opzionale)</label>
+              <input type="text" id="inputLocalWebhookUrl" placeholder="es. http://192.168.1.150:8123/api/webhook/apriporta_aurora" class="w-full text-xs p-3 rounded-xl font-mono" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <button type="button" id="btnTestSonoffPulseConfig" class="btn-apple-secondary w-full sm:w-auto px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="unlock" class="w-3.5 h-3.5 text-[#30d158]"></i>
+            <span>Test Impulso ON (Apri Porta)</span>
+          </button>
+
+          <button type="button" id="btnSaveSonoffConfig" class="btn-apple-primary w-full sm:w-auto px-5 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Salva Configurazione Completa</span>
+          </button>
+        </div>
+
+        <div id="sonoffFeedbackBoxConfig" class="hidden p-3 rounded-xl text-xs font-mono"></div>
+      </div>
+
+      <!-- Logs -->
+      <div class="apple-card p-5 space-y-3">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-[#86868b]">Registro Eventi & Aperture</h4>
+        <div id="hassLogsContainer" class="space-y-1.5 text-xs font-mono text-[#86868b]">
+          <p>Nessun evento registrato nella sessione corrente.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 5: CMS TESTI & SCHEDE                                    -->
+    <!-- ============================================================ -->
+    <section id="tab-cms" class="tab-content hidden space-y-5">
+      <div class="apple-card p-5 sm:p-6 space-y-5">
+        
+        <!-- CMS Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="layout-template" class="w-5 h-5 text-[#ff9f0a]"></i>
+              <h3 class="text-base font-semibold text-white tracking-tight">CMS Completo Guida & Schede</h3>
+            </div>
+            <p class="text-xs text-[#86868b] mt-0.5">
+              Modifica qualsiasi testo, orario o istruzione in tutte le lingue supportate.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="btnResetCms" type="button" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-[#ff453a]"></i>
+              <span>Ripristina Default</span>
+            </button>
+            <button id="btnSaveCms" type="button" class="btn-apple-primary px-5 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-md">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>Salva Modifiche</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Language & Section Selector -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-black/40 border border-white/[0.06]">
+          <!-- 1. Language selector -->
+          <div>
+            <label class="block text-[11px] uppercase font-semibold text-[#86868b] mb-2 tracking-wider">Lingua attiva:</label>
+            <div class="flex items-center gap-1.5 flex-wrap" id="cmsLanguageSelector">
+              <button type="button" data-cms-lang="it" class="cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff9f0a] text-black shadow-sm transition cursor-pointer">IT • Italiano</button>
+              <button type="button" data-cms-lang="en" class="cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-[#86868b] hover:text-white transition cursor-pointer">EN • English</button>
+              <button type="button" data-cms-lang="de" class="cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-[#86868b] hover:text-white transition cursor-pointer">DE • Deutsch</button>
+              <button type="button" data-cms-lang="fr" class="cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-[#86868b] hover:text-white transition cursor-pointer">FR • Français</button>
+              <button type="button" data-cms-lang="es" class="cms-lang-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-[#86868b] hover:text-white transition cursor-pointer">ES • Español</button>
+            </div>
+          </div>
+
+          <!-- 2. Section selector -->
+          <div>
+            <label class="block text-[11px] uppercase font-semibold text-[#86868b] mb-2 tracking-wider">Sezione da modificare:</label>
+            <select id="cmsSectionSelect" class="w-full text-xs p-2.5 rounded-xl font-medium cursor-pointer bg-[#1c1c1e] text-white border border-white/10">
+              <option value="welcome" class="bg-[#1c1c1e] text-white">🏡 1. Benvenuto & Accoglienza (welcome)</option>
+              <option value="checkIn" class="bg-[#1c1c1e] text-white">🔑 2. Check-in & Apertura Portone (checkIn)</option>
+              <option value="wifi" class="bg-[#1c1c1e] text-white">📶 3. Wi-Fi & Connessione Rete (wifi)</option>
+              <option value="rules" class="bg-[#1c1c1e] text-white">📋 4. Regole della Casa (rules)</option>
+              <option value="checkOut" class="bg-[#1c1c1e] text-white">🚪 5. Check-out & Riconsegna (checkOut)</option>
+              <option value="amenities" class="bg-[#1c1c1e] text-white">🛋️ 6. Elettrodomestici & Comfort (amenities)</option>
+              <option value="restaurants" class="bg-[#1c1c1e] text-white">🍝 7. Ristoranti & Crotti Tipici (restaurants)</option>
+              <option value="bars" class="bg-[#1c1c1e] text-white">🍷 8. Bar & Colazioni (bars)</option>
+              <option value="shopping" class="bg-[#1c1c1e] text-white">🧀 9. Botteghe del Bitto & Spesa (shopping)</option>
+              <option value="activities" class="bg-[#1c1c1e] text-white">🏔️ 10. Escursioni & Attività (activities)</option>
+              <option value="location" class="bg-[#1c1c1e] text-white">📍 11. Posizione & Parcheggio (location)</option>
+              <option value="transport" class="bg-[#1c1c1e] text-white">🚆 12. Mezzi di Trasporto & Bici (transport)</option>
+              <option value="info" class="bg-[#1c1c1e] text-white">ℹ️ 13. Informazioni Utili Morbegno (info)</option>
+              <option value="emergency" class="bg-[#1c1c1e] text-white">🚨 14. Numeri Utili & Farmacie (emergency)</option>
+              <option value="contacts" class="bg-[#1c1c1e] text-white">📞 15. Contatti Host Nino (contacts)</option>
+              <option value="siteSettings" class="bg-[#1c1c1e] text-white">🎨 16. Impostazioni Sito & Colori CSS (siteSettings)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cerca Campi Search Filter -->
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 my-2.5">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <span class="text-xs font-semibold text-[#86868b] uppercase tracking-wider whitespace-nowrap">Filtra Campi:</span>
+            <div class="relative flex-1">
+              <input type="text" id="inputFilterCmsFields" placeholder="Digita una parola chiave per filtrare i campi della sezione..." class="w-full text-xs py-2 px-3.5 pl-8 rounded-xl bg-[#1c1c1e] text-white border border-white/10 outline-none focus:border-[#ff9f0a]" />
+              <i data-lucide="search" class="w-3.5 h-3.5 text-[#86868b] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            </div>
+          </div>
+          <button id="btnClearCmsFilter" type="button" class="text-xs text-[#ff453a] hover:underline cursor-pointer transition flex items-center gap-1 bg-transparent border-0 outline-none">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i> Ripristina Filtro
+          </button>
+        </div>
+
+
+        <div id="cmsFeedback" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+        <!-- Dynamic Fields Editor & Live Preview -->
+        <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-4 pt-1">
+          <div id="cmsFieldsContainer" class="space-y-3 min-w-0">
+            <!-- Fields dynamically populated -->
+          </div>
+
+          <aside class="xl:sticky xl:top-20 self-start hidden lg:block select-none">
+            <!-- iPhone Mockup Container -->
+            <div class="relative mx-auto max-w-[340px] rounded-[44px] border-[10px] border-[#2c2c2e] bg-[#0c0d12] shadow-2xl p-3.5 pt-9 min-h-[580px] flex flex-col overflow-hidden ring-4 ring-black/10 animate-in fade-in duration-300">
+              <!-- Dynamic Island Notch -->
+              <div class="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5.5 bg-black rounded-full z-20 flex items-center justify-center">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#1c1c1e] mr-2"></span>
+                <span class="w-1 h-1 rounded-full bg-blue-950/50"></span>
+              </div>
+              
+              <!-- Phone Screen Content -->
+              <div class="flex-1 flex flex-col min-h-0 bg-[#070a0e] rounded-[28px] overflow-hidden border border-white/[0.04]">
+                <!-- Phone App Status Bar -->
+                <div class="px-5 py-2 flex items-center justify-between text-[10px] text-white/40 font-semibold select-none bg-black/20 shrink-0">
+                  <span>9:41</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-2 rounded-xs border border-white/20 p-0.5 flex items-center"><span class="h-full w-full bg-white/45 rounded-2xs"></span></span>
+                  </div>
+                </div>
+                
+                <!-- Phone App Header -->
+                <div class="px-4 py-2 border-b border-white/[0.06] bg-black/20 shrink-0 flex items-center justify-between">
+                  <div>
+                    <p class="text-[9px] uppercase tracking-wider text-[#ff9f0a] font-bold">Anteprima Live</p>
+                    <h4 id="cmsPreviewTitle" class="text-[11px] font-semibold text-white truncate max-w-[150px]">Scheda Selezionata</h4>
+                  </div>
+                  <span class="text-[8px] text-[#30d158] bg-[#30d158]/10 px-2 py-0.5 rounded-full border border-[#30d158]/20 tracking-tight font-medium uppercase font-mono">LIVE</span>
+                </div>
+                
+                <!-- Phone App Screen Body -->
+                <div id="cmsPreview" class="flex-1 p-4 space-y-3 text-[11px] text-[#86868b] overflow-y-auto no-scrollbar max-h-[440px]">
+                  Seleziona una sezione per consultare l'anteprima formattata.
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Bottom Save Bar -->
+        <div class="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+          <span class="text-xs text-[#86868b] font-mono" id="cmsSaveIndicator">Modifiche pronte per il salvataggio</span>
+          <button id="btnSaveCmsBottom" type="button" class="btn-apple-primary px-6 py-2.5 text-xs font-semibold shadow-md flex items-center gap-2 cursor-pointer">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Salva Modifiche Definitive</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 6: FOTO & GALLERIA MEDIA                                 -->
+    <!-- ============================================================ -->
+    <section id="tab-media" class="tab-content hidden space-y-5">
+      <div class="apple-card p-5 sm:p-6 space-y-5">
+        
+        <!-- Media Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="image" class="w-5 h-5 text-[#30d158]"></i>
+              <h3 class="text-base font-semibold text-white tracking-tight">Galleria Foto & Copertine Guide</h3>
+            </div>
+            <p class="text-xs text-[#86868b] mt-0.5">
+              Carica nuove immagini ad alta risoluzione direttamente dallo smartphone o computer.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="btnResetAllPhotos" type="button" class="btn-apple-secondary px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-[#ff453a]"></i>
+              <span>Ripristina Tutto</span>
+            </button>
+            <button id="btnRefreshMedia" type="button" class="btn-apple-secondary px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Ricarica</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="mediaFeedback" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="mediaCardsGrid">
+          <!-- Cards populated dynamically by app.js -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================== TAB MESSAGES ========================== -->
+    <section id="tab-messages" class="tab-content hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-white tracking-tight">Messaggi Automatici</h3>
+          <p class="text-xs text-[#86868b]">Visualizza e gestisci la coda di invio dei messaggi automatici collegati alle prenotazioni (Welcome, Pre-checkin, Checkout)</p>
+        </div>
+        <button onclick="fetchAndRenderScheduledMessages()" class="btn-apple-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>Aggiorna</span>
+        </button>
+      </div>
+
+      <!-- Section for progress statistics & overall progress bar -->
+      <div id="messagesStatsContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-4"></div>
+
+      <div class="apple-card p-4 sm:p-5">
+        <div id="messagesContainer" class="space-y-3">
+          <div class="text-center py-12 text-xs text-[#86868b]">Caricamento messaggi in corso...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================== TAB ALLOGGIATI ========================== -->
+    <section id="tab-alloggiati" class="tab-content hidden space-y-5">
+      <!-- List View -->
+      <div id="alloggiati-list-view" class="space-y-4">
+        <div class="apple-card p-5 space-y-3">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="shield-check" class="w-5 h-5 text-[#30d158]"></i>
+            <h3 class="text-sm sm:text-base font-bold text-white">Generazione Schedine Alloggiati Web</h3>
+          </div>
+          <p class="text-xs sm:text-sm text-[#86868b] leading-relaxed">
+            Seleziona una prenotazione attiva per verificarne i documenti caricati dagli ospiti e generare il file <code>.txt</code> pronto per l'invio sul portale ministeriale della Polizia di Stato entro 24 ore dal check-in.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">Prenotazioni in archivio</h4>
+          <div id="alloggiati-passes-container" class="space-y-3">
+            <div class="text-center py-12 text-xs text-[#86868b]">Nessun pass ospite in memoria.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail View -->
+      <div id="alloggiati-detail-view" class="hidden space-y-5">
+        <div class="flex items-center justify-between gap-3">
+          <button type="button" onclick="showAlloggiatiList()" class="text-xs font-bold text-[#86868b] hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-white/[0.04] transition cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Indietro alla lista</span>
+          </button>
+          <span id="alloggiati-booking-ref" class="text-[10px] sm:text-xs font-mono font-bold text-[#86868b] bg-[#1c1c1e] px-2.5 py-1 rounded-lg border border-white/[0.08]">
+            Rif: N/A
+          </span>
+        </div>
+
+        <!-- Stay Info Card -->
+        <div class="p-4 rounded-xl bg-[#1c1c1e] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono">
+          <div class="space-y-1">
+            <p class="text-[#86868b] font-bold">DETTAGLI PRENOTAZIONE</p>
+            <p id="alloggiati-guest-title" class="text-white font-bold text-sm">Ospite Aurora</p>
+          </div>
+          <div class="grid grid-cols-2 sm:flex sm:items-center gap-4 text-[#86868b]">
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">ARRIVO</p>
+              <p id="alloggiati-checkin-val" class="font-bold text-white">N/A</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">PARTENZA</p>
+              <p id="alloggiati-checkout-val" class="font-bold text-white">N/A</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#86868b] font-bold">GIORNI</p>
+              <input 
+                id="alloggiati-stay-days"
+                type="number" 
+                min="1" 
+                max="30"
+                value="1" 
+                class="w-14 px-1.5 py-0.5 bg-[#2c2c2e] border border-white/10 rounded font-bold text-white text-center focus:outline-none focus:ring-1 focus:ring-[#30d158]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Messages -->
+        <div id="alloggiati-feedback" class="hidden p-3.5 rounded-xl text-xs font-medium flex items-start gap-2 border leading-relaxed">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">Schedine Ospiti</h4>
+            <button
+              type="button"
+              onclick="addAlloggiatiGuestForm()"
+              class="py-1 px-3 rounded-lg border border-dashed border-white/20 hover:border-[#30d158] hover:bg-[#30d158]/10 text-[#86868b] hover:text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+            >
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Aggiungi Ospite</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Accordion Cards Container -->
+          <div id="alloggiati-guests-accordion-container" class="space-y-3"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-3">
+          <button
+            type="button"
+            onclick="saveAlloggiatiData()"
+            class="flex-1 py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <i data-lucide="save" class="w-4 h-4 text-[#86868b]"></i>
+            <span>Salva Modifiche</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="exportAlloggiatiTxt()"
+            class="flex-1 py-3 px-4 rounded-xl bg-[#30d158] hover:bg-[#28b84e] text-black font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Scarica File Alloggiati (.txt)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 10: EXPORT STANDALONE ZIP                                -->
+    <!-- ============================================================ -->
+    <section id="tab-export" class="tab-content hidden space-y-5">
+      <div class="apple-card p-6 space-y-6">
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-500/10 via-[#181d2a] to-[#181d2a] border border-purple-500/20 space-y-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+              <i data-lucide="folder-archive" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Sito Host Indipendente & Standalone</h3>
+              <p class="text-xs text-[#86868b]">
+                Controlla il portale, genera chiavi digitali e aziona la serratura da un pacchetto autonomo scaricabile in formato .ZIP
+              </p>
+            </div>
+          </div>
+
+          <p class="text-xs text-[#86868b] leading-relaxed">
+            Questo archivio contiene l'applicazione web completa per l'Host, pronta per essere eseguita in locale su qualsiasi PC aprendo <code class="text-white font-mono bg-white/[0.06] px-1.5 py-0.5 rounded">index.html</code> oppure pubblicata su qualsiasi server web autonomo. Si collega direttamente al backend di Aurora in Valtellina.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <a href="/api/download-host-portal-zip" download="aurora-host-portal.zip" class="btn-apple-primary flex-1 py-3 px-5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer text-black no-underline">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Scarica Portale Standalone (.ZIP)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- API specs -->
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-mono">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+            <span>Integrazione e Chiamate API Standalone:</span>
+          </h4>
+          <ul class="space-y-2 text-xs text-[#86868b]">
+            <li class="flex items-start gap-2">
+              <span class="font-mono text-[#30d158] font-bold bg-[#30d158]/10 px-1.5 py-0.5 rounded shrink-0">GET /api/passes</span>
+              <span>Recupera in tempo reale tutti i pass ospiti attivi con stato e scadenze.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-mono text-[#0071e3] font-bold bg-[#0071e3]/10 px-1.5 py-0.5 rounded shrink-0">POST /api/channels/sync-now</span>
+              <span>Sincronizza istantaneamente tutti i canali iCal (Airbnb, Booking.com, Vrbo, Bed-and-Breakfast.it).</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-mono text-amber-400 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">PUT /api/property/config</span>
+              <span>Aggiorna coordinate GPS, raggio geofence (50m primo check-in) e istruzioni impianti.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-mono text-[#30d158] font-bold bg-[#30d158]/10 px-1.5 py-0.5 rounded shrink-0">POST /api/hass/unlock</span>
+              <span>Invia l'impulso ON alla serratura smart per l'apertura immediata.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal: Aggiungi Canale iCal -->
+  <div id="addChannelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="apple-card max-w-md w-full p-6 space-y-4 border-white/20">
+      <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-[#0071e3]"></i>
+          <span>Aggiungi Feed Calendario iCal</span>
+        </h3>
+        <button type="button" id="btnCloseAddChannelModal" class="p-1.5 rounded-lg hover:bg-white/10 text-[#86868b] hover:text-white cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="formAddChannel" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-[#86868b] mb-1">Nome del Canale</label>
+          <input type="text" id="inputNewChannelName" required placeholder="Es. Airbnb Aurora, Booking Appartamento" class="w-full text-xs p-3 rounded-xl" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#86868b] mb-1">Piattaforma / Provider</label>
+          <select id="selectNewChannelType" class="w-full text-xs p-3 rounded-xl bg-[#1c1c1e] text-white border border-white/10 cursor-pointer">
+            <option value="airbnb">Airbnb (Esportazione iCal)</option>
+            <option value="booking">Booking.com</option>
+            <option value="vrbo">Vrbo / Expedia</option>
+            <option value="bed_and_breakfast">Bed-and-Breakfast.it</option>
+            <option value="custom">Altro / Feed iCal Personalizzato</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#86868b] mb-1">URL Feed iCal (.ics)</label>
+          <input type="url" id="inputNewChannelUrl" required placeholder="https://www.airbnb.it/calendar/ical/..." class="w-full text-xs p-3 rounded-xl font-mono text-[11px]" />
+          <p class="text-[10px] text-[#86868b] mt-1">Incolla qui l'URL del calendario iCal fornito dal portale.</p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3">
+          <button type="button" id="btnCancelAddChannel" class="btn-apple-secondary px-4 py-2 text-xs font-medium cursor-pointer">
+            Annulla
+          </button>
+          <button type="submit" class="btn-apple-primary px-5 py-2 text-xs font-semibold cursor-pointer shadow-md">
+            Aggiungi Canale
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Apple Minimalist Footer -->
+  <footer class="mt-auto border-t border-white/[0.06] bg-black py-6 px-4 text-center text-xs text-[#86868b]">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>© Aurora in Valtellina • Morbegno (SO)</span>
+      <div class="flex items-center gap-3">
+        <a href="/" target="_blank" class="hover:text-white transition">Apri Guida Ospite</a>
+        <span>•</span>
+        <span class="font-mono text-[11px] text-[#30d158]">Sistema Autonomo Operativo</span>
+      </div>
+    </div>
+  </footer>
+
+  </div>
+
+  <!-- Standalone Script -->
+  <script src="./app.js"></script>
+</body>
 </html>
