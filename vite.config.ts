@@ -6,8 +6,7 @@ import {defineConfig, type Plugin} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
 // Vercel serves files from dist before applying SPA rewrites. Emit the
-// standalone host portal explicitly so /host-portal/ is never handled by the
-// guest-facing React application.
+// standalone host portal explicitly so /host-portal/ is served with the dark Apple HIG design.
 function hostPortalStaticFiles(): Plugin {
   const portalDir = path.resolve(__dirname, 'standalone-host-portal');
   const portalFile = (requestUrl: string | undefined) => {

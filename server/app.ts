@@ -422,10 +422,17 @@ export function createApp() {
   }
   app.use('/assets', express.static(assetsStaticPath));
 
-  // Il portale standalone è la versione pubblicata su /host-portal/.
-  // L'interfaccia mostra il login prima della dashboard e ogni API operativa
-  // resta comunque protetta dalla sessione HttpOnly lato server.
-  app.use('/host-portal', express.static(path.join(process.cwd(), 'standalone-host-portal')));
+  // Il portale host con dark theme Apple HIG è servito su /host-portal/
+  const standalonePortalDir = path.join(process.cwd(), 'standalone-host-portal');
+  app.get(['/host-portal', '/host-portal/'], (_req, res) => {
+    res.sendFile(path.join(standalonePortalDir, 'index.html'));
+  });
+  app.use('/host-portal', express.static(standalonePortalDir));
+  app.get(['/standalone-portal', '/standalone-portal/', '/standalone-host-portal', '/standalone-host-portal/'], (_req, res) => {
+    res.sendFile(path.join(standalonePortalDir, 'index.html'));
+  });
+  app.use('/standalone-portal', express.static(standalonePortalDir));
+  app.use('/standalone-host-portal', express.static(standalonePortalDir));
 
   // Serve public directory static files
   app.use(express.static(path.join(process.cwd(), 'public')));

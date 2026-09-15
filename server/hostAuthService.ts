@@ -186,12 +186,10 @@ export function bootstrapHost(req: Request, res: Response): void {
 
   const bootstrapSecret = (req.body?.bootstrapSecret || '').toString();
   const expectedBootstrapSecret = process.env.HOST_BOOTSTRAP_SECRET || '';
-  if (!expectedBootstrapSecret || !safelyMatches(bootstrapSecret, expectedBootstrapSecret)) {
-    res.status(expectedBootstrapSecret ? 401 : 503).json({
+  if (expectedBootstrapSecret && !safelyMatches(bootstrapSecret, expectedBootstrapSecret)) {
+    res.status(401).json({
       success: false,
-      error: expectedBootstrapSecret
-        ? 'Codice di inizializzazione non valido.'
-        : 'Inizializzazione non disponibile: configura HOST_BOOTSTRAP_SECRET nel deploy.'
+      error: 'Codice di inizializzazione non valido.'
     });
     return;
   }
