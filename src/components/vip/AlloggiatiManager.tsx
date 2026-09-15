@@ -490,15 +490,15 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
   if (!selectedPass) {
     return (
       <div className="space-y-5">
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-gray-50 to-gray-50 border border-emerald-100 space-y-3">
+        <div className="p-5 rounded-2xl bg-[#1c1c1e] border border-white/[0.08] space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                <h3 className="text-sm sm:text-base font-bold text-white">
                   Portale Alloggiati Web (Polizia di Stato)
                 </h3>
-                <p className="text-xs text-emerald-700 font-medium">
+                <p className="text-xs text-emerald-400 font-medium">
                   Invio schedine alloggiati autonomo via Web Service o manuale (.txt)
                 </p>
               </div>
@@ -507,28 +507,28 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
             <button
               type="button"
               onClick={() => setShowConfig(!showConfig)}
-              className="px-3 py-1.5 rounded-xl bg-white border border-gray-300 hover:border-emerald-400 hover:bg-emerald-50 text-gray-700 hover:text-emerald-800 text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
             >
               <Settings className="w-3.5 h-3.5" />
               <span>{showConfig ? 'Chiudi Configurazione' : 'Configura Web Service'}</span>
             </button>
           </div>
 
-          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#86868b] leading-relaxed">
             I dati degli ospiti vengono elaborati e formattati secondo il tracciato ufficiale ministeriale (160 caratteri). Puoi configurare le credenziali Web Service per inviare automaticamente le schedine in autonomia non appena gli ospiti eseguono il check-in, oppure inviarle con un click o scaricare il file <code>.txt</code>.
           </p>
 
           {/* Web Service Status pill */}
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold ${
-              wsConfig.utente && wsConfig.wsKey ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
+              wsConfig.utente && wsConfig.wsKey ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
             }`}>
               <Key className="w-3 h-3" />
               {wsConfig.utente && wsConfig.wsKey ? 'Web Service Configurato' : 'Credenziali Ministeriali Mancanti'}
             </span>
 
             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold ${
-              wsConfig.autoSubmitOnCheckin ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-gray-100 text-gray-700 border border-gray-200'
+              wsConfig.autoSubmitOnCheckin ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-white/5 text-[#86868b] border border-white/10'
             }`}>
               <UploadCloud className="w-3 h-3" />
               {wsConfig.autoSubmitOnCheckin ? 'Invio Autonomo al Check-in: ATTIVO' : 'Invio Autonomo: DISATTIVATO'}
@@ -538,68 +538,68 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
 
         {/* Configuration Panel */}
         {showConfig && (
-          <div className="p-5 rounded-2xl bg-white border-2 border-emerald-200 shadow-md space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+          <div className="p-5 rounded-2xl bg-[#1c1c1e] border border-emerald-500/30 shadow-md space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-emerald-600" />
-                <h4 className="font-bold text-gray-900 text-sm">Credenziali Web Service (Alloggiati Web)</h4>
+                <Lock className="w-4 h-4 text-emerald-400" />
+                <h4 className="font-bold text-white text-sm">Credenziali Web Service (Alloggiati Web)</h4>
               </div>
-              <span className="text-[11px] text-gray-500">WS Polizia di Stato</span>
+              <span className="text-[11px] text-[#86868b]">WS Polizia di Stato</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Utente Alloggiati</label>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1">Utente Alloggiati</label>
                 <input
                   type="text"
                   value={wsConfig.utente}
                   onChange={e => setWsConfig({ ...wsConfig, utente: e.target.value })}
                   placeholder="es. SO12345"
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full px-3 py-2 text-xs border border-white/10 rounded-lg bg-black/40 text-white focus:ring-1 focus:ring-emerald-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1">Password</label>
                 <input
                   type="password"
                   value={wsConfig.password}
                   onChange={e => setWsConfig({ ...wsConfig, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full px-3 py-2 text-xs border border-white/10 rounded-lg bg-black/40 text-white focus:ring-1 focus:ring-emerald-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Chiave WsKey (Web Service)</label>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1">Chiave WsKey (Web Service)</label>
                 <input
                   type="text"
                   value={wsConfig.wsKey}
                   onChange={e => setWsConfig({ ...wsConfig, wsKey: e.target.value })}
                   placeholder="Chiave generata dal portale"
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full px-3 py-2 text-xs border border-white/10 rounded-lg bg-black/40 text-white focus:ring-1 focus:ring-emerald-500 font-mono"
                 />
               </div>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-800 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-bold text-white cursor-pointer">
                   <input
                     type="checkbox"
                     checked={wsConfig.autoSubmitOnCheckin}
                     onChange={e => setWsConfig({ ...wsConfig, autoSubmitOnCheckin: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                    className="rounded text-emerald-500 focus:ring-emerald-500 bg-black/40"
                   />
                   <span>Carica direttamente i dati nel portale Alloggiati Web in autonomia (al Check-in)</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-[#86868b] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={wsConfig.testMode}
                     onChange={e => setWsConfig({ ...wsConfig, testMode: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                    className="rounded text-emerald-500 focus:ring-emerald-500 bg-black/40"
                   />
                   <span>Modalità Test / Simulazione (senza trasmettere alla Questura reale)</span>
                 </label>
@@ -610,7 +610,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTestingConfig}
-                  className="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isTestingConfig ? 'animate-spin' : ''}`} />
                   <span>Verifica Connessione</span>
@@ -630,7 +630,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
 
             {configMessage && (
               <div className={`p-2.5 rounded-lg text-xs font-semibold ${
-                configMessage.includes('Errore') || configMessage.includes('fallito') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                configMessage.includes('Errore') || configMessage.includes('fallito') ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
               }`}>
                 {configMessage}
               </div>
@@ -639,12 +639,12 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
         )}
 
         <div className="space-y-3">
-          <h4 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-wider">
+          <h4 className="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">
             Prenotazioni in archivio
           </h4>
 
           {storedPasses.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="p-8 text-center text-[#86868b] bg-[#1c1c1e] rounded-2xl border border-white/[0.08]">
               Nessun pass ospite presente in memoria.
             </div>
           ) : (
@@ -657,20 +657,20 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                   <div 
                     key={pass.id}
                     onClick={() => handleSelectPass(pass)}
-                    className="p-4 rounded-xl bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-xs transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                    className="p-4 rounded-xl bg-[#1c1c1e] border border-white/[0.08] hover:border-emerald-500/40 hover:bg-white/[0.03] transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900 group-hover:text-emerald-700 transition">
+                        <span className="font-bold text-white group-hover:text-emerald-400 transition">
                           {pass.guestName} {pass.guestSurname}
                         </span>
                         {pass.bookingRef && (
-                          <span className="text-[10px] font-mono bg-gray-100 text-gray-600 border border-gray-200 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-mono bg-white/5 text-[#86868b] border border-white/10 px-1.5 py-0.5 rounded">
                             {pass.bookingRef}
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500 flex flex-wrap items-center gap-3 font-mono">
+                      <div className="text-xs text-[#86868b] flex flex-wrap items-center gap-3 font-mono">
                         <span>Check-in: {formatToItalianDate(pass.checkInDate)}</span>
                         <span>•</span>
                         <span>Check-out: {formatToItalianDate(pass.checkOutDate)}</span>
@@ -679,18 +679,18 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
 
                     <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
                       {hasDocs ? (
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 rounded-full flex items-center gap-1">
                           <Check className="w-3.5 h-3.5" />
                           <span>Documenti ({uploadedDocsCount})</span>
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
+                        <span className="text-xs text-[#86868b] bg-white/5 border border-white/10 px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
                           <Info className="w-3.5 h-3.5" />
                           <span>Da caricare</span>
                         </span>
                       )}
                       
-                      <button className="py-1.5 px-3 rounded-lg bg-gray-950 group-hover:bg-emerald-600 text-white font-bold text-xs transition cursor-pointer">
+                      <button className="py-1.5 px-3 rounded-lg bg-white/10 group-hover:bg-emerald-600 text-white font-bold text-xs transition cursor-pointer">
                         Seleziona
                       </button>
                     </div>
@@ -704,47 +704,46 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
     );
   }
 
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <button
           onClick={() => setSelectedPass(null)}
-          className="text-xs font-bold text-gray-600 hover:text-black flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+          className="text-xs font-bold text-[#86868b] hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Indietro alla lista</span>
         </button>
-        <span className="text-[10px] sm:text-xs font-mono font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200">
+        <span className="text-[10px] sm:text-xs font-mono font-bold text-[#86868b] bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
           Rif: {selectedPass.bookingRef || 'N/A'}
         </span>
       </div>
 
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono">
+      <div className="p-4 rounded-xl bg-[#1c1c1e] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono">
         <div className="space-y-1">
-          <p className="text-gray-500 font-bold">DETTAGLI PRENOTAZIONE</p>
-          <p className="text-gray-900 font-bold text-sm">
+          <p className="text-[#86868b] font-bold">DETTAGLI PRENOTAZIONE</p>
+          <p className="text-white font-bold text-sm">
             {selectedPass.guestName} {selectedPass.guestSurname}
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 text-gray-600">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 text-[#86868b]">
           <div>
-            <p className="text-[10px] text-gray-400 font-bold">ARRIVO</p>
-            <p className="font-bold text-gray-800">{formatToItalianDate(selectedPass.checkInDate)}</p>
+            <p className="text-[10px] text-[#86868b] font-bold">ARRIVO</p>
+            <p className="font-bold text-white">{formatToItalianDate(selectedPass.checkInDate)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold">PARTENZA</p>
-            <p className="font-bold text-gray-800">{formatToItalianDate(selectedPass.checkOutDate)}</p>
+            <p className="text-[10px] text-[#86868b] font-bold">PARTENZA</p>
+            <p className="font-bold text-white">{formatToItalianDate(selectedPass.checkOutDate)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold">GIORNI</p>
+            <p className="text-[10px] text-[#86868b] font-bold">GIORNI</p>
             <input 
               type="number" 
               min={1} 
               max={30}
               value={stayDays} 
               onChange={e => setStayDays(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-14 px-1.5 py-0.5 bg-white border border-gray-300 rounded font-bold text-gray-800 text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-14 px-1.5 py-0.5 bg-black/40 border border-white/10 rounded font-bold text-white text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
         </div>
@@ -753,15 +752,15 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
       {feedback.message && (
         <div className={`p-3.5 rounded-xl text-xs font-medium flex items-start gap-2 border leading-relaxed ${
           feedback.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+            ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' 
             : feedback.type === 'error' 
-            ? 'bg-red-50 border-red-100 text-rose-800' 
-            : 'bg-blue-50 border-blue-100 text-blue-800'
+            ? 'bg-red-500/20 border-red-500/30 text-red-300' 
+            : 'bg-blue-500/20 border-blue-500/30 text-blue-300'
         }`}>
           {feedback.type === 'error' ? (
-            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           ) : (
-            <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           )}
           <span>{feedback.message}</span>
         </div>
@@ -769,12 +768,12 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-wider">
+          <h4 className="text-xs font-mono font-bold text-[#86868b] uppercase tracking-wider">
             Schedine Ospiti ({guests.length})
           </h4>
           <button
             onClick={handleAddGuest}
-            className="py-1 px-3 rounded-lg border border-dashed border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+            className="py-1 px-3 rounded-lg border border-dashed border-white/20 hover:border-emerald-500 hover:bg-emerald-500/10 text-[#86868b] hover:text-emerald-400 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Aggiungi Ospite</span>
@@ -790,8 +789,8 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
               key={idx}
               className={`rounded-xl border transition-all ${
                 isExpanded 
-                  ? 'border-emerald-300 shadow-xs bg-white' 
-                  : 'border-gray-200 bg-gray-50 hover:bg-gray-100/50'
+                  ? 'border-emerald-500/40 shadow-xs bg-[#1c1c1e]' 
+                  : 'border-white/[0.08] bg-[#1c1c1e] hover:border-white/20'
               }`}
             >
               <div 
@@ -802,18 +801,18 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                     isCapogruppo 
                       ? 'bg-emerald-600 text-white' 
-                      : 'bg-gray-200 text-gray-600'
+                      : 'bg-white/10 text-[#86868b]'
                   }`}>
                     {idx + 1}
                   </span>
                   <div>
-                    <span className="font-bold text-gray-900">
+                    <span className="font-bold text-white">
                       {g.surname.trim() || g.name.trim() 
                         ? `${g.surname.toUpperCase()} ${g.name.toUpperCase()}` 
                         : `Ospite #${idx + 1} (Da compilare)`
                       }
                     </span>
-                    <span className="text-[10px] font-mono text-gray-500 ml-2.5 px-2 py-0.5 rounded-full bg-gray-100/80 border border-gray-200">
+                    <span className="text-[10px] font-mono text-[#86868b] ml-2.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
                       {isCapogruppo ? 'Capofamiglia/Capogruppo' : g.tipoAlloggiato === '17' ? 'Familiare' : 'Membro gruppo'}
                     </span>
                   </div>
@@ -824,92 +823,92 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleRemoveGuest(idx); }}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition cursor-pointer"
+                      className="p-1.5 rounded-lg text-[#86868b] hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {isExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                    <ChevronUp className="w-4 h-4 text-[#86868b]" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-[#86868b]" />
                   )}
                 </div>
               </div>
 
               {isExpanded && (
-                <div className="p-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 border-t border-white/[0.08] grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Tipo Alloggiato *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Tipo Alloggiato *</label>
                     <select
                       value={g.tipoAlloggiato}
                       onChange={e => handleFieldChange(idx, 'tipoAlloggiato', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
-                      <option value="16">Capofamiglia / Capogruppo / Ospite Singolo (Cod. 16)</option>
-                      <option value="17">Familiare (Cod. 17)</option>
-                      <option value="18">Membro del gruppo (Cod. 18)</option>
+                      <option value="16" className="bg-[#1c1c1e] text-white">Capofamiglia / Capogruppo / Ospite Singolo (Cod. 16)</option>
+                      <option value="17" className="bg-[#1c1c1e] text-white">Familiare (Cod. 17)</option>
+                      <option value="18" className="bg-[#1c1c1e] text-white">Membro del gruppo (Cod. 18)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Sesso *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Sesso *</label>
                     <select
                       value={g.gender}
                       onChange={e => handleFieldChange(idx, 'gender', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
-                      <option value="M">Maschio (M)</option>
-                      <option value="F">Femmina (F)</option>
+                      <option value="M" className="bg-[#1c1c1e] text-white">Maschio (M)</option>
+                      <option value="F" className="bg-[#1c1c1e] text-white">Femmina (F)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Cognome *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Cognome *</label>
                     <input
                       type="text"
                       required
                       value={g.surname}
                       onChange={e => handleFieldChange(idx, 'surname', e.target.value.toUpperCase())}
                       placeholder="ES. ROSSI"
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Nome *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Nome *</label>
                     <input
                       type="text"
                       required
                       value={g.name}
                       onChange={e => handleFieldChange(idx, 'name', e.target.value.toUpperCase())}
                       placeholder="ES. MARIO"
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Data di Nascita *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Data di Nascita *</label>
                     <input
                       type="date"
                       required
                       value={g.birthDate}
                       onChange={e => handleFieldChange(idx, 'birthDate', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Cittadinanza Stato *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Cittadinanza Stato *</label>
                     <select
                       value={g.citizenshipCode}
                       onChange={e => handleFieldChange(idx, 'citizenshipCode', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
                       {popularCountries.map(c => (
-                        <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+                        <option key={c.code} value={c.code} className="bg-[#1c1c1e] text-white">{c.name} ({c.code})</option>
                       ))}
-                      <option value="custom">--- Inserisci codice manuale ---</option>
+                      <option value="custom" className="bg-[#1c1c1e] text-white">--- Inserisci codice manuale ---</option>
                     </select>
                     {popularCountries.every(c => c.code !== g.citizenshipCode) && (
                       <input
@@ -918,13 +917,13 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                         value={g.citizenshipCode === 'custom' ? '' : g.citizenshipCode}
                         onChange={e => handleFieldChange(idx, 'citizenshipCode', e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="Codice ministeriale di 9 cifre"
-                        className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       />
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-mono mb-1">Luogo di Nascita *</label>
+                    <label className="block text-[#86868b] font-mono mb-1">Luogo di Nascita *</label>
                     {g.citizenshipCode === '100000100' ? (
                       <>
                         <select
@@ -936,12 +935,12 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                               handleFieldChange(idx, 'birthPlaceProvince', selected.province);
                             }
                           }}
-                          className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         >
                           {popularComuni.map(c => (
-                            <option key={c.code} value={c.code}>{c.name}</option>
+                            <option key={c.code} value={c.code} className="bg-[#1c1c1e] text-white">{c.name}</option>
                           ))}
-                          <option value="custom">--- Inserisci codice manuale ---</option>
+                          <option value="custom" className="bg-[#1c1c1e] text-white">--- Inserisci codice manuale ---</option>
                         </select>
                         {(g.birthPlaceCode === 'custom' || popularComuni.every(c => c.code !== g.birthPlaceCode)) && (
                           <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -951,7 +950,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                               value={g.birthPlaceCode === 'custom' ? '' : g.birthPlaceCode}
                               onChange={e => handleFieldChange(idx, 'birthPlaceCode', e.target.value.replace(/[^0-9]/g, ''))}
                               placeholder="Codice Comune (9 cifre)"
-                              className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              className="px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                             <input
                               type="text"
@@ -959,7 +958,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                               value={g.birthPlaceProvince}
                               onChange={e => handleFieldChange(idx, 'birthPlaceProvince', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
                               placeholder="Provincia (ES. SO)"
-                              className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-bold text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              className="px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white font-bold text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                           </div>
                         )}
@@ -969,12 +968,12 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                         <select
                           value={g.birthPlaceCode}
                           onChange={e => handleFieldChange(idx, 'birthPlaceCode', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         >
                           {popularCountries.map(c => (
-                            <option key={c.code} value={c.code}>Nato in: {c.name} ({c.code})</option>
+                            <option key={c.code} value={c.code} className="bg-[#1c1c1e] text-white">Nato in: {c.name} ({c.code})</option>
                           ))}
-                          <option value="custom">--- Inserisci codice manuale ---</option>
+                          <option value="custom" className="bg-[#1c1c1e] text-white">--- Inserisci codice manuale ---</option>
                         </select>
                         {(g.birthPlaceCode === 'custom' || popularCountries.every(c => c.code !== g.birthPlaceCode)) && (
                           <input
@@ -983,7 +982,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                             value={g.birthPlaceCode === 'custom' ? '' : g.birthPlaceCode}
                             onChange={e => handleFieldChange(idx, 'birthPlaceCode', e.target.value.replace(/[^0-9]/g, ''))}
                             placeholder="Codice Paese di nascita (9 cifre)"
-                            className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         )}
                       </>
@@ -991,59 +990,59 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                   </div>
 
                   {isCapogruppo && (
-                    <div className="md:col-span-2 border-t border-gray-100 pt-4 mt-2 space-y-4">
-                      <h5 className="font-mono font-bold text-[11px] text-emerald-700 tracking-wider uppercase">
+                    <div className="md:col-span-2 border-t border-white/[0.08] pt-4 mt-2 space-y-4">
+                      <h5 className="font-mono font-bold text-[11px] text-emerald-400 tracking-wider uppercase">
                         Dettagli Documento Identità (Solo Capogruppo)
                       </h5>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-gray-500 font-mono mb-1">Tipo Documento *</label>
+                          <label className="block text-[#86868b] font-mono mb-1">Tipo Documento *</label>
                           <select
                             value={g.documentType}
                             onChange={e => handleFieldChange(idx, 'documentType', e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                            className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           >
-                            <option value="IDENT">Carta d'Identità (IDENT)</option>
-                            <option value="PASSA">Passaporto (PASSA)</option>
-                            <option value="PATEN">Patente di Guida (PATEN)</option>
+                            <option value="IDENT" className="bg-[#1c1c1e] text-white">Carta d'Identità (IDENT)</option>
+                            <option value="PASSA" className="bg-[#1c1c1e] text-white">Passaporto (PASSA)</option>
+                            <option value="PATEN" className="bg-[#1c1c1e] text-white">Patente di Guida (PATEN)</option>
                           </select>
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 font-mono mb-1">Numero Documento *</label>
+                          <label className="block text-[#86868b] font-mono mb-1">Numero Documento *</label>
                           <input
                             type="text"
                             required
                             value={g.documentNumber}
                             onChange={e => handleFieldChange(idx, 'documentNumber', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                             placeholder="ES. CA12345AB"
-                            className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                            className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 font-mono mb-1">Luogo Rilascio Documento *</label>
+                          <label className="block text-[#86868b] font-mono mb-1">Luogo Rilascio Documento *</label>
                           {g.documentType === 'PASSA' ? (
                             <select
                               value={g.documentIssuingPlace}
                               onChange={e => handleFieldChange(idx, 'documentIssuingPlace', e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                              className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             >
                               {popularCountries.map(c => (
-                                <option key={c.code} value={c.code}>Rilasciato da: {c.name}</option>
+                                <option key={c.code} value={c.code} className="bg-[#1c1c1e] text-white">Rilasciato da: {c.name}</option>
                               ))}
-                              <option value="custom">--- Inserisci codice manuale ---</option>
+                              <option value="custom" className="bg-[#1c1c1e] text-white">--- Inserisci codice manuale ---</option>
                             </select>
                           ) : (
                             <select
                               value={g.documentIssuingPlace}
                               onChange={e => handleFieldChange(idx, 'documentIssuingPlace', e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                              className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             >
                               {popularComuni.map(c => (
-                                <option key={c.code} value={c.code}>Rilasciato a: {c.name}</option>
+                                <option key={c.code} value={c.code} className="bg-[#1c1c1e] text-white">Rilasciato a: {c.name}</option>
                               ))}
-                              <option value="custom">--- Inserisci codice manuale ---</option>
+                              <option value="custom" className="bg-[#1c1c1e] text-white">--- Inserisci codice manuale ---</option>
                             </select>
                           )}
                           {(g.documentIssuingPlace === 'custom' || (g.documentType === 'PASSA' ? popularCountries.every(c => c.code !== g.documentIssuingPlace) : popularComuni.every(c => c.code !== g.documentIssuingPlace))) && (
@@ -1053,7 +1052,7 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
                               value={g.documentIssuingPlace === 'custom' ? '' : g.documentIssuingPlace}
                               onChange={e => handleFieldChange(idx, 'documentIssuingPlace', e.target.value.replace(/[^0-9]/g, ''))}
                               placeholder="Codice Comune/Paese rilascio (9 cifre)"
-                              className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white font-mono text-center focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                           )}
                         </div>
@@ -1071,9 +1070,9 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
       <div className="flex flex-col sm:flex-row gap-3 pt-3">
         <button
           onClick={handleSaveData}
-          className="py-3 px-4 rounded-xl bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          className="py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
         >
-          <Save className="w-4 h-4 text-gray-500" />
+          <Save className="w-4 h-4 text-[#86868b]" />
           <span>Salva Modifiche</span>
         </button>
 
@@ -1092,9 +1091,9 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
 
         <button
           onClick={handleExportTxt}
-          className="py-3 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
         >
-          <Download className="w-4 h-4 text-gray-600" />
+          <Download className="w-4 h-4 text-[#86868b]" />
           <span>Scarica File .txt</span>
         </button>
       </div>

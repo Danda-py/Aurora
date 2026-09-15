@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "autoSyncIntervalMinutes": 15,
+  "channels": [
+    {
+      "id": "bed_and_breakfast_default",
+      "url": "",
+      "name": "Bed-and-Breakfast.it",
+      "enabled": false,
+      "channelType": "bed_and_breakfast",
+      "importedReservationsCount": 0
+    }
+  ],
+  "lastGlobalSync": "2026-09-15T00:59:59.206Z"
+}
