@@ -20,7 +20,8 @@ import {
   Phone, 
   ShoppingBag,
   KeyRound,
-  Info
+  Info,
+  Calendar
 } from 'lucide-react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
@@ -620,7 +621,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </div>
           </div>
           
-          <div className={`quick-actions-grid ${isPublic ? 'is-public' : ''}`}>
+          <div className={`quick-actions-grid ${isPublic ? 'is-public' : 'has-5-items'}`}>
             {isPublic ? (
               <>
                 <a 
@@ -648,6 +649,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   <span>{t.tiles.regole}</span>
                   <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
                 </button>
+
+                <a
+                  href="https://aurorainvaltellina.it"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Calendar />
+                  <span>{t.tiles.prenota}</span>
+                  <small>{t.tiles.prenotaDesc}</small>
+                </a>
               </>
             ) : (
               <>
@@ -686,6 +697,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   <span>{t.tiles.regole}</span>
                   <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
                 </button>
+
+                <a
+                  href="https://aurorainvaltellina.it"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Calendar />
+                  <span>{t.tiles.prenota}</span>
+                  <small>{t.tiles.prenotaDesc}</small>
+                </a>
               </>
             )}
           </div>

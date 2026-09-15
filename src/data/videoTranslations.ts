@@ -21,6 +21,8 @@ export interface VideoTranslationSchema {
     emergenza: string;
     checkOut: string;
     contatti: string;
+    prenota: string;
+    prenotaDesc: string;
   };
   actions: {
     call: string;
@@ -299,7 +301,9 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       informazioni: "INFORMAZIONI",
       emergenza: "EMERGENZA",
       checkOut: "CHECK-OUT",
-      contatti: "CONTATTI"
+      contatti: "CONTATTI",
+      prenota: "Prenotazioni",
+      prenotaDesc: "Sconto Sito"
     },
     actions: {
       call: "Chiama",
@@ -576,7 +580,9 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       informazioni: "INFORMATION",
       emergenza: "EMERGENCY",
       checkOut: "CHECK-OUT",
-      contatti: "CONTACT"
+      contatti: "CONTACT",
+      prenota: "Book Direct",
+      prenotaDesc: "Web Discount"
     },
     actions: {
       call: "Call",
@@ -851,7 +857,9 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       informazioni: "INFORMATION",
       emergenza: "NOTFALL",
       checkOut: "CHECK-OUT",
-      contatti: "KONTAKT"
+      contatti: "KONTAKT",
+      prenota: "Direkt Buchen",
+      prenotaDesc: "Web-Rabatt"
     },
     actions: {
       call: "Anrufen",
@@ -1126,7 +1134,9 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       informazioni: "INFORMATIONS",
       emergenza: "URGENCES",
       checkOut: "DÉPART",
-      contatti: "CONTACT"
+      contatti: "CONTACT",
+      prenota: "Réserver Direct",
+      prenotaDesc: "Remise Web"
     },
     actions: {
       call: "Appeler",
@@ -1401,7 +1411,9 @@ export const VIDEO_TRANSLATIONS: Record<Language, VideoTranslationSchema> = {
       informazioni: "INFORMACIÓN",
       emergenza: "EMERGENCIA",
       checkOut: "SALIDA",
-      contatti: "CONTACTO"
+      contatti: "CONTACTO",
+      prenota: "Reservar Directo",
+      prenotaDesc: "Descuento Web"
     },
     actions: {
       call: "Llamar",
