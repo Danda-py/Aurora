@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GuestPass, Language } from '../../types';
 import { X, CheckCircle2, Unlock, Loader2, AlertCircle, Wifi, Lock, RotateCcw, ShieldCheck } from 'lucide-react';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
+import { isDigitalKeyActive } from '../../services/guestPassService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, language = 'it' }) => {
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const s = t.smartLock;
+  // Keys require BOTH documents submitted AND host confirmation - not confirmation alone.
+  const keysReady = isDigitalKeyActive(pass);
 
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -187,11 +190,11 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-neutral-300 text-[11px] font-medium">
               <span className={`w-1.5 h-1.5 rounded-full ${
-                pass && !pass.checkInConfirmed 
+                pass && !keysReady 
                   ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] animate-pulse' 
                   : 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
               }`} />
-              <span>{pass && !pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : s.activeStatus}</span>
+              <span>{pass && !keysReady ? t.checkInPage.pendingHostConfirmation : s.activeStatus}</span>
             </div>
           </div>
 
@@ -241,12 +244,12 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
           {/* Apple Action Button Card */}
           <div className="pt-2 pb-2">
             <button
-              onPointerDown={pass && !pass.checkInConfirmed ? undefined : startHold}
-              onPointerUp={pass && !pass.checkInConfirmed ? undefined : cancelHold}
-              onPointerCancel={pass && !pass.checkInConfirmed ? undefined : cancelHold}
-              onPointerLeave={pass && !pass.checkInConfirmed ? undefined : cancelHold}
+              onPointerDown={pass && !keysReady ? undefined : startHold}
+              onPointerUp={pass && !keysReady ? undefined : cancelHold}
+              onPointerCancel={pass && !keysReady ? undefined : cancelHold}
+              onPointerLeave={pass && !keysReady ? undefined : cancelHold}
               onPointerMove={(event) => {
-                if (pass && !pass.checkInConfirmed) return;
+                if (pass && !keysReady) return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 const inside =
                   event.clientX >= rect.left &&
@@ -255,9 +258,9 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                   event.clientY <= rect.bottom;
                 if (!inside) cancelHold(event);
               }}
-              disabled={openingState === 'opening' || wifiChecking || (pass !== null && !pass.checkInConfirmed)}
+              disabled={openingState === 'opening' || wifiChecking || (pass !== null && !keysReady)}
               className={`group relative w-full py-5 px-5 rounded-2xl font-bold tracking-tight transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 select-none active:scale-[0.98] ${
-                pass && !pass.checkInConfirmed
+                pass && !keysReady
                   ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
                   : openingState === 'opening'
                   ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner'
@@ -270,7 +273,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                   : 'bg-neutral-800/80 text-neutral-500 border border-white/5 cursor-not-allowed'
               }`}
             >
-              {pass && !pass.checkInConfirmed ? (
+              {pass && !keysReady ? (
                 <>
                   <div className="relative w-11 h-11 rounded-full flex items-center justify-center bg-white/5 text-neutral-500">
                     <Lock className="w-5 h-5 text-amber-500" />

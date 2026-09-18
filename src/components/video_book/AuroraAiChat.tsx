@@ -12,7 +12,7 @@ interface ChatMessage {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  pass: GuestPass;
+  pass?: GuestPass | null;
   language?: Language;
 }
 
@@ -95,7 +95,8 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass, language 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          guestToken: pass.token,
+          guestToken: pass?.token,
+          guestName: pass?.guestName,
           question: text,
           history: messages.slice(1),
           image: imageToSend?.dataUrl,

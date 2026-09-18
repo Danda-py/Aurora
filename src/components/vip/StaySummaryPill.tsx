@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
-import { getStayTiming } from '../../services/guestPassService';
+import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { Unlock, ChevronRight, User, Lock } from 'lucide-react';
 import { StayDetailsModal } from './StayDetailsModal';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
@@ -17,6 +17,8 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, langua
 
   const timing = getStayTiming(pass);
   const guestFirstName = pass.guestName || 'Ospite';
+  // Keys require BOTH documents submitted AND host confirmation - not confirmation alone.
+  const keysReady = isDigitalKeyActive(pass);
 
   return (
     <>
@@ -36,14 +38,14 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, langua
                   {guestFirstName}
                 </span>
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                  !pass.checkInConfirmed
+                  !keysReady
                     ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)] animate-pulse'
                     : 'bg-[#30d158] shadow-[0_0_6px_rgba(48,209,88,0.8)]'
                 }`} />
               </div>
               <p className="text-[10px] text-neutral-400 truncate -mt-0.5 tracking-tight font-normal">
                 {timing.isActive 
-                  ? (!pass.checkInConfirmed 
+                  ? (!keysReady 
                     ? t.checkInPage.pendingHostConfirmation 
                     : `${t.staySummary.activeStay} • ${timing.formattedCountdown}`)
                   : timing.isUpcoming
@@ -60,20 +62,20 @@ export const StaySummaryPill: React.FC<Props> = ({ pass, onOpenSmartLock, langua
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (pass.checkInConfirmed) {
+                  if (keysReady) {
                     onOpenSmartLock();
                   }
                 }}
-                disabled={!pass.checkInConfirmed}
+                disabled={!keysReady}
                 className={`px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 ${
-                  !pass.checkInConfirmed
+                  !keysReady
                     ? 'bg-white/10 text-white/40 cursor-not-allowed'
                     : 'bg-white text-neutral-950 hover:bg-neutral-100 cursor-pointer'
                 }`}
               >
-                {!pass.checkInConfirmed ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                {!keysReady ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span className="tracking-tight">
-                  {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}
+                  {!keysReady ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}
                 </span>
               </button>
             )}

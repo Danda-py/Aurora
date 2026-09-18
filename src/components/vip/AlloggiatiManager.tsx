@@ -185,16 +185,28 @@ export const AlloggiatiManager: React.FC<Props> = ({ storedPasses, onUpdatePassL
   };
 
   const handleTestConnection = async () => {
+    if (!wsConfig.utente || !wsConfig.password || !wsConfig.wsKey) {
+      setConfigMessage('Compila Utente, Password e WsKey prima di testare la connessione.');
+      return;
+    }
     setIsTestingConfig(true);
     setConfigMessage(null);
     try {
-      const res = await fetch('/api/alloggiati/validate', {
+      const res = await fetch('/api/alloggiati/test-connection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          utente: wsConfig.utente,
+          password: wsConfig.password,
+          wsKey: wsConfig.wsKey
+        })
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || data.error);
-      setConfigMessage(`Connessione riuscita! ${data.message}`);
+      if (data.success) {
+        setConfigMessage(`✓ Connessione riuscita: ${data.message}`);
+      } else {
+        setConfigMessage(`✗ Verifica: ${data.message}`);
+      }
     } catch (err: any) {
       setConfigMessage(`Test fallito: ${err.message}`);
     } finally {

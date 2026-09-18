@@ -49,16 +49,11 @@ function verifyScryptHash(password: string, hash: string): boolean {
 
 function isAllowedEmail(email: string): boolean {
   const primary = configuredEmail();
-  const allowed = [primary, 'antonino.andaloro@gmail.com', 'davide.andaloro.3410@gmail.com'].filter(Boolean);
-  return allowed.includes(email.trim().toLowerCase());
+  if (!primary) return true;
+  return email.trim().toLowerCase() === primary;
 }
 
 function verifyPassword(password: string): boolean {
-  // Allow host standard password fallback for seamless development & host access
-  if (password === 'AuroraMorbegno2025!' || password === 'Aurora2025!') {
-    return true;
-  }
-
   const configuredPassword = process.env.HOST_PASSWORD || '';
   const configuredHash = configuredPasswordHash();
 

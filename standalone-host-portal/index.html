@@ -632,7 +632,7 @@
         <!-- Channels Feed List -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-[#86868b] font-mono">Canali Sincronizzati</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-[#86868b] font-mono">Canali Sincronizzati (iCal Feeds)</h4>
             <span id="channelsGlobalSyncText" class="text-[11px] text-[#86868b] font-mono">Ultimo sync: Mai</span>
           </div>
 
@@ -640,6 +640,58 @@
             <div class="p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] text-center text-xs text-[#86868b]">
               Caricamento canali in corso...
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLUSSO PRENOTAZIONI AUTONOMO & GESTIONE PRENOTAZIONI -->
+      <div class="apple-card p-5 sm:p-6 space-y-5 border border-[#0071e3]/30 bg-gradient-to-b from-[#0071e3]/5 via-transparent to-transparent">
+        <div class="border-b border-white/[0.08] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#30d158] animate-pulse"></span>
+              <h3 class="text-base font-semibold text-white tracking-tight flex items-center gap-2">
+                <i data-lucide="calendar-check" class="w-5 h-5 text-[#30d158]"></i>
+                <span>Flusso Prenotazioni Autonomo</span>
+              </h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#30d158]/15 text-[#30d158] border border-[#30d158]/30">Auto-Sync Attivo</span>
+            </div>
+            <p class="text-xs text-[#86868b] mt-1">
+              Il sistema acquisisce e gestisce autonomamente le prenotazioni da Airbnb, Booking.com, Vrbo, Bed-and-Breakfast.it e Canali Diretti. Clicca su <strong>Modifica</strong> per cambiare date, orari, numero ospiti, contatti o note.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" id="btnOpenNewReservationModal" class="btn-apple-primary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>Nuova Prenotazione</span>
+            </button>
+            <button type="button" id="btnTriggerAutonomousSync" class="btn-apple-secondary px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span>Sincronizza Ora</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2">
+          <div class="flex items-center gap-1.5 overflow-x-auto text-xs py-1" id="channelFilterPills">
+            <button type="button" data-filter="all" class="channel-filter-btn px-3 py-1 rounded-full bg-white text-black font-semibold cursor-pointer text-xs">Tutti</button>
+            <button type="button" data-filter="airbnb" class="channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs">Airbnb</button>
+            <button type="button" data-filter="booking" class="channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs">Booking.com</button>
+            <button type="button" data-filter="bed-and-breakfast" class="channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs">Bed & Breakfast</button>
+            <button type="button" data-filter="vrbo" class="channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs">Vrbo</button>
+            <button type="button" data-filter="direct" class="channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs">Dirette</button>
+          </div>
+          <div class="relative w-full sm:w-56">
+            <input type="text" id="inputSearchReservations" placeholder="Cerca ospite o codice..." class="w-full text-xs py-1.5 pl-8 pr-3 rounded-xl bg-[#1c1c1e] border border-white/10 text-white placeholder:text-[#86868b]" />
+            <i data-lucide="search" class="w-3.5 h-3.5 text-[#86868b] absolute left-2.5 top-2.5"></i>
+          </div>
+        </div>
+
+        <!-- Autonomous Reservations List -->
+        <div id="autonomousReservationsContainer" class="space-y-3">
+          <div class="p-6 rounded-2xl border border-dashed border-white/10 text-center text-xs text-[#86868b]">
+            Caricamento prenotazioni autonome in corso...
           </div>
         </div>
       </div>
@@ -1344,8 +1396,160 @@
             <h3 class="text-sm sm:text-base font-bold text-white">Generazione Schedine Alloggiati Web</h3>
           </div>
           <p class="text-xs sm:text-sm text-[#86868b] leading-relaxed">
-            Seleziona una prenotazione attiva per verificarne i documenti caricati dagli ospiti e generare il file <code>.txt</code> pronto per l'invio sul portale ministeriale della Polizia di Stato entro 24 ore dal check-in.
+            Seleziona una prenotazione attiva per verificarne i documenti caricati dagli ospiti e generare il file <code>.txt</code> conforme ministeriale (160 caratteri) per il caricamento sul portale della Polizia di Stato entro 24 ore dal check-in, oppure abilita l'invio telematico automatico.
           </p>
+        </div>
+
+        <!-- Alloggiati Web Configuration Panel -->
+        <div id="alloggiatiConfigCard" class="apple-card p-5 space-y-4 border border-white/[0.08]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="key-round" class="w-4 h-4 text-amber-400"></i>
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider font-mono">Configurazione Credenziali Alloggiati Web</h4>
+                <p class="text-[11px] text-[#86868b]">Credenziali ufficiali rilasciate dalla Questura (Polizia di Stato)</p>
+              </div>
+            </div>
+            <div id="alloggiatiStatusBadge" class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-400/20 text-amber-400 border border-amber-400/40">
+                Non configurato
+              </span>
+            </div>
+          </div>
+
+          <!-- Guide / Notice Box -->
+          <div class="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-[#86868b] space-y-2">
+            <div class="flex items-start gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-[#30d158] shrink-0 mt-0.5"></i>
+              <div class="space-y-1">
+                <p class="text-white font-medium">Come funziona la trasmissione ministeriale:</p>
+                <p class="text-[11px] leading-relaxed">
+                  Per consentire ad Aurora l'invio telematico automatico tramite Web Service SOAP della Polizia di Stato, inserisci qui sotto le credenziali assegnate alla struttura dalla Questura di Sondrio. 
+                  La <strong>WsKey</strong> (chiave web service) si genera accedendo al portale <a href="https://alloggiatiweb.poliziadistato.it" target="_blank" rel="noreferrer" class="text-[#30d158] underline">alloggiatiweb.poliziadistato.it</a> nel menu <em>Amministrazione &gt; Web Service &gt; Genera Chiave</em>.
+                </p>
+                <p class="text-[11px] leading-relaxed text-amber-400/90">
+                  <i data-lucide="alert-circle" class="w-3 h-3 inline-block mr-1"></i> Se non possiedi ancora la WsKey o preferisci il caricamento manuale, puoi sempre scaricare il file <strong>.txt</strong> conforme ministeriale da ciascuna prenotazione qui sotto e caricarlo direttamente sul portale Alloggiati Web.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <form id="formAlloggiatiConfig" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-[#86868b] mb-1 font-mono">Utente Alloggiati (es. SO0012345)</label>
+                <input
+                  type="text"
+                  id="alloggiatiInputUser"
+                  placeholder="Codice utente Questura"
+                  autocomplete="username"
+                  class="w-full px-3 py-2 text-xs rounded-xl bg-[#1c1c1e] border border-white/[0.1] text-white placeholder-[#86868b] font-mono focus:border-[#30d158] focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#86868b] mb-1 font-mono">Password Alloggiati Web</label>
+                <div class="relative">
+                  <input
+                    type="password"
+                    id="alloggiatiInputPassword"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                    class="w-full px-3 py-2 text-xs rounded-xl bg-[#1c1c1e] border border-white/[0.1] text-white placeholder-[#86868b] font-mono focus:border-[#30d158] focus:outline-hidden pr-9"
+                  />
+                  <button
+                    type="button"
+                    id="btnToggleAlloggiatiPassword"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#86868b] hover:text-white transition cursor-pointer"
+                    title="Mostra/Nascondi password"
+                  >
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#86868b] mb-1 font-mono">Chiave Web Service (WsKey)</label>
+                <input
+                  type="text"
+                  id="alloggiatiInputWsKey"
+                  placeholder="Chiave generata dal portale"
+                  class="w-full px-3 py-2 text-xs rounded-xl bg-[#1c1c1e] border border-white/[0.1] text-white placeholder-[#86868b] font-mono focus:border-[#30d158] focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <!-- Options Checkboxes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <label class="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] cursor-pointer hover:bg-white/[0.04] transition">
+                <input
+                  type="checkbox"
+                  id="alloggiatiAutoSubmitCheckin"
+                  class="mt-0.5 rounded text-[#30d158] focus:ring-0 bg-[#1c1c1e] border-white/20"
+                />
+                <div class="space-y-0.5">
+                  <p class="text-xs font-bold text-white">Invio telematico automatico al Check-in</p>
+                  <p class="text-[10px] text-[#86868b]">Carica e trasmette le schedine alla Questura non appena l'ospite convalida i propri documenti.</p>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] cursor-pointer hover:bg-white/[0.04] transition">
+                <input
+                  type="checkbox"
+                  id="alloggiatiTestMode"
+                  class="mt-0.5 rounded text-[#30d158] focus:ring-0 bg-[#1c1c1e] border-white/20"
+                />
+                <div class="space-y-0.5">
+                  <p class="text-xs font-bold text-white">Modalità Test / Simulazione</p>
+                  <p class="text-[10px] text-[#86868b]">Consente di testare i passaggi e il flusso senza inviare schedine reali alla Polizia di Stato.</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Action Buttons and Result feedback -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+              <div id="alloggiatiConfigFeedback" class="text-xs font-mono hidden"></div>
+              <div class="flex items-center gap-2.5 ml-auto">
+                <button
+                  type="button"
+                  id="btnTestAlloggiatiConnection"
+                  class="btn-apple-secondary px-3.5 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer"
+                >
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                  <span>Testa Connessione</span>
+                </button>
+
+                <button
+                  type="submit"
+                  id="btnSaveAlloggiatiConfig"
+                  class="btn-apple-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-lg"
+                >
+                  <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                  <span>Salva Configurazione</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Automatic Police Dispatch Panel -->
+        <div id="alloggiatiDispatchBanner" class="apple-card p-5 space-y-4 border border-white/[0.08] transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span id="alloggiatiDispatchDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                <span id="alloggiatiDispatchTitle" class="text-xs font-bold uppercase tracking-wider text-white font-mono">Invio Telematico Polizia di Stato</span>
+                <span id="alloggiatiDispatchPill" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-400/20 text-amber-400 border border-amber-400/40 font-mono">NON CONFIGURATO</span>
+              </div>
+              <p id="alloggiatiDispatchDesc" class="text-xs text-[#86868b]">Configura Utente, Password e WsKey nel pannello sopra per attivare l'invio telematico automatico.</p>
+            </div>
+            <button type="button" id="btnDispatchAlloggiatiNow" class="btn-apple-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-lg shrink-0">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span>Invia a Polizia di Stato Ora</span>
+            </button>
+          </div>
+          <div id="alloggiatiAutoDispatchResult" class="hidden p-3.5 rounded-xl bg-black/50 border border-white/[0.08] text-xs font-mono space-y-1 text-white"></div>
         </div>
 
         <div class="space-y-3">
@@ -1545,6 +1749,129 @@
           <button type="submit" class="btn-apple-primary px-5 py-2 text-xs font-semibold cursor-pointer shadow-md">
             Aggiungi Canale
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registra / Modifica Prenotazione Autonoma -->
+  <div id="modalEditReservation" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+    <div class="apple-card max-w-xl w-full p-6 space-y-4 border-white/20 my-8">
+      <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="calendar-days" class="w-4 h-4 text-[#0071e3]"></i>
+          <span id="editReservationModalTitle">Modifica Prenotazione</span>
+        </h3>
+        <button type="button" id="btnCloseEditReservationModal" class="p-1.5 rounded-lg hover:bg-white/10 text-[#86868b] hover:text-white cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="formEditReservation" class="space-y-4">
+        <input type="hidden" id="editResId" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Nome -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Nome Ospite *</label>
+            <input type="text" id="editResGuestName" required placeholder="Es. Mario" class="w-full text-xs p-2.5 rounded-xl" />
+          </div>
+
+          <!-- Cognome -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Cognome Ospite</label>
+            <input type="text" id="editResGuestSurname" placeholder="Es. Rossi" class="w-full text-xs p-2.5 rounded-xl" />
+          </div>
+
+          <!-- Canale di Provenienza -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Canale di Provenienza *</label>
+            <select id="editResChannelSource" class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10 cursor-pointer">
+              <option value="Bed-and-Breakfast.it">Bed-and-Breakfast.it</option>
+              <option value="Airbnb">Airbnb</option>
+              <option value="Booking.com">Booking.com</option>
+              <option value="Vrbo">Vrbo / Expedia</option>
+              <option value="Prenotazione Diretta">Prenotazione Diretta (Sito / WhatsApp)</option>
+              <option value="Altro">Altro Canale</option>
+            </select>
+          </div>
+
+          <!-- Codice Prenotazione -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Codice Prenotazione (Rif)</label>
+            <input type="text" id="editResBookingRef" placeholder="Es. BB-67807 o HM39812A" class="w-full text-xs p-2.5 rounded-xl font-mono text-[11px]" />
+          </div>
+
+          <!-- Data Arrivo -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Data di Arrivo (Check-in) *</label>
+            <input type="date" id="editResCheckInDate" required class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+          </div>
+
+          <!-- Orario Check-in -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Orario Previsto Check-in</label>
+            <input type="time" id="editResCheckInTime" value="14:00" class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+          </div>
+
+          <!-- Data Partenza -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Data di Partenza (Check-out) *</label>
+            <input type="date" id="editResCheckOutDate" required class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+          </div>
+
+          <!-- Orario Check-out -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Orario Check-out</label>
+            <input type="time" id="editResCheckOutTime" value="10:00" class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+          </div>
+
+          <!-- Numero Ospiti -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Numero di Ospiti (Pax)</label>
+            <input type="number" id="editResGuestsCount" min="1" max="12" value="2" class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10" />
+          </div>
+
+          <!-- Recapito Telefonico -->
+          <div>
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Recapito Telefonico (WhatsApp)</label>
+            <input type="tel" id="editResPhone" placeholder="+39 340 1234567" class="w-full text-xs p-2.5 rounded-xl font-mono text-[11px]" />
+          </div>
+
+          <!-- PIN Serratura Smart Lock -->
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-medium text-[#86868b] mb-1">PIN Serratura Elettronica (4 cifre)</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="editResPinCode" maxlength="6" placeholder="Es. 2741" class="w-full text-xs p-2.5 rounded-xl font-mono tracking-widest text-center text-sm font-bold bg-[#1c1c1e] text-emerald-400 border border-white/10" />
+              <button type="button" id="btnGenerateRandomPin" class="btn-apple-secondary px-3 py-2.5 text-xs whitespace-nowrap cursor-pointer shrink-0">
+                Rigenera PIN
+              </button>
+            </div>
+            <p class="text-[10px] text-[#86868b] mt-1">Questo codice PIN apre la porta durante il soggiorno tramite tastierino o pass web.</p>
+          </div>
+
+          <!-- Note -->
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-medium text-[#86868b] mb-1">Note e Richieste Speciali</label>
+            <textarea id="editResNotes" rows="2" placeholder="Es. Arrivo in treno alle 15:30, richiesta culla, allergie alimentari..." class="w-full text-xs p-2.5 rounded-xl bg-[#1c1c1e] text-white border border-white/10"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 pt-3 border-t border-white/[0.08]">
+          <button type="button" id="btnDeleteReservationModal" class="p-2 px-3 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Elimina</span>
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <button type="button" id="btnCancelEditReservation" class="btn-apple-secondary px-4 py-2 text-xs font-medium cursor-pointer">
+              Annulla
+            </button>
+            <button type="submit" id="btnSubmitSaveReservation" class="btn-apple-primary px-5 py-2 text-xs font-semibold cursor-pointer shadow-md flex items-center gap-1.5">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Salva Prenotazione</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>

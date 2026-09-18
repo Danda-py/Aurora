@@ -301,6 +301,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
     fetch('/api/generate-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         id: fullPass.id,
         guestName: fullPass.guestName,
@@ -313,14 +314,17 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
         bookingRef: fullPass.bookingRef,
         bookingSource: fullPass.bookingSource,
         guestsCount: fullPass.guestsCount,
-        notes: fullPass.notes
+        notes: fullPass.notes,
+        token: fullPass.token
       })
     })
       .then(res => res.json())
       .then(data => {
         if (data.pass) {
+          saveHostPass(data.pass);
+          setGeneratedPass(data.pass);
           // Re-fetch passes to ensure complete sync
-          fetch('/api/passes')
+          fetch('/api/passes', { credentials: 'include' })
             .then(r => r.json())
             .then(d => {
               const list: GuestPass[] = Array.isArray(d) ? d : (d.passes || []);

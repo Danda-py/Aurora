@@ -29,7 +29,7 @@ import { FlagIcon } from './FlagIcon';
 import { useCms } from '../../context/CmsContext';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
-import { getStayTiming } from '../../services/guestPassService';
+import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 
 interface Props {
   language: Language;
@@ -244,6 +244,39 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
   };
 };
 
+// Fully localized copy for the mandatory document banners (was previously IT/EN only)
+const getDocumentBannerCopy = (lang: Language) => {
+  const isIt = lang === 'it';
+  const isEn = lang === 'en';
+  const isDe = lang === 'de';
+  const isFr = lang === 'fr';
+
+  return {
+    requiredBadge: isIt ? 'Azione Obbligatoria' : isEn ? 'Required Action' : isDe ? 'Erforderliche Aktion' : isFr ? 'Action Obligatoire' : 'Acción Obligatoria',
+    requiredTitle: isIt ? 'Registra i Documenti degli Ospiti' : isEn ? 'Register Guest Documents' : isDe ? 'Gästedokumente registrieren' : isFr ? 'Enregistrer les documents des invités' : 'Registrar los documentos de los huéspedes',
+    requiredDesc: isIt
+      ? 'La legge italiana richiede la registrazione dei documenti entro 24 ore dall\'arrivo. Registra tutti gli ospiti per abilitare l\'apertura della porta (Smart Lock) e il Wi-Fi fibra ad alta velocità!'
+      : isEn
+      ? 'Italian law requires registering all guests. Please submit documents for everyone to enable home access (Smart Lock) and high-speed Wi-Fi!'
+      : isDe
+      ? 'Das italienische Gesetz schreibt die Registrierung aller Gäste vor. Bitte reiche für alle die Dokumente ein, um den Hauszugang (Smart Lock) und das Highspeed-WLAN zu aktivieren!'
+      : isFr
+      ? 'La loi italienne exige l\'enregistrement de tous les invités. Merci de soumettre les documents de chacun pour activer l\'accès au logement (Smart Lock) et le Wi-Fi haut débit !'
+      : 'La ley italiana exige registrar a todos los huéspedes. ¡Envía los documentos de todos para habilitar el acceso a la vivienda (cerradura inteligente) y el Wi-Fi de alta velocidad!',
+    requiredCta: isIt ? 'Carica Documenti Ora' : isEn ? 'Upload Documents Now' : isDe ? 'Dokumente jetzt hochladen' : isFr ? 'Télécharger les documents' : 'Subir documentos ahora',
+    reviewTitle: isIt ? 'Documenti in fase di verifica' : isEn ? 'Documents under review' : isDe ? 'Dokumente werden geprüft' : isFr ? 'Documents en cours de vérification' : 'Documentos en revisión',
+    reviewDesc: isIt
+      ? 'Hai caricato i documenti con successo! Il tuo host Nino li sta verificando per abilitare l\'apertura della porta e il Wi-Fi ad alta velocità.'
+      : isEn
+      ? 'You successfully submitted your documents! Your host Nino is reviewing them shortly to enable door unlocking and high-speed Wi-Fi.'
+      : isDe
+      ? 'Du hast deine Dokumente erfolgreich übermittelt! Dein Gastgeber Nino prüft sie in Kürze, um die Türöffnung und das Highspeed-WLAN zu aktivieren.'
+      : isFr
+      ? 'Vous avez envoyé vos documents avec succès ! Votre hôte Nino les vérifie sous peu pour activer l\'ouverture de la porte et le Wi-Fi haut débit.'
+      : '¡Enviaste tus documentos correctamente! Tu anfitrión Nino los está revisando en breve para habilitar la apertura de la puerta y el Wi-Fi de alta velocidad.'
+  };
+};
+
 const formatPassDate = (dateStr?: string) => {
   if (!dateStr) return '';
   try {
@@ -276,7 +309,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const timing = pass ? getStayTiming(pass) : null;
   const isStayActive = timing ? timing.isActive : false;
   const isCheckinConfirmed = pass ? Boolean(pass.checkInConfirmed) : false;
-  const isWifiActive = isStayActive && isCheckinConfirmed;
+  // Digital keys (Smart Lock / Wi-Fi) require BOTH the host's check-in confirmation
+  // AND the guest's documents to be submitted - confirming check-in alone is not enough.
+  const isKeysReady = pass ? isDigitalKeyActive(pass) : false;
+  const isWifiActive = isStayActive && isKeysReady;
+  // The mandatory "Required Action" banner should stay hidden until the check-in day itself.
+  const isCheckinDayOrLater = pass ? new Date().toISOString().slice(0, 10) >= pass.checkInDate : false;
+  const docBanner = getDocumentBannerCopy(language);
 
   const localStories = [
     { 
@@ -466,27 +505,25 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         </section>
 
-        {/* Mandatory Check-in Document Banner */}
-        {pass && !pass.documentsUploaded && (
+        {/* Mandatory Check-in Document Banner (hidden until the check-in day itself) */}
+        {pass && isCheckinDayOrLater && !pass.documentsUploaded && (
           <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-pulse">
             <div className="space-y-1">
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
-                <ShieldAlert className="w-3 h-3" /> {language === 'it' ? 'Azione Obbligatoria' : 'Required Action'}
+                <ShieldAlert className="w-3 h-3" /> {docBanner.requiredBadge}
               </span>
               <h3 className="text-sm font-bold text-white tracking-tight">
-                {language === 'it' ? 'Registra i Documenti degli Ospiti' : 'Register Guest Documents'}
+                {docBanner.requiredTitle}
               </h3>
               <p className="text-xs text-white/75 leading-relaxed max-w-xl">
-                {language === 'it' 
-                  ? 'La legge italiana richiede la registrazione dei documenti entro 24 ore dall\'arrivo. Registra tutti gli ospiti per abilitare l\'apertura della porta (Smart Lock) e il Wi-Fi fibra ad alta velocità!' 
-                  : 'Italian law requires registering all guests. Please submit documents for everyone to enable home access (Smart Lock) and high-speed Wi-Fi!'}
+                {docBanner.requiredDesc}
               </p>
             </div>
             <button 
               onClick={() => onNavigate('check_in')} 
               className="btn-apple-primary bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 self-start sm:self-center cursor-pointer transition shrink-0 shadow-md border-0"
             >
-              <span>{language === 'it' ? 'Carica Documenti Ora' : 'Upload Documents Now'}</span>
+              <span>{docBanner.requiredCta}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -497,12 +534,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             <Clock3 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <h3 className="text-xs font-bold text-white">
-                {language === 'it' ? 'Documenti in fase di verifica' : 'Documents under review'}
+                {docBanner.reviewTitle}
               </h3>
               <p className="text-[11px] text-white/75 leading-relaxed">
-                {language === 'it' 
-                  ? 'Hai caricato i documenti con successo! Il tuo host Nino li sta verificando per abilitare l\'apertura della porta e il Wi-Fi ad alta velocità.' 
-                  : 'You successfully submitted your documents! Your host Nino is reviewing them shortly to enable door unlocking and high-speed Wi-Fi.'}
+                {docBanner.reviewDesc}
               </p>
             </div>
           </div>
@@ -567,7 +602,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                     : t.concierge.keysConcluded}
                 </span>
               </div>
-            ) : !isCheckinConfirmed ? (
+            ) : !isKeysReady ? (
               <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex flex-col gap-1.5 items-center justify-center text-center">
                 <Clock3 className="h-5 w-5 text-amber-400 animate-pulse" />
                 <span className="font-bold text-white">{t.checkInPage.pendingHostConfirmation}</span>
@@ -665,7 +700,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <button 
                   onClick={isWifiActive ? copyWifi : undefined}
                   className={!isWifiActive ? "opacity-40 cursor-not-allowed" : ""}
-                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isCheckinConfirmed ? t.checkInPage.pendingHostConfirmationDesc : "")}
+                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isKeysReady ? t.checkInPage.pendingHostConfirmationDesc : "")}
                 >
                   <Wifi />
                   <span>{t.tiles.wifi}</span>

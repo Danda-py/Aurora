@@ -310,6 +310,18 @@ export interface StayTiming {
 }
 
 /**
+ * Digital keys (Smart Lock unlock + high-speed Wi-Fi) must only become active once BOTH:
+ *  1. the guest has submitted their identity documents (documentsUploaded), AND
+ *  2. the host has confirmed the check-in (checkInConfirmed).
+ * A host confirming check-in (e.g. a pre-authorized channel-manager booking) does NOT,
+ * by itself, unlock digital access if the documents have not been submitted and accepted.
+ */
+export function isDigitalKeyActive(pass?: GuestPass | null): boolean {
+  if (!pass) return false;
+  return Boolean(pass.checkInConfirmed) && Boolean(pass.documentsUploaded);
+}
+
+/**
  * Calculate precise stay countdown and validity
  */
 export function getStayTiming(pass: GuestPass, now: Date = new Date()): StayTiming {
@@ -420,10 +432,9 @@ export function getStayTiming(pass: GuestPass, now: Date = new Date()): StayTimi
  * Build shareable link for a pass
  */
 export function buildPassUrl(token: string): string {
-  if (typeof window === 'undefined') return `https://aurora-valtellina.app/?pass=${token}`;
+  if (typeof window === 'undefined') return `https://aurora-valtellina.app/?pass=${encodeURIComponent(token)}`;
   const origin = window.location.origin;
-  const pathname = window.location.pathname;
-  return `${origin}${pathname}?pass=${token}`;
+  return `${origin}/?pass=${encodeURIComponent(token)}`;
 }
 
 /**
@@ -564,7 +575,13 @@ export function deleteHostPass(id: string): void {
  */
 export function getActiveGuestPass(): GuestPass | null {
   if (typeof window === 'undefined') return null;
-  return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_PASS) || localStorage.getItem('aurora_guest_pass');
+    if (!raw) return null;
+    return JSON.parse(raw) as GuestPass;
+  } catch {
+    return null;
+  }
 }
 
 export async function validateGuestPassToken(token: string): Promise<GuestPass | null> {
@@ -574,14 +591,24 @@ export async function validateGuestPassToken(token: string): Promise<GuestPass |
       credentials: 'same-origin',
       cache: 'no-store'
     });
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (!data.success || !data.pass) return null;
-    localStorage.setItem(STORAGE_KEY_ACTIVE_PASS, JSON.stringify(data.pass));
-    return data.pass as GuestPass;
-  } catch {
-    return null;
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.pass) {
+        localStorage.setItem(STORAGE_KEY_ACTIVE_PASS, JSON.stringify(data.pass));
+        return data.pass as GuestPass;
+      }
+    }
+  } catch (err) {
+    console.warn('[guestPass] Server validation error, attempting local token decode:', err);
   }
+
+  // Graceful fallback: decode local self-contained token
+  const localDecoded = decodeTokenToPass(token);
+  if (localDecoded) {
+    localStorage.setItem(STORAGE_KEY_ACTIVE_PASS, JSON.stringify(localDecoded));
+    return localDecoded;
+  }
+  return null;
 }
 
 export function clearActiveGuestPass(): void {

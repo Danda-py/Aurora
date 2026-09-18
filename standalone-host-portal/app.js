@@ -591,6 +591,78 @@ function setupEventListeners() {
   if (btnSyncAllChannelsNow) btnSyncAllChannelsNow.addEventListener('click', handleSyncAllChannels);
   if (btnCopyAuroraIcalUrl) btnCopyAuroraIcalUrl.addEventListener('click', copyAuroraIcalUrl);
 
+  // Autonomous Reservation Flow Listeners
+  const btnOpenNewReservationModal = document.getElementById('btnOpenNewReservationModal');
+  const btnTriggerAutonomousSync = document.getElementById('btnTriggerAutonomousSync');
+  const btnCloseEditReservationModal = document.getElementById('btnCloseEditReservationModal');
+  const btnCancelEditReservation = document.getElementById('btnCancelEditReservation');
+  const formEditReservation = document.getElementById('formEditReservation');
+  const btnGenerateRandomPin = document.getElementById('btnGenerateRandomPin');
+  const btnDispatchAlloggiatiNow = document.getElementById('btnDispatchAlloggiatiNow');
+  const inputSearchReservations = document.getElementById('inputSearchReservations');
+
+  if (btnOpenNewReservationModal) {
+    btnOpenNewReservationModal.addEventListener('click', () => openEditReservationModal(null));
+  }
+  if (btnTriggerAutonomousSync) {
+    btnTriggerAutonomousSync.addEventListener('click', handleTriggerAutonomousSync);
+  }
+  const closeEditModal = () => {
+    const m = document.getElementById('modalEditReservation');
+    if (m) m.classList.add('hidden');
+  };
+  if (btnCloseEditReservationModal) btnCloseEditReservationModal.addEventListener('click', closeEditModal);
+  if (btnCancelEditReservation) btnCancelEditReservation.addEventListener('click', closeEditModal);
+  if (formEditReservation) formEditReservation.addEventListener('submit', handleSaveReservation);
+  if (btnGenerateRandomPin) {
+    btnGenerateRandomPin.addEventListener('click', () => {
+      const pinEl = document.getElementById('editResPinCode');
+      if (pinEl) pinEl.value = Math.floor(1000 + Math.random() * 9000).toString();
+    });
+  }
+  if (btnDispatchAlloggiatiNow) {
+    btnDispatchAlloggiatiNow.addEventListener('click', handleDispatchAlloggiatiNow);
+  }
+
+  const formAlloggiatiConfig = document.getElementById('formAlloggiatiConfig');
+  if (formAlloggiatiConfig) {
+    formAlloggiatiConfig.addEventListener('submit', handleSaveAlloggiatiConfig);
+  }
+
+  const btnTestAlloggiatiConnection = document.getElementById('btnTestAlloggiatiConnection');
+  if (btnTestAlloggiatiConnection) {
+    btnTestAlloggiatiConnection.addEventListener('click', handleTestAlloggiatiConnection);
+  }
+
+  const btnToggleAlloggiatiPassword = document.getElementById('btnToggleAlloggiatiPassword');
+  if (btnToggleAlloggiatiPassword) {
+    btnToggleAlloggiatiPassword.addEventListener('click', () => {
+      const passInput = document.getElementById('alloggiatiInputPassword');
+      if (passInput) {
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      }
+    });
+  }
+
+  // Filter pills
+  document.querySelectorAll('.channel-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.channel-filter-btn').forEach(b => {
+        b.className = 'channel-filter-btn px-3 py-1 rounded-full bg-white/5 text-[#86868b] hover:text-white font-medium cursor-pointer text-xs';
+      });
+      btn.className = 'channel-filter-btn px-3 py-1 rounded-full bg-white text-black font-semibold cursor-pointer text-xs';
+      currentChannelFilter = btn.dataset.filter || 'all';
+      renderAutonomousReservations();
+    });
+  });
+
+  if (inputSearchReservations) {
+    inputSearchReservations.addEventListener('input', (e) => {
+      currentSearchFilter = e.target.value;
+      renderAutonomousReservations();
+    });
+  }
+
   // Accordion for IMAP Email Section in Channels Tab
   const toggleEmailSection = document.getElementById('toggleEmailSection');
   const emailSectionContent = document.getElementById('emailSectionContent');
@@ -833,6 +905,7 @@ async function fetchPasses() {
     if (tabCountEl) tabCountEl.textContent = activePasses.length;
 
     filterAndRenderPasses('');
+    renderAutonomousReservations();
   } catch (err) {
     const container = document.getElementById('passesContainer');
     if (container) {
@@ -872,7 +945,8 @@ function filterAndRenderPasses(filterQuery) {
   }
 
   container.innerHTML = list.map((pass, index) => {
-    const guestLink = `${window.location.origin}/guest/${pass.token}`;
+    const passToken = pass.token || pass.id;
+    const guestLink = `${window.location.origin}/?pass=${encodeURIComponent(passToken)}`;
     const cleanPhone = (pass.phone || '').replace(/[^0-9+]/g, '');
     const isExpired = new Date(pass.checkOutDate) < new Date(new Date().toDateString());
     const guestName = escapeHtml(pass.guestName || 'Ospite');
@@ -986,6 +1060,12 @@ function filterAndRenderPasses(filterQuery) {
             </a>
           ` : ''}
 
+          <!-- Edit Reservation Details -->
+          <button type="button" data-pass-action="edit" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-[#0071e3]" title="Modifica prenotazione e dettagli">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            <span>Modifica</span>
+          </button>
+
           <!-- Delete Pass -->
           <button type="button" data-pass-action="delete" data-pass-index="${index}" class="p-2 rounded-xl bg-[#ff453a]/10 hover:bg-[#ff453a]/20 text-[#ff453a] border border-[#ff453a]/20 transition cursor-pointer" title="Revoca e cancella questo pass">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -999,9 +1079,11 @@ function filterAndRenderPasses(filterQuery) {
     button.addEventListener('click', () => {
       const pass = list[Number(button.dataset.passIndex)];
       if (!pass) return;
-      const guestLink = `${window.location.origin}/guest/${pass.token}`;
+      const passToken = pass.token || pass.id;
+      const guestLink = `${window.location.origin}/?pass=${encodeURIComponent(passToken)}`;
       if (button.dataset.passAction === 'unlock') triggerDoorUnlock(pass.guestName || 'Host', pass.token);
       if (button.dataset.passAction === 'copy') copyPassLink(guestLink, button);
+      if (button.dataset.passAction === 'edit') openEditReservationModal(pass.id);
       if (button.dataset.passAction === 'delete') deletePass(pass.id, pass.guestName || 'questo ospite');
       if (button.dataset.passAction === 'confirm') toggleCheckinConfirmation(pass);
     });
@@ -1039,6 +1121,8 @@ window.deletePass = async function(id, guestName) {
       showToast(`Pass di ${guestName} revocato con successo`, 'success');
       activePasses = activePasses.filter(p => p.id !== id);
       filterAndRenderPasses('');
+      renderAutonomousReservations();
+      if (typeof renderAlloggiatiTab === 'function') renderAlloggiatiTab();
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -1060,6 +1144,7 @@ window.toggleCheckinConfirmation = async function(pass) {
       showToast(newStatus ? 'Check-in confermato!' : 'Conferma annullata!', 'success');
       pass.checkInConfirmed = newStatus;
       filterAndRenderPasses('');
+      renderAutonomousReservations();
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -1067,6 +1152,355 @@ window.toggleCheckinConfirmation = async function(pass) {
     showToast(`Errore: ${err.message}`, 'error');
   }
 };
+
+// ============================================================
+// FLUSSO PRENOTAZIONI AUTONOMO (AirBnb, Booking, Vrbo, B&B, Dirette)
+// ============================================================
+let currentChannelFilter = 'all';
+let currentSearchFilter = '';
+
+function renderAutonomousReservations() {
+  const container = document.getElementById('autonomousReservationsContainer');
+  if (!container) return;
+
+  const filtered = activePasses.filter(pass => {
+    // Channel filter
+    const channel = (pass.channelSource || pass.bookingSource || '').toLowerCase();
+    if (currentChannelFilter === 'airbnb' && !channel.includes('airbnb')) return false;
+    if (currentChannelFilter === 'booking' && !channel.includes('booking')) return false;
+    if (currentChannelFilter === 'bed-and-breakfast' && !channel.includes('bed') && !channel.includes('b&b')) return false;
+    if (currentChannelFilter === 'vrbo' && !channel.includes('vrbo') && !channel.includes('expedia')) return false;
+    if (currentChannelFilter === 'direct' && (channel.includes('airbnb') || channel.includes('booking') || channel.includes('vrbo') || channel.includes('bed'))) return false;
+
+    // Search query
+    if (currentSearchFilter) {
+      const q = currentSearchFilter.toLowerCase();
+      const matchName = `${pass.guestName || ''} ${pass.guestSurname || ''}`.toLowerCase().includes(q);
+      const matchRef = (pass.bookingRef || '').toLowerCase().includes(q);
+      const matchPhone = (pass.phone || '').toLowerCase().includes(q);
+      if (!matchName && !matchRef && !matchPhone) return false;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center space-y-2">
+        <p class="text-xs text-[#86868b]">Nessuna prenotazione trovata con i filtri correnti.</p>
+        <button type="button" onclick="openEditReservationModal(null)" class="btn-apple-primary px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>Registra Nuova Prenotazione</span>
+        </button>
+      </div>
+    `;
+    renderIcons();
+    return;
+  }
+
+  const getChannelBadge = (source) => {
+    const s = (source || '').toLowerCase();
+    if (s.includes('airbnb')) {
+      return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FF385C]/15 text-[#FF385C] border border-[#FF385C]/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#FF385C]"></span>Airbnb</span>';
+    }
+    if (s.includes('booking')) {
+      return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#003580]/30 text-[#3894ff] border border-[#003580] flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#3894ff]"></span>Booking.com</span>';
+    }
+    if (s.includes('vrbo') || s.includes('expedia')) {
+      return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>Vrbo</span>';
+    }
+    if (s.includes('bed') || s.includes('b&b')) {
+      return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Bed-and-Breakfast.it</span>';
+    }
+    return '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white border border-white/20 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-white"></span>Diretta</span>';
+  };
+
+  container.innerHTML = filtered.map(pass => {
+    const fullName = `${pass.guestName || 'Ospite'} ${pass.guestSurname || ''}`.trim();
+    const guestLink = `${window.location.origin}/?pass=${pass.token}`;
+    const cleanPhone = (pass.phone || '').replace(/[^0-9+]/g, '');
+    const inTime = pass.checkInTime || '14:00';
+    const outTime = pass.checkOutTime || '10:00';
+    const guests = pass.guestsCount || 2;
+    const pin = pass.pinCode || '----';
+
+    return `
+      <div class="apple-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-white/[0.08] hover:border-white/[0.15] transition">
+        <div class="space-y-2 min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${getChannelBadge(pass.channelSource || pass.bookingSource)}
+            <h4 class="font-bold text-sm text-white tracking-tight">${escapeHtml(fullName)}</h4>
+            <span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#86868b] text-[10px] font-mono border border-white/[0.08]">
+              ${guests} ${guests === 1 ? 'ospite' : 'ospiti'}
+            </span>
+            ${pass.bookingRef ? `<span class="text-[10px] font-mono text-[#86868b] bg-[#1c1c1e] px-2 py-0.5 rounded-md border border-white/[0.06]">Rif: ${escapeHtml(pass.bookingRef)}</span>` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#86868b] font-mono pt-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-white font-semibold">Arrivo:</span>
+              <span>${pass.checkInDate || 'N/D'}</span>
+              <span class="text-[#30d158] font-bold">(${inTime})</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-white font-semibold">Partenza:</span>
+              <span>${pass.checkOutDate || 'N/D'}</span>
+              <span class="text-amber-400 font-bold">(${outTime})</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-white font-semibold">PIN Serratura:</span>
+              <span class="text-emerald-400 font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10">${pin}</span>
+            </div>
+          </div>
+
+          ${pass.phone ? `
+            <div class="flex items-center gap-2 text-xs text-[#86868b] pt-0.5">
+              <span>Recapito: <strong class="text-white font-mono">${escapeHtml(pass.phone)}</strong></span>
+            </div>
+          ` : ''}
+
+          ${pass.notes ? `
+            <div class="text-[11px] text-[#86868b] bg-black/30 p-2 rounded-lg border border-white/[0.04]">
+              <span class="text-white font-medium">Note:</span> ${escapeHtml(pass.notes)}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
+          <button type="button" onclick="openEditReservationModal('${pass.id}')" class="btn-apple-primary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            <span>Modifica</span>
+          </button>
+
+          <button type="button" onclick="copyPassLink('${guestLink}', this)" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Pass Link</span>
+          </button>
+
+          ${cleanPhone ? `
+            <a href="https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(`Gentile ${pass.guestName}, ecco il pass digitale e la guida per l'Appartamento Aurora:\n${guestLink}\nCodice PIN serratura: ${pin}\nCheck-in ore ${inTime}`)}" target="_blank" class="p-2 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/30 transition" title="Invia su WhatsApp">
+              <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+            </a>
+          ` : ''}
+
+          <button type="button" onclick="deletePass('${pass.id}', '${escapeHtml(pass.guestName || 'ospite')}')" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer" title="Elimina prenotazione">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderIcons();
+}
+
+function openEditReservationModal(passId) {
+  const modal = document.getElementById('modalEditReservation');
+  const title = document.getElementById('editReservationModalTitle');
+  const btnDelete = document.getElementById('btnDeleteReservationModal');
+  const form = document.getElementById('formEditReservation');
+  if (!modal || !form) return;
+
+  if (passId) {
+    const pass = activePasses.find(p => p.id === passId);
+    if (!pass) {
+      showToast('Prenotazione non trovata', 'error');
+      return;
+    }
+    title.textContent = `Modifica Prenotazione - ${pass.guestName || ''} ${pass.guestSurname || ''}`.trim();
+    document.getElementById('editResId').value = pass.id;
+    document.getElementById('editResGuestName').value = pass.guestName || '';
+    document.getElementById('editResGuestSurname').value = pass.guestSurname || '';
+    document.getElementById('editResChannelSource').value = pass.channelSource || pass.bookingSource || 'Bed-and-Breakfast.it';
+    document.getElementById('editResBookingRef').value = pass.bookingRef || '';
+    document.getElementById('editResCheckInDate').value = pass.checkInDate || '';
+    document.getElementById('editResCheckInTime').value = pass.checkInTime || '14:00';
+    document.getElementById('editResCheckOutDate').value = pass.checkOutDate || '';
+    document.getElementById('editResCheckOutTime').value = pass.checkOutTime || '10:00';
+    document.getElementById('editResGuestsCount').value = pass.guestsCount || 2;
+    document.getElementById('editResPhone').value = pass.phone || '';
+    document.getElementById('editResPinCode').value = pass.pinCode || '';
+    document.getElementById('editResNotes').value = pass.notes || '';
+
+    if (btnDelete) {
+      btnDelete.classList.remove('hidden');
+      btnDelete.onclick = () => {
+        if (confirm(`Sei sicuro di voler eliminare la prenotazione di ${pass.guestName}?`)) {
+          modal.classList.add('hidden');
+          deletePass(pass.id, pass.guestName);
+        }
+      };
+    }
+  } else {
+    // New reservation
+    title.textContent = 'Nuova Prenotazione Autonoma';
+    document.getElementById('editResId').value = '';
+    document.getElementById('editResGuestName').value = '';
+    document.getElementById('editResGuestSurname').value = '';
+    document.getElementById('editResChannelSource').value = 'Prenotazione Diretta';
+    document.getElementById('editResBookingRef').value = `DIR-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    const today = new Date();
+    const next3 = new Date(today);
+    next3.setDate(today.getDate() + 3);
+    const formatDate = d => d.toISOString().split('T')[0];
+    document.getElementById('editResCheckInDate').value = formatDate(today);
+    document.getElementById('editResCheckInTime').value = '14:00';
+    document.getElementById('editResCheckOutDate').value = formatDate(next3);
+    document.getElementById('editResCheckOutTime').value = '10:00';
+    document.getElementById('editResGuestsCount').value = 2;
+    document.getElementById('editResPhone').value = '';
+    document.getElementById('editResPinCode').value = Math.floor(1000 + Math.random() * 9000).toString();
+    document.getElementById('editResNotes').value = '';
+
+    if (btnDelete) btnDelete.classList.add('hidden');
+  }
+
+  modal.classList.remove('hidden');
+  renderIcons();
+}
+
+async function handleSaveReservation(e) {
+  if (e) e.preventDefault();
+  const id = document.getElementById('editResId').value;
+  const guestName = document.getElementById('editResGuestName').value.trim();
+  const guestSurname = document.getElementById('editResGuestSurname').value.trim();
+  const channelSource = document.getElementById('editResChannelSource').value;
+  const bookingRef = document.getElementById('editResBookingRef').value.trim();
+  const checkInDate = document.getElementById('editResCheckInDate').value;
+  const checkInTime = document.getElementById('editResCheckInTime').value || '14:00';
+  const checkOutDate = document.getElementById('editResCheckOutDate').value;
+  const checkOutTime = document.getElementById('editResCheckOutTime').value || '10:00';
+  const guestsCount = Number(document.getElementById('editResGuestsCount').value) || 2;
+  const phone = document.getElementById('editResPhone').value.trim();
+  const pinCode = document.getElementById('editResPinCode').value.trim();
+  const notes = document.getElementById('editResNotes').value.trim();
+
+  if (!guestName || !checkInDate || !checkOutDate) {
+    showToast('Compila almeno nome, data di arrivo e data di partenza', 'error');
+    return;
+  }
+
+  const payload = {
+    guestName,
+    guestSurname,
+    channelSource,
+    bookingSource: channelSource.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+    bookingRef,
+    checkInDate,
+    checkInTime,
+    checkOutDate,
+    checkOutTime,
+    guestsCount,
+    phone,
+    pinCode,
+    notes
+  };
+
+  showToast(id ? 'Salvataggio modifiche...' : 'Creazione prenotazione...', 'loading');
+
+  try {
+    let res;
+    if (id) {
+      // Update existing reservation
+      res = await fetch(`${API_BASE_URL}/api/passes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      // Create new reservation via generate-link
+      res = await fetch(`${API_BASE_URL}/api/generate-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${res.status}`);
+    }
+
+    showToast(id ? 'Prenotazione modificata con successo!' : 'Nuova prenotazione registrata!', 'success');
+    document.getElementById('modalEditReservation')?.classList.add('hidden');
+
+    await fetchPasses();
+    renderAutonomousReservations();
+    if (typeof renderAlloggiatiTab === 'function') renderAlloggiatiTab();
+  } catch (err) {
+    showToast(`Errore: ${err.message}`, 'error');
+  }
+}
+
+async function handleTriggerAutonomousSync() {
+  showToast('Sincronizzazione autonoma in corso...', 'loading');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/channels/sync-autonomous`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    showToast(data.message || 'Sincronizzazione completata!', 'success');
+    await fetchPasses();
+    await fetchChannels();
+    renderAutonomousReservations();
+  } catch (err) {
+    showToast(`Errore sincronizzazione: ${err.message}`, 'error');
+  }
+}
+
+async function handleDispatchAlloggiatiNow() {
+  const resultBox = document.getElementById('alloggiatiAutoDispatchResult');
+  showToast('Invio schedine alla Polizia di Stato in corso...', 'loading');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alloggiati/auto-dispatch`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `Errore HTTP ${res.status}`);
+    }
+    showToast(data.message || 'Schedine elaborate con successo!', 'success');
+    if (resultBox && data.result) {
+      resultBox.classList.remove('hidden');
+      const isTest = data.result.testMode;
+      resultBox.innerHTML = `
+        <div class="flex items-center justify-between font-bold pb-1 border-b border-white/[0.08] ${isTest ? 'text-sky-400' : 'text-[#30d158]'}">
+          <span>${isTest ? '⚡ TRASMISSIONE SIMULATA (TEST MODE)' : '✓ TRASMISSIONE TELEMATICA REGISTRATA'}</span>
+          <span>Protocollo: ${data.result.protocolNumber}</span>
+        </div>
+        <div class="text-[#86868b] pt-1 space-y-0.5">
+          <p>Ente ricevente: <strong class="text-white">${data.result.ente}</strong></p>
+          <p>Orario invio: <strong class="text-white">${new Date(data.result.dispatchedAt).toLocaleTimeString('it-IT')}</strong></p>
+          <p>Schedine elaborate: <strong class="text-white">${data.result.passesCount}</strong></p>
+          ${Array.isArray(data.result.dettagli) ? `
+            <div class="mt-2 pt-2 border-t border-white/[0.06] space-y-1">
+              ${data.result.dettagli.map(d => `
+                <div class="flex items-center justify-between text-[11px]">
+                  <span>${escapeHtml(d.ospite)} (${d.bookingRef})</span>
+                  <span class="${d.successo ? 'text-[#30d158]' : 'text-amber-400'} font-medium">${escapeHtml(d.messaggio || '')}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+  } catch (err) {
+    showToast(`Errore invio: ${err.message}`, 'error');
+    if (resultBox) {
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `
+        <div class="text-rose-400 font-bold pb-1">⚠ Impossibile completare l'invio</div>
+        <p class="text-xs text-[#86868b]">${escapeHtml(err.message)}</p>
+      `;
+    }
+  }
+}
+
+window.openEditReservationModal = openEditReservationModal;
+window.renderAutonomousReservations = renderAutonomousReservations;
 
 // ============================================================
 // CHANNEL MANAGER & ICAL FEEDS (Airbnb, Booking, Vrbo, B&B)
@@ -3023,6 +3457,7 @@ function mapNatToAlloggiatiCode(natStr) {
 
 
 window.renderAlloggiatiTab = function() {
+  fetchAndRenderAlloggiatiConfig();
   const container = document.getElementById('alloggiati-passes-container');
   if (!container) return;
 
@@ -3684,5 +4119,236 @@ window.exportAlloggiatiTxt = function() {
     showAlloggiatiFeedback(`Errore: ${err.message}`, 'error');
   }
 };
+
+// ============================================================
+// ALLOGGIATI WEB CONFIGURATION & CREDENTIAL MANAGEMENT
+// ============================================================
+let currentAlloggiatiConfig = null;
+
+async function fetchAndRenderAlloggiatiConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alloggiati/config`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success || !data.config) return;
+
+    currentAlloggiatiConfig = data.config;
+
+    const inputUser = document.getElementById('alloggiatiInputUser');
+    const inputPassword = document.getElementById('alloggiatiInputPassword');
+    const inputWsKey = document.getElementById('alloggiatiInputWsKey');
+    const autoCheckin = document.getElementById('alloggiatiAutoSubmitCheckin');
+    const testMode = document.getElementById('alloggiatiTestMode');
+
+    if (inputUser && (!inputUser.value || inputUser.value === '')) {
+      inputUser.value = currentAlloggiatiConfig.utente || '';
+    }
+    if (inputPassword && (!inputPassword.value || inputPassword.value === '')) {
+      inputPassword.value = currentAlloggiatiConfig.password || '';
+    }
+    if (inputWsKey && (!inputWsKey.value || inputWsKey.value === '')) {
+      inputWsKey.value = currentAlloggiatiConfig.wsKey || '';
+    }
+    if (autoCheckin) autoCheckin.checked = Boolean(currentAlloggiatiConfig.autoSubmitOnCheckin);
+    if (testMode) testMode.checked = Boolean(currentAlloggiatiConfig.testMode);
+
+    updateAlloggiatiUIBadges(currentAlloggiatiConfig);
+  } catch (err) {
+    console.error('Errore caricamento configurazione Alloggiati Web:', err);
+  }
+}
+
+function updateAlloggiatiUIBadges(config) {
+  const badge = document.getElementById('alloggiatiStatusBadge');
+  const dot = document.getElementById('alloggiatiDispatchDot');
+  const title = document.getElementById('alloggiatiDispatchTitle');
+  const pill = document.getElementById('alloggiatiDispatchPill');
+  const desc = document.getElementById('alloggiatiDispatchDesc');
+  const banner = document.getElementById('alloggiatiDispatchBanner');
+
+  const isConfigured = Boolean(config && config.utente && config.wsKey);
+  const isTest = Boolean(config && config.testMode);
+
+  if (isTest) {
+    if (badge) {
+      badge.innerHTML = `
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/40">
+          ⚡ Modalità Test / Simulazione
+        </span>
+      `;
+    }
+    if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse';
+    if (pill) {
+      pill.className = 'px-2 py-0.5 rounded-full text-[10px] bg-sky-500/20 text-sky-400 border border-sky-500/40 font-mono';
+      pill.textContent = 'SIMULAZIONE TEST ATTIVA';
+    }
+    if (desc) {
+      desc.textContent = 'Le trasmissioni avvengono in ambiente simulato locale senza invio di dati effettivi alla Questura di Sondrio.';
+    }
+    if (banner) {
+      banner.className = 'apple-card p-5 space-y-4 border border-sky-500/30 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent';
+    }
+  } else if (isConfigured) {
+    if (badge) {
+      badge.innerHTML = `
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-[#30d158]/20 text-[#30d158] border border-[#30d158]/40">
+          ✓ Web Service Attivo (${escapeHtml(config.utente)})
+        </span>
+      `;
+    }
+    if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-[#30d158] animate-pulse';
+    if (pill) {
+      pill.className = 'px-2 py-0.5 rounded-full text-[10px] bg-[#30d158]/20 text-[#30d158] border border-[#30d158]/40 font-mono';
+      pill.textContent = 'CONNESSO (Ore 08:30 CET)';
+    }
+    if (desc) {
+      desc.textContent = 'Il sistema è collegato con le credenziali ministeriali e pronto per la trasmissione automatica quotidiana o al check-in.';
+    }
+    if (banner) {
+      banner.className = 'apple-card p-5 space-y-4 border border-[#30d158]/30 bg-gradient-to-r from-[#30d158]/10 via-[#30d158]/5 to-transparent';
+    }
+  } else {
+    if (badge) {
+      badge.innerHTML = `
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-400/20 text-amber-400 border border-amber-400/40">
+          Credenziali Mancanti
+        </span>
+      `;
+    }
+    if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+    if (pill) {
+      pill.className = 'px-2 py-0.5 rounded-full text-[10px] bg-amber-400/20 text-amber-400 border border-amber-400/40 font-mono';
+      pill.textContent = 'NON CONFIGURATO';
+    }
+    if (desc) {
+      desc.textContent = 'Configura Utente, Password e WsKey nel modulo sopra oppure scarica il file TXT per il caricamento manuale.';
+    }
+    if (banner) {
+      banner.className = 'apple-card p-5 space-y-4 border border-white/[0.08]';
+    }
+  }
+}
+
+async function handleSaveAlloggiatiConfig(e) {
+  if (e) e.preventDefault();
+  const feedbackEl = document.getElementById('alloggiatiConfigFeedback');
+  const btnSave = document.getElementById('btnSaveAlloggiatiConfig');
+
+  const utente = (document.getElementById('alloggiatiInputUser')?.value || '').trim();
+  const password = (document.getElementById('alloggiatiInputPassword')?.value || '').trim();
+  const wsKey = (document.getElementById('alloggiatiInputWsKey')?.value || '').trim();
+  const autoSubmitOnCheckin = document.getElementById('alloggiatiAutoSubmitCheckin')?.checked || false;
+  const testMode = document.getElementById('alloggiatiTestMode')?.checked || false;
+
+  if (feedbackEl) {
+    feedbackEl.classList.remove('hidden');
+    feedbackEl.className = 'text-xs font-mono text-[#86868b]';
+    feedbackEl.textContent = 'Salvataggio in corso...';
+  }
+  if (btnSave) btnSave.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alloggiati/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        utente,
+        password,
+        wsKey,
+        autoSubmitOnCheckin,
+        testMode
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    currentAlloggiatiConfig = data.config;
+    updateAlloggiatiUIBadges(currentAlloggiatiConfig);
+
+    if (feedbackEl) {
+      feedbackEl.className = 'text-xs font-mono text-[#30d158]';
+      feedbackEl.textContent = '✓ Configurazione salvata correttamente!';
+      setTimeout(() => feedbackEl?.classList.add('hidden'), 5000);
+    }
+    showToast('Configurazione Alloggiati Web salvata!', 'success');
+  } catch (err) {
+    if (feedbackEl) {
+      feedbackEl.className = 'text-xs font-mono text-rose-400';
+      feedbackEl.textContent = `Errore: ${err.message}`;
+    }
+    showToast(`Errore salvataggio: ${err.message}`, 'error');
+  } finally {
+    if (btnSave) btnSave.disabled = false;
+  }
+}
+
+async function handleTestAlloggiatiConnection() {
+  const feedbackEl = document.getElementById('alloggiatiConfigFeedback');
+  const btnTest = document.getElementById('btnTestAlloggiatiConnection');
+
+  const utente = (document.getElementById('alloggiatiInputUser')?.value || '').trim();
+  const password = (document.getElementById('alloggiatiInputPassword')?.value || '').trim();
+  const wsKey = (document.getElementById('alloggiatiInputWsKey')?.value || '').trim();
+
+  if (!utente || !password || !wsKey) {
+    showToast('Compila Utente, Password e WsKey prima di testare la connessione.', 'error');
+    if (feedbackEl) {
+      feedbackEl.classList.remove('hidden');
+      feedbackEl.className = 'text-xs font-mono text-amber-400';
+      feedbackEl.textContent = 'Compila Utente, Password e WsKey per eseguire il test.';
+    }
+    return;
+  }
+
+  if (feedbackEl) {
+    feedbackEl.classList.remove('hidden');
+    feedbackEl.className = 'text-xs font-mono text-sky-400';
+    feedbackEl.textContent = 'Verifica connessione con portale Alloggiati Web in corso...';
+  }
+  if (btnTest) {
+    btnTest.disabled = true;
+    btnTest.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Test in corso...</span>`;
+    renderIcons();
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alloggiati/test-connection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ utente, password, wsKey })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('Connessione Alloggiati Web verificata con successo!', 'success');
+      if (feedbackEl) {
+        feedbackEl.className = 'text-xs font-mono text-[#30d158]';
+        feedbackEl.textContent = `✓ ${data.message}`;
+      }
+    } else {
+      showToast(`Verifica: ${data.message}`, 'error');
+      if (feedbackEl) {
+        feedbackEl.className = 'text-xs font-mono text-rose-400';
+        feedbackEl.textContent = `✗ ${data.message}`;
+      }
+    }
+  } catch (err) {
+    showToast(`Errore connessione: ${err.message}`, 'error');
+    if (feedbackEl) {
+      feedbackEl.className = 'text-xs font-mono text-rose-400';
+      feedbackEl.textContent = `✗ Errore di rete o timeout: ${err.message}`;
+    }
+  } finally {
+    if (btnTest) {
+      btnTest.disabled = false;
+      btnTest.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Testa Connessione</span>`;
+      renderIcons();
+    }
+  }
+}
+
+window.fetchAndRenderAlloggiatiConfig = fetchAndRenderAlloggiatiConfig;
+window.handleSaveAlloggiatiConfig = handleSaveAlloggiatiConfig;
+window.handleTestAlloggiatiConnection = handleTestAlloggiatiConnection;
 
 

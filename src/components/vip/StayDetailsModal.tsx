@@ -1,6 +1,6 @@
 import React from 'react';
 import { GuestPass, Language } from '../../types';
-import { getStayTiming } from '../../services/guestPassService';
+import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { 
   Calendar, 
   Clock, 
@@ -36,6 +36,8 @@ export const StayDetailsModal: React.FC<Props> = ({
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const timing = getStayTiming(pass);
   const fullName = `${pass.guestName} ${pass.guestSurname}`.trim();
+  // Keys require BOTH documents submitted AND host confirmation - not confirmation alone.
+  const keysReady = isDigitalKeyActive(pass);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -105,7 +107,7 @@ export const StayDetailsModal: React.FC<Props> = ({
 
           {/* Open Door Button Card */}
           <div className={`p-4 rounded-2xl text-white space-y-3 ${
-            !pass.checkInConfirmed 
+            !keysReady 
               ? 'bg-amber-950/20 border border-amber-500/30' 
               : 'bg-[#070a0e] border border-emerald-500/30'
           }`}>
@@ -114,11 +116,11 @@ export const StayDetailsModal: React.FC<Props> = ({
                 {t.staySummary.mainDoorOpening}
               </span>
               <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono border ${
-                !pass.checkInConfirmed
+                !keysReady
                   ? 'text-amber-300 bg-amber-500/20 border-amber-500/30'
                   : 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30'
               }`}>
-                {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.staySummary.active24h}
+                {!keysReady ? t.checkInPage.pendingHostConfirmation : t.staySummary.active24h}
               </span>
             </div>
 
@@ -126,25 +128,25 @@ export const StayDetailsModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => {
-                  if (pass.checkInConfirmed) {
+                  if (keysReady) {
                     onClose();
                     onOpenSmartLock();
                   }
                 }}
-                disabled={!pass.checkInConfirmed}
+                disabled={!keysReady}
                 className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
-                  !pass.checkInConfirmed
+                  !keysReady
                     ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed shadow-none'
                     : 'bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 shadow-lg shadow-emerald-500/20'
                 }`}
               >
-                {!pass.checkInConfirmed ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                <span>{!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}</span>
+                {!keysReady ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                <span>{!keysReady ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}</span>
               </button>
             )}
 
             <p className="text-[11px] text-slate-400 leading-snug text-center">
-              {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : t.staySummary.openDoorInstructions}
+              {!keysReady ? t.checkInPage.pendingHostConfirmationDesc : t.staySummary.openDoorInstructions}
             </p>
           </div>
 

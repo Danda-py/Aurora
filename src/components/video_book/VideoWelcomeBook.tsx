@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
-import { getStayTiming, validateGuestPassToken } from '../../services/guestPassService';
+import { getStayTiming, validateGuestPassToken, getActiveGuestPass } from '../../services/guestPassService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { ConciergeHome } from './ConciergeHome';
 import { AuroraAiChat } from './AuroraAiChat';
@@ -57,6 +57,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       ? new URLSearchParams(window.location.search).get('pass')
       : null;
     if (!token) {
+      const active = getActiveGuestPass();
+      if (active) {
+        setPass(active);
+      }
       setIsPassChecking(false);
       return;
     }

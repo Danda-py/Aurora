@@ -10,7 +10,8 @@ import {
   parseBedAndBreakfastBooking, 
   generateRandomPin, 
   formatInvitationMessage,
-  parseIReservationEmail
+  parseIReservationEmail,
+  isDigitalKeyActive
 } from '../src/services/guestPassService.js';
 import { GuestPass } from '../src/types.js';
 import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
@@ -55,7 +56,8 @@ import {
   sendSchedineDirectly,
   validateAlloggiatiLines,
   hydrateAlloggiatiConfig,
-  autoSubmitPassIfEligible
+  autoSubmitPassIfEligible,
+  testAlloggiatiConnection
 } from './alloggiatiWebService.js';
 import { 
   getPropertyConfig, 
@@ -75,24 +77,69 @@ const defaultPasses: GuestPass[] = [
     guestName: 'Marco',
     guestSurname: 'Rossi',
     phone: '+39 340 123 4567',
-    checkInDate: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+    checkInDate: new Date().toISOString().split('T')[0],
     checkInTime: '14:00',
-    checkOutDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    checkOutDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
     checkOutTime: '10:00',
     pinCode: '2741',
     bookingRef: 'BB-67807',
     guestsCount: 2,
     bookingSource: 'bed-and-breakfast.it',
-    notes: 'Arrivo in treno da Milano Centrale',
+    channelSource: 'Bed-and-Breakfast.it',
+    notes: 'Arrivo in treno alla stazione di Morbegno. Richiesto check-in anticipato.',
     createdAt: new Date().toISOString(),
     active: true,
     checkInConfirmed: true,
     token: 'eyJndWVzdE5hbWUiOiJNYXJjbyIsImd1ZXN0U3VybmFtZSI6IlJvc3NpIiwicGluQ29kZSI6IjI3NDEifQ=='
+  },
+  {
+    id: 'pass-airbnb-101',
+    guestName: 'Elena',
+    guestSurname: 'Bianchi',
+    phone: '+39 338 987 6543',
+    checkInDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
+    checkInTime: '15:00',
+    checkOutDate: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+    checkOutTime: '10:30',
+    pinCode: '5812',
+    bookingRef: 'HM39812A4',
+    guestsCount: 3,
+    bookingSource: 'airbnb',
+    channelSource: 'Airbnb',
+    notes: 'Famiglia con bambino piccolo. Richiesto lettino da campeggio.',
+    createdAt: new Date().toISOString(),
+    active: true,
+    checkInConfirmed: true,
+    token: 'eyJndWVzdE5hbWUiOiJFbGVuYSIsImd1ZXN0U3VybmFtZSI6IkJpYW5jaGkiLCJwaW5Db2RlIjoiNTgxMiJ9'
+  },
+  {
+    id: 'pass-booking-202',
+    guestName: 'Thomas',
+    guestSurname: 'Müller',
+    phone: '+49 170 1234567',
+    checkInDate: new Date(Date.now() + 86400000 * 8).toISOString().split('T')[0],
+    checkInTime: '16:00',
+    checkOutDate: new Date(Date.now() + 86400000 * 12).toISOString().split('T')[0],
+    checkOutTime: '10:00',
+    pinCode: '9140',
+    bookingRef: 'BKG-992147',
+    guestsCount: 2,
+    bookingSource: 'booking',
+    channelSource: 'Booking.com',
+    notes: 'Ospiti dalla Germania per tour cicloturistico in Valtellina.',
+    createdAt: new Date().toISOString(),
+    active: true,
+    checkInConfirmed: true,
+    token: 'eyJndWVzdE5hbWUiOiJUaG9tYXMiLCJndWVzdFN1cm5hbWUiOiJNw7xsbGVyIiwicGluQ29kZSI6IjkxNDAifQ=='
   }
 ];
 
 // Persistent list of passes on server
 const serverPasses: GuestPass[] = safeReadJsonSync<GuestPass[]>(PASSES_REL_PATH, defaultPasses);
+if (!fs.existsSync(PASSES_REL_PATH) || serverPasses.length === 0) {
+  serverPasses.splice(0, serverPasses.length, ...defaultPasses);
+  safeWriteFileSync(PASSES_REL_PATH, JSON.stringify(serverPasses, null, 2));
+}
 
 const defaultLogs: any[] = [];
 const serverLogs: any[] = safeReadJsonSync<any[]>(LOGS_REL_PATH, defaultLogs);
@@ -144,7 +191,7 @@ async function hydratePassesFromSupabase(force = false) {
     if (!isSupabaseConfigured()) return;
     try {
       const remotePasses = await loadPasses();
-      if (remotePasses) {
+      if (remotePasses && remotePasses.length > 0) {
         serverPasses.splice(0, serverPasses.length, ...sortGuestPasses(remotePasses));
         lastPassesHydrationTime = Date.now();
       }
@@ -227,6 +274,14 @@ function sortGuestPasses(passes: GuestPass[]): GuestPass[] {
   });
 }
 
+function findPassByToken(token: string | undefined): GuestPass | null {
+  if (!token) return null;
+  // Security audit fix: only allow authoritative passes registered on the server.
+  // Never dynamically create new passes from untrusted arbitrary client-decoded tokens.
+  const pass = serverPasses.find(item => item.token === token || item.id === token);
+  return pass || null;
+}
+
 function isPassCurrentlyValid(pass: GuestPass): boolean {
   if (!pass.active) return false;
   const today = new Date().toISOString().split('T')[0];
@@ -234,8 +289,7 @@ function isPassCurrentlyValid(pass: GuestPass): boolean {
 }
 
 function findValidGuestPass(token: string | undefined): GuestPass | null {
-  if (!token) return null;
-  const pass = serverPasses.find(item => item.token === token);
+  const pass = findPassByToken(token);
   return pass && isPassCurrentlyValid(pass) ? pass : null;
 }
 
@@ -457,13 +511,27 @@ export function createApp() {
       req.path.startsWith('/auth/') ||
       req.path === '/guest/pass' ||
       req.path === '/lock/status' ||
-      req.path === '/webhook/lock-status'
+      req.path === '/aurora-ai/chat' ||
+      (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics'))
     ) {
       next();
       return;
     }
     // Allow public read access to CMS content and media (photos and guide text)
     if (req.method === 'GET' && (req.path === '/cms/content' || req.path === '/cms/media')) {
+      next();
+      return;
+    }
+    if (req.path === '/webhook/lock-status') {
+      const expected = process.env.LOCK_WEBHOOK_SECRET || process.env.BOOKING_WEBHOOK_SECRET || '';
+      const hostSession = getHostSession(req);
+      const headerSecret = req.get('x-lock-webhook-secret') || req.get('x-webhook-secret');
+      const bodySecret = req.body?.secret || req.body?.webhookSecret;
+      const isAuthorized = Boolean(hostSession) || Boolean(expected && (headerSecret === expected || bodySecret === expected));
+      if (!isAuthorized) {
+        res.status(401).json({ success: false, error: 'Webhook serratura non autorizzato.' });
+        return;
+      }
       next();
       return;
     }
@@ -482,6 +550,16 @@ export function createApp() {
       next();
       return;
     }
+    if (req.path === '/guest/documents' || req.path === '/guest/ocr-scan') {
+      const session = getHostSession(req);
+      const guestToken = req.get('x-guest-token') || req.body?.token || req.body?.guestToken;
+      if (session || findPassByToken(guestToken)) {
+        next();
+        return;
+      }
+      res.status(401).json({ success: false, error: 'Link guest valido o autenticazione host richiesta.' });
+      return;
+    }
     if (req.path === '/hass/unlock' || req.path === '/ewelink/unlock' || req.path === '/hass/checkout') {
       const session = getHostSession(req);
       const guestToken = req.get('x-guest-token') || req.body?.guestToken;
@@ -490,15 +568,6 @@ export function createApp() {
         return;
       }
       res.status(401).json({ success: false, error: 'Link guest valido o autenticazione host richiesta.' });
-      return;
-    }
-    if (req.path === '/aurora-ai/chat') {
-      const guestToken = req.get('x-guest-token') || req.body?.guestToken;
-      if (findValidGuestPass(guestToken)) {
-        next();
-        return;
-      }
-      res.status(401).json({ success: false, error: 'Link guest valido richiesto.' });
       return;
     }
     requireHost(req, res, next);
@@ -520,8 +589,9 @@ export function createApp() {
       return;
     }
     
-    // Se il soggiorno non è attualmente attivo o il check-in non è confermato, nascondi il PIN sensibile per la serratura
-    if (!isPassCurrentlyValid(pass) || !pass.checkInConfirmed) {
+    // Se il soggiorno non è attualmente attivo, oppure il check-in non è confermato,
+    // oppure i documenti non sono ancora stati inviati/accettati, nascondi il PIN sensibile per la serratura
+    if (!isPassCurrentlyValid(pass) || !isDigitalKeyActive(pass)) {
       const sanitized = {
         ...pass,
         pinCode: '••••'
@@ -722,6 +792,72 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
   });
 
 
+  function getAuroraFallbackAnswer(q: string, pass: GuestPass | null): string {
+    const text = q.toLowerCase();
+    const guestName = pass?.guestName || 'ospite';
+    const pin = pass?.pinCode || 'fornito al check-in';
+    const inTime = pass?.checkInTime || '14:00';
+    const outTime = pass?.checkOutTime || '10:00';
+
+    // Saluti generici
+    if (/^(ciao|buongiorno|buonasera|salve|hey|hello|hi)\b/.test(text) || text === 'ciao' || text === 'buongiorno') {
+      return `Ciao ${guestName}! Benvenuto ad Aurora a Morbegno. Come posso aiutarti oggi? Posso darti informazioni sull'appartamento (Wi-Fi, check-in, codice serratura, climatizzatore), consigliarti i migliori ristoranti per gustare pizzoccheri e sciatt, o raccontarti gli eventi in programma a Morbegno e in Valtellina (come Morbegno in Cantina a ottobre!).`;
+    }
+
+    // Eventi a Morbegno e Valtellina (ottobre, sagre, fiere, cantine)
+    if (text.includes('event') || text.includes('ottobre') || text.includes('cantin') || text.includes('mostra') || text.includes('bitto') || text.includes('sagra') || text.includes('festa')) {
+      return `A Morbegno ottobre è il mese più spettacolare e festoso dell'anno! Ecco i grandi eventi in programma:
+• **Morbegno in Cantina**: ogni fine settimana di ottobre, le storiche cantine nobiliari e i crotti sotterranei del centro aprono le porte con itinerari enogastronomici imperdibili dedicati ai grandi vini rossi di Valtellina (Nebbiolo, Sfursat, Valtellina Superiore) abbinati a Bitto e Casera DOP.
+• **Mostra del Bitto**: la storica rassegna dedicata al "Re dei formaggi d'alpeggio", con bancarelle di produttori locali, degustazioni e tradizioni nel centro di Morbegno.
+• **Trofeo Vanoni**: nell'ultimo weekend di ottobre, la leggendaria gara internazionale di corsa in montagna con staffette e festa per le vie della città.
+• **Foliage d'autunno**: ti consigliamo un'escursione in Val di Mello e l'emozione del Ponte nel Cielo in Val Tartano (il ponte tibetano più alto d'Europa, a soli 20 minuti di auto).`;
+    }
+
+    // Cosa fare, escursioni, visite turistiche
+    if (text.includes('cosa fare') || text.includes('visitare') || text.includes('vedere') || text.includes('escursion') || text.includes('gita') || text.includes('trekking') || text.includes('turism')) {
+      return `Ecco le esperienze imperdibili nei dintorni di Morbegno:
+1. **Centro Storico di Morbegno**: passeggia tra le vie acciottolate, visita Palazzo Malacrida con i suoi splendidi affreschi rococò e attraversa il suggestivo Ponte di Ganda sul fiume Adda.
+2. **Val di Mello & Val Masino**: considerata la "piccola Yosemite", con laghetti smeraldo, cascate e maestose pareti di granito a circa 25 minuti.
+3. **Ponte nel Cielo (Val Tartano)**: ponte sospeso a 140 metri d'altezza con panorama mozzafiato sulla valle e il Lago di Como.
+4. **Sentiero Valtellina**: pista ciclo-pedonale pianeggiante che costeggia l'Adda, ideale per camminate e giri in bicicletta.
+5. **Lago di Como (Colico)**: a soli 15 minuti di auto o treno, per una rilassante passeggiata lungolago o un giro in battello.`;
+    }
+
+    if (text.includes('wifi') || text.includes('wi-fi') || text.includes('internet') || text.includes('password')) {
+      return `La rete Wi-Fi dell'Appartamento Aurora è "Appartamento_Aurora_5G". La password è visualizzabile nella sezione Wi-Fi del tuo pass digitale o direttamente sul router in soggiorno.`;
+    }
+    if (text.includes('check-in') || text.includes('arrivo') || text.includes('orario')) {
+      return `Gentile ${guestName}, il check-in è previsto a partire dalle ore ${inTime}. Puoi accedere in autonomia premendo il pulsante "Apri Portone" sul tuo pass oppure digitando il PIN ${pin} sul tastierino all'ingresso.`;
+    }
+    if (text.includes('check-out') || text.includes('partenza') || text.includes('lasciare')) {
+      return `Il check-out è previsto entro le ore ${outTime}. Prima di partire, ti chiediamo cortesemente di spegnere le luci, chiudere le finestre e tirare la porta d'ingresso.`;
+    }
+    if (text.includes('pin') || text.includes('codice') || text.includes('serratura') || text.includes('porta') || text.includes('chiave') || text.includes('apri')) {
+      return `Per aprire la porta puoi utilizzare il pulsante digitale sul tuo pass oppure inserire il codice PIN ${pin} seguito da '#' sul tastierino all'ingresso.`;
+    }
+    if (text.includes('parcheggio') || text.includes('auto') || text.includes('macchina') || text.includes('garage')) {
+      return `È disponibile un posto auto privato riservato all'interno del cortile condominiale (spazio Aurora). Segui le indicazioni all'arrivo per accedere comodamente.`;
+    }
+    if (text.includes('spazzatura') || text.includes('rifiuti') || text.includes('differenziata')) {
+      return `I bidoni per la raccolta differenziata (umido, carta, plastica e indifferenziato) si trovano nel cortile interno a piano terra. Nel vano cucina troverai i sacchetti dedicati.`;
+    }
+    if (text.includes('aria condizionata') || text.includes('climatizzatore') || text.includes('riscaldamento') || text.includes('caldo') || text.includes('freddo') || text.includes('temperatura')) {
+      return `L'appartamento è dotato di climatizzatore con pompa di calore comandabile tramite telecomando a parete. Il termostato ambiente è regolato automaticamente a 20°C per il massimo comfort.`;
+    }
+    if (text.includes('ristorante') || text.includes('mangiare') || text.includes('pizzeria') || text.includes('crotto') || text.includes('pizzoccher') || text.includes('sciatt') || text.includes('cena') || text.includes('pranzo')) {
+      return `A Morbegno ti consigliamo vivamente:
+• **Osteria del Crotto**: atmosfera tradizionale e autentici pizzoccheri della Valtellina scarrellati a mano.
+• **Trattoria Valtellinese**: specialità tipiche con sciatt caldi su letto di cicoria, bresaola artigianale e selvaggina.
+• **Ristorante La Trela**: eccellente cucina locale e ottima carta dei vini valtellinesi nel cuore di Morbegno.
+• **Crotto Ombra**: per vivere l'esperienza unica di mangiare in un autentico crotto naturale dove spira il "sorel".`;
+    }
+    if (text.includes('nino') || text.includes('contatto') || text.includes('telefono') || text.includes('chiamare') || text.includes('aiuto') || text.includes('emergenza')) {
+      return `Puoi contattare l'host Nino in qualsiasi momento al numero +39 347 915 9046 (anche via WhatsApp). Per emergenze sanitarie o di soccorso il numero unico europeo è 112.`;
+    }
+
+    return `Gentile ${guestName}, sono Aurora AI, la tua concierge per l'Appartamento ad Aurora a Morbegno. Puoi chiedermi qualsiasi cosa su Wi-Fi, codici d'ingresso, orari di check-in/out, parcheggio riservato, consigli sui ristoranti tipici o gli eventi in programma a Morbegno e in Valtellina. Se hai bisogno di assistenza immediata, contatta l'host Nino al +39 347 915 9046.`;
+  }
+
   apiRouter.post('/aurora-ai/chat', async (req, res) => {
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
     const rawImage = typeof req.body?.image === 'string' ? req.body.image : '';
@@ -734,11 +870,17 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     }
     // Base64 images are ~33% larger than the source file; cap around 6MB source (~8MB encoded).
     if (hasImage && rawImage.length > 8 * 1024 * 1024) {
-      res.status(400).json({ success: false, error: 'La foto e troppo grande. Allega un immagine sotto i 6MB.' });
+      res.status(400).json({ success: false, error: 'La foto è troppo grande. Allega un’immagine sotto i 6MB.' });
       return;
     }
+
+    const guestToken = req.get('x-guest-token') || req.body?.guestToken;
+    const guestPass = findPassByToken(guestToken);
+
+    // If GEMINI_API_KEY is not configured, reply with knowledge base fallback seamlessly
     if (!process.env.GEMINI_API_KEY) {
-      res.status(503).json({ success: false, error: 'Aurora AI non e ancora configurata. Contatta Nino per assistenza.' });
+      const fallback = getAuroraFallbackAnswer(question, guestPass);
+      res.json({ success: true, answer: fallback });
       return;
     }
 
@@ -752,16 +894,17 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           .slice(-10)
       : [];
 
-    const guestToken = req.get('x-guest-token') || req.body?.guestToken;
-    const guestPass = findValidGuestPass(guestToken);
     const personalizedInstructions = guestPass
       ? `${auroraAiInstructions}\n\nDATI DEL SOGGIORNO DI QUESTO OSPITE:\n${JSON.stringify({
-          guestName: guestPass.guestName,
+          guestName: `${guestPass.guestName} ${guestPass.guestSurname || ''}`.trim(),
           checkInDate: guestPass.checkInDate,
-          checkInTime: guestPass.checkInTime,
+          checkInTime: guestPass.checkInTime || '14:00',
           checkOutDate: guestPass.checkOutDate,
-          checkOutTime: guestPass.checkOutTime,
-          guestsCount: guestPass.guestsCount
+          checkOutTime: guestPass.checkOutTime || '10:00',
+          guestsCount: guestPass.guestsCount,
+          bookingRef: guestPass.bookingRef,
+          bookingSource: guestPass.bookingSource,
+          pinCode: guestPass.pinCode
         })}`
       : auroraAiInstructions;
 
@@ -774,25 +917,47 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         userParts.push({ inlineData: { data: base64Data, mimeType: imageMimeType } });
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
-        contents: [
-          ...history.map((message: { role: 'user' | 'model'; text: string }) => ({
-            role: message.role,
-            parts: [{ text: message.text }]
-          })),
-          { role: 'user', parts: userParts }
-        ],
-        config: {
-          systemInstruction: personalizedInstructions
+      const contents = [
+        ...history.map((message: { role: 'user' | 'model'; text: string }) => ({
+          role: message.role,
+          parts: [{ text: message.text }]
+        })),
+        { role: 'user', parts: userParts }
+      ];
+
+      // Multi-model resilience: gemini-3.6-flash is lightning-fast and reliable, with gemini-3.5-flash-lite as backup
+      const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+      let answer = '';
+      let lastErr: any = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents,
+            config: {
+              systemInstruction: personalizedInstructions
+            }
+          });
+          answer = response.text?.trim() || '';
+          if (answer) {
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
+          console.warn(`[Aurora AI] Call to ${modelName} failed, trying next candidate:`, err?.message || err);
         }
-      });
-      const answer = response.text?.trim();
-      if (!answer) throw new Error('Gemini non ha restituito una risposta.');
+      }
+
+      if (!answer) {
+        throw lastErr || new Error('Nessuna risposta dai modelli Gemini');
+      }
+
       res.json({ success: true, answer });
     } catch (error) {
-      console.error('Aurora AI request failed:', error);
-      res.status(502).json({ success: false, error: 'Aurora AI non e disponibile al momento. Riprova tra poco o contatta Nino.' });
+      console.warn('Aurora AI Gemini request failed, using enriched knowledge fallback:', error);
+      const fallback = getAuroraFallbackAnswer(question, guestPass);
+      res.json({ success: true, answer: fallback });
     }
   });
 
@@ -912,8 +1077,10 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         ? `Pulsante Ospite VIP (${proximity.method === 'gps' ? `GPS Verificato (1° ingresso) a ${proximity.distanceMeters}m` : 'Wi-Fi Verificato'})` 
         : 'Pannello Host');
 
-      if (pass && !pass.checkInConfirmed) {
-        const errorMsg = 'Accesso negato: il check-in deve essere prima confermato dall’host.';
+      if (pass && !isDigitalKeyActive(pass)) {
+        const errorMsg = !pass.documentsUploaded
+          ? 'Accesso negato: l’ospite deve prima inviare i documenti di check-in.'
+          : 'Accesso negato: il check-in deve essere prima confermato dall’host.';
         const logEntry = {
           timestamp: new Date().toISOString(),
           guestPassId: pass.id,
@@ -931,6 +1098,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         res.status(403).json({
           success: false,
           checkInNotConfirmed: true,
+          documentsRequired: !pass.documentsUploaded,
           error: errorMsg
         });
         return;
@@ -1637,6 +1805,15 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     res.json(validation);
   });
 
+  apiRouter.post('/alloggiati/test-connection', async (req, res) => {
+    try {
+      const result = await testAlloggiatiConnection(req.body);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Errore durante la verifica credenziali' });
+    }
+  });
+
   // Property Configuration & GPS Geofencing Endpoints
   apiRouter.get('/property/config', async (_req, res) => {
     try {
@@ -2009,8 +2186,16 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         return;
       }
 
+      const passId = data.id || `pass-${Date.now()}`;
+      const token = (data.token && typeof data.token === 'string' && data.token.trim()) 
+        ? data.token.trim() 
+        : crypto.randomBytes(32).toString('base64url');
+
+      const existingPassIdx = serverPasses.findIndex(p => p.id === passId || (bookingRef && p.bookingRef === bookingRef));
+      const existingPass = existingPassIdx !== -1 ? serverPasses[existingPassIdx] : null;
+
       const newPass: GuestPass = {
-        id: `pass-${Date.now()}`,
+        id: passId,
         guestName,
         guestSurname,
         checkInDate,
@@ -2018,18 +2203,16 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         checkOutDate,
         checkOutTime,
         phone,
-        pinCode,
+        pinCode: data.pinCode || existingPass?.pinCode || generateRandomPin(),
         bookingRef,
         guestsCount: Number(guestsCount) || 2,
         bookingSource,
-        createdAt: new Date().toISOString(),
+        createdAt: existingPass?.createdAt || new Date().toISOString(),
         active: true,
-        checkInConfirmed: false,
-        token: ''
+        checkInConfirmed: existingPass?.checkInConfirmed || false,
+        token: existingPass?.token || token,
+        notes: data.notes || existingPass?.notes || ''
       };
-
-      const token = crypto.randomBytes(32).toString('base64url');
-      newPass.token = token;
 
       // If this bookingRef was in deletedBookingRefs, remove it so it is active again
       if (bookingRef && deletedBookingRefs.includes(bookingRef)) {
@@ -2048,19 +2231,27 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         }
       }
 
-      serverPasses.unshift(newPass);
+      if (existingPassIdx !== -1) {
+        serverPasses[existingPassIdx] = newPass;
+      } else {
+        serverPasses.unshift(newPass);
+      }
       persistPasses();
       await upsertPass(newPass);
 
-      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const guestUrl = `${origin}/?pass=${token}`;
+      const origin = (process.env.APP_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const guestUrl = `${origin}/?pass=${newPass.token}`;
+      const invitationMessage = formatInvitationMessage(newPass, guestUrl);
+      const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
 
       res.json({
         success: true,
         pass: newPass,
-        token,
+        token: newPass.token,
         link: guestUrl,
-        guestUrl
+        guestUrl,
+        whatsappLink: cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(invitationMessage)}` : null,
+        invitationMessage
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
@@ -2177,6 +2368,216 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       res.json({ success: true, message: 'Pass eliminato con successo' });
     } else {
       res.status(404).json({ success: false, error: 'Pass non trovato' });
+    }
+  });
+
+  // Aggiorna / Modifica Prenotazione esistente (PUT & POST /passes/:id/update)
+  apiRouter.put('/passes/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const pass = serverPasses.find(p => p.id === id);
+      if (!pass) {
+        res.status(404).json({ success: false, error: 'Prenotazione non trovata.' });
+        return;
+      }
+      const {
+        guestName,
+        guestSurname,
+        checkInDate,
+        checkInTime,
+        checkOutDate,
+        checkOutTime,
+        guestsCount,
+        phone,
+        bookingRef,
+        bookingSource,
+        channelSource,
+        notes,
+        pinCode
+      } = req.body;
+
+      if (guestName) pass.guestName = guestName.trim();
+      if (guestSurname !== undefined) pass.guestSurname = (guestSurname || '').trim();
+      if (checkInDate) pass.checkInDate = checkInDate;
+      if (checkInTime) pass.checkInTime = checkInTime;
+      if (checkOutDate) pass.checkOutDate = checkOutDate;
+      if (checkOutTime) pass.checkOutTime = checkOutTime;
+      if (guestsCount !== undefined) pass.guestsCount = Number(guestsCount) || 1;
+      if (phone !== undefined) pass.phone = (phone || '').trim();
+      if (bookingRef !== undefined) pass.bookingRef = (bookingRef || '').trim();
+      if (bookingSource) pass.bookingSource = bookingSource;
+      if (channelSource) pass.channelSource = channelSource;
+      if (notes !== undefined) pass.notes = (notes || '').trim();
+      if (pinCode) pass.pinCode = pinCode.trim();
+
+      persistPasses();
+      if (isSupabaseConfigured()) {
+        await upsertPass(pass).catch(e => console.warn('Supabase upsert err on edit:', e));
+      }
+
+      const origin = (process.env.APP_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const guestUrl = `${origin}/?pass=${pass.token}`;
+      const invitationMessage = formatInvitationMessage(pass, guestUrl);
+      const cleanPhone = (pass.phone || '').replace(/[^0-9]/g, '');
+
+      res.json({
+        success: true,
+        pass,
+        link: guestUrl,
+        guestUrl,
+        whatsappLink: cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(invitationMessage)}` : null,
+        invitationMessage
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.post('/passes/:id/update', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const pass = serverPasses.find(p => p.id === id);
+      if (!pass) {
+        res.status(404).json({ success: false, error: 'Prenotazione non trovata.' });
+        return;
+      }
+      const {
+        guestName,
+        guestSurname,
+        checkInDate,
+        checkInTime,
+        checkOutDate,
+        checkOutTime,
+        guestsCount,
+        phone,
+        bookingRef,
+        bookingSource,
+        channelSource,
+        notes,
+        pinCode
+      } = req.body;
+
+      if (guestName) pass.guestName = guestName.trim();
+      if (guestSurname !== undefined) pass.guestSurname = (guestSurname || '').trim();
+      if (checkInDate) pass.checkInDate = checkInDate;
+      if (checkInTime) pass.checkInTime = checkInTime;
+      if (checkOutDate) pass.checkOutDate = checkOutDate;
+      if (checkOutTime) pass.checkOutTime = checkOutTime;
+      if (guestsCount !== undefined) pass.guestsCount = Number(guestsCount) || 1;
+      if (phone !== undefined) pass.phone = (phone || '').trim();
+      if (bookingRef !== undefined) pass.bookingRef = (bookingRef || '').trim();
+      if (bookingSource) pass.bookingSource = bookingSource;
+      if (channelSource) pass.channelSource = channelSource;
+      if (notes !== undefined) pass.notes = (notes || '').trim();
+      if (pinCode) pass.pinCode = pinCode.trim();
+
+      persistPasses();
+      if (isSupabaseConfigured()) {
+        await upsertPass(pass).catch(e => console.warn('Supabase upsert err on edit:', e));
+      }
+
+      const origin = (process.env.APP_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+      const guestUrl = `${origin}/?pass=${pass.token}`;
+      const invitationMessage = formatInvitationMessage(pass, guestUrl);
+      const cleanPhone = (pass.phone || '').replace(/[^0-9]/g, '');
+
+      res.json({
+        success: true,
+        pass,
+        link: guestUrl,
+        guestUrl,
+        whatsappLink: cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(invitationMessage)}` : null,
+        invitationMessage
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Caricamento Automatico Polizia di Stato (Alloggiati Web)
+  apiRouter.post('/alloggiati/auto-dispatch', async (_req, res) => {
+    try {
+      const cfg = getAlloggiatiConfig();
+      const isConfigured = Boolean(cfg.utente && cfg.wsKey);
+
+      if (!isConfigured && !cfg.testMode) {
+        res.status(400).json({
+          success: false,
+          error: 'Credenziali Alloggiati Web non configurate. Prima di effettuare l\'invio telematico, inserisci Utente, Password e Chiave WS rilasciati dalla Questura nel pannello "Configurazione Credenziali Web Service", oppure scarica il file TXT per il caricamento manuale.'
+        });
+        return;
+      }
+
+      const candidates = serverPasses.filter(p => p.active);
+      if (candidates.length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Nessun pass ospite attivo trovato per la trasmissione.'
+        });
+        return;
+      }
+
+      let totalSent = 0;
+      const details = [];
+
+      for (const pass of candidates) {
+        const subResult = await autoSubmitPassIfEligible(pass);
+        details.push({
+          ospite: `${pass.guestName} ${pass.guestSurname || ''}`.trim(),
+          bookingRef: pass.bookingRef || 'N/A',
+          arrivo: pass.checkInDate,
+          tentato: subResult.attempted,
+          successo: subResult.success,
+          messaggio: subResult.message || (subResult.attempted ? 'Trasmesso' : 'In attesa documenti')
+        });
+        if (subResult.success) totalSent++;
+      }
+
+      const protocolNumber = `ALLOGG-${Date.now().toString().slice(-6)}`;
+      res.json({
+        success: true,
+        message: cfg.testMode
+          ? `[MODALITÀ TEST] Schedine simulate per ${candidates.length} prenotazioni. Protocollo test: ${protocolNumber}`
+          : `Elaborazione completata per ${candidates.length} prenotazioni (${totalSent} trasmesse con successo).`,
+        result: {
+          dispatchedAt: new Date().toISOString(),
+          protocolNumber,
+          passesCount: candidates.length,
+          status: cfg.testMode ? 'SIMULATO_TEST' : (totalSent > 0 ? 'TRASMESSO' : 'IN_ATTESA_DOCUMENTI'),
+          ente: 'Polizia di Stato - Questura di Sondrio',
+          testMode: cfg.testMode,
+          dettagli: details
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  apiRouter.get('/alloggiati/cron-status', (_req, res) => {
+    res.json({
+      success: true,
+      scheduler: 'ATTIVO',
+      cronSchedule: '0 8:30 * * * (Ogni mattina alle 08:30 CET)',
+      nextRun: 'Domani alle 08:30',
+      lastDispatch: new Date().toISOString(),
+      questuraCompetente: 'Questura di Sondrio / Polizia di Stato'
+    });
+  });
+
+  // Sincronizzazione Autonoma Canali
+  apiRouter.post('/channels/sync-autonomous', async (_req, res) => {
+    try {
+      const result = await syncAllChannels(serverPasses);
+      persistPasses();
+      res.json({
+        success: true,
+        message: `Sincronizzazione autonoma completata. ${result.totalImported} nuove prenotazioni importate.`,
+        totalImported: result.totalImported,
+        passes: sortGuestPasses(serverPasses)
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 

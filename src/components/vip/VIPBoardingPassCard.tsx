@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
-import { getStayTiming } from '../../services/guestPassService';
+import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { 
   Unlock, 
   Calendar, 
@@ -39,6 +39,8 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
 
   const timing = getStayTiming(pass);
+  // Keys require BOTH documents submitted AND host confirmation - not confirmation alone.
+  const keysReady = isDigitalKeyActive(pass);
 
   const guestFullName = `${pass.guestName} ${pass.guestSurname}`.trim();
 
@@ -187,9 +189,9 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
 
               {/* Smart Lock Key Card Ribbon */}
               <div 
-                onClick={pass.checkInConfirmed ? onOpenSmartLock : undefined}
+                onClick={keysReady ? onOpenSmartLock : undefined}
                 className={`p-3.5 rounded-2xl border shadow-md transition-all ${
-                  !pass.checkInConfirmed
+                  !keysReady
                     ? 'bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 border-amber-500/30 cursor-not-allowed'
                     : 'bg-gradient-to-r from-emerald-950/60 via-slate-900 to-emerald-950/60 border-emerald-500/40 hover:border-emerald-400 cursor-pointer group'
                 }`}
@@ -197,22 +199,22 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform ${
-                      !pass.checkInConfirmed
+                      !keysReady
                         ? 'bg-amber-500/20 border border-amber-500/30 text-amber-300'
                         : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 group-hover:scale-105'
                     }`}>
-                      {!pass.checkInConfirmed ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+                      {!keysReady ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[10px] uppercase font-mono tracking-widest font-bold ${
-                          !pass.checkInConfirmed ? 'text-amber-300' : 'text-emerald-300'
+                          !keysReady ? 'text-amber-300' : 'text-emerald-300'
                         }`}>
                           {t.boardingPass.smartLockTitle}
                         </span>
                       </div>
                       <div className="text-xs text-slate-300">
-                        {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.boardingPass.smartLockSub}
+                        {!keysReady ? t.checkInPage.pendingHostConfirmation : t.boardingPass.smartLockSub}
                       </div>
                     </div>
                   </div>
@@ -222,19 +224,19 @@ export const VIPBoardingPassCard: React.FC<Props> = ({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (pass.checkInConfirmed) {
+                        if (keysReady) {
                           onOpenSmartLock();
                         }
                       }}
-                      disabled={!pass.checkInConfirmed}
+                      disabled={!keysReady}
                       className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md transition ${
-                        !pass.checkInConfirmed
+                        !keysReady
                           ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed shadow-none'
                           : 'bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 cursor-pointer'
                       }`}
                     >
-                      {!pass.checkInConfirmed ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                      <span>{!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}</span>
+                      {!keysReady ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                      <span>{!keysReady ? t.checkInPage.pendingHostConfirmation : t.smartLock.openDoorBtn}</span>
                     </button>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient';
 import { validateGuestPassToken } from '../services/guestPassService';
+import { supabase } from '../services/supabaseClient';
 
 export const GuestRedirect: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -11,16 +11,16 @@ export const GuestRedirect: React.FC = () => {
   useEffect(() => {
     const checkPass = async () => {
       if (!token) {
-        setError("Token mancante");
+        navigate('/');
         return;
       }
 
       try {
-        let checkInDateStr: string | null = null;
-        let checkOutDateStr: string | null = null;
-        let passPayload: any = null;
+        // 1. First validate against the server API
+        let passPayload = await validateGuestPassToken(token);
 
-        if (supabase) {
+        // 2. Secondary fallback to Supabase if configured
+        if (!passPayload && supabase) {
           try {
             const { data, error: sbError } = await supabase
               .from('guest_passes')
@@ -29,49 +29,41 @@ export const GuestRedirect: React.FC = () => {
               .single();
 
             if (!sbError && data) {
-              checkInDateStr = data.check_in_date;
-              checkOutDateStr = data.check_out_date;
-              passPayload = data;
+              passPayload = {
+                id: data.id,
+                guestName: data.guest_name,
+                guestSurname: data.guest_surname || '',
+                checkInDate: data.check_in_date,
+                checkInTime: data.check_in_time || '14:00',
+                checkOutDate: data.check_out_date,
+                checkOutTime: data.check_out_time || '10:00',
+                phone: data.phone || '',
+                pinCode: data.pin_code || '',
+                token: data.token,
+                bookingRef: data.booking_ref || '',
+                guestsCount: data.guests_count || 2,
+                bookingSource: data.booking_source || 'direct',
+                active: data.active !== false,
+                checkInConfirmed: data.check_in_confirmed || false,
+                createdAt: data.created_at || new Date().toISOString()
+              };
             }
           } catch (sbEx) {
-            console.warn("Supabase query failed, falling back to API:", sbEx);
+            console.warn('Supabase query fallback:', sbEx);
           }
         }
 
-        // Fallback to internal API / guestPassService
-        if (!passPayload) {
-          const apiPass = await validateGuestPassToken(token);
-          if (apiPass) {
-            checkInDateStr = apiPass.checkInDate;
-            checkOutDateStr = apiPass.checkOutDate;
-            passPayload = apiPass;
-          }
-        }
-
-        if (!passPayload || !checkInDateStr || !checkOutDateStr) {
-          console.warn("Pass not found or invalid token");
-          navigate('/');
-          return;
-        }
-
-        const checkInDate = new Date(checkInDateStr + "T00:00:00");
-        const checkOutDate = new Date(checkOutDateStr + "T23:59:59");
-        const today = new Date();
-
-        if (today < checkInDate) {
-          // Future booking
-          navigate(`/?pass=${encodeURIComponent(token)}`);
-        } else if (today > checkOutDate) {
-          // Expired
-          setError("Pass scaduto.");
-        } else {
-          // Active
+        if (passPayload) {
+          localStorage.setItem('aurora_active_pass', JSON.stringify(passPayload));
           localStorage.setItem('aurora_guest_pass', JSON.stringify(passPayload));
-          navigate(`/?pass=${encodeURIComponent(token)}`);
         }
+
+        // Navigate to the main Welcome Book with the token in query params
+        navigate(`/?pass=${encodeURIComponent(token)}`, { replace: true });
       } catch (err) {
-        console.error("Err", err);
-        setError("Errore nel recupero del pass");
+        console.error('Error redirecting guest pass:', err);
+        // Fallback: still navigate to home so guest can view the guide
+        navigate(`/?pass=${encodeURIComponent(token)}`, { replace: true });
       }
     };
 
@@ -85,9 +77,9 @@ export const GuestRedirect: React.FC = () => {
           <p className="text-red-400 font-bold">{error}</p>
           <button 
             onClick={() => window.location.href = '/'}
-            className="px-4 py-2 bg-white text-black rounded-xl font-bold text-sm"
+            className="px-4 py-2 bg-white text-black rounded-xl font-bold text-sm cursor-pointer"
           >
-            Torna alla Home
+            Accedi alla Guida
           </button>
         </div>
       </div>
@@ -96,7 +88,10 @@ export const GuestRedirect: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <div className="animate-pulse text-sm font-mono text-emerald-400">Verifica del pass in corso...</div>
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#30d158] border-t-transparent"></div>
+        <div className="text-xs font-mono text-[#86868b]">Caricamento Pass Ospite Aurora...</div>
+      </div>
     </div>
   );
 };

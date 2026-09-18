@@ -336,3 +336,70 @@ export async function autoSubmitPassIfEligible(pass: any): Promise<{ attempted: 
   return { attempted: true, ...result };
 }
 
+export async function testAlloggiatiConnection(overrideConfig?: Partial<AlloggiatiConfig>): Promise<{ success: boolean; message: string }> {
+  const cfg = {
+    ...currentConfig,
+    ...(overrideConfig || {})
+  };
+  const utente = cfg.utente?.trim();
+  const password = (overrideConfig?.password && !overrideConfig.password.includes('•'))
+    ? overrideConfig.password
+    : cfg.password;
+  const wsKey = cfg.wsKey?.trim();
+
+  if (!utente || !password || !wsKey) {
+    return {
+      success: false,
+      message: 'Compila tutti i campi richiesti: Utente, Password e Chiave Web Service (WsKey) rilasciati dalla Questura.'
+    };
+  }
+
+  if (cfg.testMode) {
+    return {
+      success: true,
+      message: 'Test superato con successo: modalità simulazione attiva (nessuna chiamata reale alla Questura).'
+    };
+  }
+
+  try {
+    const tokenSoapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <GenerateToken xmlns="AlloggiatiService">
+      <Utente>${escapeXml(utente)}</Utente>
+      <Password>${escapeXml(password)}</Password>
+      <WsKey>${escapeXml(wsKey)}</WsKey>
+    </GenerateToken>
+  </soap:Body>
+</soap:Envelope>`;
+
+    const tokenRes = await fetch('https://alloggiatiweb.poliziadistato.it/service/service.asmx', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'SOAPAction': '"AlloggiatiService/GenerateToken"'
+      },
+      body: tokenSoapEnvelope
+    });
+
+    const tokenXml = await tokenRes.text();
+    const tokenMatch = tokenXml.match(/<token>(.*?)<\/token>/i) || tokenXml.match(/<GenerateTokenResult>(.*?)<\/GenerateTokenResult>/i);
+    const token = tokenMatch ? tokenMatch[1] : null;
+
+    if (!token || tokenXml.includes('faultstring') || tokenXml.includes('Errore')) {
+      const fault = tokenXml.match(/<faultstring>(.*?)<\/faultstring>/i)?.[1] || 'Credenziali non riconosciute dal portale ministeriale Alloggiati Web.';
+      return { success: false, message: `Errore Questura Alloggiati Web: ${fault}` };
+    }
+
+    return {
+      success: true,
+      message: 'Connessione al portale ministeriale della Polizia di Stato riuscita! Credenziali Web Service convalidate.'
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Impossibile raggiungere i server della Polizia di Stato: ${err.message}`
+    };
+  }
+}
+
