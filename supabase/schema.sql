@@ -83,3 +83,27 @@ create policy "Allow service_role full access on digital_key_logs"
   to service_role
   using (true)
   with check (true);
+
+-- Table for guest activity logs
+create table if not exists public.guest_activity_logs (
+  id uuid default gen_random_uuid() primary key,
+  timestamp timestamptz not null default now(),
+  guest_pass_id text references public.guest_passes(id) on delete set null,
+  guest_name text not null,
+  action_type text not null,
+  details text not null,
+  ip_address text
+);
+
+create index if not exists guest_activity_logs_guest_pass_id_idx on public.guest_activity_logs(guest_pass_id);
+
+alter table public.guest_activity_logs enable row level security;
+revoke all on public.guest_activity_logs from anon, authenticated;
+
+-- Allow service_role to perform any operation on guest_activity_logs
+create policy "Allow service_role full access on guest_activity_logs"
+  on public.guest_activity_logs
+  for all
+  to service_role
+  using (true)
+  with check (true);

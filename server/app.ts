@@ -13,7 +13,7 @@ import {
   parseIReservationEmail,
   isDigitalKeyActive
 } from '../src/services/guestPassService.js';
-import { GuestPass } from '../src/types.js';
+import { GuestPass, GuestActivityLog } from '../src/types.js';
 import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
 import {
   getHomeAssistantConfig,
@@ -41,7 +41,7 @@ import {
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument, logGuestActivity, loadGuestActivityLogs } from './supabaseStorage.js';
 import {
   getChannelManagerConfig,
   updateChannelManagerConfig,
@@ -180,6 +180,38 @@ async function hydrateLogsFromSupabase(force = false) {
 
 function persistLogs() {
   safeWriteFileSync(LOGS_REL_PATH, JSON.stringify(serverLogs, null, 2));
+}
+
+const GUEST_ACTIVITY_REL_PATH = path.join('data', 'guest_activity_logs.json');
+const defaultActivityLogs: GuestActivityLog[] = [];
+const serverActivityLogs: GuestActivityLog[] = safeReadJsonSync<GuestActivityLog[]>(GUEST_ACTIVITY_REL_PATH, defaultActivityLogs);
+
+let activityLogsHydration: Promise<void> | null = null;
+let lastActivityLogsHydrationTime = 0;
+
+async function hydrateActivityLogsFromSupabase(force = false) {
+  const now = Date.now();
+  if (!force && activityLogsHydration && (now - lastActivityLogsHydrationTime < CACHE_TTL_MS)) {
+    return activityLogsHydration;
+  }
+  activityLogsHydration = (async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const remoteActivityLogs = await loadGuestActivityLogs();
+      if (remoteActivityLogs) {
+        serverActivityLogs.splice(0, serverActivityLogs.length, ...remoteActivityLogs);
+        lastActivityLogsHydrationTime = Date.now();
+      }
+    } catch (error) {
+      activityLogsHydration = null;
+      console.error('Supabase guest activity logs load failed; keeping local fallback:', error);
+    }
+  })();
+  return activityLogsHydration;
+}
+
+function persistActivityLogs() {
+  safeWriteFileSync(GUEST_ACTIVITY_REL_PATH, JSON.stringify(serverActivityLogs, null, 2));
 }
 
 async function hydratePassesFromSupabase(force = false) {
@@ -501,6 +533,7 @@ export function createApp() {
   apiRouter.use(async (req, res, next) => {
     await hydratePassesFromSupabase();
     await hydrateLogsFromSupabase();
+    await hydrateActivityLogsFromSupabase();
     await hydrateDeletedRefsFromSupabase();
     await hydrateHomeAssistantConfig();
     if (
@@ -510,6 +543,7 @@ export function createApp() {
       (req.method === 'GET' && req.path === '/property/config') ||
       req.path.startsWith('/auth/') ||
       req.path === '/guest/pass' ||
+      (req.path === '/guest/activity' && req.method === 'POST') ||
       req.path === '/lock/status' ||
       req.path === '/aurora-ai/chat' ||
       (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics'))
@@ -625,6 +659,27 @@ export function createApp() {
       // Aggiorna i dati del pass
       pass.documentsUploaded = true;
       pass.documentsData = documentsData;
+
+      // Registra l'attività
+      try {
+        const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+        const logEntry: GuestActivityLog = {
+          id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 15),
+          timestamp: new Date().toISOString(),
+          guestPassId: pass.id,
+          guestName: `${pass.guestName} ${pass.guestSurname || ''}`.trim(),
+          actionType: 'feature_use',
+          details: `Caricati ${Array.isArray(documentsData) ? documentsData.length : 0} documenti d'identità per check-in online`,
+          ipAddress: clientIp
+        };
+        serverActivityLogs.unshift(logEntry);
+        persistActivityLogs();
+        if (isSupabaseConfigured()) {
+          await logGuestActivity(logEntry);
+        }
+      } catch (logErr) {
+        console.warn('Errore durante la registrazione automatica dell\'attività di caricamento documenti:', logErr);
+      }
 
       // Persisti i cambiamenti localmente e su Supabase
       persistPasses();
@@ -990,6 +1045,43 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       success: true,
       logs: serverLogs
     });
+  });
+
+  // Persistent Guest Activity Logs (requires host authorization for GET, POST is public)
+  apiRouter.get('/guest/activity', (req, res) => {
+    res.json({
+      success: true,
+      logs: serverActivityLogs
+    });
+  });
+
+  apiRouter.post('/guest/activity', async (req, res) => {
+    try {
+      const { guestPassId, actionType, details, guestName } = req.body;
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
+      
+      const logEntry: GuestActivityLog = {
+        id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 15),
+        timestamp: new Date().toISOString(),
+        guestPassId: guestPassId || null,
+        guestName: guestName || 'Ospite Anonimo',
+        actionType: actionType || 'generic',
+        details: details || '',
+        ipAddress: clientIp
+      };
+      
+      serverActivityLogs.unshift(logEntry);
+      persistActivityLogs();
+      
+      if (isSupabaseConfigured()) {
+        await logGuestActivity(logEntry);
+      }
+      
+      res.json({ success: true, log: logEntry });
+    } catch (error: any) {
+      console.error('Error logging guest activity:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
   });
 
   // Real-time Lock physical status

@@ -156,3 +156,13 @@ export interface DigitalKeyLog {
   source: string;
   ipAddress?: string;
 }
+
+export interface GuestActivityLog {
+  id?: string;
+  timestamp: string; // ISO String
+  guestPassId: string | null;
+  guestName: string;
+  actionType: 'pwa_open' | 'page_view' | 'feature_use' | string;
+  details: string;
+  ipAddress?: string;
+}

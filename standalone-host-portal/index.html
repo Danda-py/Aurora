@@ -1877,6 +1877,76 @@
     </div>
   </div>
 
+  <!-- Modal: Scheda Attività Ospite -->
+  <div id="modalGuestActivity" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+    <div class="apple-card max-w-2xl w-full p-6 space-y-4 border-white/20 my-8">
+      <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-[#ff9f0a]"></i>
+          <span>Scheda Attività Ospite</span>
+        </h3>
+        <button type="button" id="btnCloseActivityModal" class="p-1.5 rounded-lg hover:bg-white/10 text-[#86868b] hover:text-white cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-1.5 pb-2 border-b border-white/[0.04]">
+        <h4 id="activityGuestName" class="text-lg font-bold text-white">Caricamento...</h4>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#86868b] font-mono">
+          <span id="activityStayDates">Soggiorno: ...</span>
+          <span>•</span>
+          <span id="activityRef">Rif: ...</span>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-white/[0.03] rounded-xl p-3.5 border border-white/[0.06] flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+            <i data-lucide="smartphone" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold text-[#86868b] tracking-wider block">Aperture PWA</span>
+            <span id="activityPwaOpens" class="text-xl font-extrabold text-white font-mono">0</span>
+          </div>
+        </div>
+
+        <div class="bg-white/[0.03] rounded-xl p-3.5 border border-white/[0.06] flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-[#30d158]/10 text-[#30d158] flex items-center justify-center shrink-0">
+            <i data-lucide="activity" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold text-[#86868b] tracking-wider block">Azioni Totali</span>
+            <span id="activityTotalActions" class="text-xl font-extrabold text-white font-mono">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Used Section -->
+      <div class="space-y-2">
+        <h5 class="text-[11px] uppercase font-bold text-[#86868b] tracking-wider">Funzioni & Pagine Più Utilizzate</h5>
+        <div id="activityMostUsed" class="flex flex-wrap gap-2 py-1">
+          <!-- Dyn list -->
+          <span class="text-xs text-[#86868b] italic">Nessun dato registrato.</span>
+        </div>
+      </div>
+
+      <!-- Scrollable Timeline -->
+      <div class="space-y-2.5">
+        <h5 class="text-[11px] uppercase font-bold text-[#86868b] tracking-wider">Cronologia Completa Attività</h5>
+        <div id="activityTimeline" class="max-h-64 overflow-y-auto space-y-2 pr-1.5 scrollbar-thin scrollbar-thumb-white/10 no-scrollbar">
+          <div class="text-center py-8 text-xs text-[#86868b] italic">Caricamento in corso...</div>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-white/[0.08]">
+        <button type="button" id="btnOkActivityModal" class="btn-apple-secondary px-5 py-2 text-xs font-semibold cursor-pointer">
+          Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Apple Minimalist Footer -->
   <footer class="mt-auto border-t border-white/[0.06] bg-black py-6 px-4 text-center text-xs text-[#86868b]">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">

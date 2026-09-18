@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken, getActiveGuestPass } from '../../services/guestPassService';
+import { logActivity } from '../../services/activityService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { ConciergeHome } from './ConciergeHome';
 import { AuroraAiChat } from './AuroraAiChat';
@@ -60,6 +61,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       const active = getActiveGuestPass();
       if (active) {
         setPass(active);
+        logActivity('pwa_open', 'PWA Welcome Book riaperto da cache', active.id, `${active.guestName} ${active.guestSurname || ''}`.trim());
       }
       setIsPassChecking(false);
       return;
@@ -68,9 +70,12 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       if (currentPass) {
         setPass(currentPass);
         setCurrentPage('grid_menu');
+        logActivity('pwa_open', 'PWA Welcome Book aperto via link', currentPass.id, `${currentPass.guestName} ${currentPass.guestSurname || ''}`.trim());
         if (typeof window !== 'undefined') {
           window.history.replaceState({ page: 'grid_menu' }, '');
         }
+      } else {
+        logActivity('pwa_open', 'Tentativo apertura PWA con token non valido o scaduto');
       }
       setIsPassChecking(false);
     });
@@ -119,6 +124,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       window.history.pushState({ page }, '');
     }
     setCurrentPage(page);
+    logActivity('page_view', `Visualizzata pagina: ${page}`, pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
   };
 
   // Expiration check: If pass is expired and user hasn't chosen to view public guide
@@ -171,7 +177,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
             onSelectLanguage={setLanguage}
             onNavigate={handleNavigate}
             pass={pass}
-            onOpenSmartLock={() => setIsSmartLockOpen(true)}
+            onOpenSmartLock={() => {
+              setIsSmartLockOpen(true);
+              logActivity('feature_use', 'Aperto pannello sblocco serratura smart', pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
+            }}
           />
         )}
 
@@ -313,6 +322,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
             )}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => logActivity('feature_use', "Contattato l'Host Nino su WhatsApp", pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined)}
             className="w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chatta con l'Host Nino su WhatsApp"
             aria-label="Chatta con l'Host Nino su WhatsApp"
@@ -329,7 +339,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           {/* AI Message Chat */}
           <button
             type="button"
-            onClick={() => setIsAuroraAiOpen(true)}
+            onClick={() => {
+              setIsAuroraAiOpen(true);
+              logActivity('feature_use', 'Aperta Chat AI Concierge', pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
+            }}
             className="w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-900 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chat AI Concierge"
             aria-label="Apri Chat AI Concierge"

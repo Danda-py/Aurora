@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import type { GuestPass, DigitalKeyLog } from '../src/types.js';
+import type { GuestPass, DigitalKeyLog, GuestActivityLog } from '../src/types.js';
 
 const baseUrl = (
   process.env.SUPABASE_URL || 
@@ -145,6 +145,45 @@ export async function loadDigitalKeyLogs(): Promise<DigitalKeyLog[] | null> {
     }));
   } catch (error) {
     console.error('Error loading digital key logs from Supabase:', error);
+    return null;
+  }
+}
+
+export async function logGuestActivity(log: Omit<GuestActivityLog, 'id'>): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await request('guest_activity_logs', {
+      method: 'POST',
+      body: JSON.stringify({
+        guest_pass_id: log.guestPassId,
+        guest_name: log.guestName,
+        action_type: log.actionType,
+        details: log.details,
+        ip_address: log.ipAddress,
+        timestamp: log.timestamp
+      })
+    });
+  } catch (error) {
+    console.error('Error saving guest activity log to Supabase:', error);
+  }
+}
+
+export async function loadGuestActivityLogs(): Promise<GuestActivityLog[] | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const rows = await request<any[]>('guest_activity_logs?select=*&order=timestamp.desc');
+    if (!Array.isArray(rows)) return [];
+    return rows.map(row => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      guestPassId: row.guest_pass_id,
+      guestName: row.guest_name,
+      actionType: row.action_type,
+      details: row.details,
+      ipAddress: row.ip_address
+    }));
+  } catch (error) {
+    console.error('Error loading guest activity logs from Supabase:', error);
     return null;
   }
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Bot, LoaderCircle, Paperclip, Send, X } from 'lucide-react';
 import { GuestPass, Language } from '../../types';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
+import { logActivity } from '../../services/activityService';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -91,6 +92,7 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass, language 
     setIsSending(true);
 
     try {
+      logActivity('feature_use', `Inviata domanda a Aurora AI Chat: "${text.substring(0, 60)}${text.length > 60 ? '...' : ''}"${imageToSend ? ' (con immagine allegata)' : ''}`, pass?.id);
       const response = await fetch('/api/aurora-ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -1060,6 +1060,12 @@ function filterAndRenderPasses(filterQuery) {
             </a>
           ` : ''}
 
+          <!-- Guest Activity Button -->
+          <button type="button" data-pass-action="activity" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-[#ff9f0a]" title="Visualizza Scheda Attività">
+            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+            <span>Attività</span>
+          </button>
+
           <!-- Edit Reservation Details -->
           <button type="button" data-pass-action="edit" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-[#0071e3]" title="Modifica prenotazione e dettagli">
             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -1086,6 +1092,7 @@ function filterAndRenderPasses(filterQuery) {
       if (button.dataset.passAction === 'edit') openEditReservationModal(pass.id);
       if (button.dataset.passAction === 'delete') deletePass(pass.id, pass.guestName || 'questo ospite');
       if (button.dataset.passAction === 'confirm') toggleCheckinConfirmation(pass);
+      if (button.dataset.passAction === 'activity') openGuestActivityModal(pass);
     });
   });
 
@@ -1107,6 +1114,56 @@ window.copyPassLink = async function(link, btn) {
     showToast('Impossibile copiare il link', 'error');
   }
 };
+
+window.openGuestActivityModal = async function(pass) {
+  const modal = document.getElementById('modalGuestActivity');
+  if (!modal) return;
+
+  document.getElementById('activityGuestName').textContent = `${pass.guestName} ${pass.guestSurname || ''}`.trim();
+  document.getElementById('activityStayDates').textContent = `Soggiorno: Dal ${convertDateToItalian(pass.checkInDate)} Al ${convertDateToItalian(pass.checkOutDate)}`;
+  document.getElementById('activityRef').textContent = `Rif: ${pass.bookingRef || 'N/A'}`;
+
+  document.getElementById('activityTimeline').innerHTML = `
+    <div class="text-center py-8 text-xs text-[#86868b] flex flex-col items-center justify-center gap-2">
+      <div class="animate-spin rounded-full h-5 w-5 border border-[#ff9f0a] border-t-transparent"></div>
+      <span>Caricamento attività...</span>
+    </div>
+  `;
+  document.getElementById('activityMostUsed').innerHTML = `<span class="text-xs text-[#86868b] italic">Calcolo...</span>`;
+  document.getElementById('activityPwaOpens').textContent = '...';
+  document.getElementById('activityTotalActions').textContent = '...';
+
+  modal.classList.remove('hidden');
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/guest/activity`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (data.success && Array.isArray(data.logs)) {
+      renderActivityDashboard(pass, data.logs);
+    } else {
+      throw new Error('Dati non validi dal server.');
+    }
+  } catch (err) {
+    document.getElementById('activityTimeline').innerHTML = `
+      <div class="text-center py-8 text-xs text-[#ff453a] font-semibold">Impossibile caricare l'attività (${err.message}).</div>
+    `;
+  }
+
+  renderIcons();
+};
+
+document.getElementById('btnCloseActivityModal')?.addEventListener('click', () => {
+  document.getElementById('modalGuestActivity')?.classList.add('hidden');
+});
+document.getElementById('btnOkActivityModal')?.addEventListener('click', () => {
+  document.getElementById('modalGuestActivity')?.classList.add('hidden');
+});
+document.getElementById('modalGuestActivity')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.add('hidden');
+  }
+});
 
 window.deletePass = async function(id, guestName) {
   if (!confirm(`Sei sicuro di voler revocare ed eliminare il pass di ${guestName}? L'ospite non potrà più accedere.`)) {
