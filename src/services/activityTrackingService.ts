@@ -21,7 +21,8 @@ export type ActivityAction =
   | 'smart_lock_open_attempt'
   | 'smart_lock_open_success'
   | 'smart_lock_open_error'
-  | 'document_upload';
+  | 'document_upload'
+  | 'button_click';
 
 const SESSION_KEY = 'aurora_activity_session_id_v1';
 
@@ -75,4 +76,59 @@ export function trackActivity(
   } catch {
     // Tracking must never break the guest experience
   }
+}
+
+/**
+ * Best-effort human-readable label for whatever element was clicked, used by the
+ * global click tracker below. Prefers an explicit `data-track-label`, then
+ * standard accessible names, then falls back to the element's visible text.
+ */
+function getClickLabel(target: EventTarget | null): string | null {
+  if (!(target instanceof Element)) return null;
+
+  const explicit = target.closest('[data-track-label]') as HTMLElement | null;
+  if (explicit?.dataset.trackLabel) return explicit.dataset.trackLabel.trim().slice(0, 80);
+
+  const interactive = target.closest('button, a, [role="button"], input[type="submit"], input[type="button"]') as HTMLElement | null;
+  if (!interactive) return null;
+
+  const aria = interactive.getAttribute('aria-label');
+  if (aria && aria.trim()) return aria.trim().slice(0, 80);
+
+  const title = interactive.getAttribute('title');
+  if (title && title.trim()) return title.trim().slice(0, 80);
+
+  const text = interactive.textContent?.replace(/\s+/g, ' ').trim();
+  if (text) return text.slice(0, 80);
+
+  const tag = interactive.tagName.toLowerCase();
+  return `elemento ${tag}`;
+}
+
+/**
+ * Attaches a single document-wide click listener that logs EVERY click on a
+ * button, link or button-like element, regardless of whether that specific
+ * control has its own dedicated trackActivity() call elsewhere. This guarantees
+ * the host's activity card shows a complete trail of "whatever button was
+ * clicked", even for controls that aren't individually instrumented.
+ *
+ * Returns a cleanup function to remove the listener (call from a useEffect).
+ */
+export function attachGlobalClickTracking(
+  pass: Pick<GuestPass, 'id' | 'token' | 'guestName' | 'guestSurname'> | null | undefined,
+  getCurrentPage: () => string
+): () => void {
+  if (typeof document === 'undefined') return () => {};
+
+  const handleClick = (event: MouseEvent) => {
+    if (!pass) return;
+    const label = getClickLabel(event.target);
+    if (!label) return;
+    const page = getCurrentPage();
+    trackActivity(pass, 'button_click', page ? `[${page}] ${label}` : label);
+  };
+
+  // Capture phase so this fires even if a specific handler stops propagation.
+  document.addEventListener('click', handleClick, true);
+  return () => document.removeEventListener('click', handleClick, true);
 }

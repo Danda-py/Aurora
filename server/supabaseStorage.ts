@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import type { GuestPass, DigitalKeyLog } from '../src/types.js';
+import type { GuestPass, DigitalKeyLog, GuestActivityEvent } from '../src/types.js';
 
 const baseUrl = (
   process.env.SUPABASE_URL || 
@@ -145,6 +145,52 @@ export async function loadDigitalKeyLogs(): Promise<DigitalKeyLog[] | null> {
     }));
   } catch (error) {
     console.error('Error loading digital key logs from Supabase:', error);
+    return null;
+  }
+}
+
+// Guest in-app activity (page views, button clicks, feature usage). Persisted to
+// Supabase so it survives across serverless invocations / cold starts - a local
+// JSON file on disk is NOT reliable in production (e.g. on Vercel the filesystem
+// is ephemeral and resets between requests, which is why entries seemed to
+// "disappear" after a refresh when only local-file storage was used).
+export async function logGuestActivity(event: GuestActivityEvent): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await request('guest_activity_log', {
+      method: 'POST',
+      body: JSON.stringify({
+        id: event.id,
+        pass_id: event.passId,
+        guest_name: event.guestName,
+        action: event.action,
+        detail: event.detail || null,
+        session_id: event.sessionId || null,
+        timestamp: event.timestamp
+      })
+    });
+  } catch (error) {
+    console.error('Error saving guest activity event to Supabase:', error);
+  }
+}
+
+export async function loadGuestActivity(passId?: string): Promise<GuestActivityEvent[] | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const filter = passId ? `&pass_id=eq.${encodeURIComponent(passId)}` : '';
+    const rows = await request<any[]>(`guest_activity_log?select=*${filter}&order=timestamp.desc&limit=5000`);
+    if (!Array.isArray(rows)) return [];
+    return rows.map(row => ({
+      id: row.id,
+      passId: row.pass_id,
+      guestName: row.guest_name,
+      action: row.action,
+      detail: row.detail || undefined,
+      sessionId: row.session_id || undefined,
+      timestamp: row.timestamp
+    }));
+  } catch (error) {
+    console.error('Error loading guest activity from Supabase:', error);
     return null;
   }
 }

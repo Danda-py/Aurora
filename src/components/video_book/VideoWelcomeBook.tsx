@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken, getActiveGuestPass } from '../../services/guestPassService';
-import { trackActivity } from '../../services/activityTrackingService';
+import { trackActivity, attachGlobalClickTracking } from '../../services/activityTrackingService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { ConciergeHome } from './ConciergeHome';
 import { AuroraAiChat } from './AuroraAiChat';
@@ -52,6 +52,21 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
   const [bypassExpired, setBypassExpired] = useState(false);
   const homeScrollPosition = useRef(0);
   const hasTrackedAppOpen = useRef(false);
+  const currentPageRef = useRef<WelcomePage>(currentPage);
+
+  // Keep a ref in sync with the current page so the global click tracker below
+  // (attached once) always reports clicks against the page they actually happened on.
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  // Track EVERY click on a button/link anywhere in the app, in addition to the
+  // specific semantic events (wifi_copy, smart_lock_open_success, ...) tracked
+  // elsewhere - so the host's activity card always shows a full, complete trail.
+  useEffect(() => {
+    if (!pass) return;
+    return attachGlobalClickTracking(pass, () => currentPageRef.current);
+  }, [pass?.id]);
 
   // Track a single "app_open" event per session, once the guest pass is known
   useEffect(() => {

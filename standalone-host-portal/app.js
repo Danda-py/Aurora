@@ -1319,7 +1319,8 @@ const ACTIVITY_ACTION_LABELS = {
   smart_lock_open_attempt: { label: 'Tentativo apertura porta', icon: 'key' },
   smart_lock_open_success: { label: 'Porta aperta con successo', icon: 'unlock' },
   smart_lock_open_error: { label: 'Errore apertura porta', icon: 'alert-circle' },
-  document_upload: { label: 'Caricamento documenti', icon: 'file-check' }
+  document_upload: { label: 'Caricamento documenti', icon: 'file-check' },
+  button_click: { label: 'Click', icon: 'mouse-pointer-click' }
 };
 
 function getActivityActionMeta(action) {
@@ -1470,6 +1471,9 @@ window.openGuestActivityModal = async function(pass) {
         <div class="space-y-1 max-h-64 overflow-y-auto pr-1">
           ${events.slice(0, 300).map(e => {
             const meta = getActivityActionMeta(e.action);
+            const isGenericClick = e.action === 'button_click';
+            const mainText = isGenericClick ? (e.detail || meta.label) : meta.label;
+            const subText = !isGenericClick && e.detail ? ` <span class="text-[#86868b]">· ${escapeHtml(e.detail)}</span>` : '';
             return `
               <div class="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.03]">
                 <div class="w-6 h-6 rounded-lg bg-white/[0.05] border border-white/10 text-[#86868b] flex items-center justify-center shrink-0">
@@ -1477,7 +1481,7 @@ window.openGuestActivityModal = async function(pass) {
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="text-xs text-white truncate">
-                    ${escapeHtml(meta.label)}${e.detail ? ` <span class="text-[#86868b]">· ${escapeHtml(e.detail)}</span>` : ''}
+                    ${escapeHtml(mainText)}${subText}
                   </p>
                 </div>
                 <span class="text-[10px] text-[#86868b] font-mono shrink-0">${formatActivityTimestamp(e.timestamp)}</span>

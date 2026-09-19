@@ -13,7 +13,7 @@ import {
   parseIReservationEmail,
   isDigitalKeyActive
 } from '../src/services/guestPassService.js';
-import { GuestPass } from '../src/types.js';
+import { GuestPass, GuestActivityEvent } from '../src/types.js';
 import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
 import {
   getHomeAssistantConfig,
@@ -41,7 +41,7 @@ import {
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument, logGuestActivity, loadGuestActivity } from './supabaseStorage.js';
 import {
   getChannelManagerConfig,
   updateChannelManagerConfig,
@@ -183,19 +183,12 @@ function persistLogs() {
   safeWriteFileSync(LOGS_REL_PATH, JSON.stringify(serverLogs, null, 2));
 }
 
-// In-app guest activity tracking: every page view / feature used by a guest is
-// recorded here so the host can see, per booking, how the guest is using the app
-// (number of opens, most-used features, full chronological activity trail).
-interface GuestActivityEvent {
-  id: string;
-  passId: string;
-  guestName: string;
-  action: string;
-  detail?: string;
-  sessionId?: string;
-  timestamp: string;
-}
-
+// In-app guest activity tracking: every page view / button click / feature used by
+// a guest is recorded here so the host can see, per booking, how the guest is
+// using the app (number of opens, most-used features, full click-by-click trail).
+// Persisted primarily to Supabase (see logGuestActivity/loadGuestActivity below) so
+// it survives across serverless invocations; the local JSON file is kept only as a
+// best-effort fallback for local/offline development without Supabase configured.
 const MAX_ACTIVITY_ENTRIES = 20000;
 const serverActivity: GuestActivityEvent[] = safeReadJsonSync<GuestActivityEvent[]>(ACTIVITY_REL_PATH, []);
 
@@ -207,15 +200,20 @@ function persistActivity() {
   safeWriteFileSync(ACTIVITY_REL_PATH, JSON.stringify(serverActivity, null, 2));
 }
 
-function buildActivitySummary(passId: string) {
-  const events = serverActivity
-    .filter(e => e.passId === passId)
-    .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)); // newest first
+// Actions that represent a distinct, named feature (used to rank "most used features").
+// Generic UI click events ('button_click') are excluded from this ranking - they are
+// still fully preserved, with their descriptive label, in the raw chronological trail.
+const GENERIC_CLICK_ACTION = 'button_click';
+
+function buildActivitySummary(events: GuestActivityEvent[]) {
+  const sorted = [...events].sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)); // newest first
 
   const actionCounts: Record<string, number> = {};
   const sessionIds = new Set<string>();
-  for (const e of events) {
-    actionCounts[e.action] = (actionCounts[e.action] || 0) + 1;
+  for (const e of sorted) {
+    if (e.action !== GENERIC_CLICK_ACTION) {
+      actionCounts[e.action] = (actionCounts[e.action] || 0) + 1;
+    }
     if (e.sessionId) sessionIds.add(e.sessionId);
   }
 
@@ -224,14 +222,15 @@ function buildActivitySummary(passId: string) {
     .map(([action, count]) => ({ action, count }));
 
   return {
-    totalEvents: events.length,
+    totalEvents: sorted.length,
     totalOpens: actionCounts['app_open'] || sessionIds.size,
     uniqueSessions: sessionIds.size,
-    lastActivityAt: events[0]?.timestamp || null,
+    lastActivityAt: sorted[0]?.timestamp || null,
     topFeatures,
-    events
+    events: sorted
   };
 }
+
 
 async function hydratePassesFromSupabase(force = false) {
   const now = Date.now();
@@ -655,9 +654,11 @@ export function createApp() {
     res.json({ success: true, pass });
   });
 
-  // Guest-side activity tracking: called silently by the app (page views, feature
-  // usage, smart lock attempts, etc.) so the host can review it later per booking.
-  apiRouter.post('/guest/activity', (req, res) => {
+  // Guest-side activity tracking: called silently by the app (page views, button
+  // clicks, feature usage, smart lock attempts, etc.) so the host can review it
+  // later per booking. Persisted to Supabase (durable) with a local-file fallback
+  // for offline/local development where Supabase isn't configured.
+  apiRouter.post('/guest/activity', async (req, res) => {
     try {
       const { passId, token, guestName, action, detail, sessionId } = req.body || {};
       const pass = passId
@@ -682,6 +683,9 @@ export function createApp() {
 
       serverActivity.unshift(event);
       persistActivity();
+      if (isSupabaseConfigured()) {
+        await logGuestActivity(event);
+      }
       res.json({ success: true });
     } catch (err: any) {
       // Never let a tracking failure break the guest experience
@@ -689,15 +693,19 @@ export function createApp() {
     }
   });
 
-  // Host-only: aggregated activity card for a single guest pass (bookings menu)
-  apiRouter.get('/passes/:id/activity', (req, res) => {
+  // Host-only: aggregated activity card for a single guest pass (bookings menu).
+  // Reads from Supabase when configured (source of truth in production, since it
+  // survives across serverless invocations), falling back to the local file cache.
+  apiRouter.get('/passes/:id/activity', async (req, res) => {
     try {
       const pass = serverPasses.find(p => p.id === req.params.id);
       if (!pass) {
         res.status(404).json({ success: false, error: 'Pass non trovato.' });
         return;
       }
-      const summary = buildActivitySummary(pass.id);
+      const remoteEvents = isSupabaseConfigured() ? await loadGuestActivity(pass.id) : null;
+      const events = remoteEvents ?? serverActivity.filter(e => e.passId === pass.id);
+      const summary = buildActivitySummary(events);
       res.json({ success: true, ...summary });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

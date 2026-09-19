@@ -83,3 +83,32 @@ create policy "Allow service_role full access on digital_key_logs"
   to service_role
   using (true)
   with check (true);
+
+-- Table for in-app guest activity tracking (page views, button clicks, feature
+-- usage). Written and read only via the server's SUPABASE_SERVICE_ROLE_KEY, so
+-- it survives across serverless invocations (unlike a local JSON file on disk,
+-- which is reset/ephemeral in serverless deployments such as Vercel - this table
+-- is what fixes the "activity disappears after a refresh" issue).
+create table if not exists public.guest_activity_log (
+  id text primary key,
+  pass_id text references public.guest_passes(id) on delete cascade,
+  guest_name text not null,
+  action text not null,
+  detail text,
+  session_id text,
+  timestamp timestamptz not null default now()
+);
+
+create index if not exists guest_activity_log_pass_id_idx on public.guest_activity_log(pass_id);
+create index if not exists guest_activity_log_timestamp_idx on public.guest_activity_log(timestamp desc);
+
+alter table public.guest_activity_log enable row level security;
+revoke all on public.guest_activity_log from anon, authenticated;
+
+-- Allow service_role to perform any operation on guest_activity_log
+create policy "Allow service_role full access on guest_activity_log"
+  on public.guest_activity_log
+  for all
+  to service_role
+  using (true)
+  with check (true);

@@ -156,3 +156,16 @@ export interface DigitalKeyLog {
   source: string;
   ipAddress?: string;
 }
+
+// In-app guest activity tracking: every page view / button click / feature used by
+// a guest is recorded here so the host can see, per booking, how the guest is
+// using the app (number of opens, most-used features, full click-by-click trail).
+export interface GuestActivityEvent {
+  id: string;
+  passId: string;
+  guestName: string;
+  action: string;
+  detail?: string;
+  sessionId?: string;
+  timestamp: string; // ISO String
+}
