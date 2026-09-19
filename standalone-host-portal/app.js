@@ -1041,6 +1041,12 @@ function filterAndRenderPasses(filterQuery) {
             <span>Apri Porta</span>
           </button>
 
+          <!-- Guest In-App Activity Card -->
+          <button type="button" data-pass-action="activity" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer" title="Vedi attività dell'ospite nell'app (aperture, funzioni usate, cronologia)">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-[#0071e3]"></i>
+            <span>Attività</span>
+          </button>
+
           <!-- Copy Link -->
           <button type="button" data-pass-action="copy" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -1059,12 +1065,6 @@ function filterAndRenderPasses(filterQuery) {
               <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
             </a>
           ` : ''}
-
-          <!-- Guest Activity Button -->
-          <button type="button" data-pass-action="activity" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-[#ff9f0a]" title="Visualizza Scheda Attività">
-            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
-            <span>Attività</span>
-          </button>
 
           <!-- Edit Reservation Details -->
           <button type="button" data-pass-action="edit" data-pass-index="${index}" class="btn-apple-secondary px-3 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer text-[#0071e3]" title="Modifica prenotazione e dettagli">
@@ -1088,11 +1088,11 @@ function filterAndRenderPasses(filterQuery) {
       const passToken = pass.token || pass.id;
       const guestLink = `${window.location.origin}/?pass=${encodeURIComponent(passToken)}`;
       if (button.dataset.passAction === 'unlock') triggerDoorUnlock(pass.guestName || 'Host', pass.token);
+      if (button.dataset.passAction === 'activity') openGuestActivityModal(pass);
       if (button.dataset.passAction === 'copy') copyPassLink(guestLink, button);
       if (button.dataset.passAction === 'edit') openEditReservationModal(pass.id);
       if (button.dataset.passAction === 'delete') deletePass(pass.id, pass.guestName || 'questo ospite');
       if (button.dataset.passAction === 'confirm') toggleCheckinConfirmation(pass);
-      if (button.dataset.passAction === 'activity') openGuestActivityModal(pass);
     });
   });
 
@@ -1114,56 +1114,6 @@ window.copyPassLink = async function(link, btn) {
     showToast('Impossibile copiare il link', 'error');
   }
 };
-
-window.openGuestActivityModal = async function(pass) {
-  const modal = document.getElementById('modalGuestActivity');
-  if (!modal) return;
-
-  document.getElementById('activityGuestName').textContent = `${pass.guestName} ${pass.guestSurname || ''}`.trim();
-  document.getElementById('activityStayDates').textContent = `Soggiorno: Dal ${convertDateToItalian(pass.checkInDate)} Al ${convertDateToItalian(pass.checkOutDate)}`;
-  document.getElementById('activityRef').textContent = `Rif: ${pass.bookingRef || 'N/A'}`;
-
-  document.getElementById('activityTimeline').innerHTML = `
-    <div class="text-center py-8 text-xs text-[#86868b] flex flex-col items-center justify-center gap-2">
-      <div class="animate-spin rounded-full h-5 w-5 border border-[#ff9f0a] border-t-transparent"></div>
-      <span>Caricamento attività...</span>
-    </div>
-  `;
-  document.getElementById('activityMostUsed').innerHTML = `<span class="text-xs text-[#86868b] italic">Calcolo...</span>`;
-  document.getElementById('activityPwaOpens').textContent = '...';
-  document.getElementById('activityTotalActions').textContent = '...';
-
-  modal.classList.remove('hidden');
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/guest/activity`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    if (data.success && Array.isArray(data.logs)) {
-      renderActivityDashboard(pass, data.logs);
-    } else {
-      throw new Error('Dati non validi dal server.');
-    }
-  } catch (err) {
-    document.getElementById('activityTimeline').innerHTML = `
-      <div class="text-center py-8 text-xs text-[#ff453a] font-semibold">Impossibile caricare l'attività (${err.message}).</div>
-    `;
-  }
-
-  renderIcons();
-};
-
-document.getElementById('btnCloseActivityModal')?.addEventListener('click', () => {
-  document.getElementById('modalGuestActivity')?.classList.add('hidden');
-});
-document.getElementById('btnOkActivityModal')?.addEventListener('click', () => {
-  document.getElementById('modalGuestActivity')?.classList.add('hidden');
-});
-document.getElementById('modalGuestActivity')?.addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) {
-    e.currentTarget.classList.add('hidden');
-  }
-});
 
 window.deletePass = async function(id, guestName) {
   if (!confirm(`Sei sicuro di voler revocare ed eliminare il pass di ${guestName}? L'ospite non potrà più accedere.`)) {
@@ -1350,6 +1300,205 @@ function renderAutonomousReservations() {
 
   renderIcons();
 }
+
+// ---- Guest In-App Activity Card (host portal "Prenotazioni" menu) ----
+// Shows, per guest pass, how many times they opened the app, which features
+// they use the most, and a full chronological trail of everything they did
+// inside the guest app (pages visited, Wi-Fi copied, door unlock attempts, etc.)
+const ACTIVITY_ACTION_LABELS = {
+  app_open: { label: 'Apertura app', icon: 'smartphone' },
+  page_view: { label: 'Visita pagina', icon: 'file-text' },
+  language_change: { label: 'Cambio lingua', icon: 'languages' },
+  wifi_copy: { label: 'Copia password Wi-Fi', icon: 'wifi' },
+  wifi_qr_view: { label: 'Visualizza QR Wi-Fi', icon: 'qr-code' },
+  whatsapp_contact: { label: 'Contatto WhatsApp', icon: 'message-square' },
+  maps_open: { label: 'Apertura mappa/posizione', icon: 'map-pin' },
+  house_rules_view: { label: 'Regole della casa', icon: 'clipboard-list' },
+  booking_link_open: { label: 'Apertura link prenotazioni', icon: 'calendar' },
+  ai_chat_open: { label: 'Apertura Aurora AI', icon: 'sparkles' },
+  smart_lock_open_attempt: { label: 'Tentativo apertura porta', icon: 'key' },
+  smart_lock_open_success: { label: 'Porta aperta con successo', icon: 'unlock' },
+  smart_lock_open_error: { label: 'Errore apertura porta', icon: 'alert-circle' },
+  document_upload: { label: 'Caricamento documenti', icon: 'file-check' }
+};
+
+function getActivityActionMeta(action) {
+  return ACTIVITY_ACTION_LABELS[action] || { label: action, icon: 'circle' };
+}
+
+function formatActivityTimestamp(iso) {
+  try {
+    const date = new Date(iso);
+    return date.toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return iso || '';
+  }
+}
+
+function formatActivityRelative(iso) {
+  if (!iso) return 'Nessuna attività registrata';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Adesso';
+  if (mins < 60) return `${mins} min fa`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? 'ora' : 'ore'} fa`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? 'giorno' : 'giorni'} fa`;
+}
+
+function closeGuestActivityModal() {
+  const modal = document.getElementById('modalGuestActivity');
+  if (modal) modal.remove();
+}
+
+window.openGuestActivityModal = async function(pass) {
+  if (!pass || !pass.id) return;
+
+  // Remove any previously open instance, then mount a loading state immediately.
+  closeGuestActivityModal();
+  const guestFullName = `${pass.guestName || 'Ospite'} ${pass.guestSurname || ''}`.trim();
+
+  const modal = document.createElement('div');
+  modal.id = 'modalGuestActivity';
+  modal.className = 'fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md';
+  modal.innerHTML = `
+    <div class="relative w-full max-w-lg max-h-[85vh] bg-[#0e151e] rounded-3xl border border-white/10 text-slate-100 shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-white/[0.08] bg-[#090d13] shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-[#0071e3]/15 border border-[#0071e3]/30 text-[#0071e3] flex items-center justify-center shrink-0">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] uppercase tracking-widest text-[#86868b] font-mono">Attività in-app</p>
+            <h3 class="text-sm font-bold text-white truncate">${escapeHtml(guestFullName || 'Ospite')}</h3>
+          </div>
+        </div>
+        <button type="button" onclick="closeGuestActivityModal()" class="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition cursor-pointer shrink-0">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="guestActivityModalBody" class="p-5 space-y-4 overflow-y-auto">
+        <div class="text-center py-10 text-xs text-[#86868b]">
+          <i data-lucide="loader-2" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+          Caricamento attività...
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeGuestActivityModal();
+  });
+  renderIcons();
+
+  const body = document.getElementById('guestActivityModalBody');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/passes/${pass.id}/activity`, { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Impossibile caricare l\'attività.');
+    }
+
+    const totalOpens = data.totalOpens || 0;
+    const uniqueSessions = data.uniqueSessions || 0;
+    const lastActivityAt = data.lastActivityAt || null;
+    const topFeatures = Array.isArray(data.topFeatures) ? data.topFeatures : [];
+    const events = Array.isArray(data.events) ? data.events : [];
+    const maxCount = topFeatures.length > 0 ? topFeatures[0].count : 1;
+
+    if (events.length === 0) {
+      body.innerHTML = `
+        <div class="text-center py-10 space-y-2">
+          <i data-lucide="ghost" class="w-6 h-6 mx-auto text-[#86868b]"></i>
+          <p class="text-sm font-semibold text-white">Nessuna attività ancora registrata</p>
+          <p class="text-xs text-[#86868b]">L'ospite non ha ancora aperto l'app oppure la prenotazione è troppo recente.</p>
+        </div>
+      `;
+      renderIcons();
+      return;
+    }
+
+    body.innerHTML = `
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+          <p class="text-lg font-bold text-white">${totalOpens}</p>
+          <p class="text-[9px] uppercase tracking-wider text-[#86868b] font-mono mt-0.5">Aperture app</p>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+          <p class="text-lg font-bold text-white">${uniqueSessions}</p>
+          <p class="text-[9px] uppercase tracking-wider text-[#86868b] font-mono mt-0.5">Sessioni uniche</p>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+          <p class="text-[11px] font-bold text-white leading-tight mt-1">${formatActivityRelative(lastActivityAt)}</p>
+          <p class="text-[9px] uppercase tracking-wider text-[#86868b] font-mono mt-0.5">Ultima attività</p>
+        </div>
+      </div>
+
+      <!-- Most Used Features -->
+      <div class="space-y-2">
+        <p class="text-[10px] uppercase tracking-wider text-[#86868b] font-mono font-bold">Funzioni più usate</p>
+        <div class="space-y-1.5">
+          ${topFeatures.slice(0, 8).map(f => {
+            const meta = getActivityActionMeta(f.action);
+            const pct = Math.max(6, Math.round((f.count / maxCount) * 100));
+            return `
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                  <i data-lucide="${meta.icon}" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <span class="font-semibold text-white truncate">${escapeHtml(meta.label)}</span>
+                    <span class="text-[#86868b] font-mono shrink-0">${f.count}</span>
+                  </div>
+                  <div class="mt-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div class="h-full bg-[#0071e3] rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Full Chronological Activity Trail -->
+      <div class="space-y-2">
+        <p class="text-[10px] uppercase tracking-wider text-[#86868b] font-mono font-bold">Cronologia completa (${events.length} eventi)</p>
+        <div class="space-y-1 max-h-64 overflow-y-auto pr-1">
+          ${events.slice(0, 300).map(e => {
+            const meta = getActivityActionMeta(e.action);
+            return `
+              <div class="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.03]">
+                <div class="w-6 h-6 rounded-lg bg-white/[0.05] border border-white/10 text-[#86868b] flex items-center justify-center shrink-0">
+                  <i data-lucide="${meta.icon}" class="w-3 h-3"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs text-white truncate">
+                    ${escapeHtml(meta.label)}${e.detail ? ` <span class="text-[#86868b]">· ${escapeHtml(e.detail)}</span>` : ''}
+                  </p>
+                </div>
+                <span class="text-[10px] text-[#86868b] font-mono shrink-0">${formatActivityTimestamp(e.timestamp)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    renderIcons();
+  } catch (err) {
+    body.innerHTML = `
+      <div class="text-center py-10 space-y-2">
+        <i data-lucide="alert-circle" class="w-6 h-6 mx-auto text-[#ff453a]"></i>
+        <p class="text-sm font-semibold text-white">Impossibile caricare l'attività</p>
+        <p class="text-xs text-[#86868b]">${escapeHtml(err.message || 'Errore sconosciuto')}</p>
+      </div>
+    `;
+    renderIcons();
+  }
+};
 
 function openEditReservationModal(passId) {
   const modal = document.getElementById('modalEditReservation');

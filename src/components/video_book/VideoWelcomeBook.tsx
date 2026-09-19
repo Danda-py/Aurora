@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken, getActiveGuestPass } from '../../services/guestPassService';
-import { logActivity } from '../../services/activityService';
+import { trackActivity } from '../../services/activityTrackingService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
 import { ConciergeHome } from './ConciergeHome';
 import { AuroraAiChat } from './AuroraAiChat';
@@ -51,6 +51,15 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
   const [isAuroraAiOpen, setIsAuroraAiOpen] = useState(false);
   const [bypassExpired, setBypassExpired] = useState(false);
   const homeScrollPosition = useRef(0);
+  const hasTrackedAppOpen = useRef(false);
+
+  // Track a single "app_open" event per session, once the guest pass is known
+  useEffect(() => {
+    if (pass && !hasTrackedAppOpen.current) {
+      hasTrackedAppOpen.current = true;
+      trackActivity(pass, 'app_open');
+    }
+  }, [pass]);
 
   // If a pass token is present, validate it
   useEffect(() => {
@@ -61,7 +70,6 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       const active = getActiveGuestPass();
       if (active) {
         setPass(active);
-        logActivity('pwa_open', 'PWA Welcome Book riaperto da cache', active.id, `${active.guestName} ${active.guestSurname || ''}`.trim());
       }
       setIsPassChecking(false);
       return;
@@ -70,12 +78,9 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       if (currentPass) {
         setPass(currentPass);
         setCurrentPage('grid_menu');
-        logActivity('pwa_open', 'PWA Welcome Book aperto via link', currentPass.id, `${currentPass.guestName} ${currentPass.guestSurname || ''}`.trim());
         if (typeof window !== 'undefined') {
           window.history.replaceState({ page: 'grid_menu' }, '');
         }
-      } else {
-        logActivity('pwa_open', 'Tentativo apertura PWA con token non valido o scaduto');
       }
       setIsPassChecking(false);
     });
@@ -104,10 +109,22 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
 
   const handleLanguageSelect = (lang: Language) => {
     setLanguage(lang);
+    trackActivity(pass, 'language_change', lang);
     setCurrentPage('grid_menu');
     if (typeof window !== 'undefined') {
       window.history.replaceState({ page: 'grid_menu' }, '');
     }
+  };
+
+  // Every language switch from anywhere in the app is tracked for the host's activity card
+  const trackedSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    trackActivity(pass, 'language_change', lang);
+  };
+
+  const handleOpenSmartLock = () => {
+    trackActivity(pass, 'smart_lock_open_attempt');
+    setIsSmartLockOpen(true);
   };
 
   const handleBackToMenu = () => {
@@ -124,7 +141,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
       window.history.pushState({ page }, '');
     }
     setCurrentPage(page);
-    logActivity('page_view', `Visualizzata pagina: ${page}`, pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
+    trackActivity(pass, 'page_view', page);
   };
 
   // Expiration check: If pass is expired and user hasn't chosen to view public guide
@@ -174,13 +191,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
         {currentPage === 'grid_menu' && (
           <ConciergeHome
             language={language}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
             onNavigate={handleNavigate}
             pass={pass}
-            onOpenSmartLock={() => {
-              setIsSmartLockOpen(true);
-              logActivity('feature_use', 'Aperto pannello sblocco serratura smart', pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
-            }}
+            onOpenSmartLock={handleOpenSmartLock}
           />
         )}
 
@@ -188,7 +202,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <BenvenutoPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
             pass={pass}
           />
         )}
@@ -197,9 +211,9 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <CheckinPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
             pass={pass}
-            onOpenSmartLock={() => setIsSmartLockOpen(true)}
+            onOpenSmartLock={handleOpenSmartLock}
             onUpdatePass={(updatedPass) => setPass(updatedPass)}
           />
         )}
@@ -208,7 +222,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <WifiPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -216,7 +230,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <RegolePage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -224,7 +238,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <PosizionePage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -232,7 +246,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <TrasportiPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -240,7 +254,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <ServiziPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -248,7 +262,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <AttivitaPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -256,7 +270,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <RistorantiPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -264,7 +278,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <BarClubPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -272,7 +286,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <ShoppingPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -280,7 +294,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <InformazioniPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -288,7 +302,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <EmergenzaPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
 
@@ -296,7 +310,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <CheckoutPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
             pass={pass}
           />
         )}
@@ -305,7 +319,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           <ContattiPage
             language={language}
             onBackToMenu={handleBackToMenu}
-            onSelectLanguage={setLanguage}
+            onSelectLanguage={trackedSetLanguage}
           />
         )}
       </main>
@@ -322,7 +336,6 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => logActivity('feature_use', "Contattato l'Host Nino su WhatsApp", pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined)}
             className="w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chatta con l'Host Nino su WhatsApp"
             aria-label="Chatta con l'Host Nino su WhatsApp"
@@ -339,10 +352,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
           {/* AI Message Chat */}
           <button
             type="button"
-            onClick={() => {
-              setIsAuroraAiOpen(true);
-              logActivity('feature_use', 'Aperta Chat AI Concierge', pass?.id, pass ? `${pass.guestName} ${pass.guestSurname || ''}`.trim() : undefined);
-            }}
+            onClick={() => { trackActivity(pass, 'ai_chat_open'); setIsAuroraAiOpen(true); }}
             className="w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-900 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chat AI Concierge"
             aria-label="Apri Chat AI Concierge"

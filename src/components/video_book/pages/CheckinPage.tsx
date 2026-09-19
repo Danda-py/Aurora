@@ -25,6 +25,7 @@ import {
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { checkCasaAuroraWifi } from '../../../services/wifiDetectionService';
 import { DocumentUploadForm } from '../../vip/DocumentUploadForm';
+import { trackActivity } from '../../../services/activityTrackingService';
 
 interface Props {
   language: Language;
@@ -133,6 +134,7 @@ export const CheckinPage: React.FC<Props> = ({
         triggerHaptic();
         setOpeningState('success');
         setStatusMessage(t.concierge.doorMessage.unlocked);
+        trackActivity(pass, 'smart_lock_open_success');
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
@@ -143,6 +145,7 @@ export const CheckinPage: React.FC<Props> = ({
     } catch (err: any) {
       setOpeningState('error');
       setStatusMessage(err.message || 'Errore di comunicazione. Verifica che Home Assistant sia online.');
+      trackActivity(pass, 'smart_lock_open_error', err?.message);
       setTimeout(() => {
         setOpeningState('idle');
       }, 6000);

@@ -13,7 +13,7 @@ import {
   parseIReservationEmail,
   isDigitalKeyActive
 } from '../src/services/guestPassService.js';
-import { GuestPass, GuestActivityLog } from '../src/types.js';
+import { GuestPass } from '../src/types.js';
 import { AMENITIES, APARTMENT_INFO, EXPERIENCES, NEARBY_PLACES } from '../src/data/apartmentData.js';
 import {
   getHomeAssistantConfig,
@@ -41,7 +41,7 @@ import {
 } from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
-import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument, logGuestActivity, loadGuestActivityLogs } from './supabaseStorage.js';
+import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument } from './supabaseStorage.js';
 import {
   getChannelManagerConfig,
   updateChannelManagerConfig,
@@ -70,6 +70,7 @@ import { extractClientIps } from './clientIpUtils.js';
 
 const PASSES_REL_PATH = path.join('data', 'passes.json');
 const LOGS_REL_PATH = path.join('data', 'digital_key_logs.json');
+const ACTIVITY_REL_PATH = path.join('data', 'guest_activity_log.json');
 
 const defaultPasses: GuestPass[] = [
   {
@@ -182,36 +183,54 @@ function persistLogs() {
   safeWriteFileSync(LOGS_REL_PATH, JSON.stringify(serverLogs, null, 2));
 }
 
-const GUEST_ACTIVITY_REL_PATH = path.join('data', 'guest_activity_logs.json');
-const defaultActivityLogs: GuestActivityLog[] = [];
-const serverActivityLogs: GuestActivityLog[] = safeReadJsonSync<GuestActivityLog[]>(GUEST_ACTIVITY_REL_PATH, defaultActivityLogs);
-
-let activityLogsHydration: Promise<void> | null = null;
-let lastActivityLogsHydrationTime = 0;
-
-async function hydrateActivityLogsFromSupabase(force = false) {
-  const now = Date.now();
-  if (!force && activityLogsHydration && (now - lastActivityLogsHydrationTime < CACHE_TTL_MS)) {
-    return activityLogsHydration;
-  }
-  activityLogsHydration = (async () => {
-    if (!isSupabaseConfigured()) return;
-    try {
-      const remoteActivityLogs = await loadGuestActivityLogs();
-      if (remoteActivityLogs) {
-        serverActivityLogs.splice(0, serverActivityLogs.length, ...remoteActivityLogs);
-        lastActivityLogsHydrationTime = Date.now();
-      }
-    } catch (error) {
-      activityLogsHydration = null;
-      console.error('Supabase guest activity logs load failed; keeping local fallback:', error);
-    }
-  })();
-  return activityLogsHydration;
+// In-app guest activity tracking: every page view / feature used by a guest is
+// recorded here so the host can see, per booking, how the guest is using the app
+// (number of opens, most-used features, full chronological activity trail).
+interface GuestActivityEvent {
+  id: string;
+  passId: string;
+  guestName: string;
+  action: string;
+  detail?: string;
+  sessionId?: string;
+  timestamp: string;
 }
 
-function persistActivityLogs() {
-  safeWriteFileSync(GUEST_ACTIVITY_REL_PATH, JSON.stringify(serverActivityLogs, null, 2));
+const MAX_ACTIVITY_ENTRIES = 20000;
+const serverActivity: GuestActivityEvent[] = safeReadJsonSync<GuestActivityEvent[]>(ACTIVITY_REL_PATH, []);
+
+function persistActivity() {
+  // Keep the file bounded so it doesn't grow forever
+  if (serverActivity.length > MAX_ACTIVITY_ENTRIES) {
+    serverActivity.splice(MAX_ACTIVITY_ENTRIES);
+  }
+  safeWriteFileSync(ACTIVITY_REL_PATH, JSON.stringify(serverActivity, null, 2));
+}
+
+function buildActivitySummary(passId: string) {
+  const events = serverActivity
+    .filter(e => e.passId === passId)
+    .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)); // newest first
+
+  const actionCounts: Record<string, number> = {};
+  const sessionIds = new Set<string>();
+  for (const e of events) {
+    actionCounts[e.action] = (actionCounts[e.action] || 0) + 1;
+    if (e.sessionId) sessionIds.add(e.sessionId);
+  }
+
+  const topFeatures = Object.entries(actionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([action, count]) => ({ action, count }));
+
+  return {
+    totalEvents: events.length,
+    totalOpens: actionCounts['app_open'] || sessionIds.size,
+    uniqueSessions: sessionIds.size,
+    lastActivityAt: events[0]?.timestamp || null,
+    topFeatures,
+    events
+  };
 }
 
 async function hydratePassesFromSupabase(force = false) {
@@ -533,7 +552,6 @@ export function createApp() {
   apiRouter.use(async (req, res, next) => {
     await hydratePassesFromSupabase();
     await hydrateLogsFromSupabase();
-    await hydrateActivityLogsFromSupabase();
     await hydrateDeletedRefsFromSupabase();
     await hydrateHomeAssistantConfig();
     if (
@@ -543,7 +561,7 @@ export function createApp() {
       (req.method === 'GET' && req.path === '/property/config') ||
       req.path.startsWith('/auth/') ||
       req.path === '/guest/pass' ||
-      (req.path === '/guest/activity' && req.method === 'POST') ||
+      req.path === '/guest/activity' ||
       req.path === '/lock/status' ||
       req.path === '/aurora-ai/chat' ||
       (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics'))
@@ -637,6 +655,55 @@ export function createApp() {
     res.json({ success: true, pass });
   });
 
+  // Guest-side activity tracking: called silently by the app (page views, feature
+  // usage, smart lock attempts, etc.) so the host can review it later per booking.
+  apiRouter.post('/guest/activity', (req, res) => {
+    try {
+      const { passId, token, guestName, action, detail, sessionId } = req.body || {};
+      const pass = passId
+        ? serverPasses.find(p => p.id === passId)
+        : findPassByToken(token);
+
+      if (!pass || !action || typeof action !== 'string') {
+        // Fail silently: tracking must never surface an error to the guest.
+        res.json({ success: false });
+        return;
+      }
+
+      const event: GuestActivityEvent = {
+        id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        passId: pass.id,
+        guestName: guestName || `${pass.guestName} ${pass.guestSurname}`.trim(),
+        action: String(action).slice(0, 64),
+        detail: detail ? String(detail).slice(0, 200) : undefined,
+        sessionId: sessionId ? String(sessionId).slice(0, 64) : undefined,
+        timestamp: new Date().toISOString()
+      };
+
+      serverActivity.unshift(event);
+      persistActivity();
+      res.json({ success: true });
+    } catch (err: any) {
+      // Never let a tracking failure break the guest experience
+      res.json({ success: false });
+    }
+  });
+
+  // Host-only: aggregated activity card for a single guest pass (bookings menu)
+  apiRouter.get('/passes/:id/activity', (req, res) => {
+    try {
+      const pass = serverPasses.find(p => p.id === req.params.id);
+      if (!pass) {
+        res.status(404).json({ success: false, error: 'Pass non trovato.' });
+        return;
+      }
+      const summary = buildActivitySummary(pass.id);
+      res.json({ success: true, ...summary });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   apiRouter.post('/guest/documents', async (req, res) => {
     try {
       const { token, documentsData } = req.body;
@@ -659,27 +726,6 @@ export function createApp() {
       // Aggiorna i dati del pass
       pass.documentsUploaded = true;
       pass.documentsData = documentsData;
-
-      // Registra l'attività
-      try {
-        const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
-        const logEntry: GuestActivityLog = {
-          id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 15),
-          timestamp: new Date().toISOString(),
-          guestPassId: pass.id,
-          guestName: `${pass.guestName} ${pass.guestSurname || ''}`.trim(),
-          actionType: 'feature_use',
-          details: `Caricati ${Array.isArray(documentsData) ? documentsData.length : 0} documenti d'identità per check-in online`,
-          ipAddress: clientIp
-        };
-        serverActivityLogs.unshift(logEntry);
-        persistActivityLogs();
-        if (isSupabaseConfigured()) {
-          await logGuestActivity(logEntry);
-        }
-      } catch (logErr) {
-        console.warn('Errore durante la registrazione automatica dell\'attività di caricamento documenti:', logErr);
-      }
 
       // Persisti i cambiamenti localmente e su Supabase
       persistPasses();
@@ -1045,43 +1091,6 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       success: true,
       logs: serverLogs
     });
-  });
-
-  // Persistent Guest Activity Logs (requires host authorization for GET, POST is public)
-  apiRouter.get('/guest/activity', (req, res) => {
-    res.json({
-      success: true,
-      logs: serverActivityLogs
-    });
-  });
-
-  apiRouter.post('/guest/activity', async (req, res) => {
-    try {
-      const { guestPassId, actionType, details, guestName } = req.body;
-      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '';
-      
-      const logEntry: GuestActivityLog = {
-        id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 15),
-        timestamp: new Date().toISOString(),
-        guestPassId: guestPassId || null,
-        guestName: guestName || 'Ospite Anonimo',
-        actionType: actionType || 'generic',
-        details: details || '',
-        ipAddress: clientIp
-      };
-      
-      serverActivityLogs.unshift(logEntry);
-      persistActivityLogs();
-      
-      if (isSupabaseConfigured()) {
-        await logGuestActivity(logEntry);
-      }
-      
-      res.json({ success: true, log: logEntry });
-    } catch (error: any) {
-      console.error('Error logging guest activity:', error);
-      res.status(500).json({ success: false, error: error.message });
-    }
   });
 
   // Real-time Lock physical status

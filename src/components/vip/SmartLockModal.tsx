@@ -3,6 +3,7 @@ import { GuestPass, Language } from '../../types';
 import { X, CheckCircle2, Unlock, Loader2, AlertCircle, Wifi, Lock, RotateCcw, ShieldCheck } from 'lucide-react';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { isDigitalKeyActive } from '../../services/guestPassService';
+import { trackActivity } from '../../services/activityTrackingService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 
 interface Props {
@@ -99,6 +100,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
         triggerHaptic();
         setOpeningState('success');
         setStatusMessage(data.message || t.concierge.doorMessage.unlocked);
+        trackActivity(pass, 'smart_lock_open_success');
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
@@ -109,6 +111,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
     } catch (err: any) {
       setOpeningState('error');
       setStatusMessage(err.message || 'Errore di connessione. Riprova.');
+      trackActivity(pass, 'smart_lock_open_error', err?.message);
       setTimeout(() => {
         setOpeningState('idle');
         setStatusMessage('');

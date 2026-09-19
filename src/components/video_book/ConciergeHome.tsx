@@ -30,6 +30,7 @@ import { useCms } from '../../context/CmsContext';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
+import { trackActivity } from '../../services/activityTrackingService';
 
 interface Props {
   language: Language;
@@ -355,6 +356,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       setWifiCopied(true);
       setShowWifiQr(false);
       setSheet('wifi');
+      trackActivity(pass, 'wifi_copy');
       window.setTimeout(() => setWifiCopied(false), 2200);
     } catch {
       setSheet('wifi');
@@ -404,12 +406,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         setDoorState('success');
         setDoorMessage(t.concierge.doorMessage.unlocked);
+        trackActivity(pass, 'smart_lock_open_success');
       } else {
         throw new Error(data.error || 'Impossibile completare lo sblocco');
       }
     } catch (err: any) {
       setDoorState('error');
       setDoorMessage(err.message || 'Errore di connessione. Riprova.');
+      trackActivity(pass, 'smart_lock_open_error', err?.message);
     } finally {
       window.setTimeout(() => {
         setDoorState('idle');
@@ -711,6 +715,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} 
                   target="_blank" 
                   rel="noreferrer"
+                  onClick={() => trackActivity(pass, 'whatsapp_contact')}
                 >
                   <MessageCircle />
                   <span>{t.tiles.contatti}</span>
@@ -721,13 +726,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   href={APARTMENT_INFO.googleMapsUrl}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() => trackActivity(pass, 'maps_open')}
                 >
                   <MapPin />
                   <span>{t.tiles.posizione}</span>
                   <small>GPS</small>
                 </a>
                 
-                <button onClick={() => setSheet('schedule')}>
+                <button onClick={() => { setSheet('schedule'); trackActivity(pass, 'house_rules_view'); }}>
                   <Clock3 />
                   <span>{t.tiles.regole}</span>
                   <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
@@ -737,6 +743,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   href="https://aurorainvaltellina.it"
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() => trackActivity(pass, 'booking_link_open')}
                 >
                   <Calendar />
                   <span>{t.tiles.prenota}</span>
@@ -919,6 +926,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}`} 
                   target="_blank" 
                   rel="noreferrer"
+                  onClick={() => trackActivity(pass, 'whatsapp_contact')}
                 >
                   {t.concierge.sheets.askNino} <ArrowUpRight className="h-4 w-4" />
                 </a>

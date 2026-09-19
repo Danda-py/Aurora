@@ -4,6 +4,7 @@ import { FlagIcon } from './FlagIcon';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { StaySummaryPill } from '../vip/StaySummaryPill';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
+import { trackActivity } from '../../services/activityTrackingService';
 import { 
   Home, 
   Key, 
@@ -346,6 +347,7 @@ export const GridMenuScreen: React.FC<Props> = ({
             )}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackActivity(pass, 'whatsapp_contact')}
             className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 border border-emerald-400/40 text-white shadow-lg shadow-emerald-950/50 transition cursor-pointer group text-center"
           >
             <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">

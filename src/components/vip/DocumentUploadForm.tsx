@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
 import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import { trackActivity } from '../../services/activityTrackingService';
 
 const dTranslations: Record<Language, any> = {
   it: {
@@ -553,6 +554,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error);
       setState(s => ({ ...s, success: true }));
+      trackActivity(pass, 'document_upload', `${payload.length} ospite/i`);
       setTimeout(() => onSaveSuccess(data.pass), 2000);
     } catch (err: any) {
       setState(s => ({ ...s, error: err.message || 'Error saving data' }));
