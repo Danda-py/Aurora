@@ -460,7 +460,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     <button
       key={item.page}
       onClick={() => onNavigate(item.page)}
-      className="relative flex-shrink-0 w-[175px] sm:w-[195px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
+      className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
       aria-label={item.label}
     >
       <img 
@@ -575,219 +575,246 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </button>
         )}
 
-        {/* 2. Stay Info & Status Widget: Compact Horizontal Apple Style */}
+        {/* 2. Stay Info & Status Widget: Card utente ridisegnata con sfondo Valtellina dal CMS */}
         {pass && (
-          <section className="rounded-2xl border border-white/10 bg-zinc-900/75 backdrop-blur-md p-3.5 shadow-xl space-y-2.5">
+          <section 
+            className="relative rounded-3xl border border-white/10 overflow-hidden p-4 sm:p-5 shadow-2xl space-y-4 bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.88), rgba(9, 13, 19, 0.94)), url(${media.view || '/uploads/valtellina.jpg'})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* Header of the Card: APT. AURORA badge */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                  {t.concierge.guestCount}
-                </span>
-                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md bg-white/10 text-[11px] font-bold text-white">
-                  {pass.guestsCount ?? 1}
-                </span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
+              <span className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase">TESSERA OSPITE</span>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-medium font-mono">
                 <BedDouble className="w-3 h-3" />
                 <span>APT. AURORA</span>
               </div>
             </div>
 
-            {/* Compact Horizontal Check-in / Check-out */}
-            <div className="grid grid-cols-2 divide-x divide-white/10 py-0.5 bg-white/[0.02] rounded-xl border border-white/5">
-              <div className="px-3 py-1.5">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Check-in</p>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-sm font-bold tracking-tight text-white">
+            {/* Dati dell'Utente (Main Guest details) */}
+            <div className="space-y-1.5 pb-2 border-b border-white/[0.06]">
+              <h3 className="text-base font-bold text-white tracking-tight leading-tight">
+                {pass.guestName} {pass.guestSurname}
+              </h3>
+              <div className="grid grid-cols-1 gap-1 text-[11px] text-[#86868b] font-mono">
+                {pass.email && (
+                  <span className="truncate">Email: <strong className="text-zinc-300 font-semibold">{pass.email}</strong></span>
+                )}
+                {pass.phone && (
+                  <span className="truncate">Tel: <strong className="text-zinc-300 font-semibold">{pass.phone}</strong></span>
+                )}
+                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                  {pass.bookingSource && (
+                    <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-zinc-300 text-[9px] font-sans font-bold uppercase">{pass.bookingSource}</span>
+                  )}
+                  {pass.bookingRef && (
+                    <span>Ref: <code className="text-zinc-300 bg-white/5 px-1 py-0.5 rounded text-[9px]">{pass.bookingRef}</code></span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Tutti gli Ospiti (All other guests) */}
+            <div className="space-y-1.5 pb-2 border-b border-white/[0.06]">
+              <span className="text-[10px] font-mono tracking-wider text-[#86868b] uppercase block">
+                Ospiti Registrati ({pass.documentsData ? pass.documentsData.length : 1})
+              </span>
+              {pass.documentsData && pass.documentsData.length > 0 ? (
+                <div className="grid grid-cols-1 gap-1 text-xs text-zinc-200">
+                  {pass.documentsData.map((guest, i) => (
+                    <div key={i} className="flex items-center gap-1.5 font-medium">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <span>{guest.name} {guest.surname}</span>
+                      {guest.documentNumber && (
+                        <span className="text-[10px] text-[#86868b] font-mono">({guest.documentType === 'passaporto' ? 'Passaporto' : guest.documentType === 'patente' ? 'Patente' : 'ID'}: {guest.documentNumber})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <span>{pass.guestName} {pass.guestSurname}</span>
+                  <span className="text-[10px] text-[#86868b] italic">(Ospite principale)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Check-in & Check-out Side-by-Side Dates */}
+            <div className="grid grid-cols-2 divide-x divide-white/[0.06] py-1 bg-white/[0.01] rounded-2xl border border-white/5">
+              <div className="px-3 py-1">
+                <p className="text-[9px] font-mono uppercase tracking-wider text-[#86868b]">Check-in</p>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">
                     {formatPassDate(pass.checkInDate)}
                   </span>
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-[10px] text-[#86868b] font-mono mt-0.5">
                     {t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'}
                   </span>
                 </div>
               </div>
-              <div className="px-3 py-1.5">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Check-out</p>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-sm font-bold tracking-tight text-white">
+              <div className="px-3 py-1">
+                <p className="text-[9px] font-mono uppercase tracking-wider text-[#86868b]">Check-out</p>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">
                     {formatPassDate(pass.checkOutDate)}
                   </span>
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-[10px] text-[#86868b] font-mono mt-0.5">
                     {t.concierge.by} {pass.checkOutTime ?? '10:00'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Dynamic Island-style status pill / Door Opener */}
-            {!isStayActive ? (
-              <div className="flex items-center justify-center pt-0.5">
-                <div className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border border-amber-500/20 rounded-full px-3 py-1 text-xs font-medium max-w-full truncate shadow-sm">
-                  <ShieldAlert className="w-3.5 h-3.5 shrink-0 animate-pulse" />
-                  <span className="truncate">{t.concierge.keysNotActive}</span>
+            {/* Smart Lock Door Opener: Tieni premuto per aprire (disattivato se non confermato) */}
+            <div className="pt-1.5 space-y-1">
+              {!isStayActive ? (
+                <div className="w-full flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold text-center leading-relaxed">
+                  <ShieldAlert className="w-4 h-4 shrink-0 mr-1.5 animate-pulse" />
+                  <span>{t.concierge.keysNotActive}</span>
                 </div>
-              </div>
-            ) : !isKeysReady ? (
-              <div className="flex items-center justify-center pt-0.5">
-                <div className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border border-amber-500/20 rounded-full px-3 py-1 text-xs font-medium max-w-full truncate shadow-sm">
-                  <Clock3 className="w-3.5 h-3.5 shrink-0 animate-pulse" />
-                  <span className="truncate">{t.checkInPage.pendingHostConfirmation}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1 pt-0.5">
-                <button
-                  className={`relative flex w-full items-center justify-between px-3.5 py-2.5 overflow-hidden text-zinc-950 font-bold bg-emerald-400 hover:bg-emerald-300 rounded-xl cursor-pointer shadow-md shadow-emerald-500/20 transition active:scale-[0.98] ${doorState === 'success' ? 'bg-emerald-300' : ''} ${doorState === 'error' ? 'bg-rose-400 text-white' : ''}`}
-                  onPointerDown={startHold}
-                  onPointerUp={cancelHold}
-                  onPointerCancel={cancelHold}
-                  onPointerLeave={cancelHold}
-                  onPointerMove={(event) => {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    const inside =
-                      event.clientX >= rect.left &&
-                      event.clientX <= rect.right &&
-                      event.clientY >= rect.top &&
-                      event.clientY <= rect.bottom;
-                    if (!inside) cancelHold(event);
-                  }}
-                  disabled={doorState === 'opening'}
-                >
-                  <span 
-                    className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
-                    style={{ transform: `scaleX(${holdProgress})` }} 
-                  />
-                  <span className="flex items-center gap-2 relative z-10 text-xs sm:text-sm">
-                    <KeyRound className="w-3.5 h-3.5" />
-                    {t.concierge.doorOpeningState[doorState]}
-                  </span>
-                  <ArrowUpRight className="w-3.5 h-3.5 relative z-10" />
-                </button>
-                {doorMessage && (
-                  <p className={`text-center text-[11px] pt-0.5 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-400'}`}>
-                    {doorMessage}
-                  </p>
-                )}
-              </div>
-            )}
+              ) : (
+                <>
+                  <button
+                    className={`relative flex w-full items-center justify-between px-3.5 py-3 overflow-hidden font-bold rounded-xl transition active:scale-[0.98] ${
+                      !isCheckinConfirmed
+                        ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                        : doorState === 'success'
+                        ? 'bg-emerald-300 text-zinc-950 shadow-md shadow-emerald-500/20'
+                        : doorState === 'error'
+                        ? 'bg-rose-400 text-white shadow-md shadow-rose-500/20'
+                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20 cursor-pointer shadow-lg'
+                    }`}
+                    onPointerDown={isCheckinConfirmed ? startHold : undefined}
+                    onPointerUp={isCheckinConfirmed ? cancelHold : undefined}
+                    onPointerCancel={isCheckinConfirmed ? cancelHold : undefined}
+                    onPointerLeave={isCheckinConfirmed ? cancelHold : undefined}
+                    onPointerMove={isCheckinConfirmed ? (event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      const inside =
+                        event.clientX >= rect.left &&
+                        event.clientX <= rect.right &&
+                        event.clientY >= rect.top &&
+                        event.clientY <= rect.bottom;
+                      if (!inside) cancelHold(event);
+                    } : undefined}
+                    disabled={doorState === 'opening' || !isCheckinConfirmed}
+                  >
+                    <span 
+                      className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
+                      style={{ transform: `scaleX(${holdProgress})` }} 
+                    />
+                    <span className="flex items-center gap-2 relative z-10 text-xs sm:text-sm">
+                      <KeyRound className="w-3.5 h-3.5" />
+                      {!isCheckinConfirmed 
+                        ? (language === 'it' ? 'Check-in non confermato dall\'host' : 'Check-in pending host confirmation')
+                        : t.concierge.doorOpeningState[doorState]}
+                    </span>
+                    <ArrowUpRight className="w-3.5 h-3.5 relative z-10" />
+                  </button>
+                  {doorMessage && (
+                    <p className={`text-center text-[11px] pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-400'}`}>
+                      {doorMessage}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </section>
         )}
 
-        {/* 3. Quick Actions: Predominantly Horizontal Scrollable Action Strip */}
-        <section className="relative">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
-            {isPublic ? (
-              <>
-                <a 
-                  href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent('Ciao Nino!')}`} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.contatti}</span>
-                </a>
+        {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
+        <section className="space-y-2">
+          <p className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase pl-1">Azioni Rapide</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Wi-Fi Action (Row 1, Col 1) */}
+            <button 
+              onClick={isPublic ? undefined : (isWifiActive ? copyWifi : undefined)}
+              disabled={isPublic || !isWifiActive}
+              className={`flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all text-left cursor-pointer ${(isPublic || !isWifiActive) ? "opacity-40 cursor-not-allowed" : ""}`}
+              title={isPublic ? "Disabilitato senza pass" : (!isWifiActive ? "Sbloccato dopo il check-in confermato" : "Copia password Wi-Fi")}
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <Wifi className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight truncate">
+                {isPublic ? t.tiles.wifi : (wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi)}
+              </span>
+            </button>
 
-                <a
-                  href={APARTMENT_INFO.googleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <MapPin className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.posizione}</span>
-                </a>
+            {/* Prenotazioni (Row 1, Col 2) */}
+            <a
+              href="https://aurorainvaltellina.it"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight truncate">
+                {t.tiles.prenota || (language === 'it' ? 'Prenotazioni' : 'Bookings')}
+              </span>
+            </a>
 
-                <button 
-                  onClick={() => setSheet('schedule')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Clock3 className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.regole}</span>
-                </button>
+            {/* Contatti (Row 2, Col 1) */}
+            <a 
+              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(isPublic ? 'Ciao Nino!' : `Ciao Nino, sono ${firstName}.`)}`} 
+              target="_blank" 
+              rel="noreferrer"
+              onClick={() => { if (!isPublic) trackActivity(pass, 'whatsapp_contact'); }}
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.contatti}</span>
+            </a>
 
-                <a
-                  href="https://aurorainvaltellina.it"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Calendar className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.prenota}</span>
-                </a>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={isWifiActive ? copyWifi : undefined}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start ${!isWifiActive ? "opacity-40 cursor-not-allowed" : ""}`}
-                  title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isKeysReady ? t.checkInPage.pendingHostConfirmationDesc : "")}
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Wifi className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">
-                    {wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi}
-                  </span>
-                </button>
-                
-                <a 
-                  href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(`Ciao Nino, sono ${firstName}.`)}`} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  onClick={() => trackActivity(pass, 'whatsapp_contact')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.contatti}</span>
-                </a>
-                
-                <a
-                  href={APARTMENT_INFO.googleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => trackActivity(pass, 'maps_open')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <MapPin className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.posizione}</span>
-                </a>
-                
-                <button 
-                  onClick={() => { setSheet('schedule'); trackActivity(pass, 'house_rules_view'); }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Clock3 className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.regole}</span>
-                </button>
+            {/* Regole (Row 2, Col 2) */}
+            <button 
+              onClick={() => { setSheet('schedule'); if (!isPublic) trackActivity(pass, 'house_rules_view'); }}
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#30d158] shrink-0">
+                <Clock3 className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.regole}</span>
+            </button>
 
-                <button 
-                  onClick={() => onNavigate('check_in')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                    <KeyRound className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.checkIn}</span>
-                </button>
-              </>
-            )}
+            {/* Posizione (Row 3, Col 1) */}
+            <a
+              href={APARTMENT_INFO.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => { if (!isPublic) trackActivity(pass, 'maps_open'); }}
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
+            >
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.posizione}</span>
+            </a>
+
+            {/* Emergenze (Row 3, Col 2 - RED) */}
+            <button 
+              onClick={() => { onNavigate('emergenza'); if (!isPublic) trackActivity(pass, 'button_click', '[QuickAction] Emergenze'); }}
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 hover:bg-rose-900/25 hover:border-rose-400 active:scale-95 transition-all cursor-pointer text-left"
+            >
+              <div className="w-7 h-7 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-400 shrink-0 animate-pulse">
+                <ShieldAlert className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold text-rose-300 tracking-tight truncate">
+                {t.tiles.emergenza || (language === 'it' ? 'Emergenza' : 'Emergency')}
+              </span>
+            </button>
           </div>
         </section>
+
+
 
         {/* 4. Sezioni di Contenuto & Card Carousel */}
         {/* SECTION 1: Guida Casa */}
@@ -818,7 +845,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             {localStories.map((story) => (
               <a
                 key={story.title} 
-                className="relative flex-shrink-0 w-[175px] sm:w-[195px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
+                className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
                 href={story.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"

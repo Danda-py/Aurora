@@ -147,6 +147,13 @@ const MEDIA_ITEMS: MediaItemMeta[] = [
     desc: 'Immagine del QR scan per connettere automaticamente gli ospiti al Wi-Fi.',
     aspect: 'Quadrata (1:1)',
     badge: 'Wi-Fi'
+  },
+  {
+    key: 'view',
+    title: 'Sfondo Valtellina User Card',
+    desc: 'Immagine di sfondo trasparente mostrata nella tessera utente della Home.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Sfondo'
   }
 ];
 

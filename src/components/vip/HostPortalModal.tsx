@@ -49,7 +49,8 @@ import {
   WifiOff,
   ShieldCheck,
   Building2,
-  Cpu
+  Cpu,
+  Activity
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { CmsMediaManager } from './CmsMediaManager';
@@ -122,6 +123,31 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
     battery?: number;
     signalStrength?: number;
   } | null>(null);
+
+  // Guest Activity Tracker Modal state
+  const [activityPass, setActivityPass] = useState<GuestPass | null>(null);
+  const [activityData, setActivityData] = useState<any>(null);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+
+  // Fetch and display guest activity tracker
+  const handleViewActivity = async (pass: GuestPass) => {
+    setActivityPass(pass);
+    setActivityData(null);
+    setIsLoadingActivity(true);
+    try {
+      const res = await fetch(`/api/passes/${pass.id}/activity`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setActivityData(data);
+      } else {
+        console.error('Failed to load guest activity:', data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching guest activity:', err);
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  };
 
   // Poll physical lock status from server every 3 seconds
   useEffect(() => {
@@ -1143,6 +1169,14 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                               </button>
 
                               <button
+                                onClick={() => handleViewActivity(pass)}
+                                className="px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-200 transition flex items-center gap-1 cursor-pointer text-xs"
+                              >
+                                <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Attività</span>
+                              </button>
+
+                              <button
                                 onClick={() => {
                                   if (onSelectPassToView) {
                                     onSelectPassToView(pass);
@@ -1799,6 +1833,52 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
             </div>
           </>
+        )}
+
+        {/* GUEST ACTIVITY TRACKER SUB-MODAL */}
+        {activityPass && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+            <div className="w-full max-w-md bg-[#0e151e] rounded-3xl border border-white/10 text-slate-100 shadow-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  <span>Attività: {activityPass.guestName} {activityPass.guestSurname}</span>
+                </h3>
+                <button onClick={() => setActivityPass(null)} className="text-white/60 hover:text-white text-xs font-bold shrink-0 cursor-pointer">Chiudi</button>
+              </div>
+              {isLoadingActivity ? (
+                <div className="text-center py-6 text-xs text-[#86868b]">Caricamento attività...</div>
+              ) : !activityData || !activityData.events || activityData.events.length === 0 ? (
+                <div className="text-center py-6 text-xs text-[#86868b]">Nessuna attività registrata.</div>
+              ) : (
+                <div className="space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-2 text-center text-[11px]">
+                    <div className="p-2 bg-white/5 rounded-xl">
+                      <p className="font-bold text-white text-sm">{activityData.totalOpens || 0}</p>
+                      <p className="text-[9px] text-[#86868b] uppercase">Aperture</p>
+                    </div>
+                    <div className="p-2 bg-white/5 rounded-xl">
+                      <p className="font-bold text-white text-sm">{activityData.uniqueSessions || 0}</p>
+                      <p className="text-[9px] text-[#86868b] uppercase">Sessioni</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                    <p className="font-bold text-[#86868b] text-[10px] uppercase font-mono">Azioni Recenti ({activityData.events.length}):</p>
+                    {activityData.events.slice(0, 50).map((e: any, i: number) => {
+                      const timeStr = new Date(e.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <div key={i} className="flex justify-between items-center py-1 border-b border-white/5 text-[11px] gap-2">
+                          <span className="font-mono text-blue-300 font-bold bg-blue-500/10 px-1 py-0.5 rounded text-[9px] shrink-0">{e.action}</span>
+                          <span className="text-zinc-300 truncate text-left flex-1">{e.detail || ''}</span>
+                          <span className="text-[#86868b] font-mono text-[9px] shrink-0">{timeStr}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
       </div>

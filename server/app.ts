@@ -835,7 +835,7 @@ export function createApp() {
 
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente leggibile dal documento, imposta una stringa vuota "". Assicurati di formattare le date in YYYY-MM-DD.`;
 
-        const candidateModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+        const candidateModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
         for (const modelName of candidateModels) {
           try {
             const response = await ai.models.generateContent({
@@ -1073,8 +1073,8 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente le
         { role: 'user', parts: userParts }
       ];
 
-      // Multi-model resilience: prioritize gemini-3.8-flash, with gemini-2.5-flash, gemini-flash-latest, and gemini-3.1-flash-lite as backups
-      const candidateModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+      // Multi-model resilience: prioritize gemini-2.5-flash, with gemini-1.5-flash as backup
+      const candidateModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
       let answer = '';
       let lastErr: any = null;
 
@@ -1547,7 +1547,7 @@ Ritorna una risposta in formato JSON strutturato con le chiavi delle lingue dest
 Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
+        model: 'gemini-2.5-flash',
         contents: [
           {
             parts: [{ text: prompt }]
