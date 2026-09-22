@@ -180,28 +180,28 @@ export const CheckinPage: React.FC<Props> = ({
         {/* HERO COMPONENT: Apple Home Key / Action Card (only for guests with pass) */}
         {pass ? (
           pass.documentsUploaded && !isEditingDocs ? (
-            <div className="aurora-glass-card p-5 sm:p-7 space-y-5">
+            <div className="aurora-glass-card p-4 sm:p-5 space-y-3.5">
           
           {/* Ambient Mint or Amber Glow */}
           <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 blur-3xl pointer-events-none rounded-full ${
             pass.checkInConfirmed ? 'bg-[#62e6bd]/10' : 'bg-amber-500/10'
           }`} />
 
-          <div className="relative z-10 space-y-5">
+          <div className="relative z-10 space-y-3.5">
             {/* Card Eyebrow & Status Header */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="aurora-eyebrow">
                   {t.checkInPage.smartHomeAccess}
                 </span>
-                <h3 className="text-lg font-bold text-white tracking-tight">
+                <h3 className="text-base font-bold text-white tracking-tight">
                   {t.checkInPage.frontDoor}
                 </h3>
               </div>
 
               {/* Apple Home-style live status capsule */}
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-md">
-                <span className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-md">
+                <span className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
                   !pass.checkInConfirmed
                     ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
                     : openingState === 'opening'
@@ -212,7 +212,7 @@ export const CheckinPage: React.FC<Props> = ({
                     ? 'bg-rose-500'
                     : 'bg-[#62e6bd] shadow-[0_0_8px_rgba(98,230,189,0.6)]'
                 }`} />
-                <span className="text-xs font-semibold text-white/80 tracking-tight">
+                <span className="text-[11px] font-semibold text-white/80 tracking-tight">
                   {!pass.checkInConfirmed
                     ? t.checkInPage.pendingHostConfirmation
                     : openingState === 'opening'
@@ -247,16 +247,16 @@ export const CheckinPage: React.FC<Props> = ({
               </div>
             ) : (
               /* Real Wi-Fi Security Verification Badge for Casa_Aurora */
-              <div className={`p-4 rounded-2xl border transition-all duration-200 ${
+              <div className={`p-3 rounded-xl border transition-all duration-200 ${
                 wifiChecking
                   ? 'bg-white/[0.04] border-white/10 text-white/80'
                   : wifiVerified 
                   ? 'bg-[#62e6bd]/10 border-[#62e6bd]/30 text-[#9ef2d3]' 
                   : 'bg-amber-950/30 border-amber-500/30 text-amber-200'
               }`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                       wifiChecking
                         ? 'bg-white/10 text-white'
                         : wifiVerified 
@@ -264,20 +264,20 @@ export const CheckinPage: React.FC<Props> = ({
                         : 'bg-amber-500/20 text-amber-400'
                     }`}>
                       {wifiChecking ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                       ) : (
-                        <Wifi className="w-4 h-4" />
+                        <Wifi className="w-3.5 h-3.5" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[10px] uppercase font-bold tracking-wider block opacity-75 font-mono">
+                      <span className="text-[9px] uppercase font-bold tracking-wider block opacity-75 font-mono">
                         {wifiChecking 
                           ? wifiMsgs.checkingConnection 
                           : wifiVerified 
                           ? wifiMsgs.verifiedLabel 
                           : wifiMsgs.requiredNotice}
                       </span>
-                      <p className="text-xs font-semibold truncate text-white">
+                      <p className="text-[11px] font-semibold truncate text-white">
                         {wifiChecking 
                           ? wifiMsgs.verifying 
                           : wifiVerified 
@@ -291,7 +291,7 @@ export const CheckinPage: React.FC<Props> = ({
                     type="button"
                     onClick={runWifiVerification}
                     disabled={wifiChecking}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 shrink-0 cursor-pointer ${
                       wifiChecking
                         ? 'bg-white/10 text-white/50 cursor-wait'
                         : wifiVerified
@@ -302,17 +302,17 @@ export const CheckinPage: React.FC<Props> = ({
                   >
                     {wifiChecking ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-3 h-3 animate-spin" />
                         <span>{wifiMsgs.checkingConnection}</span>
                       </>
                     ) : wifiVerified ? (
                       <>
-                        <Check className="w-3.5 h-3.5" />
+                        <Check className="w-3 h-3" />
                         <span>{wifiMsgs.connected}</span>
                       </>
                     ) : (
                       <>
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-3 h-3" />
                         <span>{wifiMsgs.rescanBtn}</span>
                       </>
                     )}
@@ -321,7 +321,7 @@ export const CheckinPage: React.FC<Props> = ({
 
                 {/* Diagnostic Message */}
                 {wifiMessage && !wifiChecking && (
-                  <p className={`mt-2 text-xs leading-relaxed ${
+                  <p className={`mt-1.5 text-[11px] leading-relaxed ${
                     wifiVerified ? 'text-[#9ef2d3]' : 'text-amber-300'
                   }`}>
                     {wifiMessage}
@@ -329,16 +329,16 @@ export const CheckinPage: React.FC<Props> = ({
                 )}
 
                 {!wifiVerified && !wifiChecking && (
-                  <div className="mt-2.5 pt-2.5 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="mt-2 pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px]">
                     <span className="text-white/80">
                       {t.checkInPage.wifi.copyPwd}: <span className="font-mono text-white font-bold">{APARTMENT_INFO.wifiPassword}</span>
                     </span>
                     <button
                       type="button"
                       onClick={copyWifiPassword}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 hover:text-white transition cursor-pointer self-start sm:self-auto"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white transition cursor-pointer self-start sm:self-auto"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3 h-3" />
                       <span>{copiedWifiPass ? wifiMsgs.copySuccess : wifiMsgs.copyPwd}</span>
                     </button>
                   </div>
@@ -346,14 +346,14 @@ export const CheckinPage: React.FC<Props> = ({
               </div>
             )}
 
-            {/* Apple-Grade Tactile Action Button */}
+            {/* Apple-Grade Compact Horizontal Action Button */}
             <div>
               <button
                 id="btn-open-door-checkin"
                 type="button"
                 onClick={handleOpenDoor}
                 disabled={!pass.checkInConfirmed || openingState === 'opening' || wifiChecking || !wifiVerified}
-                className={`group relative w-full overflow-hidden rounded-2xl py-4 sm:py-5 px-6 font-bold tracking-tight transition-all duration-300 cursor-pointer flex items-center justify-center gap-3 select-none active:scale-[0.98] ${
+                className={`group relative w-full overflow-hidden rounded-xl py-3 px-4 font-semibold tracking-tight transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none active:scale-[0.98] ${
                   !pass.checkInConfirmed
                     ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
                     : openingState === 'opening'
@@ -369,44 +369,44 @@ export const CheckinPage: React.FC<Props> = ({
               >
                 {!pass.checkInConfirmed ? (
                   <>
-                    <Lock className="w-5 h-5 text-white/30" />
-                    <span className="text-base font-semibold text-white/40">{t.checkInPage.pendingHostConfirmation}</span>
+                    <Lock className="w-4 h-4 text-white/30" />
+                    <span className="text-xs sm:text-sm font-semibold text-white/40">{t.checkInPage.pendingHostConfirmation}</span>
                   </>
                 ) : openingState === 'opening' ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    <span className="text-base font-semibold text-white">{t.concierge.doorOpeningState.opening}</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span className="text-xs sm:text-sm font-semibold text-white">{t.concierge.doorOpeningState.opening}</span>
                   </>
                 ) : openingState === 'success' ? (
                   <>
-                    <CheckCircle2 className="w-6 h-6 text-[#07110d]" />
-                    <span className="text-base font-bold text-[#07110d] tracking-tight">{t.concierge.doorOpeningState.success}</span>
+                    <CheckCircle2 className="w-4 h-4 text-[#07110d]" />
+                    <span className="text-xs sm:text-sm font-bold text-[#07110d] tracking-tight">{t.concierge.doorOpeningState.success}</span>
                   </>
                 ) : openingState === 'error' ? (
                   <>
-                    <AlertCircle className="w-5 h-5 text-white" />
-                    <span className="text-base font-bold text-white">{t.concierge.doorOpeningState.error}</span>
+                    <AlertCircle className="w-4 h-4 text-white" />
+                    <span className="text-xs sm:text-sm font-bold text-white">{t.concierge.doorOpeningState.error}</span>
                   </>
                 ) : wifiChecking ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin text-white/50" />
-                    <span className="text-base font-semibold text-white/50">{wifiMsgs.verifying}</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-white/50" />
+                    <span className="text-xs sm:text-sm font-semibold text-white/50">{wifiMsgs.verifying}</span>
                   </>
                 ) : wifiVerified ? (
                   <>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#07110d]/10 text-[#07110d] group-hover:scale-110 transition-transform duration-200">
-                      <Unlock className="w-4 h-4" />
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#07110d]/10 text-[#07110d] group-hover:scale-110 transition-transform duration-200">
+                      <Unlock className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-base sm:text-lg font-bold tracking-tight text-[#07110d]">
+                    <span className="text-xs sm:text-sm font-bold tracking-tight text-[#07110d]">
                       {wifiMsgs.openBtn}
                     </span>
                   </>
                 ) : (
                   <>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 text-white/30">
-                      <Lock className="w-4 h-4" />
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-white/5 text-white/30">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-sm sm:text-base font-semibold tracking-tight text-white/40">
+                    <span className="text-xs sm:text-sm font-semibold tracking-tight text-white/40">
                       {wifiMsgs.wifiRequiredBtn}
                     </span>
                   </>
@@ -414,13 +414,13 @@ export const CheckinPage: React.FC<Props> = ({
               </button>
 
               {/* Status Output */}
-              <div className="mt-3 text-center min-h-[20px]">
+              <div className="mt-2 text-center min-h-[16px]">
                 {statusMessage ? (
-                  <p className="text-xs font-semibold text-[#62e6bd] tracking-tight">
+                  <p className="text-[11px] font-semibold text-[#62e6bd] tracking-tight">
                     {statusMessage}
                   </p>
                 ) : (
-                  <p className="text-xs text-white/50 font-normal tracking-tight">
+                  <p className="text-[11px] text-white/50 font-normal tracking-tight">
                     {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : wifiMsgs.pressToUnlockNotice}
                   </p>
                 )}
@@ -519,18 +519,18 @@ export const CheckinPage: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1.5">
             <a
               href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(t.checkInPage.whatsappArrivalMsg)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3.5 px-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] active:bg-white/[0.14] text-white font-bold text-xs flex items-center justify-between border border-white/[0.08] transition shadow-sm"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:bg-white/[0.14] text-white font-medium text-xs flex items-center justify-between border border-white/[0.08] transition shadow-xs"
             >
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#62e6bd]" />
+                <MessageSquare className="w-3.5 h-3.5 text-[#62e6bd]" />
                 <span className="tracking-tight">{t.checkInPage.shareArrivalBtn}</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/40" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/40" />
             </a>
           </div>
         </div>

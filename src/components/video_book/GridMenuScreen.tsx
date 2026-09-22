@@ -4,7 +4,6 @@ import { FlagIcon } from './FlagIcon';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { StaySummaryPill } from '../vip/StaySummaryPill';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
-import { trackActivity } from '../../services/activityTrackingService';
 import { 
   Home, 
   Key, 
@@ -24,14 +23,12 @@ import {
   Coffee,
   Heart,
   Car,
-  MessageSquare,
   ChevronRight,
   LayoutGrid,
   ListFilter,
   Sparkles,
   Mountain
 } from 'lucide-react';
-import { APARTMENT_INFO } from '../../data/apartmentData';
 
 interface Props {
   language: Language;
@@ -295,67 +292,80 @@ export const GridMenuScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* 4 QUICK ACTION BUTTONS */}
-        <div className="grid grid-cols-4 gap-2">
-          {/* Wi-Fi Quick */}
+        {/* 6 QUICK ACTION BUTTONS — 2 columns x 3 rows */}
+        <div className="grid grid-cols-2 grid-rows-3 gap-2">
+          {/* Row 1: Contatti / Posizione */}
+          <button
+            onClick={() => onNavigate('contatti')}
+            className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+          >
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Headphones className="w-5 h-5 text-emerald-400" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-100 text-left">{t.tiles.contatti}</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('posizione')}
+            className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+          >
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <MapPin className="w-5 h-5 text-emerald-400" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-100 text-left">{t.tiles.posizione}</span>
+          </button>
+
+          {/* Row 2: Regole / Prenotazioni */}
+          <button
+            onClick={() => onNavigate('regole')}
+            className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+          >
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <ClipboardList className="w-5 h-5 text-emerald-400" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-100 text-left">{t.tiles.regole}</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('check_in')}
+            className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+          >
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Key className="w-5 h-5 text-emerald-400" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-100 text-left">
+              {{ it: 'Prenotazioni', en: 'Booking', de: 'Buchung', fr: 'Réservation', es: 'Reservas' }[language]}
+            </span>
+          </button>
+
+          {/* Row 3: Wi-Fi (disabled without pass & host-confirmed check-in) / Emergenze (red) */}
           <button
             onClick={isWifiActive ? () => onNavigate('wifi') : undefined}
-            className={`flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 active:scale-95 transition cursor-pointer group shadow-sm ${
-              !isWifiActive ? 'opacity-40 cursor-not-allowed hover:border-emerald-500/20 hover:bg-[#0e151e]' : 'hover:border-emerald-400/50 hover:bg-[#131d27]'
+            className={`flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 active:scale-95 transition group shadow-sm ${
+              !isWifiActive ? 'opacity-40 cursor-not-allowed hover:border-emerald-500/20 hover:bg-[#0e151e]' : 'cursor-pointer hover:border-emerald-400/50 hover:bg-[#131d27]'
             }`}
             title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isKeysReady ? t.checkInPage.pendingHostConfirmationDesc : "")}
           >
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Wifi className="w-5 h-5 text-emerald-400" />
             </div>
-            <span className="text-[11px] font-semibold text-slate-100">Wi-Fi</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">
-              {!isWifiActive ? t.actions.notActive : t.gridMenu.password}
-            </span>
+            <div className="flex flex-col items-start">
+              <span className="text-[11px] font-semibold text-slate-100">{t.tiles.wifi}</span>
+              {!isWifiActive && (
+                <span className="text-[9px] text-slate-400 font-mono">{t.actions.notActive}</span>
+              )}
+            </div>
           </button>
 
-          {/* Accesso Porta */}
           <button
-            onClick={() => onNavigate('check_in')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
+            onClick={() => onNavigate('emergenza')}
+            className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 hover:border-rose-400/60 hover:bg-rose-500/15 active:scale-95 transition cursor-pointer group shadow-sm"
           >
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-              <Key className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 shrink-0 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <PlusCircle className="w-5 h-5 text-rose-400" />
             </div>
-            <span className="text-[11px] font-semibold text-slate-100">{t.gridMenu.keys}</span>
-            <span className="text-[9px] text-emerald-400/80 font-mono">
-              {!isKeysReady ? t.actions.notActive : t.gridMenu.smartAccessLabel}
-            </span>
+            <span className="text-[11px] font-semibold text-rose-300 text-left">{t.tiles.emergenza}</span>
           </button>
-
-          {/* Parcheggio */}
-          <button
-            onClick={() => onNavigate('posizione')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-[#0e151e] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#131d27] active:scale-95 transition cursor-pointer group shadow-sm"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-              <Car className="w-5 h-5 text-emerald-400" />
-            </div>
-            <span className="text-[11px] font-semibold text-slate-100">{t.gridMenu.car}</span>
-            <span className="text-[9px] text-slate-400">{t.gridMenu.parking}</span>
-          </button>
-
-          {/* Assistenza Nino WhatsApp */}
-          <a
-            href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(
-              pass ? `Ciao Nino! Sono ${pass.guestName}, ti scrivo dall'Appartamento Aurora.` : 'Ciao Nino!'
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackActivity(pass, 'whatsapp_contact')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 border border-emerald-400/40 text-white shadow-lg shadow-emerald-950/50 transition cursor-pointer group text-center"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-              <MessageSquare className="w-5 h-5 fill-white" />
-            </div>
-            <span className="text-[11px] font-bold text-white">Nino</span>
-            <span className="text-[9px] text-emerald-100 font-medium">WhatsApp</span>
-          </a>
         </div>
 
         {/* View Switcher: Grid vs List */}

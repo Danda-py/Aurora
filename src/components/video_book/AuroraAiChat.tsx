@@ -93,12 +93,16 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass, language 
     try {
       const response = await fetch('/api/aurora-ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-guest-token': pass?.token || ''
+        },
+        credentials: 'include',
         body: JSON.stringify({
           guestToken: pass?.token,
           guestName: pass?.guestName,
           question: text,
-          history: messages.slice(1),
+          history: messages.slice(1).map(m => ({ role: m.role, text: m.text || '' })),
           image: imageToSend?.dataUrl,
           imageMimeType: imageToSend?.mimeType,
           language

@@ -84,18 +84,25 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
   }, []);
 
   const scrollNext = () => {
-    scrollerRef.current?.scrollBy({ left: scrollerRef.current.clientWidth * 0.78, behavior: 'smooth' });
+    scrollerRef.current?.scrollBy({ left: scrollerRef.current.clientWidth * 0.75, behavior: 'smooth' });
   };
 
   return (
-    <div className="aurora-photo-scroller-wrap">
-      <div ref={scrollerRef} className="aurora-photo-scroller" onScroll={updateScrollState}>
+    <div className="relative min-w-0">
+      <div
+        ref={scrollerRef}
+        className="flex gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 px-4"
+        onScroll={updateScrollState}
+      >
         {children}
       </div>
       {canScroll && (
-        <button className="aurora-scroll-hint" onClick={scrollNext} aria-label={hintLabel}>
-          <Hand className="aurora-scroll-hand" aria-hidden="true" />
-          <ChevronRight aria-hidden="true" />
+        <button
+          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-zinc-900/80 border border-white/15 text-emerald-400 backdrop-blur-md shadow-lg transition active:scale-95 cursor-pointer"
+          onClick={scrollNext}
+          aria-label={hintLabel}
+        >
+          <ChevronRight className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -453,79 +460,81 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     <button
       key={item.page}
       onClick={() => onNavigate(item.page)}
-      className="aurora-photo-card group"
+      className="relative flex-shrink-0 w-[175px] sm:w-[195px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
       aria-label={item.label}
     >
       <img 
         src={item.bgImage} 
         alt={item.label} 
         loading="lazy" 
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         onError={(e) => {
           if (item.page === 'contatti') {
             e.currentTarget.src = '/uploads/host.jpg';
           }
         }}
       />
-      <div className="aurora-photo-card-info">
-        <span className="aurora-photo-tag">
-          {item.tag}
-        </span>
-        <strong>
+      {/* Dark gradient for text readability without obscuring photo */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
+        <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
           {item.label}
         </strong>
-        <small>
+        <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
           {item.desc}
-        </small>
+        </p>
       </div>
     </button>
   );
 
   return (
-    <div className={`aurora-concierge min-h-screen text-white ${isNight ? 'aurora-night' : ''}`}>
+    <div className="min-h-screen w-full bg-black text-white selection:bg-emerald-500/25 selection:text-emerald-200">
       
-      {/* Apple Floating Language Trigger */}
-      <button 
-        className="aurora-floating-language" 
-        onClick={() => setLanguageOpen(true)} 
-        aria-label={t.concierge.changeLanguage}
-      >
-        <FlagIcon language={language} className="h-full w-full object-cover" />
-      </button>
-
-      <main className="aurora-shell space-y-7 pb-16 pt-6">
+      {/* Smartphone-first centered container with unified vertical rhythm */}
+      <main className="w-full max-w-[440px] mx-auto px-4 pt-3 pb-24 space-y-6">
         
-        {/* Apple Brand Space & Guest Greeting */}
-        <section className="aurora-brand-space" aria-label="Aurora in Valtellina">
-          <div className="aurora-house-logo">
-            <Home className="h-5 w-5 text-[#07110d]" />
+        {/* 1. Header: Frosted Glass Floating Bar */}
+        <header className="sticky top-2 z-30 w-full backdrop-blur-md bg-zinc-900/70 border border-white/10 rounded-2xl px-3.5 py-2.5 shadow-xl flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+              <Home className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-sm font-semibold text-white tracking-tight truncate">
+                {pass 
+                  ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}` 
+                  : t.concierge.welcomeCity}
+              </h1>
+            </div>
           </div>
-          <div>
-            <p className="aurora-eyebrow">Aurora in Valtellina</p>
-            <h1 className="aurora-brand-name">
-              {pass 
-                ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}.` 
-                : t.concierge.welcomeCity}
-            </h1>
-          </div>
-        </section>
 
-        {/* Mandatory Check-in Document Banner (hidden until the check-in day itself) */}
+          <button 
+            onClick={() => setLanguageOpen(true)} 
+            className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition active:scale-95 shrink-0 ml-2"
+            aria-label={t.concierge.changeLanguage}
+          >
+            <FlagIcon language={language} className="w-3.5 h-3.5 rounded-full object-cover" />
+            <span className="text-[11px] font-semibold uppercase text-zinc-300">{language}</span>
+          </button>
+        </header>
+
+        {/* Mandatory Check-in Document Banner */}
         {pass && isCheckinDayOrLater && !pass.documentsUploaded && (
-          <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-pulse">
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex flex-col gap-2.5 shadow-xl">
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
                 <ShieldAlert className="w-3 h-3" /> {docBanner.requiredBadge}
               </span>
-              <h3 className="text-sm font-bold text-white tracking-tight">
+              <h3 className="text-xs font-bold text-white tracking-tight">
                 {docBanner.requiredTitle}
               </h3>
-              <p className="text-xs text-white/75 leading-relaxed max-w-xl">
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
                 {docBanner.requiredDesc}
               </p>
             </div>
             <button 
               onClick={() => onNavigate('check_in')} 
-              className="btn-apple-primary bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 self-start sm:self-center cursor-pointer transition shrink-0 shadow-md border-0"
+              className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-98 shadow-md border-0"
             >
               <span>{docBanner.requiredCta}</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -534,90 +543,101 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         )}
 
         {pass && pass.documentsUploaded && !isCheckinConfirmed && (
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-md">
-            <Clock3 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 shadow-xl">
+            <Clock3 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <h3 className="text-xs font-bold text-white">
                 {docBanner.reviewTitle}
               </h3>
-              <p className="text-[11px] text-white/75 leading-relaxed">
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
                 {docBanner.reviewDesc}
               </p>
             </div>
           </div>
         )}
 
-        {/* Departure Reminder Nudge (if today is checkout) */}
+        {/* Departure Reminder Nudge */}
         {isCheckoutDay && (
-          <button className="stay-nudge" onClick={() => setSheet('luggage')}>
+          <button 
+            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/80 border border-white/10 text-left transition active:scale-98"
+            onClick={() => setSheet('luggage')}
+          >
             <Clock3 className="h-4 w-4 text-amber-300 shrink-0" />
-            <span>
-              <strong>{t.concierge.nudge.checkoutTitle} {APARTMENT_INFO.checkOutLimit}.</strong>
-              <small>{t.concierge.nudge.checkoutSub}</small>
-            </span>
-            <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-amber-200" />
+            <div className="flex-1 min-w-0">
+              <strong className="block text-xs font-semibold text-white truncate">
+                {t.concierge.nudge.checkoutTitle} {APARTMENT_INFO.checkOutLimit}
+              </strong>
+              <small className="block text-[11px] text-zinc-400 truncate">
+                {t.concierge.nudge.checkoutSub}
+              </small>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-zinc-400" />
           </button>
         )}
 
-        {/* Apple Wallet-Style 3D Glass Pass (only for guests with a pass) */}
+        {/* 2. Stay Info & Status Widget: Compact Horizontal Apple Style */}
         {pass && (
-          <section 
-            className="glass-pass" 
-            style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` } as React.CSSProperties}
-          >
-          <div className="glass-pass-shine" />
-          <div className="relative z-10 flex h-full flex-col justify-between p-3.5 sm:p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-                  {t.concierge.guestCount} <strong className="ml-1 text-sm text-white">{pass.guestsCount ?? 1}</strong>
-                </p>
+          <section className="rounded-2xl border border-white/10 bg-zinc-900/75 backdrop-blur-md p-3.5 shadow-xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                  {t.concierge.guestCount}
+                </span>
+                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md bg-white/10 text-[11px] font-bold text-white">
+                  {pass.guestsCount ?? 1}
+                </span>
               </div>
-              <div className="glass-chip">
-                <BedDouble className="h-4 w-4 text-[#62e6bd]" />
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
+                <BedDouble className="w-3 h-3" />
                 <span>APT. AURORA</span>
               </div>
             </div>
 
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3">
-              <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-in</p>
-                <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
-                  {formatPassDate(pass.checkInDate)}
-                </p>
-                <p className="text-[11px] font-medium text-white/70">{t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'} (2 PM)</p>
+            {/* Compact Horizontal Check-in / Check-out */}
+            <div className="grid grid-cols-2 divide-x divide-white/10 py-0.5 bg-white/[0.02] rounded-xl border border-white/5">
+              <div className="px-3 py-1.5">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Check-in</p>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-sm font-bold tracking-tight text-white">
+                    {formatPassDate(pass.checkInDate)}
+                  </span>
+                  <span className="text-[11px] text-zinc-400">
+                    {t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'}
+                  </span>
+                </div>
               </div>
-              <div className="rounded-xl border border-white/20 bg-black/30 p-2 sm:p-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[#62e6bd]">Check-out</p>
-                <p className="mt-0.5 text-base font-bold tracking-tight text-white sm:text-lg">
-                  {formatPassDate(pass.checkOutDate)}
-                </p>
-                <p className="text-[11px] font-medium text-white/70">{t.concierge.by} {pass.checkOutTime ?? '10:00'}</p>
+              <div className="px-3 py-1.5">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Check-out</p>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-sm font-bold tracking-tight text-white">
+                    {formatPassDate(pass.checkOutDate)}
+                  </span>
+                  <span className="text-[11px] text-zinc-400">
+                    {t.concierge.by} {pass.checkOutTime ?? '10:00'}
+                  </span>
+                </div>
               </div>
             </div>
 
+            {/* Dynamic Island-style status pill / Door Opener */}
             {!isStayActive ? (
-              <div className="mt-3 p-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-slate-400 text-xs flex flex-col gap-1 items-center justify-center text-center">
-                <ShieldAlert className="h-5 w-5 text-amber-500 animate-pulse" />
-                <span className="font-bold text-white">{t.concierge.keysNotActive}</span>
-                <span>
-                  {timing?.isUpcoming 
-                    ? `${t.concierge.keysAvailableFrom} ${pass.checkInTime || '14:00'} ${t.concierge.keysOn} ${formatPassDate(pass.checkInDate)}`
-                    : t.concierge.keysConcluded}
-                </span>
+              <div className="flex items-center justify-center pt-0.5">
+                <div className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border border-amber-500/20 rounded-full px-3 py-1 text-xs font-medium max-w-full truncate shadow-sm">
+                  <ShieldAlert className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+                  <span className="truncate">{t.concierge.keysNotActive}</span>
+                </div>
               </div>
             ) : !isKeysReady ? (
-              <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex flex-col gap-1.5 items-center justify-center text-center">
-                <Clock3 className="h-5 w-5 text-amber-400 animate-pulse" />
-                <span className="font-bold text-white">{t.checkInPage.pendingHostConfirmation}</span>
-                <span className="text-white/70 text-center leading-normal">
-                  {t.checkInPage.pendingHostConfirmationDesc}
-                </span>
+              <div className="flex items-center justify-center pt-0.5">
+                <div className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border border-amber-500/20 rounded-full px-3 py-1 text-xs font-medium max-w-full truncate shadow-sm">
+                  <Clock3 className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+                  <span className="truncate">{t.checkInPage.pendingHostConfirmation}</span>
+                </div>
               </div>
             ) : (
-              <>
+              <div className="space-y-1 pt-0.5">
                 <button
-                  className={`glass-key-button mt-2.5 ${doorState === 'success' ? 'is-success' : ''} ${doorState === 'error' ? 'is-error' : ''}`}
+                  className={`relative flex w-full items-center justify-between px-3.5 py-2.5 overflow-hidden text-zinc-950 font-bold bg-emerald-400 hover:bg-emerald-300 rounded-xl cursor-pointer shadow-md shadow-emerald-500/20 transition active:scale-[0.98] ${doorState === 'success' ? 'bg-emerald-300' : ''} ${doorState === 'error' ? 'bg-rose-400 text-white' : ''}`}
                   onPointerDown={startHold}
                   onPointerUp={cancelHold}
                   onPointerCancel={cancelHold}
@@ -633,82 +653,90 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   }}
                   disabled={doorState === 'opening'}
                 >
-                  <span className="glass-key-progress" style={{ transform: `scaleX(${holdProgress})` }} />
-                  <span className="flex items-center gap-2 relative z-10">
-                    <KeyRound className="h-4 w-4" />
+                  <span 
+                    className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
+                    style={{ transform: `scaleX(${holdProgress})` }} 
+                  />
+                  <span className="flex items-center gap-2 relative z-10 text-xs sm:text-sm">
+                    <KeyRound className="w-3.5 h-3.5" />
                     {t.concierge.doorOpeningState[doorState]}
                   </span>
-                  <ArrowUpRight className="h-4 w-4 relative z-10" />
+                  <ArrowUpRight className="w-3.5 h-3.5 relative z-10" />
                 </button>
                 {doorMessage && (
-                  <p className={`mt-1.5 text-center text-[11px] ${doorState === 'error' ? 'text-rose-300' : 'text-white/70'}`}>
+                  <p className={`text-center text-[11px] pt-0.5 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-400'}`}>
                     {doorMessage}
                   </p>
                 )}
-              </>
+              </div>
             )}
-          </div>
-        </section>
+          </section>
         )}
 
-        {/* Apple Quick Action Controls */}
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="aurora-eyebrow">{t.gridMenu.readyForYou}</p>
-              <h2>{t.gridMenu.guideSectionTitle}</h2>
-            </div>
-          </div>
-          
-          <div className={`quick-actions-grid ${isPublic ? 'is-public' : 'has-5-items'}`}>
+        {/* 3. Quick Actions: Predominantly Horizontal Scrollable Action Strip */}
+        <section className="relative">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
             {isPublic ? (
               <>
                 <a 
                   href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent('Ciao Nino!')}`} 
                   target="_blank" 
                   rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <MessageCircle />
-                  <span>{t.tiles.contatti}</span>
-                  <small>WhatsApp</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.contatti}</span>
                 </a>
 
                 <a
                   href={APARTMENT_INFO.googleMapsUrl}
                   target="_blank"
                   rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <MapPin />
-                  <span>{t.tiles.posizione}</span>
-                  <small>GPS</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <MapPin className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.posizione}</span>
                 </a>
 
-                <button onClick={() => setSheet('schedule')}>
-                  <Clock3 />
-                  <span>{t.tiles.regole}</span>
-                  <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
+                <button 
+                  onClick={() => setSheet('schedule')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Clock3 className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.regole}</span>
                 </button>
 
                 <a
                   href="https://aurorainvaltellina.it"
                   target="_blank"
                   rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <Calendar />
-                  <span>{t.tiles.prenota}</span>
-                  <small>{t.tiles.prenotaDesc}</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Calendar className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.prenota}</span>
                 </a>
               </>
             ) : (
               <>
                 <button 
                   onClick={isWifiActive ? copyWifi : undefined}
-                  className={!isWifiActive ? "opacity-40 cursor-not-allowed" : ""}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start ${!isWifiActive ? "opacity-40 cursor-not-allowed" : ""}`}
                   title={!isStayActive ? "Disponibile solo durante il soggiorno" : (!isKeysReady ? t.checkInPage.pendingHostConfirmationDesc : "")}
                 >
-                  <Wifi />
-                  <span>{t.tiles.wifi}</span>
-                  <small>{!isWifiActive ? t.actions.notActive : (wifiCopied ? t.actions.copied : t.actions.copy)}</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Wifi className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">
+                    {wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi}
+                  </span>
                 </button>
                 
                 <a 
@@ -716,10 +744,12 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   target="_blank" 
                   rel="noreferrer"
                   onClick={() => trackActivity(pass, 'whatsapp_contact')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <MessageCircle />
-                  <span>{t.tiles.contatti}</span>
-                  <small>WhatsApp</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.contatti}</span>
                 </a>
                 
                 <a
@@ -727,40 +757,44 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => trackActivity(pass, 'maps_open')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <MapPin />
-                  <span>{t.tiles.posizione}</span>
-                  <small>GPS</small>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <MapPin className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.posizione}</span>
                 </a>
                 
-                <button onClick={() => { setSheet('schedule'); trackActivity(pass, 'house_rules_view'); }}>
-                  <Clock3 />
-                  <span>{t.tiles.regole}</span>
-                  <small>Check-out {APARTMENT_INFO.checkOutLimit}</small>
+                <button 
+                  onClick={() => { setSheet('schedule'); trackActivity(pass, 'house_rules_view'); }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Clock3 className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.regole}</span>
                 </button>
 
-                <a
-                  href="https://aurorainvaltellina.it"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => trackActivity(pass, 'booking_link_open')}
+                <button 
+                  onClick={() => onNavigate('check_in')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all shrink-0 cursor-pointer snap-start"
                 >
-                  <Calendar />
-                  <span>{t.tiles.prenota}</span>
-                  <small>{t.tiles.prenotaDesc}</small>
-                </a>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <KeyRound className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white tracking-tight whitespace-nowrap">{t.tiles.checkIn}</span>
+                </button>
               </>
             )}
           </div>
         </section>
 
-        {/* SECTION 1: Guida & Arrivo */}
+        {/* 4. Sezioni di Contenuto & Card Carousel */}
+        {/* SECTION 1: Guida Casa */}
         <section className="space-y-3">
-          <div>
-            <p className="aurora-eyebrow">{t.gridMenu.guideSectionTitle}</p>
-            <h2>{guideSections.houseEssentials.title}</h2>
-            <p className="text-xs text-white/60 mt-0.5">{guideSections.houseEssentials.subtitle}</p>
-          </div>
+          <h2 className="text-lg font-bold text-white tracking-tight">
+            {guideSections.houseEssentials.title}
+          </h2>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.houseEssentials.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -768,14 +802,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 2: Idee per oggi */}
         <section className="space-y-3">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="aurora-eyebrow">{t.gridMenu.categories.explore}</p>
-              <h2>{t.tiles.attivita}</h2>
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {t.tiles.attivita}
+            </h2>
             <button 
               onClick={() => onNavigate('attivita')} 
-              className="text-xs font-semibold text-[#62e6bd] hover:text-[#93f4d4] flex items-center gap-1 transition"
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
             >
               {t.actions.backToMenu === 'MENU' ? 'Vedi tutto' : 'See all'} <ChevronRight className="inline h-3.5 w-3.5" />
             </button>
@@ -785,29 +818,36 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             {localStories.map((story) => (
               <a
                 key={story.title} 
-                className="aurora-photo-card group"
+                className="relative flex-shrink-0 w-[175px] sm:w-[195px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
                 href={story.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <img src={story.image} alt={story.title} loading="lazy" />
-                <div className="aurora-photo-card-info">
-                  <span className="aurora-photo-tag">{t.tiles.attivita}</span>
-                  <strong>{story.title}</strong>
-                  <small>{story.meta}</small>
+                <img 
+                  src={story.image} 
+                  alt={story.title} 
+                  loading="lazy" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
+                  <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
+                    {story.title}
+                  </strong>
+                  <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
+                    {story.meta}
+                  </p>
                 </div>
               </a>
             ))}
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 3: Vivere la Valtellina */}
+        {/* SECTION 3: Esplora Valtellina */}
         <section className="space-y-3">
-          <div>
-            <p className="aurora-eyebrow">{t.gridMenu.categories.food}</p>
-            <h2>{guideSections.exploreValtellina.title}</h2>
-            <p className="text-xs text-white/60 mt-0.5">{guideSections.exploreValtellina.subtitle}</p>
-          </div>
+          <h2 className="text-lg font-bold text-white tracking-tight">
+            {guideSections.exploreValtellina.title}
+          </h2>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.exploreValtellina.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -815,11 +855,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 4: Supporto & Sicurezza */}
         <section className="space-y-3">
-          <div>
-            <p className="aurora-eyebrow">{t.tiles.contatti}</p>
-            <h2>{guideSections.supportSecurity.title}</h2>
-            <p className="text-xs text-white/60 mt-0.5">{guideSections.supportSecurity.subtitle}</p>
-          </div>
+          <h2 className="text-lg font-bold text-white tracking-tight">
+            {guideSections.supportSecurity.title}
+          </h2>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.supportSecurity.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -827,11 +865,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 5: Partenza & Check-out */}
         <section className="space-y-3">
-          <div>
-            <p className="aurora-eyebrow">{t.tiles.checkOut}</p>
-            <h2>{guideSections.departure.title}</h2>
-            <p className="text-xs text-white/60 mt-0.5">{guideSections.departure.subtitle}</p>
-          </div>
+          <h2 className="text-lg font-bold text-white tracking-tight">
+            {guideSections.departure.title}
+          </h2>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.departure.items.map(renderPhotoCard)}
           </ScrollableTileRow>

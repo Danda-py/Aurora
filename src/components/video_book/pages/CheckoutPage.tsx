@@ -148,7 +148,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             </h4>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {(co.checklist as Array<{ title: string; desc: string }>).map((item: { title: string; desc: string }, idx: number) => {
               const isDone = !!checkedItems[idx];
               return (
@@ -156,7 +156,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                   key={idx}
                   type="button"
                   onClick={() => toggleCheck(idx)}
-                  className={`w-full p-3.5 rounded-2xl border transition-all text-left flex items-start gap-3.5 cursor-pointer select-none ${
+                  className={`w-full p-2.5 rounded-xl border transition-all text-left flex items-start gap-2.5 cursor-pointer select-none ${
                     isDone 
                       ? 'bg-[#62e6bd]/15 border-[#62e6bd]/40 text-white' 
                       : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-white/80'
@@ -164,16 +164,16 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
                 >
                   <div className="shrink-0 mt-0.5">
                     {isDone ? (
-                      <CheckSquare className="w-5 h-5 text-[#62e6bd]" />
+                      <CheckSquare className="w-4 h-4 text-[#62e6bd]" />
                     ) : (
-                      <Square className="w-5 h-5 text-white/40" />
+                      <Square className="w-4 h-4 text-white/40" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className={`block text-xs sm:text-sm font-bold tracking-tight ${isDone ? 'line-through text-white/50' : 'text-white'}`}>
+                    <span className={`block text-xs font-semibold tracking-tight ${isDone ? 'line-through text-white/50' : 'text-white'}`}>
                       {item.title}
                     </span>
-                    <span className="text-xs text-white/60 leading-relaxed block mt-0.5">
+                    <span className="text-[11px] text-white/60 leading-relaxed block mt-0.5">
                       {item.desc}
                     </span>
                   </div>
@@ -184,20 +184,20 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         </div>
 
         {/* Home Assistant Domotics Checkout Card */}
-        <div className="aurora-glass-card space-y-4 border border-rose-500/25 bg-rose-500/5">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 shrink-0">
-              <LogOut className="w-5 h-5" />
+        <div className="aurora-glass-card p-4 space-y-3 border border-rose-500/25 bg-rose-500/5">
+          <div className="flex items-start gap-2.5">
+            <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 shrink-0">
+              <LogOut className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+              <h4 className="font-bold text-xs sm:text-sm text-white tracking-tight">
                 {language === 'it' && "Domotica di Fine Soggiorno"}
                 {language === 'en' && "End-of-Stay Smart Home Automation"}
                 {language === 'de' && "Smart-Home-Abreise-Automation"}
                 {language === 'fr' && "Domotique de Fin de Séjour"}
                 {language === 'es' && "Domótica de Fin de Estancia"}
               </h4>
-              <p className="text-xs text-white/60 leading-relaxed mt-1">
+              <p className="text-[11px] text-white/60 leading-relaxed mt-0.5">
                 {CHECKOUT_BUTTON_TRANSLATIONS[language].subText}
               </p>
             </div>
@@ -206,7 +206,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           <button
             onClick={handleCheckoutClick}
             disabled={checkoutStatus === 'loading' || checkoutStatus === 'success'}
-            className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full py-2.5 px-3.5 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               checkoutStatus === 'loading'
                 ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
                 : checkoutStatus === 'success'
@@ -217,9 +217,9 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             }`}
           >
             {checkoutStatus === 'loading' && (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             )}
-            {checkoutStatus === 'success' && <CheckCircle className="w-4 h-4 text-white" />}
+            {checkoutStatus === 'success' && <CheckCircle className="w-3.5 h-3.5 text-white" />}
             <span>
               {checkoutStatus === 'loading'
                 ? CHECKOUT_BUTTON_TRANSLATIONS[language].loadingText
@@ -239,9 +239,9 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         </div>
 
         {/* Thank you note */}
-        <div className="aurora-glass-card text-center space-y-2 p-6">
-          <Heart className="w-6 h-6 text-rose-400 mx-auto fill-rose-400/20" />
-          <p className="text-xs sm:text-sm italic text-white/80 leading-relaxed max-w-md mx-auto">
+        <div className="aurora-glass-card text-center space-y-1.5 p-4">
+          <Heart className="w-5 h-5 text-rose-400 mx-auto fill-rose-400/20" />
+          <p className="text-xs italic text-white/80 leading-relaxed max-w-md mx-auto">
             "{co.thankYou}"
           </p>
         </div>
@@ -251,32 +251,32 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           href={APARTMENT_INFO.reviewUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="aurora-glass-card flex items-center gap-4 hover:border-[#62e6bd]/40 transition group cursor-pointer"
+          className="aurora-glass-card p-3 flex items-center gap-3 hover:border-[#62e6bd]/40 transition group cursor-pointer"
         >
-          <div className="aurora-icon-box bg-[#62e6bd] text-[#07110d] group-hover:scale-105 transition-transform">
-            <Star className="w-5 h-5 fill-current" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#62e6bd] text-[#07110d] group-hover:scale-105 transition-transform shrink-0">
+            <Star className="w-4 h-4 fill-current" />
           </div>
           <div className="min-w-0 flex-1">
-            <strong className="block text-sm sm:text-base text-white font-bold tracking-tight">{labels.reviewTitle}</strong>
-            <span className="text-xs text-white/60 leading-snug block mt-0.5">{labels.reviewDescription}</span>
+            <strong className="block text-xs sm:text-sm text-white font-bold tracking-tight">{labels.reviewTitle}</strong>
+            <span className="text-[11px] text-white/60 leading-snug block mt-0.5">{labels.reviewDescription}</span>
           </div>
         </a>
 
-        <div className="aurora-glass-card text-center space-y-3 p-6">
+        <div className="aurora-glass-card text-center space-y-2.5 p-4">
           <div className="flex items-center justify-center gap-1 text-[#62e6bd]">
             {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="w-5 h-5 fill-current" />
+              <Star key={star} className="w-4 h-4 fill-current" />
             ))}
           </div>
           <p className="text-xs text-white/75 leading-relaxed max-w-sm mx-auto">
             {reviewCopy.reviewPrompt}
           </p>
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <a
               href={APARTMENT_INFO.googleReviewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="aurora-secondary-pill py-3"
+              className="py-2 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white text-xs font-semibold flex items-center justify-center border border-white/10 transition"
             >
               <span>{reviewCopy.rateGoogle}</span>
             </a>
@@ -284,7 +284,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               href={APARTMENT_INFO.reviewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="aurora-action-pill py-3"
+              className="py-2 px-3 rounded-xl bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] text-xs font-bold flex items-center justify-center shadow-xs transition"
             >
               <span>{reviewCopy.rateWebsite}</span>
             </a>

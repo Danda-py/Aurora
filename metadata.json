@@ -1,6 +1,6 @@
 {
   "name": "Aurora in Valtellina",
   "description": "PWA e Guida Digitale per gli ospiti di Aurora in Valtellina a Morbegno (Via Serta 188D). Check-in, Wi-Fi, servizi della casa, ristoranti ed itinerari.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": ["geolocation", "camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

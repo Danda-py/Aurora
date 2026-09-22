@@ -561,6 +561,7 @@ export function createApp() {
       req.path.startsWith('/auth/') ||
       req.path === '/guest/pass' ||
       req.path === '/guest/activity' ||
+      req.path === '/guest/ocr-scan' ||
       req.path === '/lock/status' ||
       req.path === '/aurora-ai/chat' ||
       (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics'))
@@ -601,7 +602,7 @@ export function createApp() {
       next();
       return;
     }
-    if (req.path === '/guest/documents' || req.path === '/guest/ocr-scan') {
+    if (req.path === '/guest/documents') {
       const session = getHostSession(req);
       const guestToken = req.get('x-guest-token') || req.body?.token || req.body?.guestToken;
       if (session || findPassByToken(guestToken)) {
@@ -808,95 +809,126 @@ export function createApp() {
       }
 
       let parsedData: any = {};
+      let ocrExtracted = false;
 
       if (process.env.GEMINI_API_KEY) {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const prompt = `Analizza l'immagine di questo documento di identità (${docType || 'documento'}) e scansiona/estrai i seguenti dati dell'ospite in formato JSON strutturato con le seguenti chiavi esatte:
+        const ai = new GoogleGenAI({
+          apiKey: process.env.GEMINI_API_KEY,
+          httpOptions: {
+            headers: {
+              'User-Agent': 'aistudio-build'
+            }
+          }
+        });
+        const prompt = `Analizza con attenzione l'immagine di questo documento di identità (${docType || 'documento'}) ed estrai i dati anagrafici e del documento dell'ospite in formato JSON con le seguenti chiavi esatte:
 {
   "name": "Nome in maiuscolo (es. MARIO)",
   "surname": "Cognome in maiuscolo (es. ROSSI)",
   "gender": "M o F",
   "birthDate": "Data di nascita nel formato YYYY-MM-DD (es. 1985-05-15)",
-  "birthPlace": "Luogo o comune di nascita (es. MILANO o BERLIN)",
+  "birthPlace": "Luogo o comune di nascita (es. MILANO o BERLINO)",
   "citizenship": "Nazionalità/Cittadinanza in italiano maiuscolo (es. ITALIANA, TEDESCA, FRANCESE, SVIZZERA)",
   "documentNumber": "Numero del documento (es. CA12345XX)",
   "issuePlace": "Luogo o ente di rilascio (es. COMUNE DI MILANO o QUESTURA DI SONDRIO)",
   "issueDate": "Data di rilascio nel formato YYYY-MM-DD (es. 2020-10-12)"
 }
 
-Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni. Se un campo non è rilevabile dal documento, lascialo vuoto (""). Assicurati di convertire le date nel formato YYYY-MM-DD.`;
+Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente leggibile dal documento, imposta una stringa vuota "". Assicurati di formattare le date in YYYY-MM-DD.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash-lite',
-          contents: [
-            {
-              parts: [
-                { text: prompt },
-                { inlineData: { data: base64Data, mimeType: mimeType } }
-              ]
+        const candidateModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+        for (const modelName of candidateModels) {
+          try {
+            const response = await ai.models.generateContent({
+              model: modelName,
+              contents: [
+                {
+                  parts: [
+                    { text: prompt },
+                    { inlineData: { data: base64Data, mimeType: mimeType } }
+                  ]
+                }
+              ],
+              config: {
+                responseMimeType: "application/json"
+              }
+            });
+
+            const responseText = response.text?.trim();
+            if (responseText) {
+              try {
+                parsedData = JSON.parse(responseText);
+                ocrExtracted = true;
+                break;
+              } catch (parseErr) {
+                const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  parsedData = JSON.parse(jsonMatch[0]);
+                  ocrExtracted = true;
+                  break;
+                }
+              }
             }
-          ],
-          config: {
-            responseMimeType: "application/json"
-          }
-        });
-
-        const responseText = response.text?.trim();
-        if (!responseText) {
-          throw new Error('Gemini non ha restituito una risposta valida.');
-        }
-
-        try {
-          parsedData = JSON.parse(responseText);
-        } catch (parseErr) {
-          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            parsedData = JSON.parse(jsonMatch[0]);
-          } else {
-            throw parseErr;
+          } catch (modelErr: any) {
+            console.warn(`[OCR-SCAN] Call to model ${modelName} failed, trying next candidate:`, modelErr?.message || modelErr);
           }
         }
-      } else {
+      }
+
+      if (!ocrExtracted) {
         // Fallback to local Tesseract OCR
-        console.warn('[OCR] GEMINI_API_KEY non configurata: uso il fallback Tesseract (estrazione grezza, qualità inferiore). Imposta GEMINI_API_KEY nel file .env per un OCR affidabile.');
-        const buffer = Buffer.from(base64Data, 'base64');
-        const { data: { text } } = await Tesseract.recognize(buffer, 'ita');
-        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-        
-        // Basic naive extraction
-        parsedData = {
-          name: '',
-          surname: '',
-          gender: 'M',
-          birthDate: '',
-          birthPlace: '',
-          citizenship: 'ITALIANA',
-          documentNumber: '',
-          issuePlace: '',
-          issueDate: ''
-        };
+        console.warn('[OCR] Modelli Gemini non disponibili o errore OCR: fallback su Tesseract locale.');
+        try {
+          const buffer = Buffer.from(base64Data, 'base64');
+          const { data: { text } } = await Tesseract.recognize(buffer, 'ita');
+          const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+          
+          parsedData = {
+            name: '',
+            surname: '',
+            gender: 'M',
+            birthDate: '',
+            birthPlace: '',
+            citizenship: 'ITALIANA',
+            documentNumber: '',
+            issuePlace: '',
+            issueDate: ''
+          };
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].toUpperCase();
-          if (line.includes('COGNOME') && lines[i+1]) {
-            parsedData.surname = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
-          } else if (line.includes('NOME') && lines[i+1]) {
-            parsedData.name = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
-          } else if (line.includes('DATA DI NASCITA')) {
-            const dateMatch = (lines[i] + ' ' + (lines[i+1]||'')).match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
-            if (dateMatch) parsedData.birthDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].toUpperCase();
+            if (line.includes('COGNOME') && lines[i+1]) {
+              parsedData.surname = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
+            } else if (line.includes('NOME') && lines[i+1]) {
+              parsedData.name = lines[i+1].replace(/[^A-Z\s]/g, '').trim();
+            } else if (line.includes('DATA DI NASCITA')) {
+              const dateMatch = (lines[i] + ' ' + (lines[i+1]||'')).match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
+              if (dateMatch) parsedData.birthDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+            }
           }
+          
+          const docNumMatch = text.match(/\b([A-Z]{2}\d{5}[A-Z]{2}|[A-Z0-9]{9})\b/i);
+          if (docNumMatch) parsedData.documentNumber = docNumMatch[1].toUpperCase();
+          ocrExtracted = true;
+        } catch (tessErr) {
+          console.warn('[OCR] Anche Tesseract fallback ha fallito:', tessErr);
+          parsedData = {
+            name: '',
+            surname: '',
+            gender: 'M',
+            birthDate: '',
+            birthPlace: '',
+            citizenship: 'ITALIANA',
+            documentNumber: '',
+            issuePlace: '',
+            issueDate: ''
+          };
         }
-        
-        // Try to find any typical document number
-        const docNumMatch = text.match(/\b([A-Z]{2}\d{5}[A-Z]{2}|[A-Z0-9]{9})\b/i);
-        if (docNumMatch) parsedData.documentNumber = docNumMatch[1].toUpperCase();
       }
 
       res.json({ success: true, data: parsedData });
     } catch (err: any) {
       console.error('OCR scan failed:', err?.message || err, err?.stack || '');
-      res.status(502).json({ success: false, error: 'Scansione intelligente fallita. Riprova o compila manualmente.' });
+      res.status(502).json({ success: false, error: 'Scansione intelligente non riuscita. Puoi inserire i dati manualmente.' });
     }
   });
 
@@ -1018,7 +1050,14 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       : auroraAiInstructions;
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
       const userParts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
       if (question) userParts.push({ text: question });
       if (hasImage) {
@@ -1029,13 +1068,13 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
       const contents = [
         ...history.map((message: { role: 'user' | 'model'; text: string }) => ({
           role: message.role,
-          parts: [{ text: message.text }]
+          parts: [{ text: message.text || '(messaggio)' }]
         })),
         { role: 'user', parts: userParts }
       ];
 
-      // Multi-model resilience: gemini-3.6-flash is lightning-fast and reliable, with gemini-3.5-flash-lite as backup
-      const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+      // Multi-model resilience: prioritize gemini-3.8-flash, with gemini-2.5-flash, gemini-flash-latest, and gemini-3.1-flash-lite as backups
+      const candidateModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
       let answer = '';
       let lastErr: any = null;
 
@@ -1052,7 +1091,7 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
           if (answer) {
             break;
           }
-        } catch (err) {
+        } catch (err: any) {
           lastErr = err;
           console.warn(`[Aurora AI] Call to ${modelName} failed, trying next candidate:`, err?.message || err);
         }

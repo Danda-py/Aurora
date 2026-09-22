@@ -313,58 +313,138 @@ async function startHostPortal() {
   renderIcons();
 }
 
-// Tab Navigation
+// Tab Navigation with 5 Consolidated Sections & Contextual Sub-Nav
 function setupTabs() {
+  const mainGroupButtons = document.querySelectorAll('.main-group-btn');
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
+  const subNavGroups = document.querySelectorAll('.sub-nav-group');
 
+  const tabToGroupMap = {
+    passes: 'bookings',
+    create: 'bookings',
+    channels: 'bookings',
+    ical: 'bookings',
+    messages: 'bookings',
+    hass: 'access',
+    property: 'access',
+    cms: 'content',
+    media: 'content',
+    alloggiati: 'alloggiati',
+    export: 'alloggiati'
+  };
+
+  const groupDefaultTab = {
+    bookings: 'passes',
+    access: 'hass',
+    content: 'cms',
+    alloggiati: 'alloggiati'
+  };
+
+  function activateTab(targetTab) {
+    if (!targetTab) return;
+    const group = tabToGroupMap[targetTab] || 'bookings';
+
+    // Update main group navigation buttons
+    mainGroupButtons.forEach(btn => {
+      const g = btn.getAttribute('data-group');
+      if (g === group) {
+        btn.classList.add('active', 'bg-white/10', 'text-white');
+        btn.classList.remove('text-[#86868b]');
+      } else {
+        btn.classList.remove('active', 'bg-white/10', 'text-white');
+        btn.classList.add('text-[#86868b]');
+      }
+    });
+
+    // Update sub-navigation groups visibility
+    subNavGroups.forEach(sub => {
+      const sg = sub.getAttribute('data-group');
+      if (sg === group) {
+        sub.classList.remove('hidden');
+      } else {
+        sub.classList.add('hidden');
+      }
+    });
+
+    // Update sub-navigation buttons active states
+    tabButtons.forEach(b => {
+      if (b.getAttribute('data-tab') === targetTab) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    // Switch section contents
+    tabContents.forEach(content => {
+      if (content.id === `tab-${targetTab}`) {
+        content.classList.remove('hidden');
+      } else {
+        content.classList.add('hidden');
+      }
+    });
+
+    // Clear lock polling if leaving the hass tab
+    if (lockStatusIntervalId && targetTab !== 'hass') {
+      clearInterval(lockStatusIntervalId);
+      lockStatusIntervalId = null;
+    }
+
+    // Lazy load tab data
+    if (targetTab === 'passes') {
+      fetchPasses();
+    } else if (targetTab === 'channels' || targetTab === 'ical') {
+      fetchChannels();
+      fetchEmailConfig();
+      fetchEmailLogs();
+    } else if (targetTab === 'property') {
+      fetchPropertyConfig();
+    } else if (targetTab === 'hass') {
+      fetchSonoffConfig();
+      fetchLockStatus();
+      if (!lockStatusIntervalId) {
+        lockStatusIntervalId = setInterval(fetchLockStatus, 3000);
+      }
+    } else if (targetTab === 'cms') {
+      loadCmsData();
+    } else if (targetTab === 'media') {
+      loadMediaData();
+    } else if (targetTab === 'messages') {
+      fetchAndRenderScheduledMessages();
+    } else if (targetTab === 'alloggiati') {
+      renderAlloggiatiTab();
+    }
+
+    renderIcons();
+  }
+
+  // Bind clicks on primary group buttons
+  mainGroupButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.getAttribute('data-group');
+      const defTab = groupDefaultTab[group] || 'passes';
+      activateTab(defTab);
+    });
+  });
+
+  // Bind clicks on sub-tab buttons
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetTab = btn.getAttribute('data-tab');
-
-      tabButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      tabContents.forEach(content => {
-        if (content.id === `tab-${targetTab}`) {
-          content.classList.remove('hidden');
-        } else {
-          content.classList.add('hidden');
-        }
-      });
-
-      // Clear lock polling if leaving the hass tab
-      if (lockStatusIntervalId) {
-        clearInterval(lockStatusIntervalId);
-        lockStatusIntervalId = null;
-      }
-
-      // Lazy loads
-      if (targetTab === 'passes') {
-        fetchPasses();
-      } else if (targetTab === 'channels' || targetTab === 'ical') {
-        fetchChannels();
-        fetchEmailConfig();
-        fetchEmailLogs();
-      } else if (targetTab === 'property') {
-        fetchPropertyConfig();
-      } else if (targetTab === 'hass') {
-        fetchSonoffConfig();
-        fetchLockStatus();
-        lockStatusIntervalId = setInterval(fetchLockStatus, 3000);
-      } else if (targetTab === 'cms') {
-        loadCmsData();
-      } else if (targetTab === 'media') {
-        loadMediaData();
-      } else if (targetTab === 'messages') {
-        fetchAndRenderScheduledMessages();
-      } else if (targetTab === 'alloggiati') {
-        renderAlloggiatiTab();
-      }
-
-      renderIcons();
+      activateTab(targetTab);
     });
   });
+
+  // Initial tab setup
+  const initialActive = document.querySelector('.tab-btn.active');
+  if (initialActive) {
+    activateTab(initialActive.getAttribute('data-tab'));
+  } else {
+    activateTab('passes');
+  }
+
+  window.activatePortalTab = activateTab;
 }
 
 // Health & Connection
@@ -901,8 +981,10 @@ async function fetchPasses() {
     // Update counts
     const countEl = document.getElementById('statActiveCount');
     const tabCountEl = document.getElementById('tabCount');
+    const mainTabCountEl = document.getElementById('mainTabCount');
     if (countEl) countEl.textContent = activePasses.length;
     if (tabCountEl) tabCountEl.textContent = activePasses.length;
+    if (mainTabCountEl) mainTabCountEl.textContent = activePasses.length;
 
     filterAndRenderPasses('');
     renderAutonomousReservations();
@@ -4337,7 +4419,7 @@ let currentAlloggiatiConfig = null;
 
 async function fetchAndRenderAlloggiatiConfig() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/alloggiati/config`);
+    const res = await fetch(`${API_BASE_URL}/api/alloggiati/config`, { credentials: 'include' });
     if (!res.ok) return;
     const data = await res.json();
     if (!data.success || !data.config) return;
@@ -4461,6 +4543,7 @@ async function handleSaveAlloggiatiConfig(e) {
     const res = await fetch(`${API_BASE_URL}/api/alloggiati/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         utente,
         password,
@@ -4525,6 +4608,7 @@ async function handleTestAlloggiatiConnection() {
     const res = await fetch(`${API_BASE_URL}/api/alloggiati/test-connection`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ utente, password, wsKey })
     });
     const data = await res.json();
@@ -4551,7 +4635,7 @@ async function handleTestAlloggiatiConnection() {
   } finally {
     if (btnTest) {
       btnTest.disabled = false;
-      btnTest.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Testa Connessione</span>`;
+      btnTest.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Test Credenziali</span>`;
       renderIcons();
     }
   }

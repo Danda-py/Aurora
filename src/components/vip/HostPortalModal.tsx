@@ -559,128 +559,228 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
           </div>
         ) : (
           <>
-            {/* Nav Tabs - responsive horizontal scrollable */}
-            <div className="flex border-b border-gray-200 bg-gray-50 px-2 sm:px-4 shrink-0 text-xs font-mono overflow-x-auto">
+            {/* Primary Nav Tabs - 4 Consolidated Sections */}
+            <div className="flex border-b border-gray-200 bg-gray-50/80 px-2 sm:px-4 shrink-0 text-xs font-mono overflow-x-auto gap-1">
               <button
-                onClick={() => setActiveTab('create')}
+                type="button"
+                onClick={() => {
+                  if (activeTab !== 'create' && activeTab !== 'list' && activeTab !== 'channels') {
+                    setActiveTab(storedPasses.length > 0 ? 'list' : 'create');
+                  }
+                }}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'create'
-                    ? 'border-white text-gray-900 bg-gray-100'
+                  activeTab === 'create' || activeTab === 'list' || activeTab === 'channels'
+                    ? 'border-blue-600 text-blue-700 bg-white shadow-xs'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Nuovo Pass</span>
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                <span>Prenotazioni</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800 font-bold ml-0.5">
+                  {storedPasses.length}
+                </span>
               </button>
 
               <button
-                onClick={() => setActiveTab('list')}
+                type="button"
+                onClick={() => {
+                  if (activeTab !== 'smart_lock' && activeTab !== 'property_settings' && activeTab !== 'webhook') {
+                    setActiveTab('smart_lock');
+                  }
+                }}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'list'
-                    ? 'border-white text-gray-900 bg-gray-100'
+                  activeTab === 'smart_lock' || activeTab === 'property_settings' || activeTab === 'webhook'
+                    ? 'border-emerald-600 text-emerald-800 bg-white shadow-xs'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Gestione Pass ({storedPasses.length})</span>
+                <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                <span>Accessi & Domotica</span>
               </button>
 
               <button
-                onClick={() => setActiveTab('channels')}
+                type="button"
+                onClick={() => {
+                  if (activeTab !== 'cms_builder' && activeTab !== 'cms_media') {
+                    setActiveTab('cms_builder');
+                  }
+                }}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'channels'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
-                <span>Channel Manager (iCal)</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('property_settings')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'property_settings'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-                <span>Struttura & Geofence</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('webhook')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'webhook'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
-                <span>Automazioni</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('smart_lock')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'smart_lock'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Smart Lock</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('cms_builder')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'cms_builder'
-                    ? 'border-amber-400 text-amber-500 bg-amber-500/10'
+                  activeTab === 'cms_builder' || activeTab === 'cms_media'
+                    ? 'border-amber-500 text-amber-800 bg-white shadow-xs'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-                <span>Personalizza PWA (Visual Builder)</span>
+                <span>Guida & Media</span>
               </button>
 
               <button
-                onClick={() => setActiveTab('cms_media')}
+                type="button"
+                onClick={() => {
+                  if (activeTab !== 'alloggiati' && activeTab !== 'export_zip') {
+                    setActiveTab('alloggiati');
+                  }
+                }}
                 className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'cms_media'
-                    ? 'border-white text-gray-900 bg-gray-100'
+                  activeTab === 'alloggiati' || activeTab === 'export_zip'
+                    ? 'border-indigo-600 text-indigo-800 bg-white shadow-xs'
                     : 'border-transparent text-gray-500 hover:text-gray-900'
                 }`}
               >
-                <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
-                <span>Foto & Media</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('alloggiati')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'alloggiati'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
-                <span>Alloggiati Web</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('export_zip')}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'export_zip'
-                    ? 'border-white text-gray-900 bg-gray-100'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
-                <span>Esporta (.ZIP)</span>
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+                <span>Alloggiati & Utilità</span>
               </button>
             </div>
+
+            {/* Contextual Sub-Nav Bar for Merged Sections */}
+            {(activeTab === 'create' || activeTab === 'list' || activeTab === 'channels') && (
+              <div className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                <div className="inline-flex p-1 bg-gray-100 rounded-xl gap-1 text-xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('list')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'list'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Elenco Prenotazioni ({storedPasses.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('create')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'create'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>+ Nuovo Pass</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('channels')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'channels'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Channel Manager (iCal)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(activeTab === 'smart_lock' || activeTab === 'property_settings' || activeTab === 'webhook') && (
+              <div className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="inline-flex p-1 bg-gray-100 rounded-xl gap-1 text-xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('smart_lock')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'smart_lock'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Smart Lock (Home Assistant)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('property_settings')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'property_settings'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Geofence & Coordinate GPS</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('webhook')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'webhook'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Zap className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Automazioni & Webhook</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(activeTab === 'cms_builder' || activeTab === 'cms_media') && (
+              <div className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="inline-flex p-1 bg-gray-100 rounded-xl gap-1 text-xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('cms_builder')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'cms_builder'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Visual Builder PWA</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('cms_media')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'cms_media'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Foto & Media</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(activeTab === 'alloggiati' || activeTab === 'export_zip') && (
+              <div className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <div className="inline-flex p-1 bg-gray-100 rounded-xl gap-1 text-xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('alloggiati')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'alloggiati'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Alloggiati Web Polizia & WsKey</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('export_zip')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      activeTab === 'export_zip'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <Download className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Download Portale Standalone (.ZIP)</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Tab Contents (Scrollable) */}
             <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6 flex-1 text-xs sm:text-sm">
@@ -960,8 +1060,15 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               {activeTab === 'list' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Lista dei VIP Pass generati</span>
-                    <span>Totale: {storedPasses.length}</span>
+                    <span className="font-semibold text-gray-700">Tutte le Prenotazioni ({storedPasses.length})</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('create')}
+                      className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 transition shadow-xs cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Nuovo Pass</span>
+                    </button>
                   </div>
 
                   {sortedPasses.length === 0 ? (

@@ -64,32 +64,32 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
         </div>
 
         {/* QR Code Auto-Connect Card */}
-        <div className="aurora-glass-card text-center space-y-4 p-6">
-          <div className="flex items-center justify-center gap-2">
-            <QrCode className="w-4 h-4 text-[#62e6bd]" />
+        <div className="aurora-glass-card text-center space-y-3 p-4">
+          <div className="flex items-center justify-center gap-1.5">
+            <QrCode className="w-3.5 h-3.5 text-[#62e6bd]" />
             <span className="aurora-eyebrow text-white/90">
               {labels.scanQr}
             </span>
           </div>
 
-          <div className="w-48 h-48 mx-auto p-3.5 bg-white rounded-3xl shadow-2xl flex items-center justify-center ring-4 ring-[#62e6bd]/20">
+          <div className="w-40 h-40 mx-auto p-3 bg-white rounded-2xl shadow-xl flex items-center justify-center ring-2 ring-[#62e6bd]/20">
             <img
               src={wifiQrUrl}
               alt="Wi-Fi QR Code"
-              className="w-full h-full object-contain rounded-xl"
+              className="w-full h-full object-contain rounded-lg"
             />
           </div>
-          <p className="text-xs text-white/60 max-w-xs mx-auto leading-relaxed">
+          <p className="text-[11px] text-white/60 max-w-xs mx-auto leading-relaxed">
             {labels.qrHelp}
           </p>
         </div>
 
         {/* SSID & Password Boxes */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {/* SSID */}
-          <div className="aurora-item-card items-center">
-            <div className="aurora-icon-box">
-              <Wifi className="w-5 h-5" />
+          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/[0.06] text-[#62e6bd] border border-white/10 flex items-center justify-center shrink-0">
+              <Wifi className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
               <span className="aurora-eyebrow block">
@@ -101,7 +101,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
             </div>
             <button
               onClick={handleCopySSID}
-              className="aurora-secondary-pill"
+              className="px-3 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] active:bg-white/[0.16] text-white text-xs font-semibold flex items-center gap-1.5 border border-white/10 transition shrink-0 cursor-pointer"
             >
               {copiedSSID ? <Check className="w-3.5 h-3.5 text-[#62e6bd]" /> : <Copy className="w-3.5 h-3.5 text-white/70" />}
               <span>{copiedSSID ? t.actions.copied : t.actions.copy}</span>
@@ -109,9 +109,9 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
           </div>
 
           {/* Password */}
-          <div className="aurora-item-card items-center">
-            <div className="aurora-icon-box">
-              <Copy className="w-5 h-5" />
+          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/[0.06] text-[#62e6bd] border border-white/10 flex items-center justify-center shrink-0">
+              <Copy className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
               <span className="aurora-eyebrow block">
@@ -123,7 +123,7 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
             </div>
             <button
               onClick={handleCopyPass}
-              className="aurora-action-pill"
+              className="px-3 py-1.5 rounded-lg bg-[#62e6bd] hover:bg-[#93f4d4] active:bg-[#4ddbb0] text-[#07110d] text-xs font-bold flex items-center gap-1.5 shadow-xs transition shrink-0 cursor-pointer"
             >
               {copiedPass ? <Check className="w-3.5 h-3.5 text-[#07110d]" /> : <Copy className="w-3.5 h-3.5 text-[#07110d]" />}
               <span>{copiedPass ? t.actions.copied : (t.actions.copyPassword || t.actions.copy)}</span>

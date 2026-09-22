@@ -262,71 +262,79 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                 if (!inside) cancelHold(event);
               }}
               disabled={openingState === 'opening' || wifiChecking || (pass !== null && !keysReady)}
-              className={`group relative w-full py-5 px-5 rounded-2xl font-bold tracking-tight transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 select-none active:scale-[0.98] ${
+              className={`group relative w-full py-3 px-4 rounded-xl font-bold tracking-tight transition-all duration-200 cursor-pointer flex items-center gap-3 select-none active:scale-[0.98] ${
                 pass && !keysReady
                   ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
                   : openingState === 'opening'
-                  ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner'
+                  ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner justify-center'
                   : openingState === 'success'
                   ? 'bg-[#30d158] text-neutral-950 shadow-[0_8px_25px_rgba(48,209,88,0.4)]'
                   : openingState === 'error'
                   ? 'bg-rose-500 text-white shadow-[0_8px_25px_rgba(244,63,94,0.3)]'
                   : !wifiChecking
-                  ? 'bg-white text-neutral-950 hover:bg-neutral-100 shadow-[0_10px_30px_rgba(255,255,255,0.15)] hover:shadow-[0_12px_35px_rgba(255,255,255,0.22)]'
+                  ? 'bg-white text-neutral-950 hover:bg-neutral-100 shadow-[0_6px_20px_rgba(255,255,255,0.12)]'
                   : 'bg-neutral-800/80 text-neutral-500 border border-white/5 cursor-not-allowed'
               }`}
             >
               {pass && !keysReady ? (
                 <>
-                  <div className="relative w-11 h-11 rounded-full flex items-center justify-center bg-white/5 text-neutral-500">
-                    <Lock className="w-5 h-5 text-amber-500" />
+                  <div className="relative w-8 h-8 rounded-full flex items-center justify-center bg-white/5 text-neutral-500 shrink-0">
+                    <Lock className="w-4 h-4 text-amber-500" />
                   </div>
-                  <span className="text-base font-bold tracking-tight text-white/40 uppercase">
-                    {t.checkInPage.pendingHostConfirmation}
-                  </span>
-                  <span className="text-[11px] font-normal tracking-tight text-neutral-400 text-center px-4 leading-normal">
-                    {t.checkInPage.pendingHostConfirmationDesc}
-                  </span>
+                  <div className="text-left flex-1 min-w-0">
+                    <span className="text-xs font-bold tracking-tight text-white/50 block truncate">
+                      {t.checkInPage.pendingHostConfirmation}
+                    </span>
+                    <span className="text-[10px] font-normal text-neutral-400 block truncate">
+                      {t.checkInPage.pendingHostConfirmationDesc}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>
                   {openingState === 'opening' && (
-                    <>
-                      <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-                      <span className="text-sm font-semibold text-neutral-300">{s.openingInProgress}</span>
-                    </>
+                    <div className="flex items-center justify-center gap-2 w-full py-0.5">
+                      <Loader2 className="w-4 h-4 animate-spin text-neutral-400" />
+                      <span className="text-xs font-semibold text-neutral-300">{s.openingInProgress}</span>
+                    </div>
                   )}
 
                   {openingState === 'success' && (
                     <>
-                      <CheckCircle2 className="w-7 h-7 text-neutral-950 animate-scale-up" />
-                      <span className="text-base font-bold text-neutral-950 tracking-tight">{s.doorUnlocked}</span>
-                      <span className="text-xs font-normal text-neutral-900">{s.pushDoorToEnter}</span>
+                      <CheckCircle2 className="w-5 h-5 text-neutral-950 animate-scale-up shrink-0" />
+                      <div className="text-left min-w-0 flex-1">
+                        <span className="text-xs sm:text-sm font-bold text-neutral-950 tracking-tight block truncate">{s.doorUnlocked}</span>
+                        <span className="text-[10px] font-normal text-neutral-900 block truncate">{s.pushDoorToEnter}</span>
+                      </div>
                     </>
                   )}
 
                   {openingState === 'error' && (
                     <>
-                      <AlertCircle className="w-6 h-6 text-white" />
-                      <span className="text-sm font-semibold text-white">{s.connectionError}</span>
-                      <span className="text-xs text-white/90">{s.tapToRetry}</span>
+                      <AlertCircle className="w-5 h-5 text-white shrink-0" />
+                      <div className="text-left min-w-0 flex-1">
+                        <span className="text-xs sm:text-sm font-semibold text-white block truncate">{s.connectionError}</span>
+                        <span className="text-[10px] text-white/90 block truncate">{s.tapToRetry}</span>
+                      </div>
                     </>
                   )}
 
                   {openingState === 'idle' && (
                     <>
-                      <div className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-transform duration-200 ${
-                        wifiVerified ? 'bg-neutral-950/10 text-neutral-950 group-hover:scale-110' : 'bg-white/5 text-neutral-500'
+                      <div className={`relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                        wifiVerified ? 'bg-neutral-950/10 text-neutral-950 group-hover:scale-105' : 'bg-white/5 text-neutral-500'
                       }`}>
-                        <span className="absolute inset-[-5px] rounded-full border-2 border-emerald-300/70" style={{ clipPath: `inset(${100 - holdProgress * 100}% 0 0 0)` }} />
-                        {wifiVerified ? <Unlock className="w-5 h-5 text-neutral-950" /> : <Lock className="w-5 h-5" />}
+                        <span className="absolute inset-[-3px] rounded-full border-2 border-emerald-400/80" style={{ clipPath: `inset(${100 - holdProgress * 100}% 0 0 0)` }} />
+                        {wifiVerified ? <Unlock className="w-4 h-4 text-neutral-950" /> : <Lock className="w-4 h-4" />}
                       </div>
-                      <span className={`text-lg font-bold tracking-tight ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
-                        {wifiChecking ? t.checkInPage.wifi.checkingConnection.toUpperCase() : s.pressToOpen}
-                      </span>
-                      <span className={`text-[11px] font-normal tracking-tight ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
-                        {wifiChecking ? s.waitAMoment : s.verifiedByServer}
-                      </span>
+                      <div className="text-left flex-1 min-w-0">
+                        <span className={`text-xs sm:text-sm font-bold tracking-tight block truncate ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
+                          {wifiChecking ? t.checkInPage.wifi.checkingConnection.toUpperCase() : s.pressToOpen}
+                        </span>
+                        <span className={`text-[10px] font-normal tracking-tight block truncate ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
+                          {wifiChecking ? s.waitAMoment : s.verifiedByServer}
+                        </span>
+                      </div>
                     </>
                   )}
                 </>

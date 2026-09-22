@@ -13,7 +13,7 @@ import { HostPortal } from './pages/host-portal/HostPortal';
 function MainApp() {
   return (
     <CmsProvider>
-      <div className="min-h-[100dvh] w-full bg-[#18181b] flex items-center justify-center p-0 m-0 select-none">
+      <div className="min-h-[100dvh] w-full bg-black flex items-center justify-center p-0 m-0 select-none">
         <div className="w-full h-full min-h-[100dvh] flex justify-center items-stretch">
           <VideoWelcomeBook initialLanguage="it" />
         </div>

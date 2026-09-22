@@ -482,8 +482,17 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
       const res = await fetch('/api/guest/ocr-scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataUrl: imageUrl || dataUrl, docType })
+        headers: {
+          'Content-Type': 'application/json',
+          'x-guest-token': pass?.token || ''
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          dataUrl: imageUrl || dataUrl,
+          docType,
+          token: pass?.token,
+          guestToken: pass?.token
+        })
       });
 
       clearInterval(progressInterval);
@@ -494,7 +503,12 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
       }
 
       if (!res.ok) {
-        throw new Error(t.scanFailedAuto);
+        let errMessage = t.scanFailedAuto;
+        try {
+          const errJson = await res.json();
+          if (errJson?.error) errMessage = errJson.error;
+        } catch (_) {}
+        throw new Error(errMessage);
       }
 
       const json = await res.json();

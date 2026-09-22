@@ -98,6 +98,24 @@
       font-weight: 600;
     }
 
+    /* Apple Consolidated Main Group Navigation */
+    .main-group-btn {
+      color: #86868b;
+      background: transparent;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+    }
+    .main-group-btn:hover {
+      color: #f5f5f7;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .main-group-btn.active {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
     /* Inputs Apple HIG Style */
     html, body {
       color-scheme: dark !important;
@@ -359,57 +377,86 @@
       </div>
     </div>
 
-    <!-- Apple Segmented Tab Bar -->
-    <div class="bg-[#161618] p-1.5 rounded-2xl border border-white/[0.08] flex items-center gap-1 overflow-x-auto no-scrollbar shadow-sm">
-      <button class="tab-btn active px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="create">
-        <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
-        <span>Crea Pass Ospite</span>
-      </button>
+    <!-- Apple Consolidated Primary Navigation (4 Streamlined Sections) -->
+    <div class="space-y-2">
+      <!-- Main Domain Bar -->
+      <div class="bg-[#161618] p-1.5 rounded-2xl border border-white/[0.08] flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-sm">
+        <button type="button" class="main-group-btn active px-3.5 sm:px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl transition cursor-pointer text-white bg-white/10" data-group="bookings">
+          <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+          <span>Prenotazioni</span>
+          <span id="mainTabCount" class="px-1.5 py-0.5 rounded-full text-[10px] bg-sky-500/20 text-sky-300 font-mono font-bold">0</span>
+        </button>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="passes">
-        <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-400"></i>
-        <span>Gestione Pass (<span id="tabCount">0</span>)</span>
-      </button>
+        <button type="button" class="main-group-btn px-3.5 sm:px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl transition cursor-pointer text-[#86868b] hover:text-white" data-group="access">
+          <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+          <span>Accessi & Domotica</span>
+        </button>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="channels">
-        <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
-        <span>Channel Manager (iCal)</span>
-      </button>
+        <button type="button" class="main-group-btn px-3.5 sm:px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl transition cursor-pointer text-[#86868b] hover:text-white" data-group="content">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+          <span>Guida & Media</span>
+        </button>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="property">
-        <i data-lucide="building-2" class="w-4 h-4 text-amber-400"></i>
-        <span>Struttura & Geofence GPS</span>
-      </button>
+        <button type="button" class="main-group-btn px-3.5 sm:px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl transition cursor-pointer text-[#86868b] hover:text-white" data-group="alloggiati">
+          <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+          <span>Alloggiati & Utilità</span>
+        </button>
+      </div>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="hass">
-        <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
-        <span>Smart Lock & Porta</span>
-      </button>
+      <!-- Secondary Sub-nav Bar (Filtered by active main group) -->
+      <div id="subNavBarWrapper" class="bg-[#121214] p-1.5 rounded-xl border border-white/[0.04] flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <!-- Sub-nav: Bookings -->
+        <div class="sub-nav-group flex items-center gap-1 w-full overflow-x-auto no-scrollbar" data-group="bookings">
+          <button class="tab-btn active px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="passes">
+            <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>Gestione Pass (<span id="tabCount">0</span>)</span>
+          </button>
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="create">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>+ Crea Nuovo Pass</span>
+          </button>
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="channels">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>Channel Manager (iCal)</span>
+          </button>
+        </div>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="cms">
-        <i data-lucide="layout-template" class="w-4 h-4 text-orange-400"></i>
-        <span>Visual CMS Builder</span>
-      </button>
+        <!-- Sub-nav: Access & Domotica -->
+        <div class="sub-nav-group hidden flex items-center gap-1 w-full overflow-x-auto no-scrollbar" data-group="access">
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="hass">
+            <i data-lucide="sliders" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Smart Lock & Porta</span>
+          </button>
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="property">
+            <i data-lucide="building-2" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Struttura & Geofence GPS</span>
+          </button>
+        </div>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="media">
-        <i data-lucide="image" class="w-4 h-4 text-teal-400"></i>
-        <span>Foto & Galleria</span>
-      </button>
+        <!-- Sub-nav: Guida & Media -->
+        <div class="sub-nav-group hidden flex items-center gap-1 w-full overflow-x-auto no-scrollbar" data-group="content">
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="cms">
+            <i data-lucide="layout-template" class="w-3.5 h-3.5 text-orange-400"></i>
+            <span>Visual CMS Builder</span>
+          </button>
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="media">
+            <i data-lucide="image" class="w-3.5 h-3.5 text-teal-400"></i>
+            <span>Foto & Galleria</span>
+          </button>
+        </div>
 
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="messages">
-        <i data-lucide="message-square" class="w-4 h-4 text-rose-400"></i>
-        <span>Messaggi Programmati</span>
-      </button>
-
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="alloggiati">
-        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
-        <span>Alloggiati Web</span>
-      </button>
-
-      <button class="tab-btn px-3.5 sm:px-4 py-2 text-xs flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer" data-tab="export">
-        <i data-lucide="folder-archive" class="w-4 h-4 text-purple-400"></i>
-        <span>Esporta Standalone ZIP</span>
-      </button>
+        <!-- Sub-nav: Alloggiati & Utilità -->
+        <div class="sub-nav-group hidden flex items-center gap-1 w-full overflow-x-auto no-scrollbar" data-group="alloggiati">
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="alloggiati">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span>Alloggiati Web Polizia & Configurazione WsKey</span>
+          </button>
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="export">
+            <i data-lucide="folder-archive" class="w-3.5 h-3.5 text-purple-400"></i>
+            <span>Download Standalone (.ZIP)</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- ============================================================ -->
@@ -582,6 +629,11 @@
           <button id="btnRefreshPasses" type="button" class="btn-apple-secondary px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 cursor-pointer">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             <span>Aggiorna</span>
+          </button>
+
+          <button type="button" onclick="document.querySelector('[data-tab=create]').click()" class="btn-apple-primary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Nuovo Pass</span>
           </button>
         </div>
       </div>
@@ -1406,7 +1458,7 @@
             <div class="flex items-center gap-2.5">
               <i data-lucide="key-round" class="w-4 h-4 text-amber-400"></i>
               <div>
-                <h4 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider font-mono">Configurazione Credenziali Alloggiati Web</h4>
+                <h4 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider font-mono">Alloggiati Configuration (Web Service Questura)</h4>
                 <p class="text-[11px] text-[#86868b]">Credenziali ufficiali rilasciate dalla Questura (Polizia di Stato)</p>
               </div>
             </div>
@@ -1517,7 +1569,7 @@
                   class="btn-apple-secondary px-3.5 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer"
                 >
                   <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                  <span>Testa Connessione</span>
+                  <span>Test Credenziali</span>
                 </button>
 
                 <button
