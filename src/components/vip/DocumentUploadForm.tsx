@@ -36,8 +36,8 @@ const dTranslations: Record<Language, any> = {
     arrivalDate: "Data Arrivo",
     nightsCount: "Notti di Soggiorno",
     docNumber: "Numero Documento *",
-    issueDate: "Data Rilascio *",
-    issueAuthority: "Luogo/Ente Rilascio *",
+    issueDate: "Data Rilascio",
+    issueAuthority: "Luogo/Ente Rilascio",
     issuePlacePlaceholder: "es. Comune, Questura, etc.",
     retakePhoto: "Rifare Foto",
     save: "Salva",
@@ -78,8 +78,8 @@ const dTranslations: Record<Language, any> = {
     arrivalDate: "Arrival Date",
     nightsCount: "Nights of Stay",
     docNumber: "Doc Number *",
-    issueDate: "Issue Date *",
-    issueAuthority: "Issue Authority *",
+    issueDate: "Issue Date",
+    issueAuthority: "Issue Authority",
     issuePlacePlaceholder: "e.g. Town Hall, Police",
     retakePhoto: "Retake Photo",
     save: "Save",
@@ -120,8 +120,8 @@ const dTranslations: Record<Language, any> = {
     arrivalDate: "Fecha de llegada",
     nightsCount: "Noches de estancia",
     docNumber: "Número de documento *",
-    issueDate: "Fecha de emisión *",
-    issueAuthority: "Autoridad emisora *",
+    issueDate: "Fecha de emisión",
+    issueAuthority: "Autoridad emisora",
     issuePlacePlaceholder: "ej. Ayuntamiento, Policía",
     retakePhoto: "Repetir foto",
     save: "Guardar",
@@ -162,8 +162,8 @@ const dTranslations: Record<Language, any> = {
     arrivalDate: "Ankunftsdatum",
     nightsCount: "Übernachtungen",
     docNumber: "Ausweisnummer *",
-    issueDate: "Ausstellungsdatum *",
-    issueAuthority: "Ausstellungsbehörde *",
+    issueDate: "Ausstellungsdatum",
+    issueAuthority: "Ausstellungsbehörde",
     issuePlacePlaceholder: "z. B. Rathaus, Polizei",
     retakePhoto: "Foto erneut aufnehmen",
     save: "Speichern",
@@ -204,8 +204,8 @@ const dTranslations: Record<Language, any> = {
     arrivalDate: "Date d'arrivée",
     nightsCount: "Nuits de séjour",
     docNumber: "Numéro de document *",
-    issueDate: "Date de délivrance *",
-    issueAuthority: "Autorité de délivrance *",
+    issueDate: "Date de délivrance",
+    issueAuthority: "Autorité de délivrance",
     issuePlacePlaceholder: "ex. Mairie, Police",
     retakePhoto: "Reprendre la photo",
     save: "Sauvegarder",
@@ -680,13 +680,13 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
               </div>
               <div>
                 <label className={labelC}>{t.issueDate}</label>
-                <input type="date" required value={form.issueDate || ''} onChange={e => setForm({ ...form, issueDate: e.target.value })} className={inputC} />
+                <input type="date" value={form.issueDate || ''} onChange={e => setForm({ ...form, issueDate: e.target.value })} className={inputC} />
               </div>
             </div>
 
             <div>
               <label className={labelC}>{t.issueAuthority}</label>
-              <input type="text" required placeholder={t.issuePlacePlaceholder} value={form.issuePlace || ''} onChange={e => setForm({ ...form, issuePlace: e.target.value.toUpperCase() })} className={inputC} />
+              <input type="text" placeholder={t.issuePlacePlaceholder} value={form.issuePlace || ''} onChange={e => setForm({ ...form, issuePlace: e.target.value.toUpperCase() })} className={inputC} />
             </div>
 
             <div className="flex gap-2 pt-2">

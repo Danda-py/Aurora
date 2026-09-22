@@ -296,6 +296,93 @@ const formatPassDate = (dateStr?: string) => {
   }
 };
 
+const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, language }) => {
+  const images = [
+    { url: media.heroLiving || '/uploads/aurora_living.jpg', title: language === 'it' ? 'Soggiorno & Living Room' : 'Living Room' },
+    { url: media.bedroom || '/uploads/bedroom.jpg', title: language === 'it' ? 'Camera da Letto' : 'Master Bedroom' },
+    { url: media.kitchen || '/uploads/kitchen.jpg', title: language === 'it' ? 'Cucina Attrezzata' : 'Fully Equipped Kitchen' },
+    { url: media.bathroom || '/uploads/bathroom.jpg', title: language === 'it' ? 'Bagno Moderno' : 'Bathroom' },
+    { url: media.locationCover || '/uploads/location.jpg', title: language === 'it' ? 'Valtellina & Morbegno' : 'Morbegno & Valtellina' }
+  ].filter(img => img.url);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [images.length]);
+
+  if (images.length === 0) return null;
+
+  return (
+    <div className="relative w-full aspect-16/10 sm:aspect-16/9 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 group">
+      {/* Slides */}
+      <div className="w-full h-full relative">
+        {images.map((img, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
+          >
+            <img
+              src={img.url}
+              alt={img.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            {/* Dark vignette to overlay title */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
+            <div className="absolute bottom-4 left-4 right-4 z-20 text-left">
+              <span className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase block">CASA AURORA</span>
+              <h4 className="text-sm sm:text-base font-black text-white drop-shadow-md mt-0.5">
+                {img.title}
+              </h4>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Manual Controls */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
+            aria-label="Previous slide"
+          >
+            <ChevronRight className="w-4 h-4 rotate-180" />
+          </button>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev + 1) % images.length)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-4 right-4 z-20 flex gap-1.5">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === currentIndex ? 'bg-emerald-400 w-4' : 'bg-white/40'
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
   const { media } = useCms();
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -575,118 +662,91 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </button>
         )}
 
-        {/* 2. Stay Info & Status Widget: Card utente ridisegnata con sfondo Valtellina dal CMS */}
+        {/* Photo Carousel (editable from CMS) */}
+        <PhotoCarousel media={media} language={language} />
+
+        {/* 2. Stay Info & Status Widget: Simplified, high-legibility Guest Card */}
         {pass && (
           <section 
-            className="relative rounded-3xl border border-white/10 overflow-hidden p-4 sm:p-5 shadow-2xl space-y-4 bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500"
+            className="relative rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl space-y-5 bg-zinc-950/50 backdrop-blur-md animate-in fade-in duration-500"
             style={{
-              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.88), rgba(9, 13, 19, 0.94)), url(${media.view || '/uploads/valtellina.jpg'})`,
+              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.9), rgba(9, 13, 19, 0.95)), url(${media.view || '/uploads/valtellina.jpg'})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
           >
-            {/* Header of the Card: APT. AURORA badge */}
+            {/* Header of the Card: APT. AURORA badge with larger label */}
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase">TESSERA OSPITE</span>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-medium font-mono">
-                <BedDouble className="w-3 h-3" />
+              <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase">TESSERA OSPITE</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+                <BedDouble className="w-3.5 h-3.5" />
                 <span>APT. AURORA</span>
               </div>
             </div>
 
-            {/* Dati dell'Utente (Main Guest details) */}
-            <div className="space-y-1.5 pb-2 border-b border-white/[0.06]">
-              <h3 className="text-base font-bold text-white tracking-tight leading-tight">
+            {/* Name and Surname (Large, highly legible) */}
+            <div className="space-y-1.5 pb-1">
+              <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block">Ospite Principale</span>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
                 {pass.guestName} {pass.guestSurname}
               </h3>
-              <div className="grid grid-cols-1 gap-1 text-[11px] text-[#86868b] font-mono">
-                {pass.email && (
-                  <span className="truncate">Email: <strong className="text-zinc-300 font-semibold">{pass.email}</strong></span>
-                )}
-                {pass.phone && (
-                  <span className="truncate">Tel: <strong className="text-zinc-300 font-semibold">{pass.phone}</strong></span>
-                )}
-                <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                  {pass.bookingSource && (
-                    <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-zinc-300 text-[9px] font-sans font-bold uppercase">{pass.bookingSource}</span>
-                  )}
-                  {pass.bookingRef && (
-                    <span>Ref: <code className="text-zinc-300 bg-white/5 px-1 py-0.5 rounded text-[9px]">{pass.bookingRef}</code></span>
-                  )}
-                </div>
+            </div>
+
+            {/* Booking Code (Highly legible block) */}
+            {pass.bookingRef && (
+              <div className="space-y-1.5 pb-1">
+                <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block">Codice Prenotazione</span>
+                <span className="text-sm sm:text-base font-mono font-black text-white bg-white/5 px-3 py-1 rounded-xl inline-block border border-white/10 shadow-inner">
+                  {pass.bookingRef}
+                </span>
               </div>
-            </div>
+            )}
 
-            {/* Tutti gli Ospiti (All other guests) */}
-            <div className="space-y-1.5 pb-2 border-b border-white/[0.06]">
-              <span className="text-[10px] font-mono tracking-wider text-[#86868b] uppercase block">
-                Ospiti Registrati ({pass.documentsData ? pass.documentsData.length : 1})
-              </span>
-              {pass.documentsData && pass.documentsData.length > 0 ? (
-                <div className="grid grid-cols-1 gap-1 text-xs text-zinc-200">
-                  {pass.documentsData.map((guest, i) => (
-                    <div key={i} className="flex items-center gap-1.5 font-medium">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                      <span>{guest.name} {guest.surname}</span>
-                      {guest.documentNumber && (
-                        <span className="text-[10px] text-[#86868b] font-mono">({guest.documentType === 'passaporto' ? 'Passaporto' : guest.documentType === 'patente' ? 'Patente' : 'ID'}: {guest.documentNumber})</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  <span>{pass.guestName} {pass.guestSurname}</span>
-                  <span className="text-[10px] text-[#86868b] italic">(Ospite principale)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Check-in & Check-out Side-by-Side Dates */}
-            <div className="grid grid-cols-2 divide-x divide-white/[0.06] py-1 bg-white/[0.01] rounded-2xl border border-white/5">
-              <div className="px-3 py-1">
-                <p className="text-[9px] font-mono uppercase tracking-wider text-[#86868b]">Check-in</p>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">
+            {/* Check-in & Check-out Side-by-Side Dates (Larger, clearer labels and typography) */}
+            <div className="grid grid-cols-2 divide-x divide-white/[0.08] py-2 bg-white/[0.02] rounded-2xl border border-white/5 shadow-inner">
+              <div className="px-4 py-1.5">
+                <p className="text-xs font-mono font-black uppercase tracking-wider text-[#86868b]">Check-in</p>
+                <div className="flex flex-col mt-1">
+                  <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
                     {formatPassDate(pass.checkInDate)}
                   </span>
-                  <span className="text-[10px] text-[#86868b] font-mono mt-0.5">
+                  <span className="text-xs text-zinc-300 font-mono mt-1 font-bold">
                     {t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'}
                   </span>
                 </div>
               </div>
-              <div className="px-3 py-1">
-                <p className="text-[9px] font-mono uppercase tracking-wider text-[#86868b]">Check-out</p>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">
+              <div className="px-4 py-1.5">
+                <p className="text-xs font-mono font-black uppercase tracking-wider text-[#86868b]">Check-out</p>
+                <div className="flex flex-col mt-1">
+                  <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
                     {formatPassDate(pass.checkOutDate)}
                   </span>
-                  <span className="text-[10px] text-[#86868b] font-mono mt-0.5">
+                  <span className="text-xs text-zinc-300 font-mono mt-1 font-bold">
                     {t.concierge.by} {pass.checkOutTime ?? '10:00'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Smart Lock Door Opener: Tieni premuto per aprire (disattivato se non confermato) */}
-            <div className="pt-1.5 space-y-1">
+            {/* Smart Lock Door Opener: Tieni premuto per aprire (Highly legible button and text) */}
+            <div className="pt-2 space-y-2">
               {!isStayActive ? (
-                <div className="w-full flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold text-center leading-relaxed">
-                  <ShieldAlert className="w-4 h-4 shrink-0 mr-1.5 animate-pulse" />
+                <div className="w-full flex items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs sm:text-sm font-bold text-center leading-relaxed">
+                  <ShieldAlert className="w-4.5 h-4.5 shrink-0 mr-2 animate-pulse" />
                   <span>{t.concierge.keysNotActive}</span>
                 </div>
               ) : (
                 <>
+                  <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block text-left">Apriporta</span>
                   <button
-                    className={`relative flex w-full items-center justify-between px-3.5 py-3 overflow-hidden font-bold rounded-xl transition active:scale-[0.98] ${
+                    className={`relative flex w-full items-center justify-between px-4 py-4 overflow-hidden font-black rounded-2xl transition active:scale-[0.98] cursor-pointer shadow-lg ${
                       !isCheckinConfirmed
                         ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
                         : doorState === 'success'
                         ? 'bg-emerald-300 text-zinc-950 shadow-md shadow-emerald-500/20'
                         : doorState === 'error'
-                        ? 'bg-rose-400 text-white shadow-md shadow-rose-500/20'
-                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20 cursor-pointer shadow-lg'
+                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20 shadow-emerald-500/10'
                     }`}
                     onPointerDown={isCheckinConfirmed ? startHold : undefined}
                     onPointerUp={isCheckinConfirmed ? cancelHold : undefined}
@@ -707,16 +767,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                       className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
                       style={{ transform: `scaleX(${holdProgress})` }} 
                     />
-                    <span className="flex items-center gap-2 relative z-10 text-xs sm:text-sm">
-                      <KeyRound className="w-3.5 h-3.5" />
+                    <span className="flex items-center gap-2.5 relative z-10 text-sm sm:text-base font-black">
+                      <KeyRound className="w-4.5 h-4.5" />
                       {!isCheckinConfirmed 
-                        ? (language === 'it' ? 'Check-in non confermato dall\'host' : 'Check-in pending host confirmation')
+                        ? (language === 'it' ? 'In attesa di conferma check-in dall\'host' : 'Check-in pending host confirmation')
                         : t.concierge.doorOpeningState[doorState]}
                     </span>
-                    <ArrowUpRight className="w-3.5 h-3.5 relative z-10" />
+                    <ArrowUpRight className="w-4.5 h-4.5 relative z-10" />
                   </button>
                   {doorMessage && (
-                    <p className={`text-center text-[11px] pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-400'}`}>
+                    <p className={`text-center text-xs font-bold pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-300'}`}>
                       {doorMessage}
                     </p>
                   )}

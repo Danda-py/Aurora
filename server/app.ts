@@ -820,22 +820,33 @@ export function createApp() {
             }
           }
         });
-        const prompt = `Analizza con attenzione l'immagine di questo documento di identità (${docType || 'documento'}) ed estrai i dati anagrafici e del documento dell'ospite in formato JSON con le seguenti chiavi esatte:
+        const prompt = `Sei un sistema OCR professionale specializzato nella scansione ultra-precisa di documenti d'identità per scopi legali (Alloggiati Web della Polizia di Stato). 
+Analizza l'immagine di questo documento (${docType || 'documento'}) ed estrai i dati con la massima precisione possibile.
+
+Linee guida di precisione assoluta:
+1. NOME e COGNOME: Non scambiarli tra loro. Nei documenti italiani (es. Carta d'Identità cartacea o elettronica) il Cognome è solitamente indicato per primo, ma verifica attentamente l'etichetta del campo ("Cognome" o "Surname", "Nome" o "Given Names"). Estraili esattamente come scritti, convertiti in MAIUSCOLO.
+2. MRZ (Machine Readable Zone): Se l'immagine contiene la zona a lettura ottica (le righe di testo in fondo con i caratteri '<<<'), analizzala attentamente per correggere o verificare il Numero del Documento, la Data di Nascita, il Sesso, il Nome e il Cognome. La MRZ è la fonte dati più affidabile e priva di ambiguità di battitura.
+3. DATA DI NASCITA e DATA DI RILASCIO: Devono essere formattate esattamente come YYYY-MM-DD. Verifica la congruenza degli anni (es. l'anno di nascita è nel passato, solitamente anteriore all'anno corrente; l'anno di rilascio è congruente). Se trovi formati diversi, convertili rigorosamente.
+4. SESSO: Estrai solo "M" o "F" (un solo carattere). Se indicato come "MALE"/"FEMALE", "M"/"F", "UOMO"/"DONNA", convertilo rigorosamente in "M" o "F".
+5. CITTADINANZA: Deve essere la nazionalità espressa in lingua italiana al femminile e in maiuscolo (es. "ITALIANA", "FRANCESE", "TEDESCA", "SVIZZERA", "SPAGNOLA", "ROMENA"). Se il documento indica "ITALY" o "ITALIA", convertilo in "ITALIANA". Se indica "DEUTSCH" o "GERMANY", convertilo in "TEDESCA", ecc.
+6. NUMERO DOCUMENTO: Rimuovi spazi e caratteri spuri. Ad esempio, per le carte d'identità eletnetiche italiane (CIE), la struttura è solitamente due lettere, cinque numeri, due lettere (es. CA12345XX). Non confondere la lettera "O" con il numero "0" o la lettera "I" con il numero "1".
+
+Restituisci ESCLUSIVAMENTE un oggetto JSON valido con le seguenti chiavi:
 {
-  "name": "Nome in maiuscolo (es. MARIO)",
-  "surname": "Cognome in maiuscolo (es. ROSSI)",
+  "name": "Nome dell'ospite in maiuscolo",
+  "surname": "Cognome dell'ospite in maiuscolo",
   "gender": "M o F",
-  "birthDate": "Data di nascita nel formato YYYY-MM-DD (es. 1985-05-15)",
-  "birthPlace": "Luogo o comune di nascita (es. MILANO o BERLINO)",
-  "citizenship": "Nazionalità/Cittadinanza in italiano maiuscolo (es. ITALIANA, TEDESCA, FRANCESE, SVIZZERA)",
-  "documentNumber": "Numero del documento (es. CA12345XX)",
-  "issuePlace": "Luogo o ente di rilascio (es. COMUNE DI MILANO o QUESTURA DI SONDRIO)",
-  "issueDate": "Data di rilascio nel formato YYYY-MM-DD (es. 2020-10-12)"
+  "birthDate": "YYYY-MM-DD o stringa vuota",
+  "birthPlace": "Comune o stato di nascita in maiuscolo",
+  "citizenship": "Nazionalità in italiano, maiuscolo, es. ITALIANA",
+  "documentNumber": "Numero di documento normalizzato, senza spazi",
+  "issuePlace": "Luogo o ente di rilascio in maiuscolo (es. COMUNE DI MILANO)",
+  "issueDate": "YYYY-MM-DD o stringa vuota"
 }
 
-Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente leggibile dal documento, imposta una stringa vuota "". Assicurati di formattare le date in YYYY-MM-DD.`;
+Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JSON stesso. Ritorna solo il JSON pronto per il parsing.`;
 
-        const candidateModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+        const candidateModels = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-1.5-flash'];
         for (const modelName of candidateModels) {
           try {
             const response = await ai.models.generateContent({
@@ -1507,6 +1518,72 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente le
     }
   });
 
+function getStringDifferences(newObj: any, oldObj: any, path = ''): { path: string; value: string }[] {
+  let diffs: { path: string; value: string }[] = [];
+  if (typeof newObj === 'string') {
+    if (newObj !== oldObj && newObj.trim() !== '') {
+      diffs.push({ path, value: newObj });
+    }
+  } else if (Array.isArray(newObj)) {
+    for (let i = 0; i < newObj.length; i++) {
+      const oldVal = Array.isArray(oldObj) ? oldObj[i] : undefined;
+      diffs = diffs.concat(getStringDifferences(newObj[i], oldVal, `${path}[${i}]`));
+    }
+  } else if (newObj && typeof newObj === 'object') {
+    for (const key of Object.keys(newObj)) {
+      if (
+        key === 'id' || 
+        key === 'type' || 
+        key === 'category' || 
+        key === 'enabled' || 
+        key === 'order' || 
+        key === 'visibilityRule' || 
+        key === 'noSmoking' || 
+        key === 'noParties' || 
+        key === 'petsAllowed' || 
+        key === 'primaryColor' || 
+        key === 'accentColor' || 
+        key === 'bgMode' || 
+        key === 'buttonStyle' || 
+        key === 'siteTitle' || 
+        key === 'networkLabel' || 
+        key === 'passwordLabel' || 
+        key === 'cin' || 
+        key === 'cir' ||
+        key === 'i18n'
+      ) {
+        continue;
+      }
+      const oldVal = oldObj ? oldObj[key] : undefined;
+      diffs = diffs.concat(getStringDifferences(newObj[key], oldVal, path ? `${path}.${key}` : key));
+    }
+  }
+  return diffs;
+}
+
+function setValueByPath(obj: any, path: string, value: any) {
+  const parts = path.split(/\.|(?=\[)/);
+  let current = obj;
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i];
+    if (part.startsWith('[')) {
+      part = part.substring(1, part.length - 1);
+    }
+    const isLast = i === parts.length - 1;
+    const isNextArray = !isLast && parts[i+1].startsWith('[');
+    
+    const key = isNaN(part as any) ? part : parseInt(part);
+    if (isLast) {
+      current[key] = value;
+    } else {
+      if (current[key] === undefined) {
+        current[key] = isNextArray ? [] : {};
+      }
+      current = current[key];
+    }
+  }
+}
+
   apiRouter.post('/cms/save', async (req, res) => {
     try {
       const data = req.body.data || req.body.content || req.body;
@@ -1514,6 +1591,87 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Se un campo non è chiaramente le
         res.status(400).json({ success: false, error: 'Dati mancanti' });
         return;
       }
+
+      if (process.env.GEMINI_API_KEY) {
+        try {
+          const oldData = await getCmsDataAsync();
+          if (oldData && oldData.it && data.it) {
+            const diffs = getStringDifferences(data.it, oldData.it);
+            if (diffs.length > 0) {
+              console.log(`[CMS-TRANSLATE] Rilevati ${diffs.length} campi modificati in italiano. Avvio traduzione automatica...`);
+              
+              const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+              const prompt = `Traduci i seguenti testi in lingua italiana nelle lingue: en, de, fr, es. Mantieni la formattazione, lo stile e il tono originale (comprese eventuali emoji o numeri). Ritorna solo il JSON strutturato.
+Testi da tradurre:
+${JSON.stringify(diffs, null, 2)}
+
+Restituisci un oggetto JSON strutturato come una mappa delle lingue di destinazione, dove ogni lingua contiene un array di traduzioni nello stesso ordine dei testi forniti:
+{
+  "en": [ ... ],
+  "de": [ ... ],
+  "fr": [ ... ],
+  "es": [ ... ]
+}
+
+Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni.`;
+
+              const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: [{ parts: [{ text: prompt }] }],
+                config: { responseMimeType: "application/json" }
+              });
+
+              const responseText = response.text?.trim();
+              if (responseText) {
+                let parsedTranslations: any = null;
+                try {
+                  parsedTranslations = JSON.parse(responseText);
+                } catch (pe) {
+                  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+                  if (jsonMatch) {
+                    parsedTranslations = JSON.parse(jsonMatch[0]);
+                  }
+                }
+
+                if (parsedTranslations) {
+                  const langs = ['en', 'de', 'fr', 'es'] as const;
+                  for (const lang of langs) {
+                    const translations = parsedTranslations[lang];
+                    if (Array.isArray(translations) && translations.length === diffs.length) {
+                      for (let i = 0; i < diffs.length; i++) {
+                        const path = diffs[i].path;
+                        const translatedValue = translations[i];
+                        
+                        if (path.startsWith('siteSettings.blocks')) {
+                          const i18nPath = path.replace(/\.data\./, `.i18n.${lang}.`);
+                          setValueByPath(data.it, i18nPath, translatedValue);
+                        } else {
+                          if (!data[lang]) data[lang] = JSON.parse(JSON.stringify(oldData[lang] || oldData.it));
+                          setValueByPath(data[lang], path, translatedValue);
+                        }
+                      }
+                    }
+                  }
+
+                  const langsAll = ['it', 'en', 'de', 'fr', 'es'] as const;
+                  for (const lang of langsAll) {
+                    if (data[lang] && data.it.siteSettings) {
+                      data[lang].siteSettings = {
+                        ...(data[lang].siteSettings || {}),
+                        blocks: data.it.siteSettings.blocks
+                      };
+                    }
+                  }
+                  console.log(`[CMS-TRANSLATE] Traduzione automatica dei cambiamenti completata!`);
+                }
+              }
+            }
+          }
+        } catch (translateErr) {
+          console.warn('[CMS-TRANSLATE] Errore durante la traduzione automatica:', translateErr);
+        }
+      }
+
       await saveCmsDataAsync(data);
       res.json({ success: true, message: 'Dati CMS salvati con successo', data });
     } catch (err: any) {
