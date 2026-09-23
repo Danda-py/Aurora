@@ -91,10 +91,12 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 px-4"
+        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4"
         onScroll={updateScrollState}
       >
+        <div className="w-4 shrink-0" />
         {children}
+        <div className="w-4 shrink-0" />
       </div>
       {canScroll && (
         <button
