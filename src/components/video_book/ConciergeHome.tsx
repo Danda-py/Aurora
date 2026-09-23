@@ -662,93 +662,74 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </button>
         )}
 
-        {/* 2. Stay Info & Status Widget: Simplified Credit Card Shape Card */}
+        {/* 2. Stay Info & Status Widget: Card utente con forma di tessera, alta trasparenza e apriporta integrato */}
         {pass && (
-          <div className="space-y-4 w-full animate-in fade-in duration-500">
-            {/* The Credit Card (CR-80 landscape ratio 1.58:1) */}
-            <div 
-              className="relative w-full aspect-[1.58/1] rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl flex flex-col justify-between bg-zinc-950/50 backdrop-blur-md"
-              style={{
-                backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.9), rgba(9, 13, 19, 0.95)), url(${media.view || '/uploads/valtellina.jpg'})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              {/* Subtle glass sheen overlay */}
-              <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
+          <div 
+            className="relative w-full aspect-[1.38/1] rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl flex flex-col justify-between bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.62), rgba(9, 13, 19, 0.72)), url(${media.view || '/uploads/valtellina.jpg'})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* Sheen */}
+            <div className="absolute inset-0 bg-radial-gradient from-white/5 to-transparent pointer-events-none" />
 
-              {/* Top Row: Chip and Contactless Badge */}
-              <div className="flex items-center justify-between z-10">
-                <div className="flex items-center gap-3">
-                  {/* SIM Card Gold Chip */}
-                  <div className="w-10 h-8 sm:w-11 sm:h-9 bg-gradient-to-br from-amber-400 via-yellow-200 to-amber-600 rounded-lg relative overflow-hidden border border-amber-300/30 flex items-center justify-center shadow-md shrink-0">
-                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-1/4" />
-                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-2/4" />
-                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-3/4" />
-                    <div className="absolute inset-y-0 w-[1px] bg-amber-800/40 left-1/3" />
-                    <div className="absolute inset-y-0 w-[1px] bg-amber-800/40 left-2/3" />
-                    <div className="w-3.5 h-3.5 rounded-full bg-amber-700/20 border border-amber-800/30" />
-                  </div>
-                  <span className="text-xs sm:text-sm font-black tracking-widest text-white/90 uppercase font-mono">APT. AURORA</span>
-                </div>
+            {/* Top Row: General info */}
+            <div className="flex items-center justify-between z-10">
+              <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">TESSERA OSPITE</span>
+              <span className="text-xs font-black tracking-widest text-white/95 uppercase font-mono bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10">APT. AURORA</span>
+            </div>
 
-                {/* Wireless/NFC Signal Symbol */}
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <svg className="w-5 h-5 opacity-75 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M5 17.5c.8-1.5 2.2-2.5 4-2.5s3.2 1 4 2.5" />
-                    <path d="M3 20c1.2-2.4 3.8-4 7-4s5.8 1.6 7 4" />
-                    <path d="M1 22c1.6-3.4 5.3-6 9-6s7.4 2.6 9 6" />
-                    <circle cx="10" cy="8" r="3" />
-                  </svg>
-                  <span className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase">TESSERA</span>
-                </div>
-              </div>
-
-              {/* Center Row: Booking Reference (Spaced like a Card Number) */}
-              <div className="z-10 py-1 sm:py-1.5 text-left">
-                <p className="text-[9px] sm:text-[10px] font-mono tracking-widest text-zinc-500 uppercase">CODICE PRENOTAZIONE</p>
-                <div className="text-lg sm:text-xl md:text-2xl font-mono font-black text-white/95 tracking-[0.18em] uppercase drop-shadow-md">
-                  {pass.bookingRef || 'AURORA-PASS'}
-                </div>
-              </div>
-
-              {/* Bottom Row: Holder Name and Validity Dates */}
-              <div className="flex items-end justify-between z-10 gap-3">
-                <div className="min-w-0 text-left">
-                  <p className="text-[9px] font-mono tracking-widest text-zinc-500 uppercase">TITOLARE</p>
-                  <div className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider truncate drop-shadow-md">
+            {/* Middle Row: Guest Name, Booking Code, and Dates Side-By-Side */}
+            <div className="grid grid-cols-2 gap-3 z-10 py-1">
+              {/* Left Side: Name and Ref */}
+              <div className="space-y-1.5 text-left min-w-0">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">TITOLARE</p>
+                  <div className="text-sm sm:text-base font-black text-white uppercase tracking-tight truncate drop-shadow-md">
                     {pass.guestName} {pass.guestSurname}
                   </div>
                 </div>
-
-                <div className="text-right shrink-0">
-                  <p className="text-[9px] font-mono tracking-widest text-zinc-500 uppercase">VALIDITÀ (IN - OUT)</p>
-                  <div className="text-xs sm:text-sm font-bold text-emerald-400 font-mono tracking-tight drop-shadow-md">
-                    {formatPassDate(pass.checkInDate)} — {formatPassDate(pass.checkOutDate)}
+                {pass.bookingRef && (
+                  <div>
+                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">PRENOTAZIONE</p>
+                    <div className="text-xs sm:text-sm font-mono font-black text-white/90 tracking-wider drop-shadow-md">
+                      {pass.bookingRef}
+                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* Right Side: Stay Dates */}
+              <div className="space-y-1 text-right shrink-0">
+                <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">PERIODO DI SOGGIORNO</p>
+                <div className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md font-mono">
+                  <div>{formatPassDate(pass.checkInDate)} ({pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'})</div>
+                  <div className="text-zinc-400 font-medium my-0.5">al</div>
+                  <div>{formatPassDate(pass.checkOutDate)} ({pass.checkOutTime ?? '10:00'})</div>
                 </div>
               </div>
             </div>
 
-            {/* Smart Lock Door Opener: Separated directly below the credit card */}
-            <div className="pt-1.5 space-y-2">
+            {/* Bottom Row: Smart Lock Door Opener inside the card! */}
+            <div className="z-10 pt-1.5 w-full">
               {!isStayActive ? (
-                <div className="w-full flex items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs sm:text-sm font-bold text-center leading-relaxed">
-                  <ShieldAlert className="w-4.5 h-4.5 shrink-0 mr-2 animate-pulse" />
+                <div className="w-full flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs sm:text-sm font-bold text-center">
+                  <ShieldAlert className="w-4 h-4 shrink-0 mr-1.5 animate-pulse" />
                   <span>{t.concierge.keysNotActive}</span>
                 </div>
               ) : (
                 <>
-                  <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block text-left">Apriporta</span>
                   <button
-                    className={`relative flex w-full items-center justify-between px-4 py-4 overflow-hidden font-black rounded-2xl transition active:scale-[0.98] cursor-pointer shadow-lg ${
+                    className={`relative flex w-full items-center justify-between px-3.5 py-3 overflow-hidden font-black rounded-xl transition active:scale-[0.98] cursor-pointer shadow-md ${
                       !isCheckinConfirmed
-                        ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                        ? 'bg-zinc-800/80 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
                         : doorState === 'success'
                         ? 'bg-emerald-300 text-zinc-950 shadow-md shadow-emerald-500/20'
                         : doorState === 'error'
-                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20 shadow-emerald-500/10'
+                        ? 'bg-rose-500 text-white shadow-md'
+                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20'
                     }`}
                     onPointerDown={isCheckinConfirmed ? startHold : undefined}
                     onPointerUp={isCheckinConfirmed ? cancelHold : undefined}
@@ -769,16 +750,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                       className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
                       style={{ transform: `scaleX(${holdProgress})` }} 
                     />
-                    <span className="flex items-center gap-2.5 relative z-10 text-sm sm:text-base font-black">
-                      <KeyRound className="w-4.5 h-4.5" />
+                    <span className="flex items-center gap-2.5 relative z-10 text-xs sm:text-sm font-black">
+                      <KeyRound className="w-4 h-4" />
                       {!isCheckinConfirmed 
-                        ? (language === 'it' ? 'In attesa di conferma check-in dall\'host' : 'Check-in pending host confirmation')
+                        ? (language === 'it' ? 'In attesa di conferma check-in' : 'Check-in pending')
                         : t.concierge.doorOpeningState[doorState]}
                     </span>
-                    <ArrowUpRight className="w-4.5 h-4.5 relative z-10" />
+                    <ArrowUpRight className="w-4 h-4 relative z-10" />
                   </button>
                   {doorMessage && (
-                    <p className={`text-center text-xs font-bold pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-300'}`}>
+                    <p className={`text-center text-[11px] font-bold pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-300'}`}>
                       {doorMessage}
                     </p>
                   )}
@@ -787,9 +768,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </div>
           </div>
         )}
-
-        {/* Photo Carousel (Moved below card/apriporta, above quick actions) */}
-        <PhotoCarousel media={media} language={language} />
 
         {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
         <section className="space-y-2">
@@ -878,6 +856,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </button>
           </div>
         </section>
+
+        {/* Photo Carousel (Moved below quick actions) */}
+        <PhotoCarousel media={media} language={language} />
 
 
 
