@@ -24,6 +24,7 @@ let cmsContentData = {};
 let currentCmsLang = 'it';
 let currentCmsSection = 'welcome';
 let cmsMediaData = {};
+let currentMediaSection = 'carousel';
 let lockStatusIntervalId = null;
 
 // Fallback SVG Icons Map (guarantees icons never fail to display)
@@ -83,26 +84,28 @@ function renderIcons() {
   });
 }
 
-// Media Catalog (18 Photos & Covers)
+// Media Catalog (20 Photos & Covers)
 const MEDIA_CATALOG = [
-  { key: 'hostAvatar', title: 'Foto Profilo Host Nino', desc: 'Visualizzata nella pagina Contatti e nell\'accoglienza.', aspectRatio: '1:1' },
-  { key: 'heroLiving', title: 'Copertina Benvenuto & Living', desc: 'Foto principale del soggiorno per la copertina di Benvenuto.', aspectRatio: '16:9' },
-  { key: 'checkInCover', title: 'Copertina Check-in & Smart Lock', desc: 'Foto per la procedura di accesso e chiave smart.', aspectRatio: '16:9' },
-  { key: 'locationCover', title: 'Copertina Come Arrivare & Mappa', desc: 'Foto per orientamento, GPS e arrivo a Morbegno.', aspectRatio: '16:9' },
-  { key: 'servicesCover', title: 'Copertina Servizi Casa & Comfort', desc: 'Dotazioni, riscaldamento ed elettrodomestici.', aspectRatio: '16:9' },
-  { key: 'rulesCover', title: 'Copertina Regole della Casa', desc: 'Orari di quiete e norme di rispetto del condominio.', aspectRatio: '16:9' },
-  { key: 'restaurantsCover', title: 'Copertina Crotti & Ristoranti', desc: 'Scheda enogastronomia tipica e pizzoccheri.', aspectRatio: '16:9' },
-  { key: 'barsCover', title: 'Copertina Bar & Colazioni', desc: 'Caffetterie, pasticcerie e aperitivi serali a Morbegno.', aspectRatio: '16:9' },
-  { key: 'shoppingCover', title: 'Copertina Botteghe del Bitto & Spesa', desc: 'Formaggi DOP della Valtellina e negozi alimentari.', aspectRatio: '16:9' },
-  { key: 'activitiesCover', title: 'Copertina Escursioni & Sentieri', desc: 'Trekking alpino, Val di Mello e Ponte nel Cielo.', aspectRatio: '16:9' },
-  { key: 'transportCover', title: 'Copertina Mezzi di Trasporto & Bici', desc: 'Treni FS per Milano/Tirano e noleggio biciclette.', aspectRatio: '16:9' },
-  { key: 'infoCover', title: 'Copertina Informazioni Utili', desc: 'Farmacie di turno, bancomat e raccolta differenziata.', aspectRatio: '16:9' },
-  { key: 'emergencyCover', title: 'Copertina Emergenze & Soccorso', desc: 'Numero unico 112 e guardia medica territoriale.', aspectRatio: '16:9' },
-  { key: 'checkOutCover', title: 'Copertina Check-out & Partenza', desc: 'Checklist di partenza e rilascio chiavi.', aspectRatio: '16:9' },
-  { key: 'bedroom', title: 'Camera da Letto Matrimoniale', desc: 'Foto della camera padronale con letto matrimoniale.', aspectRatio: '16:9' },
-  { key: 'kitchen', title: 'Cucina Attrezzata Moderna', desc: 'Cucina a induzione, macchina caffè e dotazioni.', aspectRatio: '16:9' },
-  { key: 'bathroom', title: 'Bagno & Doccia Cromoterapia', desc: 'Bagno con cabina doccia relax a led cromoterapici.', aspectRatio: '16:9' },
-  { key: 'wifiQr', title: 'Codice QR Wi-Fi Casa_Aurora', desc: 'Codice QR per rapida connessione senza digitare password.', aspectRatio: '1:1' }
+  { key: 'heroLiving', title: 'Soggiorno & Living Aurora', desc: 'Copertina di benvenuto, mostrata anche nel carosello.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'bedroom', title: 'Camera da Letto Matrimoniale', desc: 'Foto dei dettagli della camera matrimoniale, nel carosello.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'kitchen', title: 'Cucina Attrezzata Moderna', desc: 'Foto della cucina ad induzione, nel carosello.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'bathroom', title: 'Bagno & Doccia Cromoterapia', desc: 'Foto del bagno con doccia rilassante a LED, nel carosello.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'balcony', title: 'Terrazzo & Balcone Esterno', desc: 'Spazio all\'aperto e terrazzo fiorito, nel carosello.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'view', title: 'Vista Panorama & Montagne', desc: 'Vista panoramica sul monte Disgrazia, nel carosello e nelle card.', aspectRatio: '16:9', section: 'carousel' },
+  { key: 'locationCover', title: 'Copertina Come Arrivare & Mappa', desc: 'Foto per orientamento, GPS e arrivo a Morbegno.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'checkInCover', title: 'Copertina Check-in & Smart Lock', desc: 'Foto per la procedura di accesso e chiave smart.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'servicesCover', title: 'Copertina Servizi Casa & Comfort', desc: 'Dotazioni, riscaldamento ed elettrodomestici.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'rulesCover', title: 'Copertina Regole della Casa', desc: 'Orari di quiete e norme di rispetto del condominio.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'restaurantsCover', title: 'Copertina Crotti & Ristoranti', desc: 'Scheda enogastronomia tipica e pizzoccheri.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'barsCover', title: 'Copertina Bar & Colazioni', desc: 'Caffetterie, pasticcerie e aperitivi serali a Morbegno.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'shoppingCover', title: 'Copertina Botteghe del Bitto & Spesa', desc: 'Formaggi DOP della Valtellina e negozi alimentari.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'activitiesCover', title: 'Copertina Escursioni & Sentieri', desc: 'Trekking alpino, Val di Mello e Ponte nel Cielo.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'transportCover', title: 'Copertina Mezzi di Trasporto & Bici', desc: 'Treni FS per Milano/Tirano e noleggio biciclette.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'infoCover', title: 'Copertina Informazioni Utili', desc: 'Farmacie di turno, bancomat e raccolta differenziata.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'emergencyCover', title: 'Copertina Emergenze & Soccorso', desc: 'Numero unico 112 e guardia medica territoriale.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'checkOutCover', title: 'Copertina Check-out & Partenza', desc: 'Checklist di partenza e rilascio chiavi.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'hostAvatar', title: 'Foto Profilo Host Nino', desc: 'Visualizzata nella pagina Contatti e nell\'accoglienza.', aspectRatio: '1:1', section: 'other' },
+  { key: 'wifiQr', title: 'Codice QR Wi-Fi Casa_Aurora', desc: 'Codice QR per rapida connessione senza digitare password.', aspectRatio: '1:1', section: 'other' }
 ];
 
 // Apple Toast Notification Manager
@@ -3177,6 +3180,22 @@ function setupMedia() {
   if (btnResetAllPhotos) {
     btnResetAllPhotos.addEventListener('click', handleResetAllPhotos);
   }
+
+  // Set up tab category listeners
+  const tabs = document.querySelectorAll('#mediaSectionTabs button');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      currentMediaSection = tab.getAttribute('data-media-section');
+      
+      // Update active style classes
+      tabs.forEach(t => {
+        t.className = "flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[#86868b] hover:text-white hover:bg-white/[0.04]";
+      });
+      tab.className = "flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-[#30d158] text-[#07110d]";
+      
+      renderMediaCatalog();
+    });
+  });
 }
 
 async function loadMediaData() {
@@ -3223,7 +3242,12 @@ function renderMediaCatalog() {
   const container = document.getElementById('mediaCardsGrid');
   if (!container) return;
 
-  container.innerHTML = MEDIA_CATALOG.map(item => {
+  const filteredCatalog = MEDIA_CATALOG.filter(item => {
+    if (currentMediaSection === 'all') return true;
+    return item.section === currentMediaSection;
+  });
+
+  container.innerHTML = filteredCatalog.map(item => {
     const currentUrl = (cmsMediaData && cmsMediaData[item.key]) || getDefaultPhotoUrl(item.key);
     const fallbackUrl = getDefaultPhotoUrl(item.key);
 

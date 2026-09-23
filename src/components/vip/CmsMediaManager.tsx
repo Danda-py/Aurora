@@ -10,7 +10,10 @@ import {
   Loader2, 
   ExternalLink,
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Sliders,
+  BookOpen,
+  Settings
 } from 'lucide-react';
 
 interface MediaItemMeta {
@@ -19,141 +22,169 @@ interface MediaItemMeta {
   desc: string;
   aspect: string;
   badge: string;
+  section: 'carousel' | 'covers' | 'other';
 }
 
 const MEDIA_ITEMS: MediaItemMeta[] = [
   {
-    key: 'hostAvatar',
-    title: 'Foto Profilo Host Nino',
-    desc: 'Mostrata nella scheda Contatti, nell\'intestazione e nell\'accoglienza.',
-    aspect: 'Quadrata (1:1)',
-    badge: 'Profilo'
-  },
-  {
     key: 'heroLiving',
     title: 'Soggiorno & Living Aurora',
-    desc: 'Foto principale del soggiorno per la copertina di Benvenuto e schede.',
+    desc: 'Copertina principale di benvenuto, mostrata anche nel carosello.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Living'
+    badge: 'Carosello',
+    section: 'carousel'
+  },
+  {
+    key: 'bedroom',
+    title: 'Camera da Letto Matrimoniale',
+    desc: 'Foto dei dettagli della camera matrimoniale, inclusa nel carosello.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Carosello',
+    section: 'carousel'
+  },
+  {
+    key: 'kitchen',
+    title: 'Cucina Attrezzata Moderna',
+    desc: 'Foto della cucina ad induzione, inclusa nel carosello.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Carosello',
+    section: 'carousel'
+  },
+  {
+    key: 'bathroom',
+    title: 'Bagno & Doccia Cromoterapia',
+    desc: 'Foto del bagno e della doccia a LED, inclusa nel carosello.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Carosello',
+    section: 'carousel'
+  },
+  {
+    key: 'balcony',
+    title: 'Terrazzo & Balcone Esterno',
+    desc: 'Foto dello spazio all\'aperto e del terrazzo fiorito, inclusa nel carosello.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Carosello',
+    section: 'carousel'
+  },
+  {
+    key: 'view',
+    title: 'Vista Panorama & Montagne',
+    desc: 'Immagine panoramica sul monte Disgrazia, inclusa nel carosello e nelle card.',
+    aspect: 'Orizzontale (16:9)',
+    badge: 'Carosello',
+    section: 'carousel'
   },
   {
     key: 'locationCover',
     title: 'Copertina Come Arrivare & Mappa',
     desc: 'Foto per la scheda di orientamento, GPS e arrivo a Morbegno.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Arrivo'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'checkInCover',
     title: 'Copertina Check-in & Smart Lock',
     desc: 'Foto per la procedura di accesso e chiave smart.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Check-in'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'servicesCover',
     title: 'Copertina Servizi Casa & Comfort',
     desc: 'Foto per dotazioni, riscaldamento ed elettrodomestici.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Servizi'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'rulesCover',
     title: 'Copertina Regole della Casa',
     desc: 'Foto per orari di quiete e norme di rispetto.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Regole'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'restaurantsCover',
     title: 'Copertina Crotti & Ristoranti',
     desc: 'Immagine per la scheda enogastronomia tipica e pizzoccheri.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Ristoranti'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'barsCover',
     title: 'Copertina Bar & Colazioni',
     desc: 'Immagine per caffetterie, aperitivi e colazioni a Morbegno.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Bar'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'shoppingCover',
     title: 'Copertina Botteghe del Bitto & Spesa',
     desc: 'Immagine per formaggi tipici, botteghe storiche e alimentari.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Shopping'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'activitiesCover',
     title: 'Copertina Escursioni & Sentieri',
     desc: 'Immagine della scheda escursioni, Val di Mello e trekking alpino.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Attività'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'transportCover',
     title: 'Copertina Mezzi di Trasporto & Bici',
     desc: 'Immagine per treni FS, orari bus e taxi.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Trasporti'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'infoCover',
     title: 'Copertina Informazioni Utili',
     desc: 'Immagine per farmacie, banche e raccolta differenziata.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Info'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'emergencyCover',
     title: 'Copertina Emergenze & Soccorso',
     desc: 'Immagine per numero unico 112 e guardia medica.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Emergenze'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
     key: 'checkOutCover',
     title: 'Copertina Check-out & Riconsegna',
     desc: 'Immagine per checklist di partenza e recensioni.',
     aspect: 'Orizzontale (16:9)',
-    badge: 'Check-out'
+    badge: 'Guida',
+    section: 'covers'
   },
   {
-    key: 'bedroom',
-    title: 'Camera da Letto Matrimoniale',
-    desc: 'Foto per i dettagli della camera matrimoniale e letti.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Notte'
-  },
-  {
-    key: 'kitchen',
-    title: 'Cucina Attrezzata Moderna',
-    desc: 'Foto della cucina a induzione, elettrodomestici e zona pranzo.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Cucina'
-  },
-  {
-    key: 'bathroom',
-    title: 'Bagno & Doccia Cromoterapia',
-    desc: 'Foto del bagno con doccia rilassante a led cromoterapici.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Bagno'
+    key: 'hostAvatar',
+    title: 'Foto Profilo Host Nino',
+    desc: 'Mostrata nella scheda Contatti, nell\'intestazione e nell\'accoglienza.',
+    aspect: 'Quadrata (1:1)',
+    badge: 'Profilo',
+    section: 'other'
   },
   {
     key: 'wifiQr',
     title: 'Codice QR Rete Wi-Fi',
     desc: 'Immagine del QR scan per connettere automaticamente gli ospiti al Wi-Fi.',
     aspect: 'Quadrata (1:1)',
-    badge: 'Wi-Fi'
-  },
-  {
-    key: 'view',
-    title: 'Sfondo Valtellina User Card',
-    desc: 'Immagine di sfondo trasparente mostrata nella tessera utente della Home.',
-    aspect: 'Orizzontale (16:9)',
-    badge: 'Sfondo'
+    badge: 'Wi-Fi',
+    section: 'other'
   }
 ];
 
@@ -163,6 +194,7 @@ export const CmsMediaManager: React.FC = () => {
   const [feedback, setFeedback] = useState<{ key?: string; message: string; type: 'success' | 'error' } | null>(null);
   const [urlInputKey, setUrlInputKey] = useState<string | null>(null);
   const [customUrl, setCustomUrl] = useState<string>('');
+  const [activeMediaSection, setActiveMediaSection] = useState<'all' | 'carousel' | 'covers' | 'other'>('carousel');
 
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
@@ -229,6 +261,15 @@ export const CmsMediaManager: React.FC = () => {
     }
   };
 
+  const filteredItems = MEDIA_ITEMS.filter((item) => {
+    if (activeMediaSection === 'all') return true;
+    return item.section === activeMediaSection;
+  });
+
+  const carouselCount = MEDIA_ITEMS.filter(item => item.section === 'carousel').length;
+  const coversCount = MEDIA_ITEMS.filter(item => item.section === 'covers').length;
+  const otherCount = MEDIA_ITEMS.filter(item => item.section === 'other').length;
+
   return (
     <div className="space-y-6 animate-fade-in text-neutral-100">
       {/* Header Banner */}
@@ -243,6 +284,61 @@ export const CmsMediaManager: React.FC = () => {
           Carica file fotografici direttamente dal tuo dispositivo in maniera definitiva.
           I file vengono archiviati permanentemente nella cartella <code className="text-cyan-300 font-mono">/uploads/</code> del server e sono subito visibili a tutti gli ospiti.
         </p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap p-1 bg-[#11141c] border border-white/5 rounded-2xl gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveMediaSection('carousel')}
+          className={`flex-1 min-w-[140px] px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
+            activeMediaSection === 'carousel'
+              ? 'bg-cyan-500 text-neutral-950 shadow-md'
+              : 'text-neutral-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          <span>Spazi & Carosello ({carouselCount})</span>
+          <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-neutral-950 text-[8px] px-1.5 py-0.5 rounded-md font-mono font-extrabold animate-pulse">
+            ATTIVO
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMediaSection('covers')}
+          className={`flex-1 min-w-[140px] px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeMediaSection === 'covers'
+              ? 'bg-cyan-500 text-neutral-950 shadow-md'
+              : 'text-neutral-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Copertine Guide ({coversCount})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMediaSection('other')}
+          className={`flex-1 min-w-[140px] px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeMediaSection === 'other'
+              ? 'bg-cyan-500 text-neutral-950 shadow-md'
+              : 'text-neutral-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Profilo & QR ({otherCount})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMediaSection('all')}
+          className={`flex-1 min-w-[140px] px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeMediaSection === 'all'
+              ? 'bg-cyan-500 text-neutral-950 shadow-md'
+              : 'text-neutral-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Mostra Tutte ({MEDIA_ITEMS.length})</span>
+        </button>
       </div>
 
       {/* Global Feedback Banner */}
@@ -271,7 +367,7 @@ export const CmsMediaManager: React.FC = () => {
 
       {/* Grid of Media Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        {MEDIA_ITEMS.map((item) => {
+        {filteredItems.map((item) => {
           const currentUrl = (media as any)[item.key] || '';
           const isCustomUploaded = currentUrl.startsWith('/uploads/');
           const isUploading = uploadingKey === item.key;

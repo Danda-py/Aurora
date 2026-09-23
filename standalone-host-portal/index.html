@@ -1407,6 +1407,26 @@
 
         <div id="mediaFeedback" class="hidden p-3 rounded-xl text-xs font-medium"></div>
 
+        <!-- Section Filter Tabs -->
+        <div class="flex flex-wrap p-1 bg-white/[0.04] border border-white/[0.06] rounded-xl gap-1 mb-2" id="mediaSectionTabs">
+          <button type="button" class="flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-[#30d158] text-[#07110d]" data-media-section="carousel">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            <span>Spazi & Carosello</span>
+          </button>
+          <button type="button" class="flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[#86868b] hover:text-white hover:bg-white/[0.04]" data-media-section="covers">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>Copertine Guide</span>
+          </button>
+          <button type="button" class="flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[#86868b] hover:text-white hover:bg-white/[0.04]" data-media-section="other">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+            <span>Profilo & QR</span>
+          </button>
+          <button type="button" class="flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[#86868b] hover:text-white hover:bg-white/[0.04]" data-media-section="all">
+            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+            <span>Mostra Tutte</span>
+          </button>
+        </div>
+
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="mediaCardsGrid">
           <!-- Cards populated dynamically by app.js -->
