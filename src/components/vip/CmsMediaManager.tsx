@@ -195,6 +195,9 @@ export const CmsMediaManager: React.FC = () => {
   const [urlInputKey, setUrlInputKey] = useState<string | null>(null);
   const [customUrl, setCustomUrl] = useState<string>('');
   const [activeMediaSection, setActiveMediaSection] = useState<'all' | 'carousel' | 'covers' | 'other'>('carousel');
+  const [isAddingExtra, setIsAddingExtra] = useState(false);
+  const [extraUrl, setExtraUrl] = useState('');
+  const extraFileInputRef = useRef<HTMLInputElement>(null);
 
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
@@ -203,6 +206,64 @@ export const CmsMediaManager: React.FC = () => {
     setTimeout(() => {
       setFeedback(prev => (prev?.message === message ? null : prev));
     }, 6000);
+  };
+
+  const handleAddExtraFile = async (file: File) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showNotification('Seleziona un file immagine valido (JPEG, PNG, WebP)', 'error');
+      return;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      showNotification('Il file supera la dimensione massima di 25MB.', 'error');
+      return;
+    }
+
+    const key = `carousel_img_${Date.now()}`;
+    setUploadingKey(key);
+    try {
+      const result = await uploadPhoto(key, file);
+      if (result.success) {
+        showNotification('Nuova foto caricata e aggiunta al carosello con successo!', 'success');
+      } else {
+        showNotification(result.error || 'Errore durante il caricamento', 'error');
+      }
+    } catch (err: any) {
+      showNotification(`Errore: ${err.message}`, 'error');
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const handleAddExtraUrl = async () => {
+    if (!extraUrl.trim()) return;
+    const key = `carousel_img_${Date.now()}`;
+    try {
+      const result = await saveMediaUrl(key, extraUrl.trim());
+      if (result.success) {
+        showNotification('Nuovo URL immagine aggiunto al carosello!', 'success');
+        setExtraUrl('');
+        setIsAddingExtra(false);
+      } else {
+        showNotification(result.error || 'Errore salvataggio URL', 'error');
+      }
+    } catch (err: any) {
+      showNotification(`Errore: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDeleteExtra = async (key: string) => {
+    if (!confirm('Eliminare definitivamente questa foto aggiuntiva dal carosello?')) return;
+    try {
+      const success = await resetPhoto(key);
+      if (success) {
+        showNotification('Foto aggiuntiva rimossa con successo.', 'success');
+      }
+    } catch (err: any) {
+      showNotification(`Errore durante la rimozione: ${err.message}`, 'error');
+    }
   };
 
   const handleFileSelected = async (key: string, file: File) => {
@@ -522,6 +583,148 @@ export const CmsMediaManager: React.FC = () => {
             </div>
           );
         })}
+
+        {/* Dynamic extra carousel photos (only shown in carousel or all tabs) */}
+        {(activeMediaSection === 'carousel' || activeMediaSection === 'all') && (
+          <>
+            {extraCarouselKeys.map((key) => {
+              const currentUrl = (media as any)[key] || '';
+              const isUploading = uploadingKey === key;
+              return (
+                <div 
+                  key={key}
+                  className="p-4 rounded-2xl bg-[#090b10] border border-cyan-500/20 flex flex-col justify-between space-y-3 relative group transition hover:border-cyan-500/30"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-xs font-bold text-white tracking-tight">Foto Carosello Extra</h4>
+                        <p className="text-[10px] text-neutral-400 leading-snug mt-0.5">Immagine aggiuntiva visualizzata nel carosello.</p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-semibold uppercase shrink-0 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        Carosello +
+                      </span>
+                    </div>
+
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden bg-black/60 border border-dashed border-white/20 flex items-center justify-center">
+                      {isUploading ? (
+                        <div className="flex flex-col items-center justify-center p-4 text-cyan-300 space-y-2">
+                          <Loader2 className="w-7 h-7 animate-spin text-cyan-400" />
+                          <span className="text-xs font-semibold">Caricamento...</span>
+                        </div>
+                      ) : (
+                        <img 
+                          src={currentUrl} 
+                          alt="Extra Carousel Photo" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="1"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/5 truncate">
+                      <span className="truncate" title={currentUrl}>
+                        {currentUrl}
+                      </span>
+                      <a 
+                        href={currentUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 hover:text-cyan-300 shrink-0 ml-1"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-end gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => handleDeleteExtra(key)}
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-[11px] font-bold transition cursor-pointer flex items-center gap-1"
+                    >
+                      <RotateCcw className="w-3 h-3 text-rose-400" />
+                      <span>Elimina</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Custom Upload/Add Photo Card */}
+            <div className="p-4 rounded-2xl bg-cyan-950/5 border border-dashed border-cyan-500/30 flex flex-col items-center justify-center text-center space-y-3 min-h-[260px]">
+              <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                <Upload className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white">Aggiungi Foto al Carosello</h4>
+                <p className="text-[10px] text-neutral-400 max-w-[200px] mx-auto mt-1">
+                  Aggiungi un'altra foto da mostrare nel carosello scorrevole della home (da 2 a 100+ foto!).
+                </p>
+              </div>
+
+              {isAddingExtra ? (
+                <div className="w-full space-y-2 p-2 bg-black/30 rounded-xl border border-white/5">
+                  <input
+                    type="text"
+                    value={extraUrl}
+                    onChange={(e) => setExtraUrl(e.target.value)}
+                    placeholder="Incolla link immagine..."
+                    className="w-full p-2 rounded-lg bg-black border border-white/20 text-white text-[11px] font-mono outline-none focus:border-cyan-400"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingExtra(false)}
+                      className="px-2 py-1 text-[10px] text-neutral-400 hover:text-white"
+                    >
+                      Annulla
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddExtraUrl}
+                      className="px-2.5 py-1 text-[10px] bg-cyan-500 text-neutral-950 font-bold rounded-md"
+                    >
+                      Aggiungi
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => extraFileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold text-[11px] transition cursor-pointer flex items-center gap-1"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Carica File</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingExtra(true)}
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold text-[11px] transition cursor-pointer flex items-center gap-1"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Aggiungi URL</span>
+                  </button>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={extraFileInputRef}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAddExtraFile(file);
+                }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -318,34 +318,28 @@ const mediaTitles: Record<string, { it: string; en: string }> = {
 };
 
 const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, language }) => {
-  // Gather all custom uploaded photos (starting with /uploads/) except the host avatar and wifi QR
-  const customImages = Object.entries(media || {})
-    .filter(([key, url]) => {
-      return (
-        typeof url === 'string' &&
-        url.startsWith('/uploads/') &&
-        key !== 'hostAvatar' &&
-        key !== 'wifiQr'
-      );
-    })
-    .map(([key, url]) => {
-      const titles = mediaTitles[key] || { it: key, en: key };
+  // 1. Core fixed spaces keys (always included in the carousel, falling back to defaults if not customized)
+  const coreKeys = ['heroLiving', 'bedroom', 'kitchen', 'bathroom', 'balcony', 'view'];
+
+  // 2. Extra keys uploaded by the host specifically for the carousel (keys starting with "carousel_img_")
+  const extraKeys = Object.keys(media || {}).filter(key => key.startsWith('carousel_img_'));
+
+  // 3. Merge all keys
+  const carouselKeys = [...coreKeys, ...extraKeys];
+
+  // 4. Map keys to image objects with localized titles
+  const images = carouselKeys
+    .map(key => {
+      const url = media[key];
+      if (!url) return null;
+
+      const titles = mediaTitles[key] || { it: 'Foto Carosello Extra', en: 'Extra Carousel Photo' };
       return {
         url,
         title: language === 'it' ? titles.it : titles.en
       };
-    });
-
-  // Dynamic carousel images: if no custom uploads, fallback to standard room / cover defaults
-  const images = customImages.length > 0 
-    ? customImages 
-    : [
-        { url: media.heroLiving || '/uploads/aurora_living.jpg', title: language === 'it' ? 'Soggiorno & Living Room' : 'Living Room' },
-        { url: media.bedroom || '/uploads/bedroom.jpg', title: language === 'it' ? 'Camera da Letto' : 'Master Bedroom' },
-        { url: media.kitchen || '/uploads/kitchen.jpg', title: language === 'it' ? 'Cucina Attrezzata' : 'Fully Equipped Kitchen' },
-        { url: media.bathroom || '/uploads/bathroom.jpg', title: language === 'it' ? 'Bagno Moderno' : 'Bathroom' },
-        { url: media.locationCover || '/uploads/location.jpg', title: language === 'it' ? 'Valtellina & Morbegno' : 'Morbegno & Valtellina' }
-      ].filter(img => img.url);
+    })
+    .filter((img): img is { url: string; title: string } => img !== null && Boolean(img.url));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
