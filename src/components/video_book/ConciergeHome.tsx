@@ -306,27 +306,61 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
   ].filter(img => img.url);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
+  // Auto-scroll every 4.5s
   useEffect(() => {
     if (images.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      const nextIndex = (currentIndex + 1) % images.length;
+      const scroller = scrollRef.current;
+      if (scroller) {
+        scroller.scrollTo({
+          left: nextIndex * scroller.clientWidth,
+          behavior: 'smooth'
+        });
+        setCurrentIndex(nextIndex);
+      }
     }, 4500);
     return () => clearInterval(timer);
-  }, [images.length]);
+  }, [currentIndex, images.length]);
+
+  // Track page on manual swipe
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scroller = e.currentTarget;
+    if (scroller.clientWidth > 0) {
+      const index = Math.round(scroller.scrollLeft / scroller.clientWidth);
+      if (index !== currentIndex) {
+        setCurrentIndex(index);
+      }
+    }
+  };
+
+  const goToSlide = (idx: number) => {
+    const scroller = scrollRef.current;
+    if (scroller) {
+      scroller.scrollTo({
+        left: idx * scroller.clientWidth,
+        behavior: 'smooth'
+      });
+      setCurrentIndex(idx);
+    }
+  };
 
   if (images.length === 0) return null;
 
   return (
     <div className="relative w-full aspect-16/10 sm:aspect-16/9 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 group">
-      {/* Slides */}
-      <div className="w-full h-full relative">
+      {/* Slides (Touch Scrollable with Snap Points) */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+      >
         {images.map((img, idx) => (
           <div
             key={idx}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
+            className="w-full h-full snap-start shrink-0 relative"
           >
             <img
               src={img.url}
@@ -350,14 +384,14 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
       {images.length > 1 && (
         <>
           <button
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)}
+            onClick={() => goToSlide((currentIndex - 1 + images.length) % images.length)}
             className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
             aria-label="Previous slide"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
           </button>
           <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % images.length)}
+            onClick={() => goToSlide((currentIndex + 1) % images.length)}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
             aria-label="Next slide"
           >
@@ -369,7 +403,7 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
             {images.map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => setCurrentIndex(idx)}
+                onClick={() => goToSlide(idx)}
                 className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
                   idx === currentIndex ? 'bg-emerald-400 w-4' : 'bg-white/40'
                 }`}
@@ -383,6 +417,14 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
   );
 };
 
+const cardTranslations: Record<Language, { cardLabel: string; holder: string; booking: string; validity: string; in: string; out: string; to: string }> = {
+  it: { cardLabel: "TESSERA OSPITE", holder: "TITOLARE", booking: "CODICE PRENOTAZIONE", validity: "PERIODO DI SOGGIORNO", in: "Check-in", out: "Check-out", to: "al" },
+  en: { cardLabel: "GUEST PASS", holder: "GUEST HOLDER", booking: "BOOKING CODE", validity: "STAY PERIOD", in: "Check-in", out: "Check-out", to: "to" },
+  de: { cardLabel: "GÄSTEKARTE", holder: "INHABER", booking: "BUCHUNGSCODE", validity: "AUFENTHALTSDAUER", in: "Check-in", out: "Check-out", to: "bis" },
+  fr: { cardLabel: "CARTE D'INVITÉ", holder: "TITULAIRE", booking: "CODE DE RÉSERVATION", validity: "PÉRIODE DE SÉJOUR", in: "Arrivée", out: "Départ", to: "au" },
+  es: { cardLabel: "TARJETA DE HUÉSPED", holder: "TITULAR", booking: "CÓDIGO DE RESERVA", validity: "PERÍODO DE ESTANCIA", in: "Entrada", out: "Salida", to: "al" }
+};
+
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
   const { media } = useCms();
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -393,8 +435,39 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [doorMessage, setDoorMessage] = useState('');
   const [holdProgress, setHoldProgress] = useState(0);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartedAt = React.useRef(0);
+
+  const handleDoorClick = () => {
+    if (!isCheckinConfirmed) {
+      const msg = {
+        it: "L'apriporta digitale sarà abilitato non appena l'host Nino avrà verificato i tuoi documenti e confermato il check-in.",
+        en: "The digital key will be enabled as soon as host Nino has verified your documents and confirmed the check-in.",
+        de: "Der digitale Türöffner wird aktiviert, sobald Gastgeber Nino Ihre Dokumente überprüft und den Check-in bestätigt hat.",
+        fr: "La clé digitale sera activée dès que l'hôte Nino aura vérifié vos documents et enregistré l'arrivée.",
+        es: "La llave digital se habilitará tan pronto como el anfitrión Nino haya verificado sus documentos y confirmado el registro."
+      }[language] || "Check-in non confermato dall'host.";
+      setAlertMessage(msg);
+      setTimeout(() => setAlertMessage(null), 5500);
+    }
+  };
+
+  const handleWifiClick = () => {
+    if (!isWifiActive) {
+      const msg = {
+        it: "La password del Wi-Fi fibra sarà visibile non appena l'host Nino avrà confermato il check-in.",
+        en: "The high-speed Wi-Fi password will be visible as soon as host Nino confirms your check-in.",
+        de: "Das Highspeed-WLAN-Passwort wird sichtbar, sobald Gastgeber Nino den Check-in bestätigt.",
+        fr: "Le mot de passe du Wi-Fi haut débit sera visible dès que l'hôte Nino aura validé l'enregistrement.",
+        es: "La contraseña del Wi-Fi de alta velocidad estará visible tan pronto como el anfitrión Nino confirme el registro."
+      }[language] || "Check-in non confermato dall'host.";
+      setAlertMessage(msg);
+      setTimeout(() => setAlertMessage(null), 5500);
+    } else {
+      void copyWifi();
+    }
+  };
   const isPublic = !pass;
   const firstName = pass?.guestName || 'Ospite';
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
@@ -577,6 +650,17 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   return (
     <div className="min-h-screen w-full bg-black text-white selection:bg-emerald-500/25 selection:text-emerald-200">
       
+      {/* Floating Accessible Warning Notification Banner */}
+      {alertMessage && (
+        <div className="fixed top-4 left-4 right-4 z-50 p-4 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-amber-500/30 text-amber-200 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-2xl animate-in fade-in slide-in-from-top duration-300">
+          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+          <div className="flex-1 text-left">{alertMessage}</div>
+          <button onClick={() => setAlertMessage(null)} className="p-1 rounded-full hover:bg-white/10 text-zinc-400 cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Smartphone-first centered container with unified vertical rhythm */}
       <main className="w-full max-w-[440px] mx-auto px-4 pt-3 pb-24 space-y-6">
         
@@ -677,7 +761,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
             {/* Top Row: General info */}
             <div className="flex items-center justify-between z-10">
-              <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">TESSERA OSPITE</span>
+              <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">
+                {cardTranslations[language]?.cardLabel || "TESSERA OSPITE"}
+              </span>
               <span className="text-xs font-black tracking-widest text-white/95 uppercase font-mono bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10">APT. AURORA</span>
             </div>
 
@@ -686,14 +772,18 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               {/* Left Side: Name and Ref */}
               <div className="space-y-1.5 text-left min-w-0">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">TITOLARE</p>
+                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
+                    {cardTranslations[language]?.holder || "TITOLARE"}
+                  </p>
                   <div className="text-sm sm:text-base font-black text-white uppercase tracking-tight truncate drop-shadow-md">
                     {pass.guestName} {pass.guestSurname}
                   </div>
                 </div>
                 {pass.bookingRef && (
                   <div>
-                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">PRENOTAZIONE</p>
+                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
+                      {cardTranslations[language]?.booking || "PRENOTAZIONE"}
+                    </p>
                     <div className="text-xs sm:text-sm font-mono font-black text-white/90 tracking-wider drop-shadow-md">
                       {pass.bookingRef}
                     </div>
@@ -703,10 +793,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
               {/* Right Side: Stay Dates */}
               <div className="space-y-1 text-right shrink-0">
-                <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">PERIODO DI SOGGIORNO</p>
+                <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
+                  {cardTranslations[language]?.validity || "PERIODO DI SOGGIORNO"}
+                </p>
                 <div className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md font-mono">
                   <div>{formatPassDate(pass.checkInDate)} ({pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'})</div>
-                  <div className="text-zinc-400 font-medium my-0.5">al</div>
+                  <div className="text-zinc-400 font-medium my-0.5">
+                    {cardTranslations[language]?.to || "al"}
+                  </div>
                   <div>{formatPassDate(pass.checkOutDate)} ({pass.checkOutTime ?? '10:00'})</div>
                 </div>
               </div>
@@ -724,14 +818,14 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   <button
                     className={`relative flex w-full items-center justify-between px-3.5 py-3 overflow-hidden font-black rounded-xl transition active:scale-[0.98] cursor-pointer shadow-md ${
                       !isCheckinConfirmed
-                        ? 'bg-zinc-800/80 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                        ? 'bg-zinc-800/80 text-zinc-400 border border-white/5 hover:bg-zinc-800'
                         : doorState === 'success'
                         ? 'bg-emerald-300 text-zinc-950 shadow-md shadow-emerald-500/20'
                         : doorState === 'error'
                         ? 'bg-rose-500 text-white shadow-md'
                         : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20'
                     }`}
-                    onPointerDown={isCheckinConfirmed ? startHold : undefined}
+                    onPointerDown={isCheckinConfirmed ? startHold : handleDoorClick}
                     onPointerUp={isCheckinConfirmed ? cancelHold : undefined}
                     onPointerCancel={isCheckinConfirmed ? cancelHold : undefined}
                     onPointerLeave={isCheckinConfirmed ? cancelHold : undefined}
@@ -744,7 +838,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                         event.clientY <= rect.bottom;
                       if (!inside) cancelHold(event);
                     } : undefined}
-                    disabled={doorState === 'opening' || !isCheckinConfirmed}
+                    disabled={doorState === 'opening'}
                   >
                     <span 
                       className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
@@ -775,10 +869,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <div className="grid grid-cols-2 gap-2.5">
             {/* Wi-Fi Action (Row 1, Col 1) */}
             <button 
-              onClick={isPublic ? undefined : (isWifiActive ? copyWifi : undefined)}
-              disabled={isPublic || !isWifiActive}
-              className={`flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all text-left cursor-pointer ${(isPublic || !isWifiActive) ? "opacity-40 cursor-not-allowed" : ""}`}
-              title={isPublic ? "Disabilitato senza pass" : (!isWifiActive ? "Sbloccato dopo il check-in confermato" : "Copia password Wi-Fi")}
+              onClick={isPublic ? undefined : handleWifiClick}
+              disabled={isPublic}
+              className={`flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all text-left cursor-pointer ${isPublic ? "opacity-40 cursor-not-allowed" : ""}`}
+              title={isPublic ? "Disabilitato senza pass" : "Copia password Wi-Fi"}
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
                 <Wifi className="w-4 h-4" />
