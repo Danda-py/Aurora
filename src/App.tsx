@@ -6,19 +6,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { VideoWelcomeBook } from './components/video_book/VideoWelcomeBook';
-import { CmsProvider } from './context/CmsContext';
 import { GuestRedirect } from './pages/GuestRedirect';
 import { HostPortal } from './pages/host-portal/HostPortal';
 
 function MainApp() {
   return (
-    <CmsProvider>
-      <div className="min-h-[100dvh] w-full bg-black flex items-center justify-center p-0 m-0 select-none">
-        <div className="w-full h-full min-h-[100dvh] flex justify-center items-stretch">
-          <VideoWelcomeBook initialLanguage="it" />
-        </div>
+    <div className="min-h-[100dvh] w-full bg-black flex items-center justify-center p-0 m-0 select-none">
+      <div className="w-full h-full min-h-[100dvh] flex justify-center items-stretch">
+        <VideoWelcomeBook initialLanguage="it" />
       </div>
-    </CmsProvider>
+    </div>
   );
 }
 

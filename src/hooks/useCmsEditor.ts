@@ -290,7 +290,7 @@ export function useCmsEditor() {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle = block.title.toLowerCase().includes(q) || (block.customTitle && block.customTitle.toLowerCase().includes(q));
-        const matchesData = Object.values(block.data).some((val) => 
+        const matchesData = Object.values(block.data).some((val) =>
           typeof val === 'string' && val.toLowerCase().includes(q)
         );
         return matchesTitle || matchesData;
@@ -348,9 +348,9 @@ export function useCmsEditor() {
 
     const sourceText = getFieldValue(block, fieldKey);
     if (!sourceText || typeof sourceText !== 'string' || !sourceText.trim()) {
-      setPublishFeedback({ 
-        type: 'error', 
-        message: 'Inserisci prima un testo nella casella da tradurre.' 
+      setPublishFeedback({
+        type: 'error',
+        message: 'Inserisci prima un testo nella casella da tradurre.'
       });
       setTimeout(() => setPublishFeedback(null), 3000);
       return false;
@@ -379,7 +379,7 @@ export function useCmsEditor() {
         return prev.map((b) => {
           if (b.id !== blockId) return b;
           const currentI18n = { ...(b.i18n || {}) };
-          
+
           (['it', 'en', 'de', 'fr', 'es'] as const).forEach((langCode) => {
             if (langCode === activeLang) {
               currentI18n[langCode] = { ...(currentI18n[langCode] || {}), [fieldKey]: sourceText };
@@ -584,15 +584,15 @@ export function useCmsEditor() {
       }
 
       setIsDirty(false);
-      setPublishFeedback({ 
-        type: 'success', 
-        message: '🚀 Modifiche salvate e pubblicate live sulla PWA Ospite!' 
+      setPublishFeedback({
+        type: 'success',
+        message: '🚀 Modifiche salvate e pubblicate live sulla PWA Ospite!'
       });
       setTimeout(() => setPublishFeedback(null), 4500);
     } catch (err: any) {
-      setPublishFeedback({ 
-        type: 'error', 
-        message: `Errore durante il salvataggio: ${err.message}` 
+      setPublishFeedback({
+        type: 'error',
+        message: `Errore durante il salvataggio: ${err.message}`
       });
     } finally {
       setIsPublishing(false);

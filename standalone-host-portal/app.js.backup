@@ -302,7 +302,8 @@ async function startHostPortal() {
   setupEventListeners();
 
   // Setup Sub-Modules
-  
+  setupMedia();
+
   // Health and data bootstrap
   await checkHealthAndBootstrap();
 
@@ -403,7 +404,7 @@ function setupTabs() {
         lockStatusIntervalId = setInterval(fetchLockStatus, 3000);
       }
     } else if (targetTab === 'media') {
-      // loadMediaData(); // removed CMS
+      loadMediaData();
     } else if (targetTab === 'messages') {
       fetchAndRenderScheduledMessages();
     } else if (targetTab === 'alloggiati') {
@@ -2537,6 +2538,228 @@ window.triggerDoorUnlock = async function(callerLabel = 'Manuale', token = null)
 // ============================================================
 // ============================================================
 // MEDIA & PHOTO GALLERY MANAGER
+// ============================================================
+function setupMedia() {
+  const btnRefreshMedia = document.getElementById('btnRefreshMedia');
+  if (btnRefreshMedia) {
+    btnRefreshMedia.addEventListener('click', () => {
+      showToast('Ricarica galleria foto...', 'info');
+      loadMediaData();
+    });
+  }
+
+  const btnResetAllPhotos = document.getElementById('btnResetAllPhotos');
+  if (btnResetAllPhotos) {
+    btnResetAllPhotos.addEventListener('click', handleResetAllPhotos);
+  }
+
+  // Set up tab category listeners
+  const tabs = document.querySelectorAll('#mediaSectionTabs button');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      currentMediaSection = tab.getAttribute('data-media-section');
+      
+      // Update active style classes
+      tabs.forEach(t => {
+        t.className = "flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[#86868b] hover:text-white hover:bg-white/[0.04]";
+      });
+      tab.className = "flex-1 min-w-[125px] px-3.5 py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-[#30d158] text-[#07110d]";
+      
+      renderMediaCatalog();
+    });
+  });
+}
+
+async function loadMediaData() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/cms/media`);
+    if (res.ok) {
+      const json = await res.json();
+      cmsMediaData = json.media || json.data || json || {};
+    }
+    renderMediaCatalog();
+  } catch (err) {
+    console.warn('Media fetch error:', err);
+    renderMediaCatalog();
+  }
+}
+
+function getDefaultPhotoUrl(key) {
+  const defaults = {
+    hostAvatar: '/uploads/host.jpg',
+    heroLiving: '/uploads/living.jpg',
+    checkInCover: '/uploads/lock.jpg',
+    locationCover: '/uploads/location.jpg',
+    servicesCover: '/uploads/services.jpg',
+    rulesCover: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    restaurantsCover: '/uploads/restaurant.jpg',
+    barsCover: '/uploads/bars.jpg',
+    shoppingCover: '/uploads/bottega.jpg',
+    activitiesCover: '/uploads/activities.jpg',
+    transportCover: '/uploads/train.jpg',
+    infoCover: '/uploads/info.jpg',
+    emergencyCover: '/uploads/emergency.jpg',
+    checkOutCover: 'https://media.istockphoto.com/id/2219309082/it/foto/persona-che-esce-di-casa-con-la-valigia-porta-esistente-del-viaggiatore-con-bagagli.webp?a=1&b=1&s=612x612&w=0&k=20&c=dzLdna5DxchqxEUdEZApP6xKCVUfsBbhVQfEI5u0nB8=',
+    bedroom: '/uploads/bedroom.jpg',
+    kitchen: '/uploads/kitchen.jpg',
+    bathroom: '/uploads/bathroom.jpg',
+    balcony: '/uploads/lock.jpg',
+    view: '/uploads/view.jpg',
+    wifiQr: '/uploads/qrcode.png'
+  };
+  return defaults[key] || '/uploads/living.jpg';
+}
+
+function renderMediaCatalog() {
+  const container = document.getElementById('mediaCardsGrid');
+  if (!container) return;
+
+  const filteredCatalog = MEDIA_CATALOG.filter(item => {
+    if (currentMediaSection === 'all') return true;
+    return item.section === currentMediaSection;
+  });
+
+  container.innerHTML = filteredCatalog.map(item => {
+    const currentUrl = (cmsMediaData && cmsMediaData[item.key]) || getDefaultPhotoUrl(item.key);
+    const fallbackUrl = getDefaultPhotoUrl(item.key);
+
+    return `
+      <div class="apple-card p-4 space-y-3 flex flex-col justify-between" id="media-card-${item.key}">
+        <div>
+          <!-- Thumbnail & Preview -->
+          <div class="relative w-full h-36 rounded-xl overflow-hidden bg-black/60 border border-white/[0.08] mb-3 group">
+            <img 
+              src="${currentUrl}" 
+              alt="${item.title}" 
+              id="img-preview-${item.key}" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              onerror="if (this.src !== '${fallbackUrl}') { this.src = '${fallbackUrl}'; } else { this.onerror=null; this.src = '/uploads/living.jpg'; }"
+            />
+            <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/70 border border-white/10">
+              ${item.aspectRatio}
+            </span>
+          </div>
+
+          <h4 class="font-semibold text-xs text-white tracking-tight">${item.title}</h4>
+          <p class="text-[11px] text-[#86868b] mt-0.5 line-clamp-2">${item.desc}</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-2 pt-2 border-t border-white/[0.06]">
+          <div class="flex items-center gap-2">
+            <!-- Upload Button (Hidden Input) -->
+            <input type="file" id="file-${item.key}" accept="image/*" class="hidden" onchange="handlePhotoUpload('${item.key}', this)" />
+            
+            <button type="button" onclick="document.getElementById('file-${item.key}').click()" class="btn-apple-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-[#30d158]"></i>
+              <span>Carica Foto</span>
+            </button>
+
+            <!-- Reset Photo Button -->
+            <button type="button" onclick="handleResetSinglePhoto('${item.key}')" class="p-2 rounded-xl bg-white/[0.06] hover:bg-[#ff453a]/15 text-[#86868b] hover:text-[#ff453a] border border-white/[0.08] transition cursor-pointer" title="Ripristina default">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderIcons();
+}
+
+window.handlePhotoUpload = async function(key, inputEl) {
+  const file = inputEl.files?.[0];
+  if (!file) return;
+
+  // Validate size (< 15MB)
+  if (file.size > 15 * 1024 * 1024) {
+    showToast('Immagine troppo pesante (massimo 15MB)', 'error');
+    return;
+  }
+
+  showToast(`Caricamento immagine per ${key}...`, 'loading');
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/cms/upload-photo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          photoKey: key,
+          key: key,
+          base64DataUrl: base64,
+          fileBase64: base64,
+          filename: file.name
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('Foto aggiornata con successo!', 'success');
+        if (!cmsMediaData) cmsMediaData = {};
+        cmsMediaData[key] = data.url;
+
+        const img = document.getElementById(`img-preview-${key}`);
+        if (img) img.src = `${data.url}?t=${Date.now()}`;
+      } else {
+        throw new Error(data.error || 'Errore di salvataggio foto');
+      }
+    } catch (err) {
+      showToast(`Errore caricamento: ${err.message}`, 'error');
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.handleResetSinglePhoto = async function(key) {
+  showToast(`Ripristino foto ${key}...`, 'loading');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/cms/reset-photo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photoKey: key, key: key })
+    });
+
+    if (res.ok) {
+      showToast('Foto ripristinata ai valori originali', 'success');
+      if (cmsMediaData) delete cmsMediaData[key];
+      const img = document.getElementById(`img-preview-${key}`);
+      if (img) img.src = getDefaultPhotoUrl(key);
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (err) {
+    showToast(`Errore ripristino: ${err.message}`, 'error');
+  }
+};
+
+async function handleResetAllPhotos() {
+  if (!confirm('Sei sicuro di voler ripristinare tutte le 18 foto alle immagini originali di fabbrica?')) {
+    return;
+  }
+
+  showToast('Ripristino galleria foto in corso...', 'loading');
+
+  for (const item of MEDIA_CATALOG) {
+    try {
+      await fetch(`${API_BASE_URL}/api/cms/reset-photo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoKey: item.key, key: item.key })
+      });
+    } catch (e) {}
+  }
+
+  cmsMediaData = {};
+  loadMediaData();
+  showToast('Tutte le foto sono state ripristinate!', 'success');
+}
+
 // ============================================================
 // REAL-TIME LOCK STATUS TRACKING (STANDALONE PORTAL)
 // ============================================================

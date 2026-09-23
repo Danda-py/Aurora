@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language } from '../types';
-import { 
-  getActiveCmsContent, 
-  fetchCmsContentFromServer, 
-  subscribeToCms, 
-  saveCmsContent, 
+import {
+  getActiveCmsContent,
+  fetchCmsContentFromServer,
+  subscribeToCms,
+  saveCmsContent,
   saveCmsSection,
   resetCmsToDefault,
   CmsMediaMap,
@@ -222,4 +222,3 @@ export function useCms(): CmsContextType {
   }
   return ctx;
 }
-
