@@ -1,38 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useCmsEditor } from '../../hooks/useCmsEditor';
 import { PwaPhonePreview } from './PwaPhonePreview';
-import { 
-  CmsBlock, 
-  CmsBlockType, 
-  HUMAN_LABELS, 
-  VISIBILITY_RULES_OPTIONS, 
+import {
+  CmsBlock,
+  CmsBlockType,
+  HUMAN_LABELS,
+  VISIBILITY_RULES_OPTIONS,
   VisibilityCondition,
   CMS_BLOCK_PRESETS
 } from '../../types/cmsBuilder';
-import { 
-  Plus, 
-  GripVertical, 
-  ChevronUp, 
-  ChevronDown, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
-  Save, 
-  RotateCcw, 
-  Sparkles, 
-  Check, 
-  AlertCircle, 
-  Smartphone, 
-  Laptop, 
-  Palette, 
-  Settings2, 
-  Layers, 
-  Tv, 
-  Wifi, 
-  ShieldCheck, 
-  MapPin, 
-  FileText, 
-  Zap, 
+import {
+  Plus,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  Trash2,
+  Eye,
+  EyeOff,
+  Save,
+  RotateCcw,
+  Sparkles,
+  Check,
+  AlertCircle,
+  Smartphone,
+  Laptop,
+  Palette,
+  Settings2,
+  Layers,
+  Tv,
+  Wifi,
+  ShieldCheck,
+  MapPin,
+  FileText,
+  Zap,
   X,
   Search,
   CheckCircle2,
@@ -44,6 +44,9 @@ import {
   Globe
 } from 'lucide-react';
 import { Language } from '../../types';
+import { InlineEditableText } from '../../../components/InlineEditableText';
+import { InlineTimePicker } from '../../../components/InlineTimePicker';
+import { StyleEditor } from '../../../components/StyleEditor';
 
 const COLOR_PALETTES = [
   { name: 'Ambra Valtellina', primary: '#f59e0b', accent: '#d97706' },
@@ -106,7 +109,29 @@ export const HostCmsTab: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to block when selected from phone preview
+  // Debounced publishLive to avoid too many calls
+  const debouncedPublishLive = useCallback(() => {
+    // If a publish is already in progress, we could skip or wait; for simplicity, we call directly
+    // but we want to debounce rapid calls. We'll use a timeout.
+    if (debouncedPublishLiveTimeoutRef.current) {
+      clearTimeout(debouncedPublishLiveTimeoutRef.current);
+    }
+    debouncedPublishLiveTimeoutRef.current = setTimeout(() => {
+      publishLive();
+    }, 500); // 500ms debounce
+  }, [publishLive]);
+
+  const debouncedPublishLiveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up timeout on unmount
+  // React.useEffect(() => {
+  //   return () => {
+  //     if (debouncedPublishLiveTimeoutRef.current) {
+  //       clearTimeout(debouncedPublishLiveTimeoutRef.current);
+  //     }
+  //   };
+  // }, []);
+
   const handleSelectBlockFromPreview = (blockId: string, fieldKey?: string) => {
     setActiveBlockId(blockId);
     if (fieldKey) setActiveFieldKey(fieldKey);
@@ -185,7 +210,7 @@ export const HostCmsTab: React.FC = () => {
         {/* Left: Branding & Language Switcher */}
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold shadow-sm"
               style={{ backgroundColor: theme.primaryColor }}
             >
@@ -290,7 +315,7 @@ export const HostCmsTab: React.FC = () => {
 
           <button
             type="button"
-            onClick={publishLive}
+            onClick={debouncedPublishLive} // Use debounced publish
             disabled={isPublishing}
             className="px-3 sm:px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition-all transform active:scale-95 cursor-pointer disabled:opacity-50"
             style={{ backgroundColor: theme.primaryColor, color: '#000000' }}
@@ -312,10 +337,10 @@ export const HostCmsTab: React.FC = () => {
 
       {/* Alert / Feedback Notification Toast */}
       {publishFeedback && (
-        <div 
+        <div
           className={`sticky top-[58px] z-40 px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-md transition-all ${
-            publishFeedback.type === 'success' 
-              ? 'bg-emerald-950/90 text-emerald-200 border-b border-emerald-500/40' 
+            publishFeedback.type === 'success'
+              ? 'bg-emerald-950/90 text-emerald-200 border-b border-emerald-500/40'
               : publishFeedback.type === 'info'
                 ? 'bg-blue-950/90 text-blue-200 border-b border-blue-500/40'
                 : 'bg-red-950/90 text-red-200 border-b border-red-500/40'
@@ -356,7 +381,7 @@ export const HostCmsTab: React.FC = () => {
                 onClick={() => setShowThemePicker(!showThemePicker)}
                 className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-2 transition cursor-pointer"
               >
-                <span 
+                <span
                   className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs"
                   style={{ backgroundColor: theme.primaryColor }}
                 />
@@ -416,414 +441,425 @@ export const HostCmsTab: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Category Filter Chips */}
-            <div className="flex items-center gap-1 overflow-x-auto py-0.5">
-              {[
-                { id: 'all', label: 'Tutti' },
-                { id: 'identity', label: 'Identità' },
-                { id: 'network', label: 'Wi-Fi' },
-                { id: 'media', label: 'Media' },
-                { id: 'legal', label: 'Regole' },
-                { id: 'guide', label: 'Guida' }
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
-                    selectedCategory === cat.id
-                      ? 'bg-white/15 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Block List Container */}
-          <div ref={containerRef} className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto">
-            {filteredBlocks.length === 0 ? (
-              <div className="p-8 text-center bg-[#11141e] border border-white/10 rounded-2xl space-y-3">
-                <Search className="w-8 h-8 text-gray-500 mx-auto" />
-                <p className="text-sm text-gray-400 font-medium">Nessun blocco trovato per "{searchQuery}".</p>
-                <button
-                  type="button"
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
-                  className="text-xs text-amber-400 hover:underline"
-                >
-                  Reimposta filtri
-                </button>
-              </div>
-            ) : (
-              filteredBlocks.map((block, index) => {
-                const isActive = activeBlockId === block.id;
-                const isHovered = hoveredBlockId === block.id;
-                const isExpandedLogic = expandedLogicBlockId === block.id;
-                const ruleInfo = VISIBILITY_RULES_OPTIONS.find((r) => r.value === block.visibilityRule);
-
-                return (
-                  <div
-                    key={block.id}
-                    id={`editor-block-${block.id}`}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, block.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, block.id)}
-                    onMouseEnter={() => setHoveredBlockId(block.id)}
-                    onMouseLeave={() => setHoveredBlockId(null)}
-                    className={`rounded-2xl transition-all duration-200 border ${
-                      isActive
-                        ? 'bg-[#151924] border-amber-400/90 shadow-xl shadow-amber-500/10'
-                        : isHovered
-                          ? 'bg-[#131722] border-white/20'
-                          : 'bg-[#11141e] border-white/[0.08] hover:border-white/15'
+              {/* Category Filter Chips */}
+              <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                {[
+                  { id: 'all', label: 'Tutti' },
+                  { id: 'identity', label: 'Identità' },
+                  { id: 'network', label: 'Wi-Fi' },
+                  { id: 'media', label: 'Media' },
+                  { id: 'legal', label: 'Regole' },
+                  { id: 'guide', label: 'Guida' }
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                      selectedCategory === cat.id
+                        ? 'bg-white/15 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    {/* Card Header: Reorder handle, Title, Status & Actions */}
-                    <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b border-white/[0.06]">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {/* Drag Handle */}
-                        <div 
-                          className="cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-white"
-                          title="Trascina per riordinare"
-                        >
-                          <GripVertical className="w-4 h-4" />
-                        </div>
+                    {cat.label}
+                  </button>
+                ))}
+              }
+            </div>
 
-                        {/* Icon */}
-                        <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] shrink-0">
-                          {getBlockIcon(block.type)}
-                        </div>
+            {/* Block List Container */}
+            <div ref={containerRef} className="flex-1 p-4 lg:p-6 space-y-4 overflow-y-auto">
+              {filteredBlocks.length === 0 ? (
+                <div className="p-8 text-center bg-[#11141e] border border-white/10 rounded-2xl space-y-3">
+                  <Search className="w-8 h-8 text-gray-500 mx-auto" />
+                  <p className="text-sm text-gray-400 font-medium">Nessun blocco trovato per "{searchQuery}".</p>
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                    className="text-xs text-amber-400 hover:underline"
+                  >
+                    Reimposta filtri
+                  </button>
+                </div>
+              ) : (
+                filteredBlocks.map((block, index) => {
+                  const isActive = activeBlockId === block.id;
+                  const isHovered = hoveredBlockId === block.id;
+                  const isExpandedLogic = expandedLogicBlockId === block.id;
+                  const ruleInfo = VISIBILITY_RULES_OPTIONS.find((r) => r.value === block.visibilityRule);
 
-                        {/* Title & Type Badge */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-gray-500">{index + 1}.</span>
-                            <h3 className="text-xs sm:text-sm font-bold text-white truncate">
-                              {block.title}
-                            </h3>
+                  return (
+                    <div
+                      key={block.id}
+                      id={`editor-block-${block.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, block.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, block.id)}
+                      onMouseEnter={() => setHoveredBlockId(block.id)}
+                      onMouseLeave={() => setHoveredBlockId(null)}
+                      className={`rounded-2xl transition-all duration-200 border ${
+                        isActive
+                          ? 'bg-[#151924] border-amber-400/90 shadow-xl shadow-amber-500/10'
+                          : isHovered
+                            ? 'bg-[#131722] border-white/20'
+                            : 'bg-[#11141e] border-white/[0.08] hover:border-white/15'
+                      }`}
+                    >
+                      {/* Card Header: Reorder handle, Title, Status & Actions */}
+                      <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b border-white/[0.06]">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* Drag Handle */}
+                          <div
+                            className="cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-white"
+                            title="Trascina per riordinare"
+                          >
+                            <GripVertical className="w-4 h-4" />
                           </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {/* Visibility rule badge */}
-                            <span className="text-[10px] font-medium text-amber-300 bg-amber-500/10 px-2 py-0.2 rounded-full border border-amber-500/20">
-                              {ruleInfo?.badge || 'Sempre Visibile'}
-                            </span>
-                            {!block.enabled && (
-                              <span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.2 rounded-full border border-red-500/20">
-                                Disattivato
+
+                          {/* Icon */}
+                          <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] shrink-0">
+                            {getBlockIcon(block.type)}
+                          </div>
+
+                          {/* Title & Type Badge */}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-gray-500">{index + 1}.</span>
+                              <h3 className="text-xs sm:text-sm font-bold text-white truncate">
+                                {block.title}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {/* Visibility rule badge */}
+                              <span className="text-[10px] font-medium text-amber-300 bg-amber-500/10 px-2 py-0.2 rounded-full border border-amber-500/20">
+                                {ruleInfo?.badge || 'Sempre Visibile'}
                               </span>
-                            )}
+                              {!block.enabled && (
+                                <span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.2 rounded-full border border-red-500/20">
+                                  Disattivato
+                                </span>
+                              )}
+                            </div>
                           </div>
+                        </div>
+
+                        {/* Header Actions: Up/Down, Visibility, Delete */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => moveBlock(block.id, 'up')}
+                            disabled={index === 0}
+                            className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover-bg-white/5 cursor-pointer"
+                            title="Sposta su"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveBlock(block.id, 'down')}
+                            disabled={index === blocks.length - 1}
+                            className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-white/5 cursor-pointer"
+                            title="Sposta giù"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleBlockEnabled(block.id)}
+                            className={`p-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition ${
+                              block.enabled ? 'text-emerald-400' : 'text-gray-500'
+                            }`}
+                            title={block.enabled ? 'Disattiva blocco' : 'Attiva blocco'}
+                          >
+                            {block.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Rimuovere il blocco "${block.title}"?`)) {
+                                removeBlock(block.id);
+                              }
+                            }}
+                            className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer transition"
+                            title="Elimina blocco"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
-                      {/* Header Actions: Up/Down, Visibility, Delete */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => moveBlock(block.id, 'up')}
-                          disabled={index === 0}
-                          className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-white/5 cursor-pointer"
-                          title="Sposta su"
-                        >
-                          <ChevronUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveBlock(block.id, 'down')}
-                          disabled={index === blocks.length - 1}
-                          className="p-1.5 text-gray-400 hover:text-white disabled:opacity-20 rounded-lg hover:bg-white/5 cursor-pointer"
-                          title="Sposta giù"
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleBlockEnabled(block.id)}
-                          className={`p-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition ${
-                            block.enabled ? 'text-emerald-400' : 'text-gray-500'
-                          }`}
-                          title={block.enabled ? 'Disattiva blocco' : 'Attiva blocco'}
-                        >
-                          {block.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Rimuovere il blocco "${block.title}"?`)) {
-                              removeBlock(block.id);
-                            }
-                          }}
-                          className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 cursor-pointer transition"
-                          title="Elimina blocco"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                      {/* Card Content: Human-Readable Inputs with AI Translate Buttons */}
+                      <div className="p-4 space-y-4">
+                        {Object.keys(block.data).map((fieldKey) => {
+                          const meta = HUMAN_LABELS[fieldKey] || {
+                            label: fieldKey,
+                            description: 'Configurazione contenuto per gli ospiti',
+                            type: 'text'
+                          };
+                          const value = getFieldValue(block, fieldKey);
+                          const isTranslating = translatingField === `${block.id}-${fieldKey}`;
+                          const isFieldFocused = activeBlockId === block.id && activeFieldKey === fieldKey;
 
-                    {/* Card Content: Human-Readable Inputs with AI Translate Buttons */}
-                    <div className="p-4 space-y-4">
-                      {Object.keys(block.data).map((fieldKey) => {
-                        const meta = HUMAN_LABELS[fieldKey] || {
-                          label: fieldKey,
-                          description: 'Configurazione contenuto per gli ospiti',
-                          type: 'text'
-                        };
-                        const value = getFieldValue(block, fieldKey);
-                        const isTranslating = translatingField === `${block.id}-${fieldKey}`;
-                        const isFieldFocused = activeBlockId === block.id && activeFieldKey === fieldKey;
-
-                        if (typeof block.data[fieldKey] === 'boolean') {
-                          return (
-                            <div 
-                              key={fieldKey} 
-                              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]"
-                            >
-                              <div>
-                                <span className="text-xs font-semibold text-gray-200 block">{meta.label}</span>
-                                <span className="text-[11px] text-gray-500">{meta.description}</span>
+                          // Handle boolean fields (checkboxes)
+                          if (typeof block.data[fieldKey] === 'boolean') {
+                            return (
+                              <div
+                                key={fieldKey}
+                                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                              >
+                                <div>
+                                  <span className="text-xs font-semibold text-gray-200 block">{meta.label}</span>
+                                  <span className="text-[11px] text-gray-500">{meta.description}</span>
+                                </div>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(value)}
+                                  onChange={(e) => updateField(block.id, fieldKey, e.target.checked)}
+                                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                                />
                               </div>
-                              <input
-                                type="checkbox"
-                                checked={Boolean(value)}
-                                onChange={(e) => updateField(block.id, fieldKey, e.target.checked)}
-                                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-                              />
+                            );
+                          }
+
+                          // Handle string and textarea fields with InlineEditableText
+                          return (
+                            <div
+                              key={fieldKey}
+                              className={`space-y-1.5 p-3 rounded-xl transition-colors ${
+                                isFieldFocused ? 'bg-amber-500/[0.04] border border-amber-500/30' : 'bg-transparent'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <label
+                                    htmlFor={`field-${block.id}-${fieldKey}`}
+                                    className="text-xs font-bold text-gray-200 block"
+                                  >
+                                    {meta.label}
+                                  </label>
+                                  <span className="text-[11px] text-gray-400 leading-tight block">
+                                    {meta.description}
+                                  </span>
+                                </div>
+
+                                {/* ✨ Traduci con IA Button (per i campi testuali) */}
+                                {typeof block.data[fieldKey] === 'string' && fieldKey !== 'videoUrl' && fieldKey !== 'cin' && fieldKey !== 'cir' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => translateFieldWithAi(block.id, fieldKey)}
+                                    disabled={isTranslating}
+                                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
+                                    title={`Traduci questo campo da ${activeLang.toUpperCase()} in tutte le altre lingue con IA`}
+                                  >
+                                    {isTranslating ? (
+                                      <>
+                                        <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                                        <span>Traduzione...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-3 h-3 text-amber-400" />
+                                        <span>✨ Traduci con IA</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+
+                                {/* Special handling for videoUrl: we could use InlineEditableText as well, but keep as is for now */}
+                                {/* For time fields? Not present in data. */}
+                              </div>
+
+                              {/* Active Language Badge */}
+                              <div className="flex items-center justify-between text-[10px] text-gray-500">
+                                <span>Lingua attiva: <strong className="text-amber-400 uppercase">{activeLang}</strong></span>
+                                {activeLang !== 'it' && (
+                                  <span className="text-gray-400 italic">
+                                    (Modifica traduzione specifica per {activeLang.toUpperCase()})
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Inline Editable Field */}
+                              {typeof block.data[fieldKey] === 'string' && (
+                                <>
+                                  {/* Determine if this field is a time-like string (e.g., HH:mm) */}
+                                  {/* We don't have a way to know; we'll treat all as text for now. */}
+                                  <InlineEditableText
+                                    value={value}
+                                    onChange={(newVal) => updateField(block.id, fieldKey, newVal)}
+                                    onSubmit={debouncedPublishLive} // Use debounced publish for each field
+                                    multiline={meta.type === 'textarea'}
+                                    placeholder={meta.placeholder}
+                                    debounceMs={500}
+                                    style={{
+                                      width: '100%',
+                                      // We'll let the component manage its own styling; we can adjust container if needed
+                                    }}
+                                  />
+                                )}
+                              }
+                              {typeof block.data[fieldKey] !== 'string' && (
+                                {/* For non-string, non-boolean (shouldn't happen) fallback */}
+                                <input
+                                  type="text"
+                                  id={`field-${block.id}-${fieldKey}`}
+                                  value={value}
+                                  onChange={(e) => updateField(block.id, fieldKey, e.target.value)}
+                                  onFocus={() => {
+                                    setActiveBlockId(block.id);
+                                    setActiveFieldKey(fieldKey);
+                                  }}
+                                  placeholder={meta.placeholder}
+                                  className="w-full px-3 py-2 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all font-sans"
+                                />
+                              )}
                             </div>
                           );
-                        }
+                        })}
 
-                        return (
-                          <div 
-                            key={fieldKey} 
-                            className={`space-y-1.5 p-3 rounded-xl transition-colors ${
-                              isFieldFocused ? 'bg-amber-500/[0.04] border border-amber-500/30' : 'bg-transparent'
-                            }`}
+                        {/* 3. LOGIC ENGINE PER SINGOLO BLOCCO (Accordion Regole di Visibilità) */}
+                        <div className="pt-2 border-t border-white/[0.06]">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedLogicBlockId(isExpandedLogic ? null : block.id)}
+                            className="w-full py-2 px-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] flex items-center justify-between text-xs font-semibold text-gray-300 transition cursor-pointer"
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <div>
-                                <label 
-                                  htmlFor={`field-${block.id}-${fieldKey}`}
-                                  className="text-xs font-bold text-gray-200 block"
-                                >
-                                  {meta.label}
-                                </label>
-                                <span className="text-[11px] text-gray-400 leading-tight block">
-                                  {meta.description}
-                                </span>
-                              </div>
-
-                              {/* ✨ Traduci con IA Button (per i campi testuali) */}
-                              {typeof block.data[fieldKey] === 'string' && fieldKey !== 'videoUrl' && fieldKey !== 'cin' && fieldKey !== 'cir' && (
-                                <button
-                                  type="button"
-                                  onClick={() => translateFieldWithAi(block.id, fieldKey)}
-                                  disabled={isTranslating}
-                                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
-                                  title={`Traduci questo campo da ${activeLang.toUpperCase()} in tutte le altre lingue con IA`}
-                                >
-                                  {isTranslating ? (
-                                    <>
-                                      <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
-                                      <span>Traduzione...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles className="w-3 h-3 text-amber-400" />
-                                      <span>✨ Traduci con IA</span>
-                                    </>
-                                  )}
-                                </button>
-                              )}
+                            <div className="flex items-center gap-2">
+                              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                              <span>⚙️ Logica & Condizioni di Visibilità</span>
+                              <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                {ruleInfo?.badge}
+                              </span>
                             </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpandedLogic ? 'rotate-180' : ''}`} />
+                          </button>
 
-                            {/* Active Language Badge */}
-                            <div className="flex items-center justify-between text-[10px] text-gray-500">
-                              <span>Lingua attiva: <strong className="text-amber-400 uppercase">{activeLang}</strong></span>
-                              {activeLang !== 'it' && (
-                                <span className="text-gray-400 italic">
-                                  (Modifica traduzione specifica per {activeLang.toUpperCase()})
-                                </span>
-                              )}
+                          {isExpandedLogic && (
+                            <div className="mt-2 p-3.5 bg-[#0e111a] rounded-xl border border-white/[0.08] space-y-3 animate-in fade-in">
+                              <label className="text-[11px] font-bold text-gray-300 block">
+                                Regola di visualizzazione per l'Ospite:
+                              </label>
+                              <div className="space-y-2">
+                                {VISIBILITY_RULES_OPTIONS.map((opt) => (
+                                  <label
+                                    key={opt.value}
+                                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
+                                      block.visibilityRule === opt.value
+                                        ? 'bg-amber-500/10 border-amber-400/60 text-white'
+                                        : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-gray-200'
+                                    }`}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`rule-${block.id}`}
+                                      value={opt.value}
+                                      checked={block.visibilityRule === opt.value}
+                                      onChange={() => updateBlockRule(block.id, opt.value)}
+                                      className="mt-0.5 accent-amber-500 cursor-pointer"
+                                    />
+                                    <div className="min-w-0 text-xs">
+                                      <span className="font-bold block text-white">{opt.label}</span>
+                                      <span className="text-[11px] text-gray-400 block mt-0.5">{opt.description}</span>
+                                    </div>
+                                  </label>
+                                )}
+                              }
                             </div>
-
-                            {/* Input or Textarea */}
-                            {meta.type === 'textarea' ? (
-                              <textarea
-                                id={`field-${block.id}-${fieldKey}`}
-                                rows={3}
-                                value={value}
-                                onChange={(e) => updateField(block.id, fieldKey, e.target.value)}
-                                onFocus={() => {
-                                  setActiveBlockId(block.id);
-                                  setActiveFieldKey(fieldKey);
-                                }}
-                                placeholder={meta.placeholder}
-                                className="w-full px-3 py-2 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all font-sans"
-                              />
-                            ) : (
-                              <input
-                                type="text"
-                                id={`field-${block.id}-${fieldKey}`}
-                                value={value}
-                                onChange={(e) => updateField(block.id, fieldKey, e.target.value)}
-                                onFocus={() => {
-                                  setActiveBlockId(block.id);
-                                  setActiveFieldKey(fieldKey);
-                                }}
-                                placeholder={meta.placeholder}
-                                className="w-full px-3 py-2 bg-[#0d1017] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all font-sans"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* 3. LOGIC ENGINE PER SINGOLO BLOCCO (Accordion Regole di Visibilità) */}
-                      <div className="pt-2 border-t border-white/[0.06]">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedLogicBlockId(isExpandedLogic ? null : block.id)}
-                          className="w-full py-2 px-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] flex items-center justify-between text-xs font-semibold text-gray-300 transition cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                            <span>⚙️ Logica & Condizioni di Visibilità</span>
-                            <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                              {ruleInfo?.badge}
-                            </span>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpandedLogic ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isExpandedLogic && (
-                          <div className="mt-2 p-3.5 bg-[#0e111a] rounded-xl border border-white/[0.08] space-y-3 animate-in fade-in">
-                            <label className="text-[11px] font-bold text-gray-300 block">
-                              Regola di visualizzazione per l'Ospite:
-                            </label>
-                            <div className="space-y-2">
-                              {VISIBILITY_RULES_OPTIONS.map((opt) => (
-                                <label
-                                  key={opt.value}
-                                  className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
-                                    block.visibilityRule === opt.value
-                                      ? 'bg-amber-500/10 border-amber-400/60 text-white'
-                                      : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-gray-200'
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name={`rule-${block.id}`}
-                                    value={opt.value}
-                                    checked={block.visibilityRule === opt.value}
-                                    onChange={() => updateBlockRule(block.id, opt.value)}
-                                    className="mt-0.5 accent-amber-500 cursor-pointer"
-                                  />
-                                  <div className="min-w-0 text-xs">
-                                    <span className="font-bold block text-white">{opt.label}</span>
-                                    <span className="text-[11px] text-gray-400 block mt-0.5">{opt.description}</span>
-                                  </div>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        }
+                      }
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: INTERACTIVE PWA SMARTPHONE SIMULATOR */}
+          <div className="w-full xl:w-[44%] 2xl:w-[42%] bg-[#080a0f] border-t xl:border-t-0 xl:border-l border-white/[0.08] flex flex-col items-center justify-start relative sticky top-[57px] xl:h-[calc(100vh-57px)] overflow-hidden">
+            <PwaPhonePreview
+              blocks={blocks}
+              theme={theme}
+              activeBlockId={activeBlockId}
+              hoveredBlockId={hoveredBlockId}
+              activeFieldKey={activeFieldKey}
+              activeLang={activeLang}
+              simulatedGuestState={simulatedGuestState}
+              previewDevice={previewDevice}
+              onSelectBlock={handleSelectBlockFromPreview}
+              onHoverBlock={setHoveredBlockId}
+              onLanguageChange={setActiveLang}
+              onSimulateGuestChange={setSimulatedGuestState}
+            />
           </div>
         </div>
 
-        {/* RIGHT COLUMN: INTERACTIVE PWA SMARTPHONE SIMULATOR */}
-        <div className="w-full xl:w-[44%] 2xl:w-[42%] bg-[#080a0f] border-t xl:border-t-0 xl:border-l border-white/[0.08] flex flex-col items-center justify-start relative sticky top-[57px] xl:h-[calc(100vh-57px)] overflow-hidden">
-          <PwaPhonePreview
-            blocks={blocks}
-            theme={theme}
-            activeBlockId={activeBlockId}
-            hoveredBlockId={hoveredBlockId}
-            activeFieldKey={activeFieldKey}
-            activeLang={activeLang}
-            simulatedGuestState={simulatedGuestState}
-            previewDevice={previewDevice}
-            onSelectBlock={handleSelectBlockFromPreview}
-            onHoverBlock={setHoveredBlockId}
-            onLanguageChange={setActiveLang}
-            onSimulateGuestChange={setSimulatedGuestState}
-          />
-        </div>
-      </div>
-
-      {/* 4. MODALE "+ AGGIUNGI BLOCCO" (CATALOGO PREDEFINITO NO-CODE) */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-[#151922] border border-white/10 rounded-2xl shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
-                  style={{ backgroundColor: theme.primaryColor }}
+        {/* 4. MODALE "+ AGGIUNGI BLOCCO" (CATALOGO PREDEFINITO NO-CODE) */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-xl bg-[#151922] border border-white/10 rounded-2xl shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
+                    style={{ backgroundColor: theme.primaryColor }}
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Catalogo Blocchi PWA</h3>
+                    <p className="text-[11px] text-gray-400">Scegli un modulo pre-costruito da aggiungere all'applicazione</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-white p-1 rounded-lg"
                 >
-                  <Plus className="w-4 h-4 stroke-[3]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Catalogo Blocchi PWA</h3>
-                  <p className="text-[11px] text-gray-400">Scegli un modulo pre-costruito da aggiungere all'applicazione</p>
-                </div>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar">
-              {CMS_BLOCK_PRESETS.map((preset) => (
-                <div
-                  key={preset.type}
-                  onClick={() => {
-                    addBlockFromPreset(preset);
-                    setShowAddModal(false);
-                  }}
-                  className="p-3.5 rounded-xl border border-white/10 hover:border-amber-400/80 bg-white/[0.02] hover:bg-white/[0.05] transition-all cursor-pointer group flex flex-col justify-between"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="p-1.5 rounded-lg bg-white/5 text-amber-400 group-hover:scale-110 transition-transform">
-                        {getBlockIcon(preset.type)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-1 custom-scrollbar">
+                {CMS_BLOCK_PRESETS.map((preset) => (
+                  <div
+                    key={preset.type}
+                    onClick={() => {
+                      addBlockFromPreset(preset);
+                      setShowAddModal(false);
+                    }}
+                    className="p-3.5 rounded-xl border border-white/10 hover:border-amber-400/80 bg-white/[0.02] hover:bg-white/[0.05] transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="p-1.5 rounded-lg bg-white/5 text-amber-400 group-hover:scale-110 transition-transform">
+                          {getBlockIcon(preset.type)}
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                          {preset.category}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
-                        {preset.category}
-                      </span>
+                      <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                        {preset.title}
+                      </h4>
+                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                        {preset.subtitle}
+                      </p>
                     </div>
-                    <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
-                      {preset.title}
-                    </h4>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">
-                      {preset.subtitle}
-                    </p>
-                  </div>
 
-                  <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-amber-400 font-semibold">
-                    <span>Aggiungi alla PWA</span>
-                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-amber-400 font-semibold">
+                      <span>Aggiungi alla PWA</span>
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
