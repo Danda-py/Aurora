@@ -344,39 +344,113 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
+  // If images.length > 1, clone first slide to end and last slide to start
+  const slides = images.length > 1
+    ? [images[images.length - 1], ...images, images[0]]
+    : images;
+
+  // Set initial scroll to first real slide (index 1)
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (scroller && images.length > 1) {
+      const setInitialScroll = () => {
+        if (scroller.clientWidth > 0) {
+          scroller.scrollLeft = scroller.clientWidth;
+        } else {
+          // If not ready yet, retry next frame
+          requestAnimationFrame(setInitialScroll);
+        }
+      };
+      setInitialScroll();
+    }
+  }, [images.length]);
+
+  // Handle window resizing to keep the current slide aligned
+  useEffect(() => {
+    const handleResize = () => {
+      const scroller = scrollRef.current;
+      if (scroller && images.length > 1) {
+        scroller.scrollLeft = (currentIndex + 1) * scroller.clientWidth;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [currentIndex, images.length]);
+
+  const goNext = () => {
+    const scroller = scrollRef.current;
+    if (scroller && images.length > 1) {
+      const width = scroller.clientWidth;
+      if (width > 0) {
+        scroller.scrollTo({
+          left: (currentIndex + 2) * width,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
+  const goPrev = () => {
+    const scroller = scrollRef.current;
+    if (scroller && images.length > 1) {
+      const width = scroller.clientWidth;
+      if (width > 0) {
+        scroller.scrollTo({
+          left: currentIndex * width,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
   // Auto-scroll every 4.5s
   useEffect(() => {
     if (images.length <= 1) return;
     const timer = setInterval(() => {
-      const nextIndex = (currentIndex + 1) % images.length;
-      const scroller = scrollRef.current;
-      if (scroller) {
-        scroller.scrollTo({
-          left: nextIndex * scroller.clientWidth,
-          behavior: 'smooth'
-        });
-        setCurrentIndex(nextIndex);
-      }
+      goNext();
     }, 4500);
     return () => clearInterval(timer);
   }, [currentIndex, images.length]);
 
-  // Track page on manual swipe
+  // Track page on manual swipe and perform seamless instant resets on boundaries
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scroller = e.currentTarget;
-    if (scroller.clientWidth > 0) {
-      const index = Math.round(scroller.scrollLeft / scroller.clientWidth);
-      if (index !== currentIndex) {
-        setCurrentIndex(index);
+    const width = scroller.clientWidth;
+    if (width > 0 && images.length > 1) {
+      const scrollLeft = scroller.scrollLeft;
+      
+      // Calculate closest integer index
+      const index = Math.round(scrollLeft / width);
+      
+      // Left boundary: we reached the clone of the last image (index 0)
+      if (scrollLeft <= 5) {
+        scroller.scrollLeft = images.length * width;
+        setCurrentIndex(images.length - 1);
+        return;
+      }
+      
+      // Right boundary: we reached the clone of the first image (index N + 1)
+      if (scrollLeft >= (images.length + 1) * width - 5) {
+        scroller.scrollLeft = width;
+        setCurrentIndex(0);
+        return;
+      }
+      
+      // Otherwise, we are within the normal range [1, N]
+      const originalIndex = index - 1;
+      if (originalIndex >= 0 && originalIndex < images.length) {
+        if (originalIndex !== currentIndex) {
+          setCurrentIndex(originalIndex);
+        }
       }
     }
   };
 
   const goToSlide = (idx: number) => {
     const scroller = scrollRef.current;
-    if (scroller) {
+    if (scroller && images.length > 1) {
       scroller.scrollTo({
-        left: idx * scroller.clientWidth,
+        left: (idx + 1) * scroller.clientWidth,
         behavior: 'smooth'
       });
       setCurrentIndex(idx);
@@ -391,9 +465,9 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+        className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
       >
-        {images.map((img, idx) => (
+        {slides.map((img, idx) => (
           <div
             key={idx}
             className="w-full h-full snap-start shrink-0 relative"
@@ -420,14 +494,14 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
       {images.length > 1 && (
         <>
           <button
-            onClick={() => goToSlide((currentIndex - 1 + images.length) % images.length)}
+            onClick={goPrev}
             className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
             aria-label="Previous slide"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
           </button>
           <button
-            onClick={() => goToSlide((currentIndex + 1) % images.length)}
+            onClick={goNext}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs border border-white/10 cursor-pointer"
             aria-label="Next slide"
           >
