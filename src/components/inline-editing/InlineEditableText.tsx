@@ -8,6 +8,9 @@ interface InlineEditableTextProps {
   placeholder?: string;
   saveOnBlur?: boolean;
   debounceMs?: number;
+  // New props for optional field with add button
+  showAddButtonWhenEmpty?: boolean;
+  addButtonLabel?: string;
 }
 
 const InlineEditableText: React.FC<InlineEditableTextProps> = ({
@@ -18,6 +21,8 @@ const InlineEditableText: React.FC<InlineEditableTextProps> = ({
   placeholder,
   saveOnBlur = true,
   debounceMs = 500,
+  showAddButtonWhenEmpty = false,
+  addButtonLabel = '+ Aggiungi',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -90,6 +95,40 @@ const InlineEditableText: React.FC<InlineEditableTextProps> = ({
   };
 
   if (!isEditing) {
+    // If we want to show add button when empty and value is empty
+    if (showAddButtonWhenEmpty && !value) {
+      return (
+        <span
+          onClick={startEditing}
+          style={{
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          {placeholder || ''}
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the span click twice? Actually we want both to start editing, but stopping propagation prevents the span click from firing if we click the button? We want clicking the button to also start editing, so we don't stop propagation.
+              startEditing();
+            }}
+            style={{
+              padding: '0',
+              background: 'none',
+              border: 'none',
+              color: '#007bff',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              lineHeight: '1',
+            }}
+          >
+            {addButtonLabel}
+          </button>
+        </span>
+      );
+    }
+
     return (
       <span
         onClick={startEditing}
