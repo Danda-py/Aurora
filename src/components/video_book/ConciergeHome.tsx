@@ -662,74 +662,76 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </button>
         )}
 
-        {/* Photo Carousel (editable from CMS) */}
-        <PhotoCarousel media={media} language={language} />
-
-        {/* 2. Stay Info & Status Widget: Simplified, high-legibility Guest Card */}
+        {/* 2. Stay Info & Status Widget: Simplified Credit Card Shape Card */}
         {pass && (
-          <section 
-            className="relative rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl space-y-5 bg-zinc-950/50 backdrop-blur-md animate-in fade-in duration-500"
-            style={{
-              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.9), rgba(9, 13, 19, 0.95)), url(${media.view || '/uploads/valtellina.jpg'})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          >
-            {/* Header of the Card: APT. AURORA badge with larger label */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase">TESSERA OSPITE</span>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
-                <BedDouble className="w-3.5 h-3.5" />
-                <span>APT. AURORA</span>
-              </div>
-            </div>
+          <div className="space-y-4 w-full animate-in fade-in duration-500">
+            {/* The Credit Card (CR-80 landscape ratio 1.58:1) */}
+            <div 
+              className="relative w-full aspect-[1.58/1] rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl flex flex-col justify-between bg-zinc-950/50 backdrop-blur-md"
+              style={{
+                backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.9), rgba(9, 13, 19, 0.95)), url(${media.view || '/uploads/valtellina.jpg'})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              {/* Subtle glass sheen overlay */}
+              <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
 
-            {/* Name and Surname (Large, highly legible) */}
-            <div className="space-y-1.5 pb-1">
-              <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block">Ospite Principale</span>
-              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
-                {pass.guestName} {pass.guestSurname}
-              </h3>
-            </div>
+              {/* Top Row: Chip and Contactless Badge */}
+              <div className="flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  {/* SIM Card Gold Chip */}
+                  <div className="w-10 h-8 sm:w-11 sm:h-9 bg-gradient-to-br from-amber-400 via-yellow-200 to-amber-600 rounded-lg relative overflow-hidden border border-amber-300/30 flex items-center justify-center shadow-md shrink-0">
+                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-1/4" />
+                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-2/4" />
+                    <div className="absolute inset-x-0 h-[1px] bg-amber-800/40 top-3/4" />
+                    <div className="absolute inset-y-0 w-[1px] bg-amber-800/40 left-1/3" />
+                    <div className="absolute inset-y-0 w-[1px] bg-amber-800/40 left-2/3" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-amber-700/20 border border-amber-800/30" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-black tracking-widest text-white/90 uppercase font-mono">APT. AURORA</span>
+                </div>
 
-            {/* Booking Code (Highly legible block) */}
-            {pass.bookingRef && (
-              <div className="space-y-1.5 pb-1">
-                <span className="text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase block">Codice Prenotazione</span>
-                <span className="text-sm sm:text-base font-mono font-black text-white bg-white/5 px-3 py-1 rounded-xl inline-block border border-white/10 shadow-inner">
-                  {pass.bookingRef}
-                </span>
-              </div>
-            )}
-
-            {/* Check-in & Check-out Side-by-Side Dates (Larger, clearer labels and typography) */}
-            <div className="grid grid-cols-2 divide-x divide-white/[0.08] py-2 bg-white/[0.02] rounded-2xl border border-white/5 shadow-inner">
-              <div className="px-4 py-1.5">
-                <p className="text-xs font-mono font-black uppercase tracking-wider text-[#86868b]">Check-in</p>
-                <div className="flex flex-col mt-1">
-                  <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
-                    {formatPassDate(pass.checkInDate)}
-                  </span>
-                  <span className="text-xs text-zinc-300 font-mono mt-1 font-bold">
-                    {t.concierge.from} {pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'}
-                  </span>
+                {/* Wireless/NFC Signal Symbol */}
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <svg className="w-5 h-5 opacity-75 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M5 17.5c.8-1.5 2.2-2.5 4-2.5s3.2 1 4 2.5" />
+                    <path d="M3 20c1.2-2.4 3.8-4 7-4s5.8 1.6 7 4" />
+                    <path d="M1 22c1.6-3.4 5.3-6 9-6s7.4 2.6 9 6" />
+                    <circle cx="10" cy="8" r="3" />
+                  </svg>
+                  <span className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-[#86868b] uppercase">TESSERA</span>
                 </div>
               </div>
-              <div className="px-4 py-1.5">
-                <p className="text-xs font-mono font-black uppercase tracking-wider text-[#86868b]">Check-out</p>
-                <div className="flex flex-col mt-1">
-                  <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
-                    {formatPassDate(pass.checkOutDate)}
-                  </span>
-                  <span className="text-xs text-zinc-300 font-mono mt-1 font-bold">
-                    {t.concierge.by} {pass.checkOutTime ?? '10:00'}
-                  </span>
+
+              {/* Center Row: Booking Reference (Spaced like a Card Number) */}
+              <div className="z-10 py-1 sm:py-1.5 text-left">
+                <p className="text-[9px] sm:text-[10px] font-mono tracking-widest text-zinc-500 uppercase">CODICE PRENOTAZIONE</p>
+                <div className="text-lg sm:text-xl md:text-2xl font-mono font-black text-white/95 tracking-[0.18em] uppercase drop-shadow-md">
+                  {pass.bookingRef || 'AURORA-PASS'}
+                </div>
+              </div>
+
+              {/* Bottom Row: Holder Name and Validity Dates */}
+              <div className="flex items-end justify-between z-10 gap-3">
+                <div className="min-w-0 text-left">
+                  <p className="text-[9px] font-mono tracking-widest text-zinc-500 uppercase">TITOLARE</p>
+                  <div className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider truncate drop-shadow-md">
+                    {pass.guestName} {pass.guestSurname}
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <p className="text-[9px] font-mono tracking-widest text-zinc-500 uppercase">VALIDITÀ (IN - OUT)</p>
+                  <div className="text-xs sm:text-sm font-bold text-emerald-400 font-mono tracking-tight drop-shadow-md">
+                    {formatPassDate(pass.checkInDate)} — {formatPassDate(pass.checkOutDate)}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Smart Lock Door Opener: Tieni premuto per aprire (Highly legible button and text) */}
-            <div className="pt-2 space-y-2">
+            {/* Smart Lock Door Opener: Separated directly below the credit card */}
+            <div className="pt-1.5 space-y-2">
               {!isStayActive ? (
                 <div className="w-full flex items-center justify-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs sm:text-sm font-bold text-center leading-relaxed">
                   <ShieldAlert className="w-4.5 h-4.5 shrink-0 mr-2 animate-pulse" />
@@ -783,8 +785,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 </>
               )}
             </div>
-          </section>
+          </div>
         )}
+
+        {/* Photo Carousel (Moved below card/apriporta, above quick actions) */}
+        <PhotoCarousel media={media} language={language} />
 
         {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
         <section className="space-y-2">
