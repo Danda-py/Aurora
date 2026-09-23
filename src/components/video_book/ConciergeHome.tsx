@@ -91,7 +91,7 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className="flex gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 px-4"
+        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 px-4"
         onScroll={updateScrollState}
       >
         {children}
@@ -343,11 +343,21 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // If images.length > 1, clone first slide to end and last slide to start
   const slides = images.length > 1
     ? [images[images.length - 1], ...images, images[0]]
     : images;
+
+  // Cleanup scroll timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Set initial scroll to first real slide (index 1)
   useEffect(() => {
@@ -412,7 +422,7 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
     return () => clearInterval(timer);
   }, [currentIndex, images.length]);
 
-  // Track page on manual swipe and perform seamless instant resets on boundaries
+  // Track page on manual swipe and perform seamless instant resets on boundaries when scroll has settled
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scroller = e.currentTarget;
     const width = scroller.clientWidth;
@@ -422,27 +432,43 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
       // Calculate closest integer index
       const index = Math.round(scrollLeft / width);
       
-      // Left boundary: we reached the clone of the last image (index 0)
-      if (scrollLeft <= 5) {
-        scroller.scrollLeft = images.length * width;
-        setCurrentIndex(images.length - 1);
-        return;
-      }
-      
-      // Right boundary: we reached the clone of the first image (index N + 1)
-      if (scrollLeft >= (images.length + 1) * width - 5) {
-        scroller.scrollLeft = width;
-        setCurrentIndex(0);
-        return;
-      }
-      
-      // Otherwise, we are within the normal range [1, N]
+      // Update indicators immediately during scrolling for responsiveness
       const originalIndex = index - 1;
       if (originalIndex >= 0 && originalIndex < images.length) {
         if (originalIndex !== currentIndex) {
           setCurrentIndex(originalIndex);
         }
+      } else if (originalIndex === -1) {
+        if (currentIndex !== images.length - 1) {
+          setCurrentIndex(images.length - 1);
+        }
+      } else if (originalIndex === images.length) {
+        if (currentIndex !== 0) {
+          setCurrentIndex(0);
+        }
       }
+
+      // Debounce the boundary silent jump to ensure ongoing smooth scrolls do not conflict
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        const currentScrollLeft = scroller.scrollLeft;
+        const currentWidth = scroller.clientWidth;
+        if (currentWidth > 0) {
+          const roundedIndex = Math.round(currentScrollLeft / currentWidth);
+          
+          // Left boundary: we settled at the clone of the last image (index 0)
+          if (roundedIndex === 0) {
+            scroller.scrollLeft = images.length * currentWidth;
+          } 
+          // Right boundary: we settled at the clone of the first image (index N + 1)
+          else if (roundedIndex === images.length + 1) {
+            scroller.scrollLeft = currentWidth;
+          }
+        }
+      }, 100);
     }
   };
 
