@@ -508,14 +508,21 @@ export function createApp() {
     next();
   });
 
-  // Serve permanent uploads directory directly (/uploads/*)
+  // Serve permanent uploads directory directly (/uploads/*) with /tmp fallback for Serverless read-only systems
   const uploadsStaticPath = path.join(process.cwd(), 'public', 'uploads');
   if (!fs.existsSync(uploadsStaticPath)) {
     try {
       fs.mkdirSync(uploadsStaticPath, { recursive: true });
     } catch {}
   }
-  app.use('/uploads', express.static(uploadsStaticPath));
+  app.use('/uploads', (req: any, res: any, next: any) => {
+    const tmpFile = path.join('/tmp', 'public', 'uploads', req.path);
+    if (fs.existsSync(tmpFile)) {
+      res.sendFile(tmpFile);
+    } else {
+      next();
+    }
+  }, express.static(uploadsStaticPath));
 
   // Serve static assets directory directly (/assets/*)
   const assetsStaticPath = path.join(process.cwd(), 'public', 'assets');
@@ -1788,9 +1795,8 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
         res.status(400).json({ success: false, error: 'photoKey e base64DataUrl sono obbligatori' });
         return;
       }
-      const result = saveUploadedPhoto(photoKey, filename, base64DataUrl);
+      const result = await saveUploadedPhoto(photoKey, filename, base64DataUrl);
       if (result.success) {
-        if (result.media) await saveCmsMediaAsync(result.media);
         res.json({ success: true, url: result.url, media: result.media });
       } else {
         res.status(500).json({ success: false, error: result.error });

@@ -177,11 +177,11 @@ export async function saveCmsMediaAsync(newMedia: CmsMediaMap): Promise<boolean>
 /**
  * Saves an uploaded photo definitively to /public/uploads and updates the media map
  */
-export function saveUploadedPhoto(
+export async function saveUploadedPhoto(
   photoKey: string,
   filename: string,
   base64DataUrl: string
-): { success: boolean; url?: string; error?: string; media?: CmsMediaMap } {
+): Promise<{ success: boolean; url?: string; error?: string; media?: CmsMediaMap }> {
   try {
     if (!photoKey) {
       return { success: false, error: 'Chiave foto (photoKey) obbligatoria' };
@@ -190,14 +190,19 @@ export function saveUploadedPhoto(
       return { success: false, error: 'Dati immagine non forniti' };
     }
 
-    // Extract mime and base64 buffer
+    // Extract mime and base64 buffer without fragile regex to prevent CPU spikes / timeouts
     let ext = 'jpg';
     let base64Content = base64DataUrl;
 
-    const matches = base64DataUrl.match(/^data:image\/([a-zA-Z0-9\+\.]+);base64,(.+)$/);
-    if (matches) {
-      ext = matches[1].replace('jpeg', 'jpg').replace('svg+xml', 'svg');
-      base64Content = matches[2];
+    if (base64DataUrl.includes(';base64,')) {
+      const parts = base64DataUrl.split(';base64,');
+      base64Content = parts[1];
+      
+      // Determine extension from header (e.g. "data:image/png")
+      if (parts[0].startsWith('data:image/')) {
+        const mime = parts[0].substring(11).toLowerCase(); // e.g. "png" or "jpeg" or "svg+xml"
+        ext = mime.replace('jpeg', 'jpg').replace('svg+xml', 'svg').split('+')[0];
+      }
     } else {
       // Fallback from filename extension
       const dotIdx = filename.lastIndexOf('.');
@@ -215,9 +220,9 @@ export function saveUploadedPhoto(
     safeWriteFileSync(relUploadPath, buffer);
 
     const publicUrl = `/uploads/${safeFilename}`;
-    const media = getCmsMedia();
+    const media = await getCmsMediaAsync();
     media[photoKey] = publicUrl;
-    saveCmsMedia(media);
+    await saveCmsMediaAsync(media);
 
     return {
       success: true,
