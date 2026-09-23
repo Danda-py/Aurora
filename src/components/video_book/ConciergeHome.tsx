@@ -296,14 +296,56 @@ const formatPassDate = (dateStr?: string) => {
   }
 };
 
+const mediaTitles: Record<string, { it: string; en: string }> = {
+  heroLiving: { it: 'Soggiorno & Living Room', en: 'Living Room' },
+  bedroom: { it: 'Camera da Letto', en: 'Master Bedroom' },
+  kitchen: { it: 'Cucina Attrezzata', en: 'Fully Equipped Kitchen' },
+  bathroom: { it: 'Bagno Moderno', en: 'Bathroom' },
+  balcony: { it: 'Terrazzo & Balcone', en: 'Balcony & Outdoor' },
+  view: { it: 'Vista & Panorama', en: 'Mountain View' },
+  locationCover: { it: 'Valtellina & Morbegno', en: 'Morbegno & Valtellina' },
+  checkInCover: { it: 'Ingresso & Smart Lock', en: 'Check-in & Entrance' },
+  servicesCover: { it: 'Servizi & Comfort', en: 'Amenities & Comfort' },
+  rulesCover: { it: 'Regole della Casa', en: 'House Rules' },
+  restaurantsCover: { it: 'Ristoranti & Crotti', en: 'Where to Eat' },
+  barsCover: { it: 'Bar & Colazioni', en: 'Cafés & Breakfast' },
+  shoppingCover: { it: 'Botteghe & Spesa', en: 'Local Shops & Grocery' },
+  activitiesCover: { it: 'Attività & Sentieri', en: 'Activities & Trekking' },
+  transportCover: { it: 'Trasporti & Mezzi', en: 'Transport & Connections' },
+  infoCover: { it: 'Informazioni Utili', en: 'Useful Info' },
+  emergencyCover: { it: 'Emergenza & SOS', en: 'Emergency & Safety' },
+  checkOutCover: { it: 'Check-out & Partenza', en: 'Check-out & Departure' }
+};
+
 const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, language }) => {
-  const images = [
-    { url: media.heroLiving || '/uploads/aurora_living.jpg', title: language === 'it' ? 'Soggiorno & Living Room' : 'Living Room' },
-    { url: media.bedroom || '/uploads/bedroom.jpg', title: language === 'it' ? 'Camera da Letto' : 'Master Bedroom' },
-    { url: media.kitchen || '/uploads/kitchen.jpg', title: language === 'it' ? 'Cucina Attrezzata' : 'Fully Equipped Kitchen' },
-    { url: media.bathroom || '/uploads/bathroom.jpg', title: language === 'it' ? 'Bagno Moderno' : 'Bathroom' },
-    { url: media.locationCover || '/uploads/location.jpg', title: language === 'it' ? 'Valtellina & Morbegno' : 'Morbegno & Valtellina' }
-  ].filter(img => img.url);
+  // Gather all custom uploaded photos (starting with /uploads/) except the host avatar and wifi QR
+  const customImages = Object.entries(media || {})
+    .filter(([key, url]) => {
+      return (
+        typeof url === 'string' &&
+        url.startsWith('/uploads/') &&
+        key !== 'hostAvatar' &&
+        key !== 'wifiQr'
+      );
+    })
+    .map(([key, url]) => {
+      const titles = mediaTitles[key] || { it: key, en: key };
+      return {
+        url,
+        title: language === 'it' ? titles.it : titles.en
+      };
+    });
+
+  // Dynamic carousel images: if no custom uploads, fallback to standard room / cover defaults
+  const images = customImages.length > 0 
+    ? customImages 
+    : [
+        { url: media.heroLiving || '/uploads/aurora_living.jpg', title: language === 'it' ? 'Soggiorno & Living Room' : 'Living Room' },
+        { url: media.bedroom || '/uploads/bedroom.jpg', title: language === 'it' ? 'Camera da Letto' : 'Master Bedroom' },
+        { url: media.kitchen || '/uploads/kitchen.jpg', title: language === 'it' ? 'Cucina Attrezzata' : 'Fully Equipped Kitchen' },
+        { url: media.bathroom || '/uploads/bathroom.jpg', title: language === 'it' ? 'Bagno Moderno' : 'Bathroom' },
+        { url: media.locationCover || '/uploads/location.jpg', title: language === 'it' ? 'Valtellina & Morbegno' : 'Morbegno & Valtellina' }
+      ].filter(img => img.url);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -398,19 +440,27 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          {/* Dots Indicator */}
-          <div className="absolute bottom-4 right-4 z-20 flex gap-1.5">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => goToSlide(idx)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === currentIndex ? 'bg-emerald-400 w-4' : 'bg-white/40'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
+          {/* Indicators */}
+          {images.length <= 10 ? (
+            /* Dots Indicator */
+            <div className="absolute bottom-4 right-4 z-20 flex gap-1.5 bg-black/25 backdrop-blur-xs px-2 py-1.5 rounded-full border border-white/5">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToSlide(idx)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === currentIndex ? 'bg-emerald-400 w-3' : 'bg-white/40'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Numeric Indicator Badge (Fraction style like Apple Photos) */
+            <div className="absolute bottom-4 right-4 z-20 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold font-mono text-emerald-400 shadow-lg">
+              {currentIndex + 1} / {images.length}
+            </div>
+          )}
         </>
       )}
     </div>
