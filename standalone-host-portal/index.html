@@ -435,6 +435,9 @@
 
         <!-- Sub-nav: Guida & Media -->
         <div class="sub-nav-group hidden flex items-center gap-1 w-full overflow-x-auto no-scrollbar" data-group="content">
+          <button class="tab-btn px-3 py-1.5 text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer rounded-lg" data-tab="visualcms">
+            <i data-lucide="layout-template" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Visual Builder PWA</span>
           </button>
         </div>
 
@@ -1225,6 +1228,32 @@
         <div id="hassLogsContainer" class="space-y-1.5 text-xs font-mono text-[#86868b]">
           <p>Nessun evento registrato nella sessione corrente.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB: VISUAL CMS BUILDER (GUIDA & MEDIA)                      -->
+    <!-- ============================================================ -->
+    <section id="tab-visualcms" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-white tracking-tight">Visual Builder PWA</h3>
+          <p class="text-xs text-[#86868b]">Personalizza la guida ospiti direttamente sul mockup iPhone: testi, stili, immagini e orari in tempo reale.</p>
+        </div>
+        <a href="/visual-cms" target="_blank" rel="noreferrer" class="shrink-0 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold transition cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="layout-template" class="w-4 h-4"></i>
+          <span>Apri a schermo intero</span>
+        </a>
+      </div>
+      <div id="visualCmsFrameWrap" class="relative w-full rounded-2xl border border-white/[0.08] bg-black overflow-hidden">
+        <iframe
+          id="visualCmsFrame"
+          src="/visual-cms?embed=1"
+          title="Visual CMS Builder"
+          class="w-full border-0"
+          style="height: 880px"
+          loading="lazy"
+        ></iframe>
       </div>
     </section>
 

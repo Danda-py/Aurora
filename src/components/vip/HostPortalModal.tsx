@@ -52,6 +52,7 @@ import {
   Activity
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
+import { VisualCMSBuilder } from '../visual-cms';
 import { AlloggiatiManager } from './AlloggiatiManager';
 import { PropertySettingsManager } from './PropertySettingsManager';
 import { ChannelManagerTab } from './ChannelManagerTab';
@@ -67,11 +68,14 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Tabs: 'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'export_zip' | 'alloggiati'
-  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'export_zip' | 'alloggiati'>(() => {
+  // Tabs: 'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'visual_cms' | 'export_zip' | 'alloggiati'
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'visual_cms' | 'export_zip' | 'alloggiati'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
+      if (tab === 'visual_cms' || tab === 'cms' || tab === 'visual') {
+        return 'visual_cms';
+      }
       if (tab === 'list' || tab === 'channels' || tab === 'property_settings' || tab === 'smart_lock' || tab === 'alloggiati') {
         return tab as any;
       }
@@ -616,6 +620,23 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               >
                 <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                 <span>Accessi & Domotica</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeTab !== 'visual_cms') {
+                    setActiveTab('visual_cms');
+                  }
+                }}
+                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
+                  activeTab === 'visual_cms'
+                    ? 'border-amber-500 text-amber-800 bg-white shadow-xs'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                <span>Guida & Media</span>
               </button>
 
               <button
@@ -1663,6 +1684,13 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                   </div>
 
                 </form>
+                </div>
+              )}
+
+              {/* TAB: VISUAL CMS BUILDER (Guida & Media) */}
+              {activeTab === 'visual_cms' && (
+                <div className="p-0 -m-4 sm:-m-6 bg-[#0b0f14] rounded-b-2xl sm:rounded-b-3xl">
+                  <VisualCMSBuilder />
                 </div>
               )}
 

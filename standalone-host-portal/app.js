@@ -325,7 +325,7 @@ function setupTabs() {
     messages: 'bookings',
     hass: 'access',
     property: 'access',
-    media: 'content',
+    visualcms: 'content',
     alloggiati: 'alloggiati',
     export: 'alloggiati'
   };
@@ -333,7 +333,7 @@ function setupTabs() {
   const groupDefaultTab = {
     bookings: 'passes',
     access: 'hass',
-    content: 'media',
+    content: 'visualcms',
     alloggiati: 'alloggiati'
   };
 
