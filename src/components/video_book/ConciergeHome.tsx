@@ -814,11 +814,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <Home className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-semibold text-white tracking-tight truncate">
-                {pass 
-                  ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}` 
-                  : t.concierge.welcomeCity}
-              </h1>
+              <EditableElement id="home.header-title" label="Titolo header" className="rounded-lg">
+                <h1 className="text-sm font-semibold text-white tracking-tight truncate">
+                  {pass 
+                    ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}` 
+                    : t.concierge.welcomeCity}
+                </h1>
+              </EditableElement>
             </div>
           </div>
 
@@ -906,9 +908,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
             {/* Top Row: General info */}
             <div className="flex items-center justify-between z-10">
-              <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">
-                {cardTranslations[language]?.cardLabel || "TESSERA OSPITE"}
-              </span>
+              <EditableElement id="home.card-label" label="Etichetta tessera" className="rounded-lg">
+                <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">
+                  {cardTranslations[language]?.cardLabel || "TESSERA OSPITE"}
+                </span>
+              </EditableElement>
               <span className="text-xs font-black tracking-widest text-white/95 uppercase font-mono bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10">APT. AURORA</span>
             </div>
 
@@ -917,9 +921,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               {/* Left Side: Name and Ref */}
               <div className="space-y-1.5 text-left min-w-0">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
-                    {cardTranslations[language]?.holder || "TITOLARE"}
-                  </p>
+                  <EditableElement id="home.card-holder-label" label="Etichetta titolare" className="rounded-lg">
+                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
+                      {cardTranslations[language]?.holder || "TITOLARE"}
+                    </p>
+                  </EditableElement>
                   <div className="text-sm sm:text-base font-black text-white uppercase tracking-tight truncate drop-shadow-md">
                     {pass.guestName} {pass.guestSurname}
                   </div>
@@ -938,9 +944,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
               {/* Right Side: Stay Dates */}
               <div className="space-y-1 text-right shrink-0">
-                <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
-                  {cardTranslations[language]?.validity || "PERIODO DI SOGGIORNO"}
-                </p>
+                <EditableElement id="home.card-validity-label" label="Etichetta soggiorno" className="rounded-lg">
+                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
+                    {cardTranslations[language]?.validity || "PERIODO DI SOGGIORNO"}
+                  </p>
+                </EditableElement>
                 <div className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md font-mono">
                   <div>{formatPassDate(pass.checkInDate)} (<CheckinTime />)</div>
                   <div className="text-zinc-400 font-medium my-0.5">
@@ -1006,13 +1014,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               )}
             </div>
           </div>
+          <GuestCardImageOverlay />
           </GuestCardBackground>
           </EditableElement>
         )}
 
         {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
         <section className="space-y-2">
-          <p className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase pl-1">Azioni Rapide</p>
+          <EditableElement id="home.section-quickactions" label="Titolo Azioni Rapide" className="rounded-lg">
+            <p className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase pl-1">Azioni Rapide</p>
+          </EditableElement>
           <div className="grid grid-cols-2 gap-2.5">
             {/* Wi-Fi Action (Row 1, Col 1) */}
             <EditableElement id="home.action-wifi" label="Card Wi-Fi" className="rounded-2xl">
@@ -1118,9 +1129,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* 4. Sezioni di Contenuto & Card Carousel */}
         {/* SECTION 1: Guida Casa */}
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {guideSections.houseEssentials.title}
-          </h2>
+          <EditableElement id="home.section-house" label="Titolo Guida Casa" className="rounded-lg">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {guideSections.houseEssentials.title}
+            </h2>
+          </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.houseEssentials.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -1129,9 +1142,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {/* SECTION 2: Idee per oggi */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {t.tiles.attivita}
-            </h2>
+            <EditableElement id="home.section-activities" label="Titolo Attività" className="rounded-lg">
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                {t.tiles.attivita}
+              </h2>
+            </EditableElement>
             <button 
               onClick={() => onNavigate('attivita')} 
               className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
@@ -1171,9 +1186,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 3: Esplora Valtellina */}
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {guideSections.exploreValtellina.title}
-          </h2>
+          <EditableElement id="home.section-explore" label="Titolo Esplora" className="rounded-lg">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {guideSections.exploreValtellina.title}
+            </h2>
+          </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.exploreValtellina.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -1181,9 +1198,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 4: Supporto & Sicurezza */}
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {guideSections.supportSecurity.title}
-          </h2>
+          <EditableElement id="home.section-support" label="Titolo Supporto" className="rounded-lg">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {guideSections.supportSecurity.title}
+            </h2>
+          </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.supportSecurity.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -1191,9 +1210,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* SECTION 5: Partenza & Check-out */}
         <section className="space-y-3">
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {guideSections.departure.title}
-          </h2>
+          <EditableElement id="home.section-departure" label="Titolo Partenza" className="rounded-lg">
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {guideSections.departure.title}
+            </h2>
+          </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
             {guideSections.departure.items.map(renderPhotoCard)}
           </ScrollableTileRow>
@@ -1305,13 +1326,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 // Visual CMS helpers (usati sopra nella home)
 // ============================================================
 
-/** Immagine di un tile con override CMS (upload host) applicato. */
+/** Immagine di un tile con override CMS (upload host) e overlay di sostituzione. */
 const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ page, fallback, alt }) => {
-  // L'override (foto caricata dall'host) vale anche per gli ospiti.
-  const { isEditMode, images } = useEditMode();
+  const { images } = useEditMode();
   const override = images[`home.tile-${page}`];
+  const cmsId = `home.tile-${page}`;
   return (
-    <>
+    <EditableImageOverlay id={cmsId} buttonPosition="center" triggerOnHover>
       <img
         src={override || fallback}
         alt={alt}
@@ -1323,16 +1344,8 @@ const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ 
           }
         }}
       />
-      {isEditMode && <EditableImageTarget id={`home.tile-${page}`} />}
-    </>
+    </EditableImageOverlay>
   );
-};
-
-/** Punto di aggancio dell'overlay upload: viene renderizzato dentro EditableElement selezionato. */
-const EditableImageTarget: React.FC<{ id: string }> = ({ id }) => {
-  const { selectedElementId } = useEditMode();
-  if (selectedElementId !== id) return null;
-  return <EditableImageOverlay id={id} />;
 };
 
 /** Sfondo della Tessera Ospite con override CMS e overlay upload. */
@@ -1373,5 +1386,22 @@ const CheckinTime: React.FC = () => {
         className="text-emerald-300 bg-emerald-400/10 rounded-md px-1.5 py-0.5"
       />
     </span>
+  );
+};
+
+/**
+ * Overlay di sostituzione dello sfondo della Tessera Ospite:
+ * al hover sulla card compare il pulsante "Sostituisci immagine"
+ * (upload file o drag-and-drop). L'override vale anche per gli ospiti.
+ */
+const GuestCardImageOverlay: React.FC = () => {
+  const { isEditMode } = useEditMode();
+  if (!isEditMode) return null;
+  return (
+    <div className="absolute top-2 right-2 z-30 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+      <EditableImageOverlay id="home.guest-card" buttonPosition="top-right" triggerOnHover>
+        <span />
+      </EditableImageOverlay>
+    </div>
   );
 };

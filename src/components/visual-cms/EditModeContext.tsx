@@ -1,5 +1,30 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { TextStyle } from './CMSContext';
+import { GuestPass } from '../../types';
+
+/**
+ * Mock pass NEUTRO per la modalità editor: nessun dato reale del cliente.
+ * checkInConfirmed + documentsUploaded = true così la Tessera mostra anche
+ * il tasto apriporta (vista completa "con pass").
+ */
+export const MOCK_EDITOR_PASS: GuestPass = {
+  id: 'editor-mock-pass',
+  guestName: 'MARIO',
+  guestSurname: 'ROSSI',
+  phone: '+39 333 000 0000',
+  checkInDate: '2026-01-15',
+  checkInTime: '14:00',
+  checkOutDate: '2026-01-18',
+  checkOutTime: '10:00',
+  pinCode: '0000',
+  bookingRef: 'ABC123XYZ',
+  guestsCount: 2,
+  token: 'editor-mock-token',
+  createdAt: new Date().toISOString(),
+  active: true,
+  checkInConfirmed: true,
+  documentsUploaded: true,
+};
 
 /**
  * Forma del documento persistito: stili, testi, immagini e orari
@@ -18,53 +43,57 @@ const EMPTY_DOC: CMSEditsDocument = { version: 1, styles: {}, texts: {}, images:
 const STORAGE_KEY = 'aurora_visual_cms_edits_v1';
 
 /**
- * Persistenza: Supabase se configurato, altrimenti localStorage.
- * La tabella è app_documents (key/value JSON), già usata dal backend.
+ * Persistenza: SEMPRE tramite il server (PUT /api/cms/edits con sessione host
+ * via cookie; GET pubblico per la lettura). Il client non scrive mai direttamente
+ * su Supabase: la RLS lo vieta e il server valida con il service role key.
+ * localStorage resta come cache offline/fallback (es. server non raggiungibile).
  */
 function createPersistence() {
-  try {
-    // Import statico: supabaseClient esporta `supabase: SupabaseClient | null`
-    // ed è null quando le env VITE_SUPABASE_* non sono impostate.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { supabase } = require('../../services/supabaseClient') as typeof import('../../services/supabaseClient');
-    if (supabase) {
-      return {
-        backend: 'supabase' as const,
-        load: async (): Promise<CMSEditsDocument | null> => {
-          const { data, error } = await supabase
-            .from('app_documents')
-            .select('value')
-            .eq('key', STORAGE_KEY)
-            .limit(1)
-            .maybeSingle();
-          if (error) return null;
-          return (data?.value as CMSEditsDocument) ?? null;
-        },
-        save: async (doc: CMSEditsDocument): Promise<boolean> => {
-          const { error } = await supabase
-            .from('app_documents')
-            .upsert({ key: STORAGE_KEY, value: doc, updated_at: new Date().toISOString() });
-          return !error;
-        },
-      };
+  const readLocal = (): CMSEditsDocument | null => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as CMSEditsDocument) : null;
+    } catch {
+      return null;
     }
-  } catch {
-    // fallback sotto
-  }
+  };
+  const writeLocal = (doc: CMSEditsDocument): boolean => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(doc));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
-    backend: 'local' as const,
+    backend: 'server' as const,
     load: async (): Promise<CMSEditsDocument | null> => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? (JSON.parse(raw) as CMSEditsDocument) : null;
+        const res = await fetch('/api/cms/edits');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data) {
+            writeLocal(json.data as CMSEditsDocument); // cache locale
+            return json.data as CMSEditsDocument;
+          }
+        }
       } catch {
-        return null;
+        // server non raggiungibile: fallback alla cache locale
       }
+      return readLocal();
     },
     save: async (doc: CMSEditsDocument): Promise<boolean> => {
+      // Scrivi sempre la cache locale (PWA ospite la usa come fallback offline).
+      writeLocal(doc);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(doc));
-        return true;
+        const res = await fetch('/api/cms/edits', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // cookie di sessione host
+          body: JSON.stringify({ data: doc }),
+        });
+        return res.ok;
       } catch {
         return false;
       }
@@ -94,6 +123,9 @@ interface EditModeContextValue {
   setLanguage: (lang: string) => void;
   saveStatus: 'saved' | 'saving' | 'error';
   saveNow: () => Promise<void>;
+  /** Anteprima nel builder: 'pass' = ospite con pass attivo, 'no-pass' = visitatore. */
+  previewVariant: 'pass' | 'no-pass';
+  setPreviewVariant: (variant: 'pass' | 'no-pass') => void;
 }
 
 const EditModeContext = createContext<EditModeContextValue | undefined>(undefined);
@@ -119,6 +151,8 @@ export const useEditMode = (): EditModeContextValue => {
       setLanguage: () => {},
       saveStatus: 'saved' as const,
       saveNow: async () => {},
+      previewVariant: 'pass' as const,
+      setPreviewVariant: () => {},
     }
   );
 };
@@ -137,6 +171,7 @@ export const EditModeProvider: React.FC<{
   const [times, setTimes] = useState<Record<string, string>>({});
   const [currentLanguage, setCurrentLanguage] = useState(initialLanguage);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [previewVariant, setPreviewVariant] = useState<'pass' | 'no-pass'>('pass');
 
   const persistenceRef = useRef<ReturnType<typeof createPersistence> | null>(null);
   if (!persistenceRef.current) persistenceRef.current = createPersistence();
@@ -297,6 +332,8 @@ export const EditModeProvider: React.FC<{
       setLanguage,
       saveStatus,
       saveNow,
+      previewVariant,
+      setPreviewVariant,
     }),
     [
       isEditMode,
@@ -315,6 +352,8 @@ export const EditModeProvider: React.FC<{
       setLanguage,
       saveStatus,
       saveNow,
+      previewVariant,
+      setPreviewVariant,
     ],
   );
 

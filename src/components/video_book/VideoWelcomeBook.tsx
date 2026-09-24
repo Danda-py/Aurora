@@ -22,6 +22,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ContattiPage } from './pages/ContattiPage';
 import { SmartLockModal } from '../vip/SmartLockModal';
 import { ExpiredPassScreen } from '../vip/ExpiredPassScreen';
+import { MOCK_EDITOR_PASS } from '../visual-cms/EditModeContext';
 import { Key } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 
@@ -29,10 +30,19 @@ interface Props {
   initialLanguage?: Language;
   /** Modalità editor (Visual CMS Builder): disabilita navigazione e abilita selezione elementi. */
   isEditMode?: boolean;
+  /** Solo in edit mode: quale pass mostrare ('mock' = dati segnaposto neutri, 'none' = visitatore). */
+  editorPass?: 'mock' | 'none';
 }
 
-export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode = false }: Props) => {
+export const VideoWelcomeBook: React.FC<Props> = ({
+  initialLanguage,
+  isEditMode = false,
+  editorPass = 'mock',
+}: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
+  const [editorMockPass] = useState<GuestPass | null>(() =>
+    isEditMode && editorPass === 'mock' ? MOCK_EDITOR_PASS : null,
+  );
   const [language, setLanguage] = useState<Language>(() => {
     // Determine initial language: URL query ?lang= -> initialLanguage prop -> navigator -> 'it'
     if (typeof window !== 'undefined') {
@@ -92,16 +102,26 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode 
     return attachGlobalClickTracking(pass, () => currentPageRef.current);
   }, [pass?.id]);
 
-  // Track a single "app_open" event per session, once the guest pass is known
+  // Track a single "app_open" event per session, once the guest pass is known.
+  // In editor mode il tracking è disattivato: le interazioni sono dell'host,
+  // non dell'ospite, e il pass è un mock.
   useEffect(() => {
+    if (isEditMode) return;
     if (pass && !hasTrackedAppOpen.current) {
       hasTrackedAppOpen.current = true;
       trackActivity(pass, 'app_open');
     }
-  }, [pass]);
+  }, [pass, isEditMode]);
 
-  // If a pass token is present, validate it
+  // If a pass token is present, validate it.
+  // In editor mode NESSUN dato reale: si usa il mock pass neutro (MOCK_EDITOR_PASS)
+  // e si ignorano token e localStorage dell'ospite.
   useEffect(() => {
+    if (isEditMode) {
+      setPass(editorMockPass);
+      setIsPassChecking(false);
+      return;
+    }
     const token = typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('pass')
       : null;
@@ -148,7 +168,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode 
 
   const handleLanguageSelect = (lang: Language) => {
     setLanguage(lang);
-    trackActivity(pass, 'language_change', lang);
+    if (!isEditMode) trackActivity(pass, 'language_change', lang);
     setCurrentPage('grid_menu');
     if (typeof window !== 'undefined') {
       window.history.replaceState({ page: 'grid_menu' }, '');
@@ -158,11 +178,11 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode 
   // Every language switch from anywhere in the app is tracked for the host's activity card
   const trackedSetLanguage = (lang: Language) => {
     setLanguage(lang);
-    trackActivity(pass, 'language_change', lang);
+    if (!isEditMode) trackActivity(pass, 'language_change', lang);
   };
 
   const handleOpenSmartLock = () => {
-    trackActivity(pass, 'smart_lock_open_attempt');
+    if (!isEditMode) trackActivity(pass, 'smart_lock_open_attempt');
     setIsSmartLockOpen(true);
   };
 
@@ -180,7 +200,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode 
       window.history.pushState({ page }, '');
     }
     setCurrentPage(page);
-    trackActivity(pass, 'page_view', page);
+    if (!isEditMode) trackActivity(pass, 'page_view', page);
   };
 
   // Expiration check: If pass is expired and user hasn't chosen to view public guide
@@ -392,7 +412,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode 
           {/* AI Message Chat */}
           <button
             type="button"
-            onClick={() => { trackActivity(pass, 'ai_chat_open'); setIsAuroraAiOpen(true); }}
+            onClick={() => { if (!isEditMode) trackActivity(pass, 'ai_chat_open'); setIsAuroraAiOpen(true); }}
             className="w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-900 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-md"
             title="Chat AI Concierge"
             aria-label="Apri Chat AI Concierge"

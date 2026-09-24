@@ -42,14 +42,24 @@ create policy "Allow service_role full access on guest_passes"
   using (true)
   with check (true);
 
--- Allow anonymous read access to app_documents (since CMS content and media are public anyway)
+-- app_documents contains mixed content: public CMS documents (guest guide
+-- overrides published by the host) and SENSITIVE server-side configuration
+-- (home_assistant_config with the door-opener token, alloggiati_config with
+-- police-portal credentials, channel_manager_config). Only the published CMS
+-- document may be readable with the public anon key; everything else must be
+-- read/written exclusively by the server via SUPABASE_SERVICE_ROLE_KEY.
 grant select on public.app_documents to anon, authenticated;
 
-create policy "Allow read access to app documents for everyone"
+create policy "Allow public read of published CMS edits only"
   on public.app_documents
   for select
   to anon, authenticated
-  using (true);
+  using (key = 'aurora_visual_cms_edits_v1');
+
+-- Writing CMS edits requires an authenticated host session: the builder saves
+-- through the server (POST/PUT /api/cms/edits) which uses the service role key,
+-- so anon/authenticated have NO direct INSERT/UPDATE/DELETE here.
+-- (Only the service_role policy below grants write access.)
 
 -- Allow service_role to perform any operation on app_documents
 create policy "Allow service_role full access on app_documents"

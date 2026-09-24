@@ -37,6 +37,7 @@ const LanguageSync: React.FC = () => {
 
 const BuilderShell: React.FC<{ className: string }> = ({ className }) => {
   const { state, setLanguage, selectBlock } = useCMS();
+  const { previewVariant } = useEditMode();
   const screenRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -46,9 +47,16 @@ const BuilderShell: React.FC<{ className: string }> = ({ className }) => {
       <div className="relative">
         <iPhone18Frame scale={0.72}>
           <div ref={screenRef} className="relative w-full h-full overflow-hidden bg-black">
-            {/* PWA ospiti REALE dentro il frame, in modalità editing */}
+            {/* PWA ospiti REALE dentro il frame, in modalità editing.
+                Il pass mostrato dipende dal toggle: 'pass' = mock neutro,
+                'no-pass' = nessun pass (visitatore senza check-in). */}
             <div className="w-full h-full overflow-y-auto overflow-x-hidden">
-              <VideoWelcomeBook initialLanguage={state.language} isEditMode />
+              <VideoWelcomeBook
+                key={previewVariant}
+                initialLanguage={state.language}
+                isEditMode
+                editorPass={previewVariant === 'pass' ? 'mock' : 'none'}
+              />
             </div>
 
             {/* Toolbar fluttuante (agganciata all'elemento selezionato) */}

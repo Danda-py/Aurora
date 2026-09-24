@@ -557,7 +557,9 @@ export function createApp() {
       req.path === '/guest/ocr-scan' ||
       req.path === '/lock/status' ||
       req.path === '/aurora-ai/chat' ||
-      (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics'))
+      (req.method === 'GET' && (req.path === '/channels/export.ics' || req.path === '/ical/export.ics')) ||
+      // CMS edits: lettura pubblica degli override pubblicati (scrittura protetta sotto)
+      (req.method === 'GET' && req.path === '/cms/edits')
     ) {
       next();
       return;
@@ -1498,6 +1500,66 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
 
   
   
+  // ============================================================
+  // Visual CMS Edits Endpoints
+  //
+  // GET  /api/cms/edits  -> pubblico: gli ospiti scaricano gli override
+  //                         pubblicati dall'host (lettura anon consentita
+  //                         dalla policy RLS su questa sola chiave).
+  // PUT  /api/cms/edits  -> solo host autenticato (requireHost): il client
+  //                         builder non ha mai accesso in scrittura diretta
+  //                         a Supabase; qui si passa dal service role key.
+  // ============================================================
+  const CMS_EDITS_KEY = 'aurora_visual_cms_edits_v1';
+  const CMS_EDITS_MAX_BYTES = 5 * 1024 * 1024; // 5MB: dataURL di foto compresse
+
+  apiRouter.get('/cms/edits', async (_req, res) => {
+    try {
+      const doc = await loadDocument<Record<string, unknown>>(CMS_EDITS_KEY);
+      res.json({ success: true, data: doc ?? null });
+    } catch (err: any) {
+      console.warn('[CMS-EDITS] Errore lettura:', err.message);
+      res.json({ success: true, data: null });
+    }
+  });
+
+  apiRouter.put('/cms/edits', requireHost, async (req, res) => {
+    try {
+      const doc = req.body?.data;
+      if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+        res.status(400).json({ success: false, error: 'Documento mancante o non valido.' });
+        return;
+      }
+      const serialized = JSON.stringify(doc);
+      if (serialized.length > CMS_EDITS_MAX_BYTES) {
+        res.status(413).json({ success: false, error: 'Documento troppo grande (limite 5MB).' });
+        return;
+      }
+      // Validazione della forma: solo le 4 collection note, chiavi semplici.
+      const allowed = ['styles', 'texts', 'images', 'times'] as const;
+      const clean: Record<string, unknown> = { version: 1 };
+      for (const k of allowed) {
+        const section = (doc as any)[k] ?? {};
+        if (typeof section !== 'object' || Array.isArray(section)) {
+          res.status(400).json({ success: false, error: `Sezione "${k}" non valida.` });
+          return;
+        }
+        for (const id of Object.keys(section)) {
+          if (!/^[a-zA-Z0-9._#-]{1,120}$/.test(id)) {
+            res.status(400).json({ success: false, error: `Identificatore non valido: "${id}".` });
+            return;
+          }
+        }
+        clean[k] = section;
+      }
+      await saveDocument(CMS_EDITS_KEY, clean);
+      res.json({ success: true, message: 'Modifiche della guida salvate.' });
+    } catch (err: any) {
+      console.warn('[CMS-EDITS] Errore salvataggio:', err.message);
+      res.status(500).json({ success: false, error: 'Salvataggio non riuscito.' });
+    }
+  });
+
   // Parser & Config Endpoints
   apiRouter.post('/parse-booking', (req, res) => {
     const rawText = req.body?.rawText || req.body?.text || req.body?.body || '';
