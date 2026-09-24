@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
 
 interface Props {
@@ -14,10 +13,8 @@ interface Props {
 }
 
 export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsActivities = getPageData('activities') || {};
-  const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
+  
+  const act = BOOK_DATA[language].activities;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
@@ -44,7 +41,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Top Banner Image with Overlay */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.activitiesCover || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"
             alt="Valtellina Panorama"
           />
           <div className="aurora-hero-banner-overlay">

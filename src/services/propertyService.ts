@@ -45,7 +45,7 @@ export interface PropertyConfig {
   // Proximity validation policy
   proximityPolicy: 'wifi_or_gps' | 'wifi_only' | 'gps_only';
 
-  // Specific editable instructions (CMS)
+  // Specific editable instructions for house systems (breaker box, climate)
   breakerBoxInstructions?: string;
   climateInstructions?: string;
 }

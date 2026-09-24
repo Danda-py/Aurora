@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, LogOut, CheckCircle } from 'lucide-react';
 
@@ -60,10 +59,8 @@ const CHECKOUT_BUTTON_TRANSLATIONS: Record<Language, {
 };
 
 export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage, pass }: Props) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsCheckOut = getPageData('checkOut') || {};
-  const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
+  
+  const co = BOOK_DATA[language].checkOut;
   const reviewCopy = BOOK_DATA[language].contacts;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
@@ -116,7 +113,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.checkOutCover || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
             alt="Check-out e Fine Soggiorno"
           />
           <div className="aurora-hero-banner-overlay">

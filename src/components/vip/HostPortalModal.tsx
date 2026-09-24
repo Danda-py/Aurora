@@ -44,7 +44,6 @@ import {
   Globe,
   Download,
   FolderArchive,
-  Image as ImageIcon,
   Battery,
   WifiOff,
   ShieldCheck,
@@ -53,11 +52,9 @@ import {
   Activity
 } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
-import { CmsMediaManager } from './CmsMediaManager';
 import { AlloggiatiManager } from './AlloggiatiManager';
 import { PropertySettingsManager } from './PropertySettingsManager';
 import { ChannelManagerTab } from './ChannelManagerTab';
-import { HostCmsTab } from './HostCmsTab';
 
 interface Props {
   isOpen: boolean;
@@ -70,14 +67,11 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   // Host access is handled exclusively by the standalone authenticated portal.
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Tabs: 'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_builder' | 'cms_media' | 'export_zip' | 'alloggiati'
-  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'cms_builder' | 'cms_media' | 'export_zip' | 'alloggiati'>(() => {
+  // Tabs: 'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'export_zip' | 'alloggiati'
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'channels' | 'property_settings' | 'webhook' | 'smart_lock' | 'export_zip' | 'alloggiati'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab === 'cms' || tab === 'cms_builder' || tab === 'visual' || tab === 'visual_cms' || window.location.hash === '#cms') {
-        return 'cms_builder';
-      }
       if (tab === 'list' || tab === 'channels' || tab === 'property_settings' || tab === 'smart_lock' || tab === 'alloggiati') {
         return tab as any;
       }
@@ -536,7 +530,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
   };
 
   const modalContent = (
-      <div className={`relative w-full ${inlineMode || activeTab === 'cms_builder' ? 'max-w-7xl' : 'max-w-3xl'} mx-auto bg-white rounded-2xl sm:rounded-3xl border border-gray-100 text-gray-800 shadow-sm overflow-hidden flex flex-col ${inlineMode ? 'min-h-[85vh]' : 'my-auto max-h-[94vh] sm:max-h-[92vh] shadow-2xl'}`}>
+      <div className={`relative w-full ${inlineMode ? 'max-w-7xl' : 'max-w-3xl'} mx-auto bg-white rounded-2xl sm:rounded-3xl border border-gray-100 text-gray-800 shadow-sm overflow-hidden flex flex-col ${inlineMode ? 'min-h-[85vh]' : 'my-auto max-h-[94vh] sm:max-h-[92vh] shadow-2xl'}`}>
         
         {/* Top Header */}
         {!inlineMode && (
@@ -622,23 +616,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
               >
                 <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                 <span>Accessi & Domotica</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeTab !== 'cms_builder' && activeTab !== 'cms_media') {
-                    setActiveTab('cms_builder');
-                  }
-                }}
-                className={`py-2.5 px-3 sm:py-3 sm:px-4 border-b-2 font-bold transition flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 text-[11px] sm:text-xs ${
-                  activeTab === 'cms_builder' || activeTab === 'cms_media'
-                    ? 'border-amber-500 text-amber-800 bg-white shadow-xs'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-                <span>Guida & Media</span>
               </button>
 
               <button
@@ -741,37 +718,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                   >
                     <Zap className="w-3.5 h-3.5 text-blue-600" />
                     <span>Automazioni & Webhook</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {(activeTab === 'cms_builder' || activeTab === 'cms_media') && (
-              <div className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                <div className="inline-flex p-1 bg-gray-100 rounded-xl gap-1 text-xs shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('cms_builder')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
-                      activeTab === 'cms_builder'
-                        ? 'bg-white text-gray-900 shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Visual Builder PWA</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('cms_media')}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer text-xs ${
-                      activeTab === 'cms_media'
-                        ? 'bg-white text-gray-900 shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    <ImageIcon className="w-3.5 h-3.5 text-teal-600" />
-                    <span>Foto & Media</span>
                   </button>
                 </div>
               </div>
@@ -1718,18 +1664,6 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
 
                 </form>
                 </div>
-              )}
-
-              {/* TAB: VISUAL CMS BUILDER WYSIWYG */}
-              {activeTab === 'cms_builder' && (
-                <div className="p-0 -m-4 sm:-m-6">
-                  <HostCmsTab />
-                </div>
-              )}
-
-              {/* TAB 4: CMS FOTO & FILE UPLOAD DEFINITIVO */}
-              {activeTab === 'cms_media' && (
-                <CmsMediaManager />
               )}
 
               {/* TAB: ALLOGGIATI WEB GENERATION */}

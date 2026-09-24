@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, Phone, Coffee, Sparkles } from 'lucide-react';
 
 interface Props {
@@ -14,10 +13,8 @@ interface Props {
 }
 
 export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsBars = getPageData('bars') || {};
-  const bars = { ...BOOK_DATA[language].bars, ...cmsBars };
+  
+  const bars = BOOK_DATA[language].bars;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
@@ -37,7 +34,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         {/* Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.barsCover || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
             alt="Café & Wine Bar"
           />
           <div className="aurora-hero-banner-overlay">

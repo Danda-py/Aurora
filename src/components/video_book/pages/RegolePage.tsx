@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall } from 'lucide-react';
 
 interface Props {
@@ -14,10 +13,8 @@ interface Props {
 }
 
 export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsRules = getPageData('rules') || {};
-  const r = { ...BOOK_DATA[language].rules, ...cmsRules };
+  
+  const r = BOOK_DATA[language].rules;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
@@ -82,7 +79,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.rulesCover || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
             alt="Regole e Quiete della Casa"
           />
           <div className="aurora-hero-banner-overlay">

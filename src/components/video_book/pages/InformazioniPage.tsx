@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building, Droplet, Church } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
@@ -15,10 +14,8 @@ interface Props {
 }
 
 export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsInfo = getPageData('info') || {};
-  const inf = { ...BOOK_DATA[language].info, ...cmsInfo };
+  
+  const inf = BOOK_DATA[language].info;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
@@ -68,7 +65,7 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.infoCover || "https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"
             alt="Morbegno e Servizi Utili"
           />
           <div className="aurora-hero-banner-overlay">

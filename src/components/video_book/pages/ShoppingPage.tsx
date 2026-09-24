@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
 
 interface Props {
@@ -14,10 +13,8 @@ interface Props {
 }
 
 export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsShopping = getPageData('shopping') || {};
-  const sh = { ...BOOK_DATA[language].shopping, ...cmsShopping };
+  
+  const sh = BOOK_DATA[language].shopping;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
@@ -37,7 +34,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.shoppingCover || "https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"
             alt="Botteghe e Sapori Tipici"
           />
           <div className="aurora-hero-banner-overlay">

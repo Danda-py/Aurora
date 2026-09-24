@@ -698,24 +698,7 @@ export const DEFAULT_APPLIANCES: Appliance[] = [
   },
 ];
 
-export const APPLIANCES: Appliance[] = new Proxy(DEFAULT_APPLIANCES, {
-  get(target, prop, receiver) {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('aurora_cms_appliances_override');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return Reflect.get(parsed, prop, receiver);
-          }
-        }
-      } catch {
-        // Fallback to default
-      }
-    }
-    return Reflect.get(target, prop, receiver);
-  }
-});
+export const APPLIANCES: Appliance[] = DEFAULT_APPLIANCES;
 
 export const WASTE_GUIDE: WasteCategory[] = [
   {

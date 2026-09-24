@@ -53,44 +53,6 @@ export const PropertySettingsManager: React.FC = () => {
     if (res.success && res.config) {
       setConfig(res.config);
 
-      if (config.breakerBoxInstructions || config.climateInstructions) {
-        try {
-          // Import dynamic appliances reference or fallback
-          const raw = localStorage.getItem('aurora_cms_appliances_override');
-          let list = raw ? JSON.parse(raw) : [];
-          if (!Array.isArray(list) || list.length === 0) {
-            list = [
-              {
-                id: 'breaker_box',
-                title: { it: 'Quadro Elettrico & Salvavita', en: 'Electrical Breaker Box' },
-                icon: 'Zap',
-                instructions: { it: config.breakerBoxInstructions ? config.breakerBoxInstructions.split('\n').filter(Boolean) : [] },
-                tips: { it: 'Evita sovraccarichi spegnendo un elettrodomestico prima di riarmare la levetta.' }
-              },
-              {
-                id: 'thermostat',
-                title: { it: 'Riscaldamento, Termostato & Condizionatore', en: 'Heating, Thermostat & Air Conditioning' },
-                icon: 'Thermometer',
-                instructions: { it: config.climateInstructions ? config.climateInstructions.split('\n').filter(Boolean) : [] },
-                tips: { it: 'Tieni finestre chiuse con riscaldamento o climatizzatore in funzione.' }
-              }
-            ];
-          } else {
-            const b = list.find((x: any) => x.id === 'breaker_box');
-            if (b && config.breakerBoxInstructions) {
-              b.instructions.it = config.breakerBoxInstructions.split('\n').filter(Boolean);
-            }
-            const c = list.find((x: any) => x.id === 'thermostat');
-            if (c && config.climateInstructions) {
-              c.instructions.it = config.climateInstructions.split('\n').filter(Boolean);
-            }
-          }
-          localStorage.setItem('aurora_cms_appliances_override', JSON.stringify(list));
-        } catch (e) {
-          console.warn('Sync override fallback:', e);
-        }
-      }
-
       setStatusMessage({ type: 'success', text: 'Impostazioni della struttura e istruzioni impianti salvate con successo!' });
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Errore durante il salvataggio.' });
@@ -582,16 +544,13 @@ export const PropertySettingsManager: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 7: Guida Impianti & Elettrodomestici (CMS Modificabile) */}
+      {/* SECTION 7: Guida Impianti & Elettrodomestici */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
             <Zap className="w-4 h-4 text-amber-600" />
             <span>Istruzioni Salvavita, Quadro Elettrico & Riscaldamento/Clima</span>
           </div>
-          <span className="text-[11px] text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 font-medium">
-            CMS Guida Casa
-          </span>
         </div>
 
         <p className="text-xs text-gray-500">

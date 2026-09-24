@@ -13,9 +13,7 @@ interface Props {
 }
 
 export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const getPageData = () => ({});
-  const cmsLocation = getPageData('location') || {};
-  const loc = { ...BOOK_DATA[language].location, ...cmsLocation };
+  const loc = BOOK_DATA[language].location;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const [copied, setCopied] = useState(false);
 

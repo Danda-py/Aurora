@@ -4,8 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
 
 interface Props {
@@ -15,10 +13,7 @@ interface Props {
 }
 
 export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsTransport = getPageData('transport') || {};
-  const tr = { ...BOOK_DATA[language].transport, ...cmsTransport };
+  const tr = BOOK_DATA[language].transport;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
 
@@ -52,7 +47,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.transportCover || "https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"
             alt="Treni e Trasporti in Valtellina"
           />
           <div className="aurora-hero-banner-overlay">

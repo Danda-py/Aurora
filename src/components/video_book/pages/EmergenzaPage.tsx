@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 
 interface Props {
@@ -14,10 +13,8 @@ interface Props {
 }
 
 export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { media } = DEFAULT_MEDIA_MAP;
-  const getPageData = () => ({});
-  const cmsEmergency = getPageData('emergency') || {};
-  const em = { ...BOOK_DATA[language].emergency, ...cmsEmergency };
+  
+  const em = BOOK_DATA[language].emergency;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
@@ -54,7 +51,7 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.emergencyCover || "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"}
+            src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
             alt="Soccorso e Sicurezza"
           />
           <div className="aurora-hero-banner-overlay">
