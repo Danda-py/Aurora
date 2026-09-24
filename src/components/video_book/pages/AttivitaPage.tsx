@@ -4,7 +4,7 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
+import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
 
 interface Props {
@@ -14,7 +14,8 @@ interface Props {
 }
 
 export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData, media } = useCms();
+  const { media } = DEFAULT_MEDIA_MAP;
+  const getPageData = () => ({});
   const cmsActivities = getPageData('activities') || {};
   const act = { ...BOOK_DATA[language].activities, ...cmsActivities };
   const t = VIDEO_TRANSLATIONS[language];

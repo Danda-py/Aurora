@@ -3,7 +3,6 @@ import { Language } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
-import { useCms } from '../../../context/CmsContext';
 import { MapPin, Navigation, Copy, Check, Train, Car, Plane } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
+  const getPageData = () => ({});
   const cmsLocation = getPageData('location') || {};
   const loc = { ...BOOK_DATA[language].location, ...cmsLocation };
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;

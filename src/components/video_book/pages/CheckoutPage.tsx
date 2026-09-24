@@ -4,7 +4,7 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
+import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, LogOut, CheckCircle } from 'lucide-react';
 
@@ -60,7 +60,8 @@ const CHECKOUT_BUTTON_TRANSLATIONS: Record<Language, {
 };
 
 export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage, pass }: Props) => {
-  const { getPageData, media } = useCms();
+  const { media } = DEFAULT_MEDIA_MAP;
+  const getPageData = () => ({});
   const cmsCheckOut = getPageData('checkOut') || {};
   const co = { ...BOOK_DATA[language].checkOut, ...cmsCheckOut };
   const reviewCopy = BOOK_DATA[language].contacts;

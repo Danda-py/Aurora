@@ -4,7 +4,7 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
+import { DEFAULT_MEDIA_MAP } from '../../../data/defaultMediaMap';
 import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall } from 'lucide-react';
 
 interface Props {
@@ -14,7 +14,8 @@ interface Props {
 }
 
 export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData, media } = useCms();
+  const { media } = DEFAULT_MEDIA_MAP;
+  const getPageData = () => ({});
   const cmsRules = getPageData('rules') || {};
   const r = { ...BOOK_DATA[language].rules, ...cmsRules };
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;

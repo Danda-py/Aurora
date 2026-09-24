@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  ArrowUpRight, 
-  BedDouble, 
-  Check, 
-  ChevronRight, 
-  Clock3, 
-  Copy, 
-  Home, 
+import {
+  ArrowUpRight,
+  BedDouble,
+  Check,
+  ChevronRight,
+  Clock3,
+  Copy,
+  Home,
   Hand,
-  MapPin, 
-  MessageCircle, 
-  Utensils, 
-  Wifi, 
-  X, 
-  ShieldAlert, 
-  Train, 
-  Wrench, 
-  LogOut, 
-  Phone, 
+  MapPin,
+  MessageCircle,
+  Utensils,
+  Wifi,
+  X,
+  ShieldAlert,
+  Train,
+  Wrench,
+  LogOut,
+  Phone,
   ShoppingBag,
   KeyRound,
   Info,
@@ -26,7 +26,7 @@ import {
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
-import { useCms } from '../../context/CmsContext';
+import { DEFAULT_MEDIA_MAP } from '../data/defaultMediaMap';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
@@ -572,7 +572,7 @@ const cardTranslations: Record<Language, { cardLabel: string; holder: string; bo
 };
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
-  const { media } = useCms();
+  const media = DEFAULT_MEDIA_MAP;
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [wifiCopied, setWifiCopied] = useState(false);

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Language, WelcomePage, GuestPass } from '../../types';
-import { useCms } from '../../context/CmsContext';
 import { getStayTiming, validateGuestPassToken, getActiveGuestPass } from '../../services/guestPassService';
 import { trackActivity, attachGlobalClickTracking } from '../../services/activityTrackingService';
 import { LanguageSelectScreen } from './LanguageSelectScreen';
@@ -32,14 +31,37 @@ interface Props {
 
 export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
-  const { language, setLanguage } = useCms();
-  
-  // Set initial language if provided and different
-  useEffect(() => {
-    if (initialLanguage && initialLanguage !== language) {
-      setLanguage(initialLanguage);
+  const [language, setLanguage] = useState<Language>(() => {
+    // Determine initial language: URL query ?lang= -> initialLanguage prop -> navigator -> 'it'
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang') as Language;
+      if (urlLang && ['it', 'en', 'de', 'fr', 'es'].includes(urlLang)) {
+        return urlLang;
+      }
+      if (initialLanguage && ['it', 'en', 'de', 'fr', 'es'].includes(initialLanguage)) {
+        return initialLanguage;
+      }
+      const candidate = (navigator.language || navigator.languages?.[0] || 'it').slice(0, 2).toLowerCase() as Language;
+      if (['it', 'en', 'de', 'fr', 'es'].includes(candidate)) {
+        return candidate;
+      }
     }
-  }, [initialLanguage]);
+    return 'it';
+  });
+
+  // Update URL when language changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', language);
+        window.history.replaceState({}, '', url);
+      } catch {
+        // ignore
+      }
+    }
+  }, [language]);
   
   // Guest Pass State
   const [pass, setPass] = useState<GuestPass | null>(null);

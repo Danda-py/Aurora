@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
-import InlineEditableText from './components/inline-editing/InlineEditableText';
-import InlineTimePicker from './components/inline-editing/InlineTimePicker';
+import InlineEditableText from './inline-editing/InlineEditableText';
+import InlineTimePicker from './inline-editing/InlineTimePicker';
 
 // Mock Supabase save function (replace with actual Supabase call)
 const saveToDatabase = async (field: string, value: any) => {
