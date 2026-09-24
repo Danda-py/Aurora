@@ -1307,6 +1307,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
 /** Immagine di un tile con override CMS (upload host) applicato. */
 const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ page, fallback, alt }) => {
+  // L'override (foto caricata dall'host) vale anche per gli ospiti.
   const { isEditMode, images } = useEditMode();
   const override = images[`home.tile-${page}`];
   return (
@@ -1336,10 +1337,11 @@ const EditableImageTarget: React.FC<{ id: string }> = ({ id }) => {
 
 /** Sfondo della Tessera Ospite con override CMS e overlay upload. */
 const GuestCardBackground: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isEditMode, images } = useEditMode();
+  // L'override viene applicato sia in editing sia in produzione (ospiti).
+  const { images } = useEditMode();
   const override = images['home.guest-card'];
   const card = React.Children.only(children) as React.ReactElement<{ style?: React.CSSProperties }>;
-  if (!isEditMode || !override) return <>{children}</>;
+  if (!override) return <>{children}</>;
   return React.cloneElement(card, {
     style: {
       ...(card.props.style ?? {}),

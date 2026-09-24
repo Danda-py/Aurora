@@ -32,6 +32,14 @@ function applyStyleToNode(
   if (style.align) node.style.textAlign = style.align;
 }
 
+/** Rimuove ogni proprietà inline settata dall'editing. */
+const EDIT_CSS_PROPS = ['fontWeight', 'fontStyle', 'textDecoration', 'color', 'fontSize', 'fontFamily', 'textAlign'] as const;
+function clearStyleOnNode(node: HTMLElement) {
+  EDIT_CSS_PROPS.forEach((p) => {
+    node.style.removeProperty(p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`));
+  });
+}
+
 /**
  * Trova ricorsivamente i nodi testo "utili" dentro un wrapper:
  * elementi tipografici (h1..h6, p, span, strong, em, small, label, a)
@@ -60,12 +68,15 @@ function collectTextNodes(root: HTMLElement | null): HTMLElement[] {
 }
 
 /**
- * Wrapper per gli elementi reali della PWA in modalità editing:
- * - hover: outline blu soft
- * - click: bounding box con maniglie + selezione (per la FloatingTextToolbar)
- * - quando selezionato, i nodi testo interni diventano contentEditable
- *   (digitabili in-place) e ricevono lo stile patchato dal context.
- * Fuori dalla modalità editing non rende nessun markup aggiuntivo.
+ * Wrapper per gli elementi reali della PWA.
+ *
+ * Due percorsi:
+ * - PRODUZIONE (isEditMode false): nessun wrapper DOM (via CSS display:contents
+ *   il div scompare); gli override salvati dall'host (testi, stili, immagini,
+ *   orari) vengono applicati ai nodi reali così gli ospiti vedono i contenuti
+ *   personalizzati.
+ * - EDITING (Visual CMS Builder): wrapper interattivo con hover outline,
+ *   bounding box di selezione, nodi testo contentEditable e stile live.
  */
 export const EditableElement: React.FC<EditableElementProps> = ({ id, label, children, className = '' }) => {
   const {
@@ -83,10 +94,35 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
 
   const isSelected = selectedElementId === id;
   const style = styles[id];
-  const textOverride = texts[id]?.[currentLanguage];
 
-  // Quando l'elemento è selezionato: rende i nodi testo editabili in-place,
-  // applica lo stile corrente e ripristina eventuali override di testo.
+  // ------------------------------------------------------------------
+  // PERCORSO RUNTIME (ospiti): applica testi e stili salvati senza
+  // aggiungere wrapper interattivi. Le chiavi testo sono per-nodo
+  // (id#idx) e quindi stabili tra builder e produzione.
+  // ------------------------------------------------------------------
+  React.useEffect(() => {
+    if (isEditMode) return;
+    const nodes = collectTextNodes(wrapRef.current);
+    nodes.forEach((node, idx) => {
+      const textKey = `${id}#${idx}`;
+      const override = texts[textKey]?.[currentLanguage];
+      if (override !== undefined && node.innerText !== override) {
+        node.innerText = override;
+      }
+      const elStyle = styles[id];
+      if (elStyle) {
+        applyStyleToNode(node, elStyle);
+      } else {
+        clearStyleOnNode(node);
+      }
+    });
+  }, [isEditMode, id, styles, texts, currentLanguage, children]);
+
+  // ------------------------------------------------------------------
+  // PERCORSO EDITING (builder)
+  // ------------------------------------------------------------------
+  const textOverride = isEditMode ? texts[id]?.[currentLanguage] : undefined;
+
   React.useEffect(() => {
     if (!isEditMode || !isSelected) return;
     const nodes = collectTextNodes(wrapRef.current);
@@ -125,7 +161,13 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
   );
 
   if (!isEditMode) {
-    return <>{children}</>;
+    // display:contents: il div non genera box, gli elementi figli della PWA
+    // restano nel flusso esattamente come prima dell'introduzione del CMS.
+    return (
+      <div ref={wrapRef} data-cms-id={id} style={{ display: 'contents' }}>
+        {children}
+      </div>
+    );
   }
 
   return (
