@@ -6,18 +6,19 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Link2,
-  Smile,
-  Trash2,
+  RotateCcw,
   ChevronDown,
   X,
 } from 'lucide-react';
-import { useCMS, TextRole, TextAlign } from './CMSContext';
+import { useEditMode } from './EditModeContext';
+import { TextStyle, TextRole } from './CMSContext';
 
 interface SelectionInfo {
   key: string;
   node: HTMLElement;
-  rect: { top: number; left: number; width: number };
+  top: number;
+  left: number;
+  width: number;
 }
 
 const FONT_FAMILIES = [
@@ -27,55 +28,88 @@ const FONT_FAMILIES = [
   { label: 'JetBrains Mono', value: '"JetBrains Mono", monospace' },
 ];
 
-const FONT_ROLES: { label: string; value: TextRole }[] = [
-  { label: 'Titolo', value: 'title' },
-  { label: 'Intestazione', value: 'heading' },
-  { label: 'Sottotitolo', value: 'subtitle' },
-  { label: 'Testo normale', value: 'body' },
+const FONT_ROLES: { label: string; value: TextRole; size: number }[] = [
+  { label: 'Titolo', value: 'title', size: 22 },
+  { label: 'Intestazione', value: 'heading', size: 17 },
+  { label: 'Sottotitolo', value: 'subtitle', size: 13 },
+  { label: 'Testo normale', value: 'body', size: 12 },
 ];
 
 const FONT_SIZES = [10, 12, 13, 15, 17, 20, 22, 26, 32];
 
-const EMOJIS = ['✨', '🏠', '🔑', '📶', '📍', '🍽️', '⭐', '🚪', '🧹', '☎️', '🅿️', '🗑️'];
+const TEXT_COLORS = [
+  '#ffffff', '#cbd5e1', '#62e6bd', '#30d158', '#fbbf24',
+  '#f87171', '#60a5fa', '#c084fc', '#0b0f14', '#111827',
+];
 
 /**
- * Toolbar di formattazione fluttuante stile Google Sites.
- * Appare sopra il testo selezionato dentro l'iPhone e agisce sul blocco CMS attivo.
+ * Toolbar di formattazione fluttuante stile Google Sites (FASE 3).
+ * Compara sopra l'elemento PWA selezionato (bounding box blu) e i suoi
+ * controlli patchano lo stile dell'elemento nel EditModeContext; i nodi
+ * testo interni sono già contentEditable e digitabili in-place.
  */
 export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = ({
   containerRef,
 }) => {
-  const { state, updateTextStyle, selectBlock } = useCMS();
+  const {
+    isEditMode,
+    selectedElementId,
+    selectElement,
+    styles,
+    updateStyle,
+    resetStyle,
+  } = useEditMode();
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [linkMode, setLinkMode] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
+  const [showColors, setShowColors] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
-  // Ascolta la selezione dei blocchi editabili.
+  // Trova il nodo selezionato nel DOM e calcola la posizione della toolbar.
   useEffect(() => {
-    const handler = (e: Event) => {
-      const { key, node } = (e as CustomEvent).detail;
+    if (!isEditMode || !selectedElementId) {
+      setSelection(null);
+      return;
+    }
+    const node = (containerRef.current?.querySelector(`[data-editable-id="${selectedElementId}"]`) as HTMLElement | null) ?? null;
+    if (!node) {
+      setSelection(null);
+      return;
+    }
+    const measure = () => {
       const nodeRect = node.getBoundingClientRect();
       const containerRect = containerRef.current?.getBoundingClientRect();
-      const top = containerRect ? nodeRect.top - containerRect.top : nodeRect.top;
-      const left = containerRect ? nodeRect.left - containerRect.left : nodeRect.left;
-      setSelection({ key, node, rect: { top, left, width: nodeRect.width } });
+      if (!containerRect) return;
+      setSelection({
+        key: selectedElementId,
+        node,
+        top: nodeRect.top - containerRect.top,
+        left: nodeRect.left - containerRect.left,
+        width: nodeRect.width,
+      });
     };
-    window.addEventListener('visual-cms:select-node', handler);
-    return () => window.removeEventListener('visual-cms:select-node', handler);
-  }, [containerRef]);
+    measure();
+    // Ricalcola su scroll/resize dello schermo dell'iPhone.
+    const scroller = containerRef.current?.querySelector('.overflow-y-auto') ?? containerRef.current;
+    scroller?.addEventListener('scroll', measure, { passive: true });
+    window.addEventListener('resize', measure);
+    return () => {
+      scroller?.removeEventListener('scroll', measure);
+      window.removeEventListener('resize', measure);
+    };
+  }, [isEditMode, selectedElementId, containerRef]);
 
   // Chiudi su click fuori dal toolbar o su ESC.
   useEffect(() => {
     if (!selection) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
-        setSelection(null);
-      }
+      const target = e.target as HTMLElement;
+      // Non chiudere se il click è dentro la toolbar o dentro l'elemento
+      // editato (che deve restare attivo mentre si digita).
+      if (toolbarRef.current?.contains(target)) return;
+      if (selection.node.contains(target)) return;
+      selectElement(null);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelection(null);
+      if (e.key === 'Escape') selectElement(null);
     };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKey);
@@ -83,51 +117,43 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKey);
     };
-  }, [selection]);
+  }, [selection, selectElement]);
 
-  if (!selection || state.previewMode) return null;
+  if (!selection) return null;
 
-  const block = state.blocks[selection.key];
-  if (!block) return null;
-
-  const style = block.style;
-  const patch = (p: Parameters<typeof updateTextStyle>[1]) => updateTextStyle(selection.key, p);
-
-  const applyLink = () => {
-    if (!linkUrl.trim()) {
-      setLinkMode(false);
-      return;
-    }
-    // Inserisce un anchor come testo "[label](url)" compatibile con innerText
-    const sel = window.getSelection();
-    const label = sel && !sel.isCollapsed ? sel.toString() : linkUrl.replace(/^https?:\/\//, '');
-    selection.node.dataset.link = linkUrl;
-    patch({});
-    setLinkMode(false);
-    setLinkUrl('');
+  const style: TextStyle = styles[selection.key] ?? {
+    role: 'body',
+    fontFamily: 'system-ui, sans-serif',
+    fontSize: 14,
+    bold: false,
+    italic: false,
+    underline: false,
+    color: '',
+    align: 'left',
   };
 
-  const insertEmoji = (emoji: string) => {
-    selection.node.append(emoji);
-    setShowEmoji(false);
-  };
+  const patch = (p: Partial<TextStyle>) => updateStyle(selection.key, p);
 
-  const toolbarTop = Math.max(8, selection.rect.top - 52);
-  const toolbarLeft = Math.max(8, selection.rect.left + selection.rect.width / 2);
+  const toolbarTop = Math.max(8, selection.top - 52);
+  const toolbarLeft = Math.max(80, selection.left + selection.width / 2);
 
   return (
     <div
       ref={toolbarRef}
-      className="absolute z-50 -translate-x-1/2"
+      className="absolute z-[60] -translate-x-1/2"
       style={{ top: toolbarTop, left: toolbarLeft }}
       onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center gap-0.5 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 text-white">
+      <div className="flex items-center gap-0.5 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 text-white max-w-[95vw]">
         {/* Tipo di testo */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <select
             value={style.role}
-            onChange={(e) => patch({ role: e.target.value as TextRole })}
+            onChange={(e) => {
+              const role = FONT_ROLES.find((r) => r.value === e.target.value);
+              if (role) patch({ role: role.value, fontSize: role.size, bold: role.value === 'title' || role.value === 'heading' });
+            }}
             className="appearance-none bg-white/5 hover:bg-white/10 rounded-lg pl-2.5 pr-6 py-1.5 text-[11px] font-semibold cursor-pointer outline-none"
           >
             {FONT_ROLES.map((r) => (
@@ -145,7 +171,7 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
         <select
           value={style.fontFamily}
           onChange={(e) => patch({ fontFamily: e.target.value })}
-          className="appearance-none bg-white/5 hover:bg-white/10 rounded-lg px-2 py-1.5 text-[11px] cursor-pointer outline-none max-w-[86px]"
+          className="appearance-none bg-white/5 hover:bg-white/10 rounded-lg px-2 py-1.5 text-[11px] cursor-pointer outline-none max-w-[86px] shrink-0"
         >
           {FONT_FAMILIES.map((f) => (
             <option key={f.value} value={f.value} className="bg-zinc-900">
@@ -158,7 +184,7 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
         <select
           value={style.fontSize}
           onChange={(e) => patch({ fontSize: Number(e.target.value) })}
-          className="appearance-none bg-white/5 hover:bg-white/10 rounded-lg px-1.5 py-1.5 text-[11px] cursor-pointer outline-none"
+          className="appearance-none bg-white/5 hover:bg-white/10 rounded-lg px-1.5 py-1.5 text-[11px] cursor-pointer outline-none shrink-0"
         >
           {FONT_SIZES.map((s) => (
             <option key={s} value={s} className="bg-zinc-900">
@@ -181,88 +207,72 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
         </Toggle>
 
         {/* Colore testo */}
-        <label className="relative w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer flex items-center justify-center" title="Colore testo">
-          <span className="w-3.5 h-3.5 rounded-full border border-white/30" style={{ backgroundColor: style.color }} />
-          <input
-            type="color"
-            value={style.color}
-            onChange={(e) => patch({ color: e.target.value })}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-          />
-        </label>
-
-        <Divider />
-
-        {/* Allineamento */}
-        <Toggle active={style.align === 'left'} onClick={() => patch({ align: 'left' as TextAlign })} title="Allinea a sinistra">
-          <AlignLeft className="w-3.5 h-3.5" />
-        </Toggle>
-        <Toggle active={style.align === 'center'} onClick={() => patch({ align: 'center' as TextAlign })} title="Centra">
-          <AlignCenter className="w-3.5 h-3.5" />
-        </Toggle>
-        <Toggle active={style.align === 'right'} onClick={() => patch({ align: 'right' as TextAlign })} title="Allinea a destra">
-          <AlignRight className="w-3.5 h-3.5" />
-        </Toggle>
-
-        <Divider />
-
-        {/* Link */}
-        {linkMode ? (
-          <div className="flex items-center gap-1">
-            <input
-              autoFocus
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && applyLink()}
-              placeholder="https://…"
-              className="w-28 bg-white/5 rounded-lg px-2 py-1 text-[11px] outline-none placeholder:text-white/30"
+        <div className="relative shrink-0">
+          <Toggle active={showColors} onClick={() => setShowColors((v) => !v)} title="Colore testo">
+            <span
+              className="w-3.5 h-3.5 rounded-full border border-white/40"
+              style={{ backgroundColor: style.color || '#ffffff' }}
             />
-            <button onClick={applyLink} className="px-1.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-bold cursor-pointer">
-              OK
-            </button>
-            <button onClick={() => setLinkMode(false)} className="p-1 rounded-lg hover:bg-white/10 cursor-pointer">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        ) : (
-          <Toggle active={false} onClick={() => setLinkMode(true)} title="Inserisci link">
-            <Link2 className="w-3.5 h-3.5" />
           </Toggle>
-        )}
-
-        {/* Emoji */}
-        <div className="relative">
-          <Toggle active={showEmoji} onClick={() => setShowEmoji((v) => !v)} title="Emoji">
-            <Smile className="w-3.5 h-3.5" />
-          </Toggle>
-          {showEmoji && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-zinc-900 border border-white/10 rounded-xl p-2 grid grid-cols-6 gap-1 shadow-2xl">
-              {EMOJIS.map((em) => (
+          {showColors && (
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-zinc-900 border border-white/10 rounded-xl p-2 grid grid-cols-5 gap-1.5 shadow-2xl">
+              {TEXT_COLORS.map((c) => (
                 <button
-                  key={em}
-                  onClick={() => insertEmoji(em)}
-                  className="w-7 h-7 rounded-lg hover:bg-white/10 text-base cursor-pointer"
-                >
-                  {em}
-                </button>
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    patch({ color: c });
+                    setShowColors(false);
+                  }}
+                  className="w-6 h-6 rounded-full border border-white/20 cursor-pointer hover:scale-110 transition-transform"
+                  style={{ backgroundColor: c }}
+                  title={c}
+                />
               ))}
+              <label className="col-span-5 flex items-center gap-1.5 pt-1 cursor-pointer">
+                <input
+                  type="color"
+                  value={style.color || '#ffffff'}
+                  onChange={(e) => patch({ color: e.target.value })}
+                  className="w-full h-6 rounded cursor-pointer bg-transparent"
+                />
+                <span className="text-[9px] text-white/50">custom</span>
+              </label>
             </div>
           )}
         </div>
 
         <Divider />
 
-        {/* Elimina */}
+        {/* Allineamento */}
+        <Toggle active={style.align === 'left'} onClick={() => patch({ align: 'left' })} title="Allinea a sinistra">
+          <AlignLeft className="w-3.5 h-3.5" />
+        </Toggle>
+        <Toggle active={style.align === 'center'} onClick={() => patch({ align: 'center' })} title="Centra">
+          <AlignCenter className="w-3.5 h-3.5" />
+        </Toggle>
+        <Toggle active={style.align === 'right'} onClick={() => patch({ align: 'right' })} title="Allinea a destra">
+          <AlignRight className="w-3.5 h-3.5" />
+        </Toggle>
+
+        <Divider />
+
+        {/* Reset stile */}
         <Toggle
           active={false}
           danger
-          title="Elimina blocco"
+          title="Ripristina stile originale"
           onClick={() => {
-            selectBlock(null);
-            setSelection(null);
+            resetStyle(selection.key);
+            setShowColors(false);
           }}
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <RotateCcw className="w-3.5 h-3.5" />
+        </Toggle>
+
+        {/* Chiudi (deseleziona) */}
+        <Toggle active={false} title="Chiudi" onClick={() => selectElement(null)}>
+          <X className="w-3.5 h-3.5" />
         </Toggle>
       </div>
 
@@ -285,7 +295,7 @@ const Toggle: React.FC<{
     type="button"
     title={title}
     onClick={onClick}
-    className={`w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition ${
+    className={`w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition shrink-0 ${
       danger
         ? 'text-rose-400 hover:bg-rose-500/15'
         : active

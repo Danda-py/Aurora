@@ -27,9 +27,11 @@ import { APARTMENT_INFO } from '../../data/apartmentData';
 
 interface Props {
   initialLanguage?: Language;
+  /** Modalità editor (Visual CMS Builder): disabilita navigazione e abilita selezione elementi. */
+  isEditMode?: boolean;
 }
 
-export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) => {
+export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage, isEditMode = false }: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
   const [language, setLanguage] = useState<Language>(() => {
     // Determine initial language: URL query ?lang= -> initialLanguage prop -> navigator -> 'it'
@@ -232,6 +234,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({ initialLanguage }: Props) =>
             onNavigate={handleNavigate}
             pass={pass}
             onOpenSmartLock={handleOpenSmartLock}
+            isEditMode={isEditMode}
           />
         )}
 

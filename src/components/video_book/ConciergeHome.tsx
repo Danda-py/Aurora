@@ -28,6 +28,10 @@ import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
 import { DEFAULT_MEDIA_MAP } from '../../data/defaultMediaMap';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
+import { EditableElement } from '../visual-cms/EditableElement';
+import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
+import { useEditMode } from '../visual-cms/EditModeContext';
+import { InlineTimePicker } from '../visual-cms/InlineTimePicker';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { trackActivity } from '../../services/activityTrackingService';
@@ -38,6 +42,8 @@ interface Props {
   onNavigate: (page: WelcomePage) => void;
   pass?: GuestPass | null;
   onOpenSmartLock: () => void;
+  /** Modalità editor (Visual CMS): evidenzia gli elementi selezionabili. */
+  isEditMode?: boolean;
 }
 
 type Sheet = 'wifi' | 'schedule' | 'luggage' | null;
@@ -571,7 +577,7 @@ const cardTranslations: Record<Language, { cardLabel: string; holder: string; bo
   es: { cardLabel: "TARJETA DE HUÉSPED", holder: "TITULAR", booking: "CÓDIGO DE RESERVA", validity: "PERÍODO DE ESTANCIA", in: "Entrada", out: "Salida", to: "al" }
 };
 
-export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock }) => {
+export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock, isEditMode = false }) => {
   const media = DEFAULT_MEDIA_MAP;
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -763,23 +769,13 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   }, [sheet]);
 
   const renderPhotoCard = (item: GuideTileItem) => (
+    <EditableElement key={item.page} id={`home.tile-${item.page}`} label={item.label} className="rounded-3xl shrink-0 snap-start">
     <button
-      key={item.page}
       onClick={() => onNavigate(item.page)}
       className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
       aria-label={item.label}
     >
-      <img 
-        src={item.bgImage} 
-        alt={item.label} 
-        loading="lazy" 
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        onError={(e) => {
-          if (item.page === 'contatti') {
-            e.currentTarget.src = '/uploads/host.jpg';
-          }
-        }}
-      />
+      <TileImage page={item.page} fallback={item.bgImage} alt={item.label} />
       {/* Dark gradient for text readability without obscuring photo */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
@@ -791,6 +787,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         </p>
       </div>
     </button>
+    </EditableElement>
   );
 
   return (
@@ -894,6 +891,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* 2. Stay Info & Status Widget: Card utente con forma di tessera, alta trasparenza e apriporta integrato */}
         {pass && (
+          <EditableElement id="home.guest-card" label="Tessera Ospite" className="rounded-3xl">
+          <GuestCardBackground>
           <div 
             className="relative w-full aspect-[1.38/1] rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl flex flex-col justify-between bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500"
             style={{
@@ -943,7 +942,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   {cardTranslations[language]?.validity || "PERIODO DI SOGGIORNO"}
                 </p>
                 <div className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md font-mono">
-                  <div>{formatPassDate(pass.checkInDate)} ({pass.checkInTime && pass.checkInTime !== '15:00' ? pass.checkInTime : '14:00'})</div>
+                  <div>{formatPassDate(pass.checkInDate)} (<CheckinTime />)</div>
                   <div className="text-zinc-400 font-medium my-0.5">
                     {cardTranslations[language]?.to || "al"}
                   </div>
@@ -1007,6 +1006,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               )}
             </div>
           </div>
+          </GuestCardBackground>
+          </EditableElement>
         )}
 
         {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
@@ -1014,6 +1015,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           <p className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase pl-1">Azioni Rapide</p>
           <div className="grid grid-cols-2 gap-2.5">
             {/* Wi-Fi Action (Row 1, Col 1) */}
+            <EditableElement id="home.action-wifi" label="Card Wi-Fi" className="rounded-2xl">
             <button 
               onClick={isPublic ? undefined : handleWifiClick}
               disabled={isPublic}
@@ -1027,8 +1029,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 {isPublic ? t.tiles.wifi : (wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi)}
               </span>
             </button>
+            </EditableElement>
 
             {/* Prenotazioni (Row 1, Col 2) */}
+            <EditableElement id="home.action-bookings" label="Prenotazioni" className="rounded-2xl">
             <a
               href="https://aurorainvaltellina.it"
               target="_blank"
@@ -1042,8 +1046,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 {t.tiles.prenota || (language === 'it' ? 'Prenotazioni' : 'Bookings')}
               </span>
             </a>
+            </EditableElement>
 
             {/* Contatti (Row 2, Col 1) */}
+            <EditableElement id="home.action-contacts" label="Contatti WhatsApp" className="rounded-2xl">
             <a 
               href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(isPublic ? 'Ciao Nino!' : `Ciao Nino, sono ${firstName}.`)}`} 
               target="_blank" 
@@ -1056,8 +1062,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.contatti}</span>
             </a>
+            </EditableElement>
 
             {/* Regole (Row 2, Col 2) */}
+            <EditableElement id="home.action-rules" label="Card Regole" className="rounded-2xl">
             <button 
               onClick={() => { setSheet('schedule'); if (!isPublic) trackActivity(pass, 'house_rules_view'); }}
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
@@ -1067,8 +1075,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.regole}</span>
             </button>
+            </EditableElement>
 
             {/* Posizione (Row 3, Col 1) */}
+            <EditableElement id="home.action-location" label="Card Posizione" className="rounded-2xl">
             <a
               href={APARTMENT_INFO.googleMapsUrl}
               target="_blank"
@@ -1081,8 +1091,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.posizione}</span>
             </a>
+            </EditableElement>
 
             {/* Emergenze (Row 3, Col 2 - RED) */}
+            <EditableElement id="home.action-emergency" label="Card Emergenza" className="rounded-2xl">
             <button 
               onClick={() => { onNavigate('emergenza'); if (!isPublic) trackActivity(pass, 'button_click', '[QuickAction] Emergenze'); }}
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 hover:bg-rose-900/25 hover:border-rose-400 active:scale-95 transition-all cursor-pointer text-left"
@@ -1094,6 +1106,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 {t.tiles.emergenza || (language === 'it' ? 'Emergenza' : 'Emergency')}
               </span>
             </button>
+            </EditableElement>
           </div>
         </section>
 
@@ -1285,5 +1298,78 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         </div>
       )}
     </div>
+  );
+};
+
+// ============================================================
+// Visual CMS helpers (usati sopra nella home)
+// ============================================================
+
+/** Immagine di un tile con override CMS (upload host) applicato. */
+const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ page, fallback, alt }) => {
+  const { isEditMode, images } = useEditMode();
+  const override = images[`home.tile-${page}`];
+  return (
+    <>
+      <img
+        src={override || fallback}
+        alt={alt}
+        loading="lazy"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        onError={(e) => {
+          if (page === 'contatti') {
+            e.currentTarget.src = '/uploads/host.jpg';
+          }
+        }}
+      />
+      {isEditMode && <EditableImageTarget id={`home.tile-${page}`} />}
+    </>
+  );
+};
+
+/** Punto di aggancio dell'overlay upload: viene renderizzato dentro EditableElement selezionato. */
+const EditableImageTarget: React.FC<{ id: string }> = ({ id }) => {
+  const { selectedElementId } = useEditMode();
+  if (selectedElementId !== id) return null;
+  return <EditableImageOverlay id={id} />;
+};
+
+/** Sfondo della Tessera Ospite con override CMS e overlay upload. */
+const GuestCardBackground: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isEditMode, images } = useEditMode();
+  const override = images['home.guest-card'];
+  const card = React.Children.only(children) as React.ReactElement<{ style?: React.CSSProperties }>;
+  if (!isEditMode || !override) return <>{children}</>;
+  return React.cloneElement(card, {
+    style: {
+      ...(card.props.style ?? {}),
+      backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.62), rgba(9, 13, 19, 0.72)), url(${override})`,
+    },
+  });
+};
+
+/**
+ * Orario check-in della Tessera: in modalità editing mostra il Time Picker
+ * contestuale; gli override vengono auto-salvati nel context.
+ */
+const CheckinTime: React.FC = () => {
+  const { isEditMode, times, updateTime } = useEditMode();
+  const value = times['home.checkin-time'] || '14:00';
+  if (!isEditMode) {
+    return <>{value}</>;
+  }
+  return (
+    <span
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <InlineTimePicker
+        value={value}
+        onChange={(v) => updateTime('home.checkin-time', v)}
+        className="text-emerald-300 bg-emerald-400/10 rounded-md px-1.5 py-0.5"
+      />
+    </span>
   );
 };
