@@ -3,18 +3,17 @@ import { Language, GuestPass } from '../../../types';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
-import { useCms } from '../../../context/CmsContext';
-import { 
-  Unlock, 
-  Car, 
-  ShieldCheck, 
-  Clock, 
-  MessageSquare, 
-  HandHeart, 
-  Sparkles, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Unlock,
+  Car,
+  ShieldCheck,
+  Clock,
+  MessageSquare,
+  HandHeart,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
   ChevronRight,
   Wifi,
   Copy,
@@ -36,17 +35,15 @@ interface Props {
   onUpdatePass?: (pass: GuestPass) => void;
 }
 
-export const CheckinPage: React.FC<Props> = ({ 
-  language, 
-  onBackToMenu, 
+export const CheckinPage: React.FC<Props> = ({
+  language,
+  onBackToMenu,
   onSelectLanguage,
   pass,
   onUpdatePass
 }) => {
   const [isEditingDocs, setIsEditingDocs] = useState(false);
-  const { getPageData, media } = useCms();
-  const cmsCheckIn = getPageData('checkIn') || {};
-  const c = { ...BOOK_DATA[language].checkIn, ...cmsCheckIn };
+  const c = BOOK_DATA[language].checkIn;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const wifiMsgs = t.checkInPage.wifi;
 
@@ -461,11 +458,10 @@ export const CheckinPage: React.FC<Props> = ({
         <div className="aurora-glass-card space-y-4">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#62e6bd]/40 ring-2 ring-[#62e6bd]/15 shadow-md shrink-0 bg-white/10">
-              <img 
-                src={media?.hostAvatar || '/uploads/host.jpg'} 
-                alt="Nino" 
+              <img
+                src="/uploads/host.jpg"
+                alt="Nino"
                 className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = '/uploads/host.jpg'; }}
               />
             </div>
             <div>

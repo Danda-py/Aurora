@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
 import { Sparkles, Bed, Utensils, Tv, Mountain, Heart, Key, ShieldCheck, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
@@ -16,9 +15,7 @@ interface Props {
 }
 
 export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage, pass }) => {
-  const { getPageData, media } = useCms();
-  const cmsWelcome = getPageData('welcome') || {};
-  const w = { ...BOOK_DATA[language].welcome, ...cmsWelcome };
+  const w = BOOK_DATA[language].welcome;
   const guestFullName = pass ? `${pass.guestName} ${pass.guestSurname}`.trim() : null;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
@@ -39,7 +36,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         {/* Hero Welcome Banner */}
         <div className="aurora-hero-banner">
           <img
-            src={media?.heroLiving || "/uploads/living.jpg"}
+            src="/uploads/living.jpg"
             alt="Aurora in Valtellina Living"
           />
           <div className="aurora-hero-banner-overlay">
@@ -85,7 +82,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.heroLiving || "/uploads/living.jpg"} 
+                  src="/uploads/living.jpg" 
                   alt={w.livingTitle} 
                   className="w-full h-full object-cover"
                 />
@@ -104,7 +101,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.bedroom || "/uploads/bedroom.jpg"} 
+                  src="/uploads/bedroom.jpg" 
                   alt={w.bedroomTitle} 
                   className="w-full h-full object-cover"
                 />
@@ -123,7 +120,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.kitchen || "/uploads/kitchen.jpg"} 
+                  src="/uploads/kitchen.jpg" 
                   alt={w.kitchenTitle} 
                   className="w-full h-full object-cover"
                 />
@@ -142,7 +139,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.view || "/uploads/view.jpg"} 
+                  src="/uploads/view.jpg" 
                   alt={w.viewTitle} 
                   className="w-full h-full object-cover"
                 />
@@ -172,7 +169,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.checkInCover || "/uploads/lock.jpg"} 
+                  src="/uploads/lock.jpg" 
                   alt={t.tiles.checkIn} 
                   className="w-full h-full object-cover"
                 />
@@ -192,7 +189,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.servicesCover || "/uploads/services.jpg"} 
+                  src="/uploads/services.jpg" 
                   alt={t.tiles.servizi} 
                   className="w-full h-full object-cover"
                 />
@@ -212,7 +209,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
               <div className="h-32 w-full overflow-hidden relative">
                 <img 
-                  src={media?.infoCover || "/uploads/info.jpg"} 
+                  src="/uploads/info.jpg" 
                   alt={t.tiles.informazioni} 
                   className="w-full h-full object-cover"
                 />

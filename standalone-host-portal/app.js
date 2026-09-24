@@ -403,7 +403,7 @@ function setupTabs() {
         lockStatusIntervalId = setInterval(fetchLockStatus, 3000);
       }
     } else if (targetTab === 'media') {
-      // loadMediaData(); // removed CMS
+      // Media data loading removed - CMS functionality removed
     } else if (targetTab === 'messages') {
       fetchAndRenderScheduledMessages();
     } else if (targetTab === 'alloggiati') {
@@ -456,8 +456,8 @@ async function checkHealthAndBootstrap() {
       Promise.all([
         fetchPasses(),
         fetchSonoffConfig(),
-        fetchEmailConfig(),
-        loadCmsData()
+        fetchEmailConfig()
+        // loadCmsData() - removed CMS functionality
       ]).catch(console.warn);
     } else {
       throw new Error(`HTTP ${res.status}`);
@@ -2533,10 +2533,7 @@ window.triggerDoorUnlock = async function(callerLabel = 'Manuale', token = null)
 };
 
 // ============================================================
-// CMS GESTIONE TESTI E SCHEDE
-// ============================================================
-// ============================================================
-// MEDIA & PHOTO GALLERY MANAGER
+// REAL-TIME LOCK STATUS TRACKING (STANDALONE PORTAL)
 // ============================================================
 // REAL-TIME LOCK STATUS TRACKING (STANDALONE PORTAL)
 // ============================================================

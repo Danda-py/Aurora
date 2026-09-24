@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
 import { Phone, MessageSquare, Mail, Copy, Check, MessageCircle } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
@@ -15,9 +14,7 @@ interface Props {
 }
 
 export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData, media } = useCms();
-  const cmsContacts = getPageData('contacts') || getPageData('contact') || {};
-  const c = { ...BOOK_DATA[language].contacts, ...cmsContacts };
+  const c = BOOK_DATA[language].contacts;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const [copiedType, setCopiedType] = useState<string | null>(null);
@@ -45,13 +42,10 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         <div className="aurora-glass-card text-center space-y-3 pt-4 pb-6">
           <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#62e6bd]/40 shadow-xl ring-4 ring-[#62e6bd]/15 bg-white/10">
             <img
-              src={media?.hostAvatar || '/uploads/host.jpg'}
+              src="/uploads/host.jpg"
               alt={APARTMENT_INFO.hostName}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.src = '/uploads/host.jpg';
-              }}
             />
           </div>
 

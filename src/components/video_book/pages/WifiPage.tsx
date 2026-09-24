@@ -4,7 +4,6 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { useCms } from '../../../context/CmsContext';
 import { Wifi, Copy, Check, QrCode, Zap, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 
@@ -15,9 +14,7 @@ interface Props {
 }
 
 export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
-  const { getPageData } = useCms();
-  const cmsWifi = getPageData('wifi') || {};
-  const w = { ...BOOK_DATA[language].wifi, ...cmsWifi };
+  const w = BOOK_DATA[language].wifi;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const [copiedSSID, setCopiedSSID] = useState(false);

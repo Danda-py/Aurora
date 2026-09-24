@@ -25,20 +25,6 @@ import {
   detectAndUpdatePublicIp,
   startAutoPublicIpSync
 } from './homeAssistantService.js';
-import {
-  getCmsData,
-  getCmsDataAsync,
-  saveCmsData,
-  saveCmsDataAsync,
-  updateCmsSection,
-  resetCmsData,
-  getCmsMedia,
-  getCmsMediaAsync,
-  saveUploadedPhoto,
-  resetCmsPhoto,
-  saveCmsMedia,
-  saveCmsMediaAsync
-} from './cmsService.js';
 import { safeReadJsonSync, safeWriteFileSync, getReadFilePath } from './storageUtils.js';
 import { bootstrapHost, getHostSession, hostRegistrationOpen, isHostConfigured, loginHost, logoutHost, requireHost } from './hostAuthService.js';
 import { deletePass as deleteSupabasePass, isSupabaseConfigured, loadPasses, upsertPass, logDigitalKeyAccess, loadDigitalKeyLogs, loadDocument, saveDocument, logGuestActivity, loadGuestActivity } from './supabaseStorage.js';
@@ -1686,158 +1672,14 @@ Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice m
     }
   });
 
-  apiRouter.post('/cms/translate', async (req, res) => {
-    try {
-      const { text, sourceLang } = req.body;
-      if (!text || !sourceLang) {
-        res.status(400).json({ success: false, error: 'Campi obbligatori mancanti: text, sourceLang' });
-        return;
-      }
-      if (!process.env.GEMINI_API_KEY) {
-        res.status(503).json({ success: false, error: 'Configurazione Gemini assente sul server.' });
-        return;
-      }
+  
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const targetLangs = ['it', 'en', 'de', 'fr', 'es'].filter(l => l !== sourceLang);
-      const prompt = `Traduci il seguente testo dalla lingua '${sourceLang}' alle seguenti lingue di destinazione: ${targetLangs.join(', ')}. Mantieni lo stile, il formato (ad esempio se ci sono numeri o emoji) ed il tono del testo originale. Non aggiungere commenti personali, traduci solo il testo in modo naturale.
-Testo originale:
-"${text}"
-
-Ritorna una risposta in formato JSON strutturato con le chiavi delle lingue destinazione:
-{
-  ${targetLangs.map(l => `"${l}": "traduzione in ${l}"`).join(',\n  ')}
-}
-
-Ritorna SOLO ed ESCLUSIVAMENTE l'oggetto JSON. Non includere blocchi di codice markdown o spiegazioni.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          {
-            parts: [{ text: prompt }]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json"
-        }
-      });
-
-      const responseText = response.text?.trim();
-      if (!responseText) {
-        throw new Error('Gemini non ha restituito una risposta valida.');
-      }
-
-      let parsedTranslations: any = {};
-      try {
-        parsedTranslations = JSON.parse(responseText);
-      } catch (parseErr) {
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedTranslations = JSON.parse(jsonMatch[0]);
-        } else {
-          throw parseErr;
-        }
-      }
-
-      res.json({ success: true, translations: parsedTranslations });
-    } catch (err: any) {
-      console.error('Translation with Gemini failed:', err);
-      res.status(502).json({ success: false, error: 'Traduzione automatica fallita. Riprova più tardi.' });
-    }
-  });
-
-
-  apiRouter.post('/cms/section', async (req, res) => {
-    try {
-      const { language, section, content } = req.body;
-      if (!language || !section || !content) {
-        res.status(400).json({ success: false, error: 'Campi obbligatori mancanti: language, section, content' });
-        return;
-      }
-      const current: any = await getCmsDataAsync();
-      if (!current[language]) current[language] = {};
-      current[language][section] = { ...(current[language][section] || {}), ...content };
-      await saveCmsDataAsync(current);
-      const updated = current;
-      res.json({ success: true, message: `Sezione ${section} aggiornata`, data: updated });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  apiRouter.post('/cms/reset', async (_req, res) => {
-    try {
-      const defaults = resetCmsData();
-      await saveCmsDataAsync(defaults);
-      res.json({ success: true, message: 'CMS ripristinato ai valori predefiniti', data: defaults });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  apiRouter.get('/cms/media', async (_req, res) => {
-    try {
-      const media = await getCmsMediaAsync();
-      res.json({ success: true, media });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  apiRouter.post('/cms/upload-photo', async (req, res) => {
-    try {
-      const photoKey = req.body.photoKey || req.body.key;
-      const base64DataUrl = req.body.base64DataUrl || req.body.fileBase64 || req.body.dataUrl;
-      const filename = req.body.filename || `${photoKey}.jpg`;
-
-      if (!photoKey || !base64DataUrl) {
-        res.status(400).json({ success: false, error: 'photoKey e base64DataUrl sono obbligatori' });
-        return;
-      }
-      const result = await saveUploadedPhoto(photoKey, filename, base64DataUrl);
-      if (result.success) {
-        res.json({ success: true, url: result.url, media: result.media });
-      } else {
-        res.status(500).json({ success: false, error: result.error });
-      }
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  apiRouter.post('/cms/save-media-url', async (req, res) => {
-    try {
-      const photoKey = req.body.photoKey || req.body.key;
-      const url = req.body.url;
-      if (!photoKey || !url) {
-        res.status(400).json({ success: false, error: 'photoKey e url sono obbligatori' });
-        return;
-      }
-      const media = await getCmsMediaAsync();
-      media[photoKey] = url;
-      await saveCmsMediaAsync(media);
-      res.json({ success: true, media });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  apiRouter.post('/cms/reset-photo', async (req, res) => {
-    try {
-      const photoKey = req.body.photoKey || req.body.key;
-      if (!photoKey) {
-        res.status(400).json({ success: false, error: 'photoKey obbligatoria' });
-        return;
-      }
-      const result = resetCmsPhoto(photoKey);
-      await saveCmsMediaAsync(result);
-      res.json({ success: true, media: result });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
+  
+  
+  
+  
+  
+  
   // Parser & Config Endpoints
   apiRouter.post('/parse-booking', (req, res) => {
     const rawText = req.body?.rawText || req.body?.text || req.body?.body || '';
