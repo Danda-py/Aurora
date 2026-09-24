@@ -26,7 +26,7 @@ import {
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 import { FlagIcon } from './FlagIcon';
-import { DEFAULT_MEDIA_MAP } from '../data/defaultMediaMap';
+import { DEFAULT_MEDIA_MAP } from '../../data/defaultMediaMap';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
