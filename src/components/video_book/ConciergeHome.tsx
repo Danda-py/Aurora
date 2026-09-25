@@ -1382,14 +1382,21 @@ const GuestCardBackground: React.FC<{ children: React.ReactNode }> = ({ children
   // L'override viene applicato sia in editing sia in produzione (ospiti).
   const { images } = useEditMode();
   const override = images['home.guest-card'];
-  const card = React.Children.only(children) as React.ReactElement<{ style?: React.CSSProperties }>;
   if (!override) return <>{children}</>;
-  return React.cloneElement(card, {
+  // Applica l'override di sfondo al primo elemento figlio (la card) senza
+  // toccare gli altri figli (es. l'overlay di upload): React.Children.only
+  // crasherebbe perché il wrapper riceve più di un figlio.
+  const items = React.Children.toArray(children);
+  const cardIdx = items.findIndex(React.isValidElement);
+  if (cardIdx === -1) return <>{children}</>;
+  const card = items[cardIdx] as React.ReactElement<{ style?: React.CSSProperties }>;
+  const styledCard = React.cloneElement(card, {
     style: {
       ...(card.props.style ?? {}),
       backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.62), rgba(9, 13, 19, 0.72)), url(${override})`,
     },
   });
+  return <>{items.map((item, i) => (i === cardIdx ? styledCard : item))}</>;
 };
 
 /**
