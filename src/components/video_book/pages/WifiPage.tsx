@@ -6,6 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Wifi, Copy, Check, QrCode, Zap, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -48,26 +49,29 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
         />
 
         {/* Speed badge */}
-        <div className="aurora-glass-card p-4 flex items-center gap-3">
-          <div className="aurora-icon-box">
-            <Zap className="w-5 h-5" />
+        <PageEditable id="page.wifi.speed-badge" label="Badge velocità Wi-Fi">
+          <div className="aurora-glass-card p-4 flex items-center gap-3">
+            <div className="aurora-icon-box">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="aurora-eyebrow">{labels.fiber}</span>
+              <p className="text-xs sm:text-sm font-semibold text-white mt-0.5 leading-snug">
+                {w.speedNotice}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="aurora-eyebrow">{labels.fiber}</span>
-            <p className="text-xs sm:text-sm font-semibold text-white mt-0.5 leading-snug">
-              {w.speedNotice}
-            </p>
-          </div>
-        </div>
+        </PageEditable>
 
         {/* QR Code Auto-Connect Card */}
-        <div className="aurora-glass-card text-center space-y-3 p-4">
-          <div className="flex items-center justify-center gap-1.5">
-            <QrCode className="w-3.5 h-3.5 text-[#62e6bd]" />
-            <span className="aurora-eyebrow text-white/90">
-              {labels.scanQr}
-            </span>
-          </div>
+        <PageEditable id="page.wifi.qr-card" label="QR Wi-Fi">
+          <div className="aurora-glass-card text-center space-y-3 p-4">
+            <div className="flex items-center justify-center gap-1.5">
+              <QrCode className="w-3.5 h-3.5 text-[#62e6bd]" />
+              <span className="aurora-eyebrow text-white/90">
+                {labels.scanQr}
+              </span>
+            </div>
 
           <div className="w-40 h-40 mx-auto p-3 bg-white rounded-2xl shadow-xl flex items-center justify-center ring-2 ring-[#62e6bd]/20">
             <img
@@ -76,15 +80,17 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
               className="w-full h-full object-contain rounded-lg"
             />
           </div>
-          <p className="text-[11px] text-white/60 max-w-xs mx-auto leading-relaxed">
-            {labels.qrHelp}
-          </p>
-        </div>
+            <p className="text-[11px] text-white/60 max-w-xs mx-auto leading-relaxed">
+              {labels.qrHelp}
+            </p>
+          </div>
+        </PageEditable>
 
         {/* SSID & Password Boxes */}
         <div className="space-y-2.5">
           {/* SSID */}
-          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
+          <PageEditable id="page.wifi.ssid" label="Rete Wi-Fi (SSID)">
+            <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/[0.06] text-[#62e6bd] border border-white/10 flex items-center justify-center shrink-0">
               <Wifi className="w-4 h-4" />
             </div>
@@ -104,9 +110,11 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
               <span>{copiedSSID ? t.actions.copied : t.actions.copy}</span>
             </button>
           </div>
+          </PageEditable>
 
           {/* Password */}
-          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
+          <PageEditable id="page.wifi.password" label="Password Wi-Fi">
+            <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/[0.06] text-[#62e6bd] border border-white/10 flex items-center justify-center shrink-0">
               <Copy className="w-4 h-4" />
             </div>
@@ -126,18 +134,21 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
               <span>{copiedPass ? t.actions.copied : (t.actions.copyPassword || t.actions.copy)}</span>
             </button>
           </div>
+          </PageEditable>
         </div>
 
         {/* Troubleshooting */}
-        <div className="aurora-glass-card p-4 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-[#62e6bd]" />
-            <span className="aurora-eyebrow text-white">{w.troubleshootTitle}</span>
+        <PageEditable id="page.wifi.troubleshooting" label="Assistenza Wi-Fi">
+          <div className="aurora-glass-card p-4 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-[#62e6bd]" />
+              <span className="aurora-eyebrow text-white">{w.troubleshootTitle}</span>
+            </div>
+            <p className="text-xs text-white/60 leading-relaxed pl-6">
+              {w.troubleshootText}
+            </p>
           </div>
-          <p className="text-xs text-white/60 leading-relaxed pl-6">
-            {w.troubleshootText}
-          </p>
-        </div>
+        </PageEditable>
 
       </div>
     </div>

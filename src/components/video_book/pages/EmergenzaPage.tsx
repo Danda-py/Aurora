@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield, ExternalLink } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -49,23 +50,21 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
-            alt="Soccorso e Sicurezza"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="emergenza"
+          img="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
+          alt="Soccorso e Sicurezza"
+          eyebrow={
             <span className="aurora-eyebrow text-rose-300 flex items-center gap-1.5">
               {labels.emergency}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {em.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={em.title}
+        />
 
         {/* Red Highlight 112 Banner */}
-        <div className="aurora-glass-card border-rose-500/30 bg-gradient-to-br from-rose-950/40 to-black/60 space-y-3">
+        <PageEditable id="page.emergenza.banner-112" label="Numero 112">
+          <div className="aurora-glass-card border-rose-500/30 bg-gradient-to-br from-rose-950/40 to-black/60 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-rose-400" />
@@ -90,8 +89,9 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-lg">
               <Phone className="w-5 h-5" />
             </div>
-          </a>
-        </div>
+            </a>
+          </div>
+        </PageEditable>
 
         {/* Local emergency locations */}
         <div className="space-y-3">
@@ -101,10 +101,10 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           </div>
 
           {em.items.map((item, idx) => (
-            <div
-              key={idx}
-              className="aurora-glass-card space-y-3"
-            >
+            <PageEditable key={idx} id={`page.emergenza.item-${idx}`} label={item.title}>
+              <div
+                className="aurora-glass-card space-y-3"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center shrink-0 text-rose-300 shadow-inner mt-0.5">
@@ -154,7 +154,8 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   )}
                 </div>
               </div>
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 

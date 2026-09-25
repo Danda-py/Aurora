@@ -1535,8 +1535,8 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         res.status(413).json({ success: false, error: 'Documento troppo grande (limite 5MB).' });
         return;
       }
-      // Validazione della forma: solo le 4 collection note, chiavi semplici.
-      const allowed = ['styles', 'texts', 'images', 'times'] as const;
+      // Validazione della forma: solo le collection note, chiavi semplici.
+      const allowed = ['styles', 'texts', 'images', 'times', 'links'] as const;
       const clean: Record<string, unknown> = { version: 1 };
       for (const k of allowed) {
         const section = (doc as any)[k] ?? {};

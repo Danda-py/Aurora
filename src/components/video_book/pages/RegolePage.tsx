@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -77,28 +78,25 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
-            alt="Regole e Quiete della Casa"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="regole"
+          img="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
+          alt="Regole e Quiete della Casa"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {labels.harmony}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {r.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={r.title}
+        />
 
         {/* Rules List */}
         <div className="space-y-3">
           {rulesList.map((item) => (
-            <div
-              key={item.num}
-              className="aurora-item-card items-start"
-            >
+            <PageEditable key={item.num} id={`page.regole.rule-${item.num}`} label={`Regola ${item.num}`}>
+              <div
+                className="aurora-item-card items-start"
+              >
               {/* Rule icon pill */}
               <div className="aurora-icon-box mt-0.5">
                 {item.icon}
@@ -118,7 +116,8 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
                   {item.desc}
                 </p>
               </div>
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 

@@ -6,6 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Sparkles, Bed, Utensils, Tv, Mountain, Heart, Key, ShieldCheck, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
+import { PageEditable, EditableHeroBanner, EditableImage } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -34,23 +35,21 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         />
 
         {/* Hero Welcome Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="/uploads/living.jpg"
-            alt="Aurora in Valtellina Living"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="benvenuto"
+          img="/uploads/living.jpg"
+          alt="Aurora in Valtellina Living"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> {APARTMENT_INFO.city} • Valtellina
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {w.greeting}
-            </h1>
-          </div>
-        </div>
+          }
+          title={w.greeting}
+        />
 
         {/* Host Welcome Note */}
-        <div className="aurora-glass-card space-y-3">
+        <PageEditable id="page.benvenuto.welcome-note" label="Nota di benvenuto">
+          <div className="aurora-glass-card space-y-3">
           {guestFullName ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
@@ -69,7 +68,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           <p className="text-xs sm:text-sm text-white/75 leading-relaxed font-normal">
             {w.message}
           </p>
-        </div>
+          </div>
+        </PageEditable>
 
         {/* Room Spaces Grid */}
         <div className="space-y-3">
@@ -79,14 +79,11 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
-              <div className="h-32 w-full overflow-hidden relative">
-                <img 
-                  src="/uploads/living.jpg" 
-                  alt={w.livingTitle} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <PageEditable id="page.benvenuto.living" label={w.livingTitle} className="rounded-2xl">
+              <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+                <div className="h-32 w-full overflow-hidden relative">
+                  <EditableImage id="page.benvenuto.living-img" src="/uploads/living.jpg" alt={w.livingTitle} />
+                </div>
               <div className="p-4 flex items-start gap-3">
                 <div className="aurora-icon-box shrink-0 mt-0.5">
                   <Tv className="w-5 h-5" />
@@ -96,16 +93,14 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.livingDesc}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
-              <div className="h-32 w-full overflow-hidden relative">
-                <img 
-                  src="/uploads/bedroom.jpg" 
-                  alt={w.bedroomTitle} 
-                  className="w-full h-full object-cover"
-                />
               </div>
+            </PageEditable>
+
+            <PageEditable id="page.benvenuto.bedroom" label={w.bedroomTitle} className="rounded-2xl">
+              <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+                <div className="h-32 w-full overflow-hidden relative">
+                  <EditableImage id="page.benvenuto.bedroom-img" src="/uploads/bedroom.jpg" alt={w.bedroomTitle} />
+                </div>
               <div className="p-4 flex items-start gap-3">
                 <div className="aurora-icon-box shrink-0 mt-0.5">
                   <Bed className="w-5 h-5" />
@@ -115,16 +110,14 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.bedroomDesc}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
-              <div className="h-32 w-full overflow-hidden relative">
-                <img 
-                  src="/uploads/kitchen.jpg" 
-                  alt={w.kitchenTitle} 
-                  className="w-full h-full object-cover"
-                />
               </div>
+            </PageEditable>
+
+            <PageEditable id="page.benvenuto.kitchen" label={w.kitchenTitle} className="rounded-2xl">
+              <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+                <div className="h-32 w-full overflow-hidden relative">
+                  <EditableImage id="page.benvenuto.kitchen-img" src="/uploads/kitchen.jpg" alt={w.kitchenTitle} />
+                </div>
               <div className="p-4 flex items-start gap-3">
                 <div className="aurora-icon-box shrink-0 mt-0.5">
                   <Utensils className="w-5 h-5" />
@@ -134,16 +127,14 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   <span className="text-xs text-white/60 leading-relaxed block mt-0.5">{w.kitchenDesc}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
-              <div className="h-32 w-full overflow-hidden relative">
-                <img 
-                  src="/uploads/view.jpg" 
-                  alt={w.viewTitle} 
-                  className="w-full h-full object-cover"
-                />
               </div>
+            </PageEditable>
+
+            <PageEditable id="page.benvenuto.view" label={w.viewTitle} className="rounded-2xl">
+              <div className="aurora-item-card overflow-hidden p-0 flex flex-col">
+                <div className="h-32 w-full overflow-hidden relative">
+                  <EditableImage id="page.benvenuto.view-img" src="/uploads/view.jpg" alt={w.viewTitle} />
+                </div>
               <div className="p-4 flex items-start gap-3">
                 <div className="aurora-icon-box shrink-0 mt-0.5">
                   <Mountain className="w-5 h-5" />
@@ -154,6 +145,7 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                 </div>
               </div>
             </div>
+            </PageEditable>
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { MapPin, Navigation, Copy, Check, Train, Car, Plane } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
+import { PageEditable } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -37,7 +38,8 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         />
 
         {/* Map Interactive View */}
-        <div className="relative h-52 sm:h-64 w-full rounded-3xl overflow-hidden shadow-lg border border-white/[0.1] backdrop-blur-xl">
+        <PageEditable id="page.posizione.map" label="Mappa e navigazione">
+          <div className="relative h-52 sm:h-64 w-full rounded-3xl overflow-hidden shadow-lg border border-white/[0.1] backdrop-blur-xl">
           <iframe
             title="Mappa Morbegno"
             width="100%"
@@ -60,11 +62,13 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               <span>{t.actions.googleMaps}</span>
             </a>
           </div>
-        </div>
+          </div>
+        </PageEditable>
 
         {/* Address Card */}
-        <div className="aurora-glass-card space-y-4">
-          <div className="flex items-start justify-between gap-3">
+        <PageEditable id="page.posizione.address" label="Indirizzo">
+          <div className="aurora-glass-card space-y-4">
+            <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
               <div className="aurora-icon-box">
                 <MapPin className="w-5 h-5" />
@@ -89,25 +93,27 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </button>
           </div>
 
-          <a
-            href={APARTMENT_INFO.googleMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="aurora-action-pill w-full py-3.5"
-          >
-            <Navigation className="w-4 h-4 text-[#07110d]" />
-            <span>{t.locationPage.startGps}</span>
-          </a>
-        </div>
+            <a
+              href={APARTMENT_INFO.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="aurora-action-pill w-full py-3.5"
+            >
+              <Navigation className="w-4 h-4 text-[#07110d]" />
+              <span>{t.locationPage.startGps}</span>
+            </a>
+          </div>
+        </PageEditable>
 
         {/* How to arrive directions */}
-        <div className="aurora-glass-card space-y-3">
-          <div>
-            <p className="aurora-eyebrow">{loc.howToArrive}</p>
-            <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
-              {loc.howToArrive}
-            </h4>
-          </div>
+        <PageEditable id="page.posizione.how-to-arrive" label="Come arrivare">
+          <div className="aurora-glass-card space-y-3">
+            <div>
+              <p className="aurora-eyebrow">{loc.howToArrive}</p>
+              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                {loc.howToArrive}
+              </h4>
+            </div>
 
           <div className="space-y-3 text-xs text-white/80">
             <div className="aurora-item-card">
@@ -140,7 +146,8 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </PageEditable>
 
       </div>
     </div>

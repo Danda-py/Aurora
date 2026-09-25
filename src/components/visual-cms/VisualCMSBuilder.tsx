@@ -36,16 +36,32 @@ const LanguageSync: React.FC = () => {
 };
 
 const BuilderShell: React.FC<{ className: string }> = ({ className }) => {
-  const { state, setLanguage, selectBlock } = useCMS();
-  const { previewVariant } = useEditMode();
+  const { state, setLanguage } = useCMS();
+  const { previewVariant, selectElement } = useEditMode();
   const screenRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <div className={`flex flex-col items-center gap-4 w-full ${className}`}>
-      <BuilderTopToolbar className="w-full max-w-2xl" />
+  // Click fuori dallo schermo dell'iPhone e dalla toolbar fluttuante:
+  // deseleziona l'elemento in editing. I click DENTRO lo schermo sono parte
+  // dell'editing (selezione/esecuzione, vedi EditModeContext).
+  React.useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (screenRef.current?.contains(target)) return;
+      if (target?.closest?.('[data-floating-toolbar]')) return;
+      selectElement(null);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [selectElement]);
 
-      <div className="relative">
-        <iPhone18Frame scale={0.72}>
+  return (
+    <div className={`flex flex-col items-center gap-5 w-full px-4 sm:px-8 py-6 ${className}`}>
+      <BuilderTopToolbar className="w-full max-w-3xl" />
+
+      {/* Canvas con ampio padding: la toolbar fluttuante (in portal) non viene
+          mai tagliata perché vive a livello di document.body, non qui. */}
+      <div className="relative w-full flex justify-center py-14">
+        <iPhone18Frame scale={0.78}>
           <div ref={screenRef} className="relative w-full h-full overflow-hidden bg-black">
             {/* PWA ospiti REALE dentro il frame, in modalità editing.
                 Il pass mostrato dipende dal toggle: 'pass' = mock neutro,
@@ -53,52 +69,43 @@ const BuilderShell: React.FC<{ className: string }> = ({ className }) => {
             <div className="w-full h-full overflow-y-auto overflow-x-hidden">
               <VideoWelcomeBook
                 key={previewVariant}
-                initialLanguage={state.language}
+                initialLanguage="it"
                 isEditMode
                 editorPass={previewVariant === 'pass' ? 'mock' : 'none'}
               />
             </div>
-
-            {/* Toolbar fluttuante (agganciata all'elemento selezionato) */}
-            <FloatingTextToolbar containerRef={screenRef} />
           </div>
         </iPhone18Frame>
       </div>
 
-      {/* La lingua scelta nella toolbar guida la PWA: il context resta la fonte di verità del builder. */}
+      {/* Toolbar di formattazione + campo URL dell'elemento selezionato
+          (portal a document.body, mai tagliata dai contenitori). */}
+      <FloatingTextToolbar containerRef={screenRef} />
+
+      {/* La lingua è fissata su IT: l'host modifica solo l'italiano, le traduzioni
+          sono gestite automaticamente a livello globale. */}
       <BuilderLanguageBridge onLanguageChange={setLanguage} />
     </div>
   );
 };
 
 /**
- * Ponte lingua: VideoWelcomeBook legge ?lang= dall'URL e aggiorna l'URL quando
- * l'ospite cambia lingua dall'interno della PWA. Questo componente ascolta le
- * variazioni dell'URL e le riporta nel context del builder, così la toolbar in
- * alto resta sincronizzata con la lingua effettiva della PWA dentro l'iPhone.
+ * La lingua del builder è bloccata su IT: rimuove ?lang= dall'URL così la PWA
+ * dentro l'iPhone non eredita lingue diverse (l'ospite nella sua sessione la
+ * sceglierà liberamente; l'host modifica solo la sorgente italiana).
  */
 const BuilderLanguageBridge: React.FC<{ onLanguageChange: (lang: any) => void }> = ({ onLanguageChange }) => {
   React.useEffect(() => {
-    const checkLang = () => {
-      try {
-        const lang = new URLSearchParams(window.location.search).get('lang');
-        if (lang && ['it', 'en', 'de', 'fr', 'es'].includes(lang)) {
-          onLanguageChange(lang);
-        }
-      } catch {
-        // ignore
+    onLanguageChange('it');
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('lang')) {
+        url.searchParams.delete('lang');
+        window.history.replaceState({}, '', url);
       }
-    };
-    checkLang();
-    // patch history per intercettare replaceState fatto dalla PWA
-    const original = window.history.replaceState.bind(window.history);
-    window.history.replaceState = (...args: Parameters<typeof original>) => {
-      original(...args);
-      checkLang();
-    };
-    return () => {
-      window.history.replaceState = original;
-    };
+    } catch {
+      // ignore
+    }
   }, [onLanguageChange]);
 
   return null;

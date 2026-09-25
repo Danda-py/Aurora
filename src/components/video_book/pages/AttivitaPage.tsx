@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -39,20 +40,17 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         />
 
         {/* Top Banner Image with Overlay */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"
-            alt="Valtellina Panorama"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="attivita"
+          img="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"
+          alt="Valtellina Panorama"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> {act.title}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {act.bannerText}
-            </h1>
-          </div>
-        </div>
+          }
+          title={act.bannerText}
+        />
 
         {/* Highlights List */}
         <div className="space-y-3">
@@ -62,10 +60,10 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           </div>
 
           {act.highlights.map((item, index) => (
-            <div
-              key={index}
-              className="aurora-glass-card space-y-3"
-            >
+            <PageEditable key={index} id={`page.attivita.highlight-${index}`} label={item.title}>
+              <div
+                className="aurora-glass-card space-y-3"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <span className="aurora-eyebrow text-[#62e6bd] font-mono">
@@ -88,7 +86,8 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               <p className="text-xs text-white/70 leading-relaxed">
                 {item.desc}
               </p>
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 

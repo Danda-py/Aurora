@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -45,28 +46,25 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"
-            alt="Treni e Trasporti in Valtellina"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="trasporti"
+          img="https://images.unsplash.com/photo-1515165562839-978bbcf18277?auto=format&fit=crop&w=1200&q=80"
+          alt="Treni e Trasporti in Valtellina"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {labels.connections}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {tr.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={tr.title}
+        />
 
         {/* Transport options list */}
         <div className="space-y-3">
           {tr.items.map((item, idx) => (
-            <div
-              key={idx}
-              className="aurora-glass-card space-y-3"
-            >
+            <PageEditable key={idx} id={`page.trasporti.item-${idx}`} label={item.title}>
+              <div
+                className="aurora-glass-card space-y-3"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="aurora-icon-box mt-0.5">
@@ -108,7 +106,8 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
                   </a>
                 </div>
               )}
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 

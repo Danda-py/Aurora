@@ -456,15 +456,30 @@ export const VideoWelcomeBook: React.FC<Props> = ({
         language={language}
       />
 
-      {/* Subtle footer */}
+      {/* Subtle footer — in modalità editor solo segnaposto neutri, mai dati reali */}
       {currentPage !== 'language_select' && currentPage !== 'grid_menu' && (
         <footer className="p-3 text-center border-t border-emerald-500/15 bg-[#070a0e] flex items-center justify-center text-[10px] text-slate-400 px-4">
           <span>
-            {language === 'it' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di Andaloro Davide"}
-            {language === 'en' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App by Andaloro Davide"}
-            {language === 'de' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App von Andaloro Davide"}
-            {language === 'fr' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App par Andaloro Davide"}
-            {language === 'es' && "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App de Andaloro Davide"}
+            {language === 'it' &&
+              (isEditMode
+                ? "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di MARIO ROSSI"
+                : "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App di Andaloro Davide")}
+            {language === 'en' &&
+              (isEditMode
+                ? "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App by MARIO ROSSI"
+                : "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App by Andaloro Davide")}
+            {language === 'de' &&
+              (isEditMode
+                ? "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App von MARIO ROSSI"
+                : "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App von Andaloro Davide")}
+            {language === 'fr' &&
+              (isEditMode
+                ? "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App par MARIO ROSSI"
+                : "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App par Andaloro Davide")}
+            {language === 'es' &&
+              (isEditMode
+                ? "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App de MARIO ROSSI"
+                : "© Aurora in Valtellina • Via Serta 188D, Morbegno (SO) • App de Andaloro Davide")}
           </span>
         </footer>
       )}

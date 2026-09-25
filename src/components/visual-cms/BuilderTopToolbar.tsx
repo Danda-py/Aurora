@@ -1,68 +1,37 @@
 import React from 'react';
-import { Check, Loader2, AlertCircle, Languages, Save, Ticket, Lock } from 'lucide-react';
-import { Language } from '../../types';
+import { Check, Loader2, AlertCircle, Save, Ticket, Lock, Globe } from 'lucide-react';
 import { useCMS } from './CMSContext';
 import { useEditMode } from './EditModeContext';
 
-const LANGUAGES: { code: Language; label: string }[] = [
-  { code: 'it', label: 'IT' },
-  { code: 'en', label: 'EN' },
-  { code: 'de', label: 'DE' },
-  { code: 'fr', label: 'FR' },
-  { code: 'es', label: 'ES' },
-];
-
 /**
- * Barra globale sopra l'iPhone (FASE 1): selettore lingua della guida
- * e stato di salvataggio automatico. Le altre funzionalità (traduzione IA,
- * anteprima guest) arriveranno nelle fasi successive.
+ * Barra globale sopra l'iPhone.
+ * L'host modifica i contenuti SOLO in Italiano: non esiste selettore lingua.
+ * Le traduzioni (EN/DE/FR/ES) saranno gestite automaticamente a livello globale.
  */
 export const BuilderTopToolbar: React.FC<{ className?: string }> = ({ className = '' }) => {
-  const { state, setLanguage } = useCMS();
+  const { setLanguage } = useCMS();
   const {
     saveStatus: editSaveStatus,
     saveNow,
-    currentLanguage,
     setLanguage: setEditLanguage,
     previewVariant,
     setPreviewVariant,
   } = useEditMode();
 
-  const handleLanguage = (lang: Language) => {
-    setLanguage(lang);
-    setEditLanguage(lang);
-    // Sincronizza ?lang= nell'URL: la PWA dentro l'iPhone legge la lingua
-    // iniziale proprio da questo parametro.
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('lang', lang);
-      window.history.replaceState({}, '', url);
-    } catch {
-      // ignore
-    }
-  };
+  // Lingua bloccata su IT, applicata una volta al montaggio.
+  React.useEffect(() => {
+    setLanguage('it');
+    setEditLanguage('it');
+  }, [setLanguage, setEditLanguage]);
 
   return (
     <div
       className={`flex items-center justify-between gap-2 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 shadow-xl flex-wrap ${className}`}
     >
-      {/* Lingue */}
-      <div className="flex items-center gap-1">
-        <Languages className="w-4 h-4 text-white/50 mr-1" />
-        {LANGUAGES.map((l) => (
-          <button
-            key={l.code}
-            type="button"
-            onClick={() => handleLanguage(l.code)}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition ${
-              state.language === l.code
-                ? 'bg-emerald-400 text-black'
-                : 'text-white/60 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            {l.label}
-          </button>
-        ))}
+      {/* Indicatore lingua sorgente (non è un selettore) */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 text-[11px] font-bold text-white/70">
+        <Globe className="w-3.5 h-3.5 text-white/50" />
+        <span>Modifica in Italiano</span>
       </div>
 
       {/* Toggle vista Con Pass / Senza Pass */}

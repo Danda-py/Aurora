@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -32,28 +33,25 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"
-            alt="Botteghe e Sapori Tipici"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="shopping"
+          img="https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=1200&q=80"
+          alt="Botteghe e Sapori Tipici"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {labels.artisan}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {sh.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={sh.title}
+        />
 
         {/* Shopping List */}
         <div className="space-y-3">
           {sh.shops.map((shop, idx) => (
-            <div
-              key={idx}
-              className="aurora-glass-card space-y-3"
-            >
+            <PageEditable key={idx} id={`page.shopping.shop-${idx}`} label={shop.title}>
+              <div
+                className="aurora-glass-card space-y-3"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="aurora-icon-box mt-0.5">
@@ -90,7 +88,8 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
               <p className="text-xs text-white/70 leading-relaxed pl-14">
                 {shop.desc}
               </p>
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 

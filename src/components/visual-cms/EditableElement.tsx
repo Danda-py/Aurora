@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditMode } from './EditModeContext';
 
 interface EditableElementProps {
@@ -43,7 +43,8 @@ function clearStyleOnNode(node: HTMLElement) {
 /**
  * Trova ricorsivamente i nodi testo "utili" dentro un wrapper:
  * elementi tipografici (h1..h6, p, span, strong, em, small, label, a)
- * che contengono testo diretto. Scarta i contenitori puri e i decorativi.
+ * che contengono testo diretto. Scarta i contenitori puri, i decorativi
+ * e i controlli CMS (picker orari, upload immagini).
  */
 function collectTextNodes(root: HTMLElement | null): HTMLElement[] {
   if (!root) return [];
@@ -52,6 +53,7 @@ function collectTextNodes(root: HTMLElement | null): HTMLElement[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
     acceptNode: (node) => {
       const el = node as HTMLElement;
+      if (el.closest('[data-cms-control]')) return NodeFilter.FILTER_REJECT;
       if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_REJECT;
       const hasDirectText = Array.from(el.childNodes).some(
         (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
@@ -73,10 +75,13 @@ function collectTextNodes(root: HTMLElement | null): HTMLElement[] {
  * Due percorsi:
  * - PRODUZIONE (isEditMode false): nessun wrapper DOM (via CSS display:contents
  *   il div scompare); gli override salvati dall'host (testi, stili, immagini,
- *   orari) vengono applicati ai nodi reali così gli ospiti vedono i contenuti
- *   personalizzati.
+ *   orari, link) vengono applicati ai nodi reali così gli ospiti vedono i
+ *   contenuti personalizzati.
  * - EDITING (Visual CMS Builder): wrapper interattivo con hover outline,
  *   bounding box di selezione, nodi testo contentEditable e stile live.
+ *   Il PRIMO click seleziona l'elemento (l'azione PWA è bloccata dal listener
+ *   in capture del EditModeContext); il SECONDO click sull'elemento già
+ *   selezionato esegue l'azione reale (test/anteprima).
  */
 export const EditableElement: React.FC<EditableElementProps> = ({ id, label, children, className = '' }) => {
   const {
@@ -87,29 +92,60 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
     texts,
     updateText,
     currentLanguage,
+    links,
   } = useEditMode();
   const [hovered, setHovered] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const editedNodesRef = useRef<Set<HTMLElement>>(new Set());
+  // Nodi resi contentEditable, con il loro listener 'input' (chiave = id#idx).
+  const editedNodesRef = useRef<Map<HTMLElement, string>>(new Map());
 
   const isSelected = selectedElementId === id;
   const style = styles[id];
 
   // ------------------------------------------------------------------
+  // OVERRIDE LINK: applicato a tutti gli anchor interni (anche annidati).
+  // Con override vuoto ('') si ripristina l'href originale salvato.
+  // In editing l'apertura dei link resta comunque bloccata dal listener
+  // in capture del context; in produzione l'href override è quello usato.
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    const root = wrapRef.current;
+    if (!root) return;
+    const anchors = root.querySelectorAll<HTMLAnchorElement>('a[href]');
+    anchors.forEach((a) => {
+      if (!a.dataset.cmsOriginalHref) {
+        a.dataset.cmsOriginalHref = a.getAttribute('href') ?? '';
+      }
+      const original = a.dataset.cmsOriginalHref;
+      const linkOverride = links[id];
+      const nextHref =
+        linkOverride !== undefined && linkOverride !== '' ? linkOverride : original;
+      if (nextHref && a.getAttribute('href') !== nextHref) {
+        a.setAttribute('href', nextHref);
+      }
+    });
+  }, [links, id, children, isEditMode]);
+
+  // ------------------------------------------------------------------
   // PERCORSO RUNTIME (ospiti): applica testi e stili salvati senza
   // aggiungere wrapper interattivi. Le chiavi testo sono per-nodo
-  // (id#idx) e quindi stabili tra builder e produzione.
+  // (id#idx) e quindi stabili tra builder e produzione; per compatibilità
+  // con i dati salvati in passato, un override con la chiave id esatta
+  // viene applicato al primo nodo testo.
   // ------------------------------------------------------------------
-  React.useEffect(() => {
+  useEffect(() => {
     if (isEditMode) return;
     const nodes = collectTextNodes(wrapRef.current);
+    const elStyle = styles[id];
     nodes.forEach((node, idx) => {
-      const textKey = `${id}#${idx}`;
-      const override = texts[textKey]?.[currentLanguage];
+      const exactKey = texts[id]?.[currentLanguage];
+      const override =
+        idx === 0 && exactKey !== undefined
+          ? exactKey
+          : texts[`${id}#${idx}`]?.[currentLanguage];
       if (override !== undefined && node.innerText !== override) {
         node.innerText = override;
       }
-      const elStyle = styles[id];
       if (elStyle) {
         applyStyleToNode(node, elStyle);
       } else {
@@ -123,41 +159,86 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
   // ------------------------------------------------------------------
   const textOverride = isEditMode ? texts[id]?.[currentLanguage] : undefined;
 
-  React.useEffect(() => {
-    if (!isEditMode || !isSelected) return;
-    const nodes = collectTextNodes(wrapRef.current);
-    nodes.forEach((node) => {
-      if (style) applyStyleToNode(node, style);
-
-      if (!editedNodesRef.current.has(node)) {
-        node.contentEditable = 'true';
-        node.spellcheck = false;
-        node.style.outline = 'none';
-        node.style.cursor = 'text';
-        editedNodesRef.current.add(node);
-        node.addEventListener('input', () => {
-          updateText(id, currentLanguage, node.innerText);
-        });
-        // Impedisce che INVIO/spazio attivino bottoni o link della PWA.
-        node.addEventListener('keydown', (e) => e.stopPropagation());
-        node.addEventListener('click', (e) => e.stopPropagation());
-      }
-
-      if (textOverride !== undefined && node.innerText !== textOverride) {
-        if (document.activeElement !== node) {
-          node.innerText = textOverride;
+  useEffect(() => {
+    if (!isEditMode) return;
+    const root = wrapRef.current;
+    if (!root) return;
+    const nodes = collectTextNodes(root);
+    const editingActive = isSelected;
+    nodes.forEach((node, idx) => {
+      const textKey = `${id}#${idx}`;
+      if (editingActive) {
+        if (style) applyStyleToNode(node, style);
+        if (!editedNodesRef.current.has(node)) {
+          node.contentEditable = 'true';
+          node.spellcheck = false;
+          node.style.outline = 'none';
+          node.style.cursor = 'text';
+          // Riattiva i pointer-events anche dentro overlay decorativi con
+          // pointer-events:none (es. testi delle tile sopra le foto), così
+          // il testo selezionato è cliccabile e digitabile in-place.
+          node.style.pointerEvents = 'auto';
+          editedNodesRef.current.set(node, textKey);
+          node.addEventListener('input', () => {
+            // Chiave per-nodo: ogni riga/label mantiene il suo testo.
+            const key = editedNodesRef.current.get(node);
+            if (key) updateText(key, currentLanguage, node.innerText);
+          });
+          // Impedisce che INVIO/spazio attivino bottoni o link della PWA.
+          node.addEventListener('keydown', (e) => e.stopPropagation());
+          node.addEventListener('click', (e) => e.stopPropagation());
         }
+
+        // Compatibilità: un vecchio override con chiave id esatta va al
+        // primo nodo; quelli per-nodo restano sulla loro riga.
+        const exactOverride = idx === 0 ? textOverride : undefined;
+        const nodeOverride =
+          exactOverride !== undefined
+            ? exactOverride
+            : texts[textKey]?.[currentLanguage];
+        if (nodeOverride !== undefined && node.innerText !== nodeOverride) {
+          if (document.activeElement !== node) {
+            node.innerText = nodeOverride;
+          }
+        }
+      } else if (editedNodesRef.current.has(node)) {
+        // Deselezione: esci dal contentEditable mantenendo le modifiche.
+        node.contentEditable = 'false';
+        const key = editedNodesRef.current.get(node);
+        if (key) updateText(key, currentLanguage, node.innerText);
+        editedNodesRef.current.delete(node);
+        node.style.cursor = '';
+        node.style.pointerEvents = '';
       }
     });
-  }, [isEditMode, isSelected, style, textOverride, currentLanguage, id, updateText]);
+  }, [isEditMode, isSelected, style, textOverride, currentLanguage, id, updateText, texts]);
 
+  // ------------------------------------------------------------------
+  // SELEZIONE / ESECUZIONE: primo click seleziona (la PWA è bloccata dal
+  // listener in capture del context), secondo click sull'elemento già
+  // selezionato esegue l'azione reale (test/anteprima).
+  // ------------------------------------------------------------------
   const handleSelection = useCallback(
     (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      selectElement(isSelected ? null : id);
+      if (!isSelected) return; // il primo click è già gestito in capture dal context
+      const target = e.target as HTMLElement | null;
+      // Click su un controllo CMS (upload immagini/icone, picker orari) o su
+      // un testo contentEditable: mantieni la selezione e lascia interagire.
+      if (target?.closest?.('[data-cms-control], [contenteditable="true"]')) return;
+      // Secondo click sull'elemento già selezionato: l'azione reale della PWA
+      // è già partita via propagazione naturale (il listener in capture non
+      // blocca il secondo click); qui solo rilasciamo la selezione.
+      selectElement(null);
+      // Per gli anchor garantiamo l'apertura in nuova scheda (niente navigazione
+      // della pagina editor) e raccogliamo l'href con l'override applicato.
+      const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (anchor) {
+        e.preventDefault();
+        const href = anchor.getAttribute('href') || '';
+        if (href) window.open(href, '_blank', 'noopener,noreferrer');
+      }
     },
-    [id, isSelected, selectElement],
+    [isSelected, selectElement],
   );
 
   if (!isEditMode) {
@@ -200,11 +281,11 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
           ).map((pos) => (
             <span
               key={pos}
-              className={`absolute ${pos} w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-[3px] z-40 shadow-sm`}
+              className={`absolute ${pos} w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-[3px] z-40 shadow-sm pointer-events-none`}
             />
           ))}
           {label && (
-            <span className="absolute -top-2 left-2 -translate-y-full bg-sky-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md z-40 shadow-md">
+            <span className="absolute -top-2 left-2 -translate-y-full bg-sky-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md z-40 shadow-md pointer-events-none">
               {label}
             </span>
           )}

@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { CheckCircle2, Info } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -32,48 +33,48 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
-            alt="Servizi e Comfort Appartamento"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="servizi"
+          img="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
+          alt="Servizi e Comfort Appartamento"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {labels.comfort}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {am.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={am.title}
+        />
 
         {/* Grid of amenities */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {am.items.map((item, idx) => (
-            <div
-              key={idx}
-              className="aurora-item-card items-center"
-            >
-              <div className="aurora-icon-box">
-                <CheckCircle2 className="w-5 h-5" />
+            <PageEditable key={idx} id={`page.servizi.item-${idx}`} label={item.title}>
+              <div
+                className="aurora-item-card items-center"
+              >
+                <div className="aurora-icon-box">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <strong className="block text-xs sm:text-sm font-bold text-white tracking-tight">
+                    {item.title}
+                  </strong>
+                  <span className="text-xs text-white/60 leading-relaxed block mt-0.5">
+                    {item.desc}
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <strong className="block text-xs sm:text-sm font-bold text-white tracking-tight">
-                  {item.title}
-                </strong>
-                <span className="text-xs text-white/60 leading-relaxed block mt-0.5">
-                  {item.desc}
-                </span>
-              </div>
-            </div>
+            </PageEditable>
           ))}
         </div>
 
         {/* Safety / energy notice */}
-        <div className="aurora-glass-card p-4 flex items-start gap-3">
-          <Info className="w-5 h-5 text-[#62e6bd] shrink-0 mt-0.5" />
-          <span className="text-xs text-white/70 leading-relaxed">{am.notice}</span>
-        </div>
+        <PageEditable id="page.servizi.notice" label="Avviso sicurezza">
+          <div className="aurora-glass-card p-4 flex items-start gap-3">
+            <Info className="w-5 h-5 text-[#62e6bd] shrink-0 mt-0.5" />
+            <span className="text-xs text-white/70 leading-relaxed">{am.notice}</span>
+          </div>
+        </PageEditable>
 
       </div>
     </div>

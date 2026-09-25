@@ -6,15 +6,22 @@ import { GuestPass } from '../../types';
  * Mock pass NEUTRO per la modalità editor: nessun dato reale del cliente.
  * checkInConfirmed + documentsUploaded = true così la Tessera mostra anche
  * il tasto apriporta (vista completa "con pass").
+ * Le date sono DINAMICHE (oggi → oggi+3) così il pass è sempre ATTIVO/VALIDO:
+ * con date fisse era risultato "scaduto" col passare del tempo.
  */
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
+const today = new Date();
+const checkout = new Date(today);
+checkout.setDate(today.getDate() + 3);
+
 export const MOCK_EDITOR_PASS: GuestPass = {
   id: 'editor-mock-pass',
   guestName: 'MARIO',
   guestSurname: 'ROSSI',
   phone: '+39 333 000 0000',
-  checkInDate: '2026-01-15',
+  checkInDate: isoDate(today),
   checkInTime: '14:00',
-  checkOutDate: '2026-01-18',
+  checkOutDate: isoDate(checkout),
   checkOutTime: '10:00',
   pinCode: '0000',
   bookingRef: 'ABC123XYZ',
@@ -27,7 +34,7 @@ export const MOCK_EDITOR_PASS: GuestPass = {
 };
 
 /**
- * Forma del documento persistito: stili, testi, immagini e orari
+ * Forma del documento persistito: stili, testi, immagini, orari e link
  * modificati dall'host nel Visual CMS Builder.
  */
 export interface CMSEditsDocument {
@@ -36,9 +43,10 @@ export interface CMSEditsDocument {
   texts: Record<string, Record<string, string>>;
   images: Record<string, string>;
   times: Record<string, string>;
+  links: Record<string, string>;
 }
 
-const EMPTY_DOC: CMSEditsDocument = { version: 1, styles: {}, texts: {}, images: {}, times: {} };
+const EMPTY_DOC: CMSEditsDocument = { version: 1, styles: {}, texts: {}, images: {}, times: {}, links: {} };
 
 const STORAGE_KEY = 'aurora_visual_cms_edits_v1';
 
@@ -119,6 +127,9 @@ interface EditModeContextValue {
   updateImage: (id: string, url: string) => void;
   times: Record<string, string>;
   updateTime: (id: string, time: string) => void;
+  /** Link di destinazione sovrascritti per elemento (bottoni, card con URL). */
+  links: Record<string, string>;
+  updateLink: (id: string, url: string) => void;
   currentLanguage: string;
   setLanguage: (lang: string) => void;
   saveStatus: 'saved' | 'saving' | 'error';
@@ -147,6 +158,8 @@ export const useEditMode = (): EditModeContextValue => {
       updateImage: () => {},
       times: {},
       updateTime: () => {},
+      links: {},
+      updateLink: () => {},
       currentLanguage: 'it',
       setLanguage: () => {},
       saveStatus: 'saved' as const,
@@ -169,6 +182,7 @@ export const EditModeProvider: React.FC<{
   const [texts, setTexts] = useState<Record<string, Record<string, string>>>({});
   const [images, setImages] = useState<Record<string, string>>({});
   const [times, setTimes] = useState<Record<string, string>>({});
+  const [links, setLinks] = useState<Record<string, string>>({});
   const [currentLanguage, setCurrentLanguage] = useState(initialLanguage);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [previewVariant, setPreviewVariant] = useState<'pass' | 'no-pass'>('pass');
@@ -189,6 +203,7 @@ export const EditModeProvider: React.FC<{
       setTexts(doc.texts ?? {});
       setImages(doc.images ?? {});
       setTimes(doc.times ?? {});
+      setLinks(doc.links ?? {});
     });
     return () => {
       cancelled = true;
@@ -219,8 +234,9 @@ export const EditModeProvider: React.FC<{
       texts,
       images,
       times,
+      links,
     };
-  }, [styles, texts, images, times]);
+  }, [styles, texts, images, times, links]);
 
   // Mantieni docRef aggiornato a ogni cambio degli override.
   useEffect(() => {
@@ -235,6 +251,37 @@ export const EditModeProvider: React.FC<{
   const selectElement = useCallback((id: string | null) => {
     setSelectedElementId(id);
   }, []);
+
+  // Riflesso dell'elemento selezionato per il listener globale (senza re-bind).
+  const selectedRef = useRef(selectedElementId);
+  selectedRef.current = selectedElementId;
+
+  /**
+   * Selezione via click in stile builder visuale (capture su documento):
+   * - PRIMO click su un elemento della PWA → lo seleziona e blocca l'azione
+   *   reale (navigazione, sheet, link esterni...);
+   * - SECONDO click sull'elemento già selezionato → esegue l'azione reale
+   *   (test/anteprima del comportamento);
+   * - i controlli CMS (upload immagini/icone, picker orari) agiscono al
+   *   secondo click sulla card selezionata.
+   */
+  useEffect(() => {
+    if (!isEditMode) return;
+    const onCaptureClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target || typeof target.closest !== 'function') return;
+      const holder = target.closest('[data-editable-id]') as HTMLElement | null;
+      const id = holder?.getAttribute('data-editable-id') ?? null;
+      // Click fuori dagli elementi editabili (toolbar del builder) o sull'
+      // elemento GIÀ selezionato: lascia proseguire il comportamento naturale.
+      if (!id || selectedRef.current === id) return;
+      e.preventDefault();
+      e.stopPropagation();
+      selectElement(id);
+    };
+    document.addEventListener('click', onCaptureClick, true);
+    return () => document.removeEventListener('click', onCaptureClick, true);
+  }, [isEditMode, selectElement]);
 
   const updateStyle = useCallback(
     (id: string, patch: Partial<TextStyle>, options?: { immediate?: boolean }) => {
@@ -310,6 +357,18 @@ export const EditModeProvider: React.FC<{
     [persist],
   );
 
+  const updateLink = useCallback(
+    (id: string, url: string) => {
+      setLinks((prev) => {
+        const next = { ...prev, [id]: url };
+        docRef.current = { ...docRef.current, links: next };
+        return next;
+      });
+      persist(0);
+    },
+    [persist],
+  );
+
   const setLanguage = useCallback((lang: string) => {
     setCurrentLanguage(lang);
   }, []);
@@ -328,6 +387,8 @@ export const EditModeProvider: React.FC<{
       updateImage,
       times,
       updateTime,
+      links,
+      updateLink,
       currentLanguage,
       setLanguage,
       saveStatus,
@@ -348,6 +409,8 @@ export const EditModeProvider: React.FC<{
       updateImage,
       times,
       updateTime,
+      links,
+      updateLink,
       currentLanguage,
       setLanguage,
       saveStatus,

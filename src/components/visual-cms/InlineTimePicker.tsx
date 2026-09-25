@@ -48,7 +48,7 @@ export const InlineTimePicker: React.FC<InlineTimePickerProps> = ({
   const pick = (h: string, m: string) => onChange(`${h}:${m}`);
 
   return (
-    <span ref={wrapperRef} className="relative inline-block">
+    <span ref={wrapperRef} data-cms-control className="relative inline-block">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

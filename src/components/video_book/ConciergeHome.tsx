@@ -30,6 +30,7 @@ import { DEFAULT_MEDIA_MAP } from '../../data/defaultMediaMap';
 import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { EditableElement } from '../visual-cms/EditableElement';
 import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
+import { EditableIcon } from '../visual-cms/EditableIcon';
 import { useEditMode } from '../visual-cms/EditModeContext';
 import { InlineTimePicker } from '../visual-cms/InlineTimePicker';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
@@ -506,12 +507,7 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
             key={idx}
             className="w-full h-full snap-start shrink-0 relative"
           >
-            <img
-              src={img.url}
-              alt={img.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+            <CarouselSlideImage slideKey={carouselKeys[idx - (images.length > 1 ? 1 : 0)] ?? `slide-${idx}`} fallback={img.url} alt={img.title} />
             {/* Dark vignette to overlay title */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 right-4 z-20 text-left">
@@ -579,6 +575,8 @@ const cardTranslations: Record<Language, { cardLabel: string; holder: string; bo
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock, isEditMode = false }) => {
   const media = DEFAULT_MEDIA_MAP;
+  // Override immagini CMS (es. foto delle storie locali sostituite dall'host).
+  const { images: cmsImages } = useEditMode();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [wifiCopied, setWifiCopied] = useState(false);
@@ -824,14 +822,17 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </div>
           </div>
 
-          <button 
-            onClick={() => setLanguageOpen(true)} 
-            className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition active:scale-95 shrink-0 ml-2"
-            aria-label={t.concierge.changeLanguage}
-          >
-            <FlagIcon language={language} className="w-3.5 h-3.5 rounded-full object-cover" />
-            <span className="text-[11px] font-semibold uppercase text-zinc-300">{language}</span>
-          </button>
+          {/* Selettore lingua nascosto in editor: l'host modifica solo l'italiano. */}
+          {!isEditMode && (
+            <button 
+              onClick={() => setLanguageOpen(true)} 
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition active:scale-95 shrink-0 ml-2"
+              aria-label={t.concierge.changeLanguage}
+            >
+              <FlagIcon language={language} className="w-3.5 h-3.5 rounded-full object-cover" />
+              <span className="text-[11px] font-semibold uppercase text-zinc-300">{language}</span>
+            </button>
+          )}
         </header>
 
         {/* Mandatory Check-in Document Banner */}
@@ -872,8 +873,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         )}
 
-        {/* Departure Reminder Nudge */}
-        {isCheckoutDay && (
+        {/* Departure Reminder Nudge (in editor visibile sempre per la modifica) */}
+        {(isCheckoutDay || isEditMode) && (
+          <EditableElement id="home.nudge-checkout" label="Promemoria Check-out" className="rounded-xl">
           <button 
             className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/80 border border-white/10 text-left transition active:scale-98"
             onClick={() => setSheet('luggage')}
@@ -889,6 +891,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-zinc-400" />
           </button>
+          </EditableElement>
         )}
 
         {/* 2. Stay Info & Status Widget: Card utente con forma di tessera, alta trasparenza e apriporta integrato */}
@@ -1034,7 +1037,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               title={isPublic ? "Disabilitato senza pass" : "Copia password Wi-Fi"}
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <EditableIcon id="home.action-wifi-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
                 <Wifi className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">
                 {isPublic ? t.tiles.wifi : (wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi)}
@@ -1051,7 +1056,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <EditableIcon id="home.action-bookings-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
                 <Calendar className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">
                 {t.tiles.prenota || (language === 'it' ? 'Prenotazioni' : 'Bookings')}
@@ -1069,7 +1076,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <EditableIcon id="home.action-contacts-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
                 <MessageCircle className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.contatti}</span>
             </a>
@@ -1082,7 +1091,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#30d158] shrink-0">
+                <EditableIcon id="home.action-rules-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
                 <Clock3 className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.regole}</span>
             </button>
@@ -1098,7 +1109,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
             >
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                <EditableIcon id="home.action-location-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
                 <MapPin className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.posizione}</span>
             </a>
@@ -1111,7 +1124,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 hover:bg-rose-900/25 hover:border-rose-400 active:scale-95 transition-all cursor-pointer text-left"
             >
               <div className="w-7 h-7 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-400 shrink-0 animate-pulse">
-                <ShieldAlert className="w-4 h-4" />
+                <EditableIcon id="home.action-emergency-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
+                  <ShieldAlert className="w-4 h-4" />
+                </EditableIcon>
               </div>
               <span className="text-xs font-bold text-rose-300 tracking-tight truncate">
                 {t.tiles.emergenza || (language === 'it' ? 'Emergenza' : 'Emergency')}
@@ -1147,39 +1162,53 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 {t.tiles.attivita}
               </h2>
             </EditableElement>
-            <button 
-              onClick={() => onNavigate('attivita')} 
-              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
-            >
-              {t.actions.backToMenu === 'MENU' ? 'Vedi tutto' : 'See all'} <ChevronRight className="inline h-3.5 w-3.5" />
-            </button>
+            <EditableElement id="home.link-vedi-tutto" label="Vedi tutte le attività" className="rounded-lg">
+              <button 
+                onClick={() => onNavigate('attivita')} 
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
+              >
+                {t.actions.backToMenu === 'MENU' ? 'Vedi tutto' : 'See all'} <ChevronRight className="inline h-3.5 w-3.5" />
+              </button>
+            </EditableElement>
           </div>
           
           <ScrollableTileRow hintLabel="Scorri per altro">
-            {localStories.map((story) => (
-              <a
-                key={story.title} 
-                className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
-                href={story.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            {localStories.map((story, storyIdx) => (
+              <EditableElement
+                key={story.title}
+                id={`home.story-${storyIdx}`}
+                label={story.title}
+                className="rounded-3xl shrink-0 snap-start"
               >
-                <img 
-                  src={story.image} 
-                  alt={story.title} 
-                  loading="lazy" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-                <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
-                  <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
-                    {story.title}
-                  </strong>
-                  <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
-                    {story.meta}
-                  </p>
-                </div>
-              </a>
+                <a
+                  className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
+                  href={story.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <EditableImageOverlay
+                    id={`home.story-${storyIdx}-img`}
+                    buttonPosition="center"
+                    triggerOnHover
+                  >
+                    <img 
+                      src={cmsImages[`home.story-${storyIdx}-img`] || story.image} 
+                      alt={story.title} 
+                      loading="lazy" 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    />
+                  </EditableImageOverlay>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
+                    <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
+                      {story.title}
+                    </strong>
+                    <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
+                      {story.meta}
+                    </p>
+                  </div>
+                </a>
+              </EditableElement>
             ))}
           </ScrollableTileRow>
         </section>
@@ -1403,5 +1432,30 @@ const GuestCardImageOverlay: React.FC = () => {
         <span />
       </EditableImageOverlay>
     </div>
+  );
+};
+
+/**
+ * Slide del photo carousel con override CMS e overlay di sostituzione:
+ * al hover compare "Sostituisci immagine" (upload o drag-drop).
+ * L'override è persistito per chiave slide (heroLiving, bedroom, ...) e
+ * vale anche per gli ospiti.
+ */
+const CarouselSlideImage: React.FC<{ slideKey: string; fallback: string; alt: string }> = ({ slideKey, fallback, alt }) => {
+  const { images } = useEditMode();
+  const override = images[`home.carousel-${slideKey}`];
+  return (
+    <EditableImageOverlay
+      id={`home.carousel-${slideKey}`}
+      buttonPosition="center"
+      triggerOnHover
+    >
+      <img
+        src={override || fallback}
+        alt={alt}
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+    </EditableImageOverlay>
   );
 };

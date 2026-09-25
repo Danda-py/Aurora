@@ -14,9 +14,9 @@ interface EditableImageOverlayProps {
 }
 
 /**
- * Overlay di editing immagini: in modalità editor, al click (o hover per le
- * immagini piccole) sull'immagine compare il pulsante "Sostituisci immagine"
- * con apertura del selettore file; supporta anche il drag-and-drop.
+ * Overlay di editing immagini: al click (o hover per le immagini piccole)
+ * sull'immagine compare il pulsante "Sostituisci immagine" con apertura del
+ * selettore file; supporta anche il drag-and-drop.
  * Il risultato (dataURL) finisce nel context e viene auto-salvato.
  * L'immagine sostituita vale anche per gli ospiti (runtime).
  */
@@ -59,6 +59,7 @@ export const EditableImageOverlay: React.FC<EditableImageOverlayProps> = ({
 
   return (
     <div
+      data-cms-control
       className={`relative ${className}`}
       onClick={(e) => {
         if (triggerOnHover) return;

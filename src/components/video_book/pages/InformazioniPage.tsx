@@ -6,6 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building, Droplet, Church } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -63,20 +64,17 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"
-            alt="Morbegno e Servizi Utili"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="informazioni"
+          img="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&w=1200&q=80"
+          alt="Morbegno e Servizi Utili"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {labels.practical}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {inf.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={inf.title}
+        />
 
         {/* Services List */}
         <div className="space-y-3">
@@ -86,54 +84,57 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
           </div>
 
           {services.map((s, idx) => (
-            <div
-              key={idx}
-              className="aurora-item-card items-center"
-            >
-              <div className="aurora-icon-box">
-                {getServiceIcon(s.title)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-sm text-white truncate">
-                  {s.title}
-                </h4>
-                <p className="text-xs text-white/60 truncate mt-0.5">
-                  {s.desc}
-                </p>
-              </div>
+            <PageEditable key={idx} id={`page.informazioni.service-${idx}`} label={s.title}>
+              <div
+                className="aurora-item-card items-center"
+              >
+                <div className="aurora-icon-box">
+                  {getServiceIcon(s.title)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-sm text-white truncate">
+                    {s.title}
+                  </h4>
+                  <p className="text-xs text-white/60 truncate mt-0.5">
+                    {s.desc}
+                  </p>
+                </div>
 
-              {s.mapsUrl && s.mapsUrl.trim() !== '' && (
-                <a
-                  href={s.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="aurora-action-pill shrink-0"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
-                  <span>{t.actions.googleMaps}</span>
-                </a>
-              )}
-            </div>
+                {s.mapsUrl && s.mapsUrl.trim() !== '' && (
+                  <a
+                    href={s.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aurora-action-pill shrink-0"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-[#07110d]" />
+                    <span>{t.actions.googleMaps}</span>
+                  </a>
+                )}
+              </div>
+            </PageEditable>
           ))}
         </div>
 
         {/* Waste recycling card */}
-        <div className="aurora-glass-card space-y-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="aurora-icon-box">
-              <Trash2 className="w-5 h-5 text-[#62e6bd]" />
+        <PageEditable id="page.informazioni.waste" label="Raccolta rifiuti">
+          <div className="aurora-glass-card space-y-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="aurora-icon-box">
+                <Trash2 className="w-5 h-5 text-[#62e6bd]" />
+              </div>
+              <div>
+                <span className="aurora-eyebrow">{t.infoPage.wasteRecycling}</span>
+                <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                  {inf.wasteTitle}
+                </h4>
+              </div>
             </div>
-            <div>
-              <span className="aurora-eyebrow">{t.infoPage.wasteRecycling}</span>
-              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                {inf.wasteTitle}
-              </h4>
-            </div>
+            <p className="text-xs text-white/70 leading-relaxed pl-13">
+              {inf.wasteDesc}
+            </p>
           </div>
-          <p className="text-xs text-white/70 leading-relaxed pl-13">
-            {inf.wasteDesc}
-          </p>
-        </div>
+        </PageEditable>
 
         {/* Legal CIR/CIN Card */}
         <div className="aurora-glass-card space-y-2 text-xs">

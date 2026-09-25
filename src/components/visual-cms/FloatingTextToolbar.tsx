@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bold,
   Italic,
@@ -9,6 +10,7 @@ import {
   RotateCcw,
   ChevronDown,
   X,
+  Link2,
 } from 'lucide-react';
 import { useEditMode } from './EditModeContext';
 import { TextStyle, TextRole } from './CMSContext';
@@ -16,9 +18,25 @@ import { TextStyle, TextRole } from './CMSContext';
 interface SelectionInfo {
   key: string;
   node: HTMLElement;
+  /** Posizione assoluta nel viewport (per il portal fixed). */
   top: number;
   left: number;
   width: number;
+  /** true se l'elemento contiene anchor/link da modificare. */
+  hasAnchor: boolean;
+  /** href corrente (override o originale) da mostrare nel campo URL. */
+  currentLink: string;
+}
+
+/** Aggiunge lo scheme ai domini scritti senza protocollo (es. "mysite.com"). */
+function normalizeUrl(raw: string): string {
+  const value = raw.trim();
+  if (!value) return '';
+  if (/^(https?:|mailto:|tel:|sms:|whatsapp:)/i.test(value)) return value;
+  // numeri di telefono scritti a mano senza scheme
+  if (/^\+?[\d\s.-]{6,}$/.test(value)) return `tel:${value.replace(/[\s.-]/g, '')}`;
+  if (value.includes('.') || value.startsWith('localhost')) return `https://${value}`;
+  return value;
 }
 
 const FONT_FAMILIES = [
@@ -43,10 +61,11 @@ const TEXT_COLORS = [
 ];
 
 /**
- * Toolbar di formattazione fluttuante stile Google Sites (FASE 3).
- * Compara sopra l'elemento PWA selezionato (bounding box blu) e i suoi
- * controlli patchano lo stile dell'elemento nel EditModeContext; i nodi
- * testo interni sono già contentEditable e digitabili in-place.
+ * Toolbar fluttuante stile Google Sites per l'elemento PWA selezionato.
+ * Tutti gli hook sono dichiarati PRIMA di ogni early-return (regola dei
+ * React Hooks): la visibilità è gestita da `selection === null`.
+ * Oltre a tipografia e colore, per gli elementi con link (bottoni, card con
+ * URL, azioni rapide) mostra il campo "URL di destinazione".
  */
 export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = ({
   containerRef,
@@ -58,10 +77,12 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
     styles,
     updateStyle,
     resetStyle,
+    links,
+    updateLink,
   } = useEditMode();
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [showColors, setShowColors] = useState(false);
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [linkDraft, setLinkDraft] = useState('');
 
   // Trova il nodo selezionato nel DOM e calcola la posizione della toolbar.
   useEffect(() => {
@@ -75,15 +96,19 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
       return;
     }
     const measure = () => {
+      // Coordinate ASSOLUTE nel viewport: la toolbar è renderizzata in un
+      // portal a document.body con position:fixed, così nessun contenitore
+      // con overflow hidden/transform può tagliarla o comprimerla.
       const nodeRect = node.getBoundingClientRect();
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
+      const anchor = node.querySelector('a');
       setSelection({
         key: selectedElementId,
         node,
-        top: nodeRect.top - containerRect.top,
-        left: nodeRect.left - containerRect.left,
+        top: nodeRect.top,
+        left: nodeRect.left,
         width: nodeRect.width,
+        hasAnchor: Boolean(anchor),
+        currentLink: anchor?.getAttribute('href') ?? '',
       });
     };
     measure();
@@ -97,24 +122,20 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
     };
   }, [isEditMode, selectedElementId, containerRef]);
 
-  // Chiudi su click fuori dal toolbar o su ESC.
+  // Allinea la bozza del campo URL a ogni cambio elemento selezionato.
+  useEffect(() => {
+    setLinkDraft(selection?.currentLink ?? '');
+    setShowColors(false);
+  }, [selection?.key, selection?.currentLink]);
+
+  // Chiudi con ESC (la deselezione al click-fuori è gestita dal builder).
   useEffect(() => {
     if (!selection) return;
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement;
-      // Non chiudere se il click è dentro la toolbar o dentro l'elemento
-      // editato (che deve restare attivo mentre si digita).
-      if (toolbarRef.current?.contains(target)) return;
-      if (selection.node.contains(target)) return;
-      selectElement(null);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') selectElement(null);
     };
-    document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKey);
     };
   }, [selection, selectElement]);
@@ -135,17 +156,22 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
   const patch = (p: Partial<TextStyle>) => updateStyle(selection.key, p);
 
   const toolbarTop = Math.max(8, selection.top - 52);
-  const toolbarLeft = Math.max(80, selection.left + selection.width / 2);
+  const toolbarLeft = selection.left + selection.width / 2;
 
-  return (
+  return createPortal(
     <div
-      ref={toolbarRef}
-      className="absolute z-[60] -translate-x-1/2"
-      style={{ top: toolbarTop, left: toolbarLeft }}
+      data-floating-toolbar
+      className="fixed z-[9999]"
+      style={{
+        top: toolbarTop,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: 'calc(100vw - 16px)',
+      }}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center gap-0.5 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 text-white max-w-[95vw]">
+      <div className="flex items-center gap-0.5 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 text-white flex-wrap justify-center">
         {/* Tipo di testo */}
         <div className="relative shrink-0">
           <select
@@ -276,9 +302,48 @@ export const FloatingTextToolbar: React.FC<{ containerRef: React.RefObject<HTMLD
         </Toggle>
       </div>
 
+      {/* Riga link: visibile solo per elementi con URL di destinazione */}
+      {selection.hasAnchor && (
+        <div className="mt-1.5 flex items-center gap-1 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl px-2 py-1.5 shadow-2xl">
+          <Link2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <input
+            value={linkDraft}
+            onChange={(e) => setLinkDraft(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') updateLink(selection.key, normalizeUrl(linkDraft));
+            }}
+            onBlur={() => updateLink(selection.key, normalizeUrl(linkDraft))}
+            placeholder="https://… (URL di destinazione)"
+            className="flex-1 min-w-[160px] bg-white/5 rounded-lg px-2 py-1 text-[11px] text-white outline-none placeholder:text-white/30"
+          />
+          <button
+            type="button"
+            onClick={() => updateLink(selection.key, normalizeUrl(linkDraft))}
+            className="px-2 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-[10px] font-bold cursor-pointer transition shrink-0"
+          >
+            Applica
+          </button>
+          {links[selection.key] && (
+            <button
+              type="button"
+              title="Ripristina link originale"
+              onClick={() => {
+                updateLink(selection.key, '');
+                setLinkDraft(selection.currentLink);
+              }}
+              className="p-1 rounded-lg hover:bg-white/10 text-rose-400 cursor-pointer transition shrink-0"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Freccia verso l'elemento */}
       <div className="w-2.5 h-2.5 bg-zinc-900 border-r border-b border-white/10 rotate-45 mx-auto -mt-[7px]" />
-    </div>
+    </div>,
+    document.body,
   );
 };
 

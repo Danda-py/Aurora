@@ -5,6 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Bike, Sparkles } from 'lucide-react';
+import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -37,20 +38,17 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
-            alt="Valtellina Food & Wine"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="ristoranti"
+          img="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+          alt="Valtellina Food & Wine"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> {res.title}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {res.bannerText}
-            </h1>
-          </div>
-        </div>
+          }
+          title={res.bannerText}
+        />
 
         {/* Recommended Restaurants List */}
         <div className="space-y-3">
@@ -60,10 +58,10 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
           </div>
 
           {orderedRestaurants.map((r, idx) => (
-            <div
-              key={idx}
-              className="aurora-glass-card space-y-3"
-            >
+            <PageEditable key={idx} id={`page.ristoranti.item-${idx}`} label={r.name}>
+              <div
+                className="aurora-glass-card space-y-3"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <span className="aurora-eyebrow text-[#62e6bd] font-mono">
@@ -102,23 +100,25 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
               <p className="text-xs text-white/70 leading-relaxed">
                 {r.desc}
               </p>
-            </div>
+              </div>
+            </PageEditable>
           ))}
         </div>
 
         {/* Delivery takeout section */}
-        <div className="aurora-glass-card space-y-3">
-          <div className="flex items-center gap-2.5">
-            <div className="aurora-icon-box">
-              <Bike className="w-5 h-5" />
+        <PageEditable id="page.ristoranti.delivery" label="Delivery e asporto">
+          <div className="aurora-glass-card space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="aurora-icon-box">
+                <Bike className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="aurora-eyebrow">{labels.delivery}</span>
+                <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                  {res.deliveryTitle}
+                </h4>
+              </div>
             </div>
-            <div>
-              <span className="aurora-eyebrow">{labels.delivery}</span>
-              <h4 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                {res.deliveryTitle}
-              </h4>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             {res.deliveries.filter((del) => !/poletti/i.test(del.name)).map((del, i) => (
@@ -137,7 +137,8 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
               </div>
             ))}
           </div>
-        </div>
+          </div>
+        </PageEditable>
 
       </div>
     </div>
