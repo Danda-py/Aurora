@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { GuestPass, Language } from '../../types';
-import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { Camera, FileText, Check, AlertCircle, Loader2, CheckCircle2, User, ChevronRight, Crop } from 'lucide-react';
 import { trackActivity } from '../../services/activityTrackingService';
 
 const dTranslations: Record<Language, any> = {
@@ -238,6 +237,8 @@ interface GuestDocument {
   documentNumber: string;
   issuePlace: string;
   issueDate: string;
+  profileImage?: string;
+  nationality?: string;
 }
 
 /**
@@ -312,59 +313,6 @@ async function resizeImageForOcr(file: File, maxDimension = 1400, quality = 0.7)
   }
 }
 
-/**
- * Converte un base64 Data URL in un Blob pronto per essere caricato.
- */
-function dataUrlToBlob(dataUrl: string): Blob {
-  const parts = dataUrl.split(';base64,');
-  const contentType = parts[0].split(':')[1];
-  const raw = window.atob(parts[1]);
-  const rawLength = raw.length;
-  const uInt8Array = new Uint8Array(rawLength);
-  for (let i = 0; i < rawLength; ++i) {
-    uInt8Array[i] = raw.charCodeAt(i);
-  }
-  return new Blob([uInt8Array], { type: contentType });
-}
-
-/**
- * Carica l'immagine su un bucket Supabase Storage se configurato (Opzione Robusta).
- * In caso di errore o assenza del client Supabase, ritorna null per effettuare il fallback.
- */
-async function uploadToSupabaseStorage(dataUrl: string, passToken: string): Promise<string | null> {
-  if (!supabase) return null;
-  try {
-    const blob = dataUrlToBlob(dataUrl);
-    const bucketName = 'ocr-documents';
-    
-    const fileExt = blob.type.split('/')[1] || 'jpg';
-    const fileName = `${passToken}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-    const filePath = `ocr-scans/${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, blob, {
-        contentType: blob.type,
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (error) {
-      console.warn('Errore upload Supabase Storage:', error.message);
-      return null;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  } catch (err) {
-    console.warn('Errore durante upload su Supabase Storage:', err);
-    return null;
-  }
-}
-
 export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSuccess, onCancel }) => {
   const t = dTranslations[language] || dTranslations.en;
   
@@ -407,6 +355,9 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
   const [docType, setDocType] = useState<'identita' | 'passaporto' | 'patente'>('identita');
   const [state, setState] = useState({ isScanning: false, scanProgress: 0, ocrStatus: 'idle', isSubmitting: false, error: null as string | null, success: false });
   const [form, setForm] = useState<Partial<GuestDocument>>({});
+  const [documentPreview, setDocumentPreview] = useState<string | null>(null);
+  const [cropSelection, setCropSelection] = useState({ x: 32, y: 18, width: 36, height: 44 });
+  const cropStart = React.useRef<{ pointerX: number; pointerY: number; x: number; y: number; width: number; height: number; mode: 'move' | 'resize' } | null>(null);
 
   const inputC = "w-full p-2 rounded-xl bg-[#131d27] border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500";
   const labelC = "text-[10px] font-mono text-slate-400 uppercase block";
@@ -424,9 +375,13 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
     if (g && g.isCompleted && g.data) {
       setForm(g.data);
+      setDocumentPreview(null);
+      setCropSelection({ x: 32, y: 18, width: 36, height: 44 });
       setDocType(g.data.documentType || 'identita');
       setState(s => ({ ...s, ocrStatus: 'success' }));
     } else {
+      setDocumentPreview(null);
+      setCropSelection({ x: 32, y: 18, width: 36, height: 44 });
       setForm({
         name: idx === 1 ? pass.guestName || '' : '',
         surname: idx === 1 ? pass.guestSurname || '' : '',
@@ -468,16 +423,8 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
       setState(s => ({ ...s, scanProgress: 45 }));
 
-      // Tentativo di upload su Supabase Storage (Opzione Robusta)
-      let imageUrl: string | null = null;
-      if (supabase) {
-        try {
-          imageUrl = await uploadToSupabaseStorage(dataUrl, pass.token);
-        } catch (storageErr) {
-          console.warn('Supabase storage upload failed, falling back to base64 payload:', storageErr);
-        }
-      }
-
+      setDocumentPreview(dataUrl);
+      setCropSelection({ x: 32, y: 18, width: 36, height: 44 });
       setState(s => ({ ...s, scanProgress: 65 }));
 
       const res = await fetch('/api/guest/ocr-scan', {
@@ -488,7 +435,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
         },
         credentials: 'include',
         body: JSON.stringify({
-          dataUrl: imageUrl || dataUrl,
+          dataUrl,
           docType,
           token: pass?.token,
           guestToken: pass?.token
@@ -541,14 +488,77 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
 
   const saveGuestForm = (e: React.FormEvent) => {
     e.preventDefault();
+    if (documentPreview && !form.profileImage) {
+      setState(s => ({ ...s, error: 'Conferma il ritaglio del volto per salvare la foto profilo.' }));
+      return;
+    }
     if (!form.name || !form.surname || !form.documentNumber || !form.birthDate || !form.citizenship) {
       setState(s => ({ ...s, error: t.requiredFields }));
       return;
     }
-    const finalData = { ...form, documentType: docType };
+    const finalData = { ...form, documentType: docType, profileImage: form.profileImage };
     setGuests(guests.map(g => g.id === activeIndex ? { ...g, data: finalData, isCompleted: true } : g));
     setActiveIndex(null);
     setState(s => ({ ...s, error: null }));
+  };
+
+  const saveProfileCrop = () => {
+    if (!documentPreview) return;
+    const image = new Image();
+    image.onload = () => {
+      const sourceX = image.width * cropSelection.x / 100;
+      const sourceY = image.height * cropSelection.y / 100;
+      const sourceWidth = image.width * cropSelection.width / 100;
+      const sourceHeight = image.height * cropSelection.height / 100;
+      const canvas = document.createElement('canvas');
+      canvas.width = 240;
+      canvas.height = 300;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      setForm(current => ({ ...current, profileImage: canvas.toDataURL('image/jpeg', 0.82) }));
+    };
+    image.src = documentPreview;
+  };
+
+  const handleCropPointerDown = (event: React.PointerEvent<HTMLElement>, mode: 'move' | 'resize' = 'move') => {
+    event.preventDefault();
+    event.stopPropagation();
+    const cropContainer = mode === 'resize' ? event.currentTarget.parentElement?.parentElement : event.currentTarget.parentElement;
+    const rect = cropContainer?.getBoundingClientRect();
+    if (!rect) return;
+    cropStart.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      x: cropSelection.x,
+      y: cropSelection.y,
+      width: cropSelection.width,
+      height: cropSelection.height,
+      mode
+    };
+    const update = (clientX: number, clientY: number) => {
+      const start = cropStart.current;
+      if (!start) return;
+      const deltaX = (clientX - start.pointerX) / rect.width * 100;
+      const deltaY = (clientY - start.pointerY) / rect.height * 100;
+      setCropSelection(current => start.mode === 'resize' ? ({
+        ...current,
+        width: Math.max(16, Math.min(100 - start.x, start.width + deltaX)),
+        height: Math.max(18, Math.min(100 - start.y, start.height + deltaY))
+      }) : ({
+        ...current,
+        x: Math.max(0, Math.min(100 - current.width, start.x + deltaX)),
+        y: Math.max(0, Math.min(100 - current.height, start.y + deltaY))
+      }));
+    };
+    const move = (moveEvent: PointerEvent) => update(moveEvent.clientX, moveEvent.clientY);
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      cropStart.current = null;
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop, { once: true });
   };
 
   const submitAll = async () => {
@@ -626,6 +636,28 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
           <form onSubmit={saveGuestForm} className="space-y-3.5 pt-1 animate-fade-in">
             {state.error && <div className="p-2 rounded-xl bg-red-950/20 border border-red-500/30 text-rose-300 text-[11px]">{state.error}</div>}
 
+            {documentPreview && (
+              <div className="space-y-2">
+                <p className={labelC}>Ritaglia la foto profilo · trascina il riquadro</p>
+                <div className="relative mx-auto w-full max-w-xs overflow-hidden rounded-xl border border-white/10 select-none touch-none">
+                  <img src={documentPreview} alt="Anteprima documento in memoria" className="block w-full h-auto" draggable={false} />
+                  <div
+                    className="absolute cursor-move border-2 border-emerald-300 bg-emerald-300/15 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] touch-none"
+                    style={{ left: `${cropSelection.x}%`, top: `${cropSelection.y}%`, width: `${cropSelection.width}%`, height: `${cropSelection.height}%` }}
+                    onPointerDown={handleCropPointerDown}
+                    aria-label="Sposta il riquadro di ritaglio"
+                  >
+                    <span className="absolute inset-x-0 bottom-0 bg-black/65 py-0.5 text-center text-[9px] font-bold text-white">VOLTO</span>
+                    <span onPointerDown={event => handleCropPointerDown(event, 'resize')} className="absolute -bottom-1.5 -right-1.5 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-zinc-950 bg-emerald-300" aria-label="Ridimensiona il riquadro di ritaglio" />
+                  </div>
+                </div>
+                <button type="button" onClick={saveProfileCrop} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-bold text-emerald-200">
+                  <Crop className="h-3.5 w-3.5" /> {form.profileImage ? 'Aggiorna ritaglio profilo' : 'Conferma ritaglio profilo'}
+                </button>
+                {form.profileImage && <img src={form.profileImage} alt="Anteprima ritaglio profilo" className="h-14 w-14 rounded-full border border-emerald-400/50 object-cover" />}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label className={labelC}>{t.surname}</label>
@@ -690,7 +722,7 @@ export const DocumentUploadForm: React.FC<Props> = ({ pass, language, onSaveSucc
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={() => setState(s => ({ ...s, ocrStatus: 'idle', isScanning: false, scanProgress: 0 }))} className="py-2.5 px-3 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-xs border border-amber-500/20 cursor-pointer">
+              <button type="button" onClick={() => { setDocumentPreview(null); setForm(current => ({ ...current, profileImage: undefined })); setState(s => ({ ...s, ocrStatus: 'idle', isScanning: false, scanProgress: 0 })); }} className="py-2.5 px-3 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-xs border border-amber-500/20 cursor-pointer">
                 <Camera className="w-4 h-4 inline-block mr-1" />
                 {t.retakePhoto}
               </button>

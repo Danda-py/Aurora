@@ -121,8 +121,11 @@ export interface GuestPass {
     surname: string;
     birthDate: string;
     birthPlace: string;
-    nationality: string;
+    nationality?: string;
+    citizenship?: string;
     gender: 'M' | 'F';
+    profileImage?: string;
+    issuePlace?: string;
     issueDate?: string;
     expiryDate?: string;
   }>;

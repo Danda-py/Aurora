@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   ArrowUpRight,
-  BedDouble,
+  BookOpen,
   Check,
+  CheckSquare,
+  CheckCircle2,
+  DoorOpen,
+  Navigation,
+  Square,
+  UserRound,
+  Users,
   ChevronRight,
   Clock3,
   Copy,
@@ -34,6 +41,7 @@ import { EditableIcon } from '../visual-cms/EditableIcon';
 import { useEditMode } from '../visual-cms/EditModeContext';
 import { InlineTimePicker } from '../visual-cms/InlineTimePicker';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
+import { BOOK_DATA } from '../../data/multilingualBookData';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { trackActivity } from '../../services/activityTrackingService';
 
@@ -47,7 +55,7 @@ interface Props {
   isEditMode?: boolean;
 }
 
-type Sheet = 'wifi' | 'schedule' | 'luggage' | null;
+type Sheet = 'wifi' | 'schedule' | 'luggage' | 'checkout' | 'guest' | null;
 
 const languages: { id: Language; label: string }[] = [
   { id: 'it', label: 'Italiano' },
@@ -579,6 +587,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const { images: cmsImages } = useEditMode();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [selectedGuestIndex, setSelectedGuestIndex] = useState(0);
+  const [checkoutItems, setCheckoutItems] = useState<Record<string, boolean>>(() => {
+    if (!pass || typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(localStorage.getItem(`aurora_checkout_${pass.id}`) || '{}');
+    } catch {
+      return {};
+    }
+  });
+  const [now, setNow] = useState(() => new Date());
   const [wifiCopied, setWifiCopied] = useState(false);
   const [showWifiQr, setShowWifiQr] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -623,17 +641,54 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const guideSections = getLocalizedGuideSections(language, media, isPublic);
   const isNight = new Date().getHours() >= 22 || new Date().getHours() < 7;
-  const isCheckoutDay = pass ? new Date().toISOString().slice(0, 10) === pass.checkOutDate : false;
-  const timing = pass ? getStayTiming(pass) : null;
+  const timing = pass ? getStayTiming(pass, now) : null;
   const isStayActive = timing ? timing.isActive : false;
   const isCheckinConfirmed = pass ? Boolean(pass.checkInConfirmed) : false;
   // Digital keys (Smart Lock / Wi-Fi) require BOTH the host's check-in confirmation
   // AND the guest's documents to be submitted - confirming check-in alone is not enough.
   const isKeysReady = pass ? isDigitalKeyActive(pass) : false;
   const isWifiActive = isStayActive && isKeysReady;
-  // The mandatory "Required Action" banner should stay hidden until the check-in day itself.
-  const isCheckinDayOrLater = pass ? new Date().toISOString().slice(0, 10) >= pass.checkInDate : false;
   const docBanner = getDocumentBannerCopy(language);
+  const isCheckinApproved = isCheckinConfirmed && Boolean(pass?.documentsUploaded);
+  const stayGuests = pass?.documentsData || [];
+  const selectedGuest = stayGuests[selectedGuestIndex] || stayGuests[0];
+  const checkoutAt = pass ? (() => {
+    const [year, month, day] = pass.checkOutDate.split('-').map(Number);
+    const [hour, minute] = (pass.checkOutTime || APARTMENT_INFO.checkOutLimit).split(':').map(Number);
+    return new Date(year, month - 1, day, hour, minute || 0);
+  })() : null;
+  const checkoutMsRemaining = checkoutAt ? checkoutAt.getTime() - now.getTime() : Infinity;
+  const showCheckoutReminder = Boolean(pass && pass.checkInConfirmed && checkoutMsRemaining >= 0 && checkoutMsRemaining <= 24 * 60 * 60 * 1000);
+  const checkoutList = BOOK_DATA[language].checkOut.checklist;
+  const checkoutDoneCount = checkoutList.filter((_, index) => checkoutItems[String(index)]).length;
+  const checkoutMood = checkoutDoneCount === checkoutList.length ? '😄' : checkoutDoneCount >= checkoutList.length * 0.67 ? '🙂' : checkoutDoneCount >= checkoutList.length * 0.34 ? '😐' : checkoutDoneCount > 0 ? '🙁' : '😢';
+  const checkoutHours = Math.max(0, Math.floor(checkoutMsRemaining / (60 * 60 * 1000)));
+  const checkoutMinutes = Math.max(0, Math.floor((checkoutMsRemaining % (60 * 60 * 1000)) / (60 * 1000)));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!pass) {
+      setCheckoutItems({});
+      return;
+    }
+    try {
+      setCheckoutItems(typeof window === 'undefined' ? {} : JSON.parse(localStorage.getItem(`aurora_checkout_${pass.id}`) || '{}'));
+    } catch {
+      setCheckoutItems({});
+    }
+  }, [pass?.id]);
+
+  const toggleCheckoutItem = (index: number) => {
+    setCheckoutItems(current => {
+      const updated = { ...current, [String(index)]: !current[String(index)] };
+      if (pass && typeof window !== 'undefined') localStorage.setItem(`aurora_checkout_${pass.id}`, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const localStories = [
     { 
@@ -791,358 +846,125 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   return (
     <div className="min-h-screen w-full bg-black text-white selection:bg-emerald-500/25 selection:text-emerald-200">
       
-      {/* Floating Accessible Warning Notification Banner */}
+      {/* Avviso stato azioni accessibili */}
       {alertMessage && (
-        <div className="fixed top-4 left-4 right-4 z-50 p-4 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-amber-500/30 text-amber-200 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-2xl animate-in fade-in slide-in-from-top duration-300">
-          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
-          <div className="flex-1 text-left">{alertMessage}</div>
-          <button onClick={() => setAlertMessage(null)} className="p-1 rounded-full hover:bg-white/10 text-zinc-400 cursor-pointer">
-            <X className="w-4 h-4" />
-          </button>
+        <div className="fixed top-4 left-4 right-4 z-50 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-zinc-900/95 p-4 text-xs font-bold text-amber-100 shadow-2xl">
+          <ShieldAlert className="h-5 w-5 shrink-0 text-amber-400" />
+          <div className="flex-1">{alertMessage}</div>
+          <button onClick={() => setAlertMessage(null)} className="rounded-full p-1 text-zinc-400 hover:bg-white/10" aria-label={t.concierge.close}><X className="h-4 w-4" /></button>
         </div>
       )}
 
-      {/* Smartphone-first centered container with unified vertical rhythm */}
-      <main className="w-full max-w-[440px] mx-auto px-4 pt-3 pb-24 space-y-6">
-        
-        {/* 1. Header: Frosted Glass Floating Bar */}
-        <header className="sticky top-2 z-30 w-full backdrop-blur-md bg-zinc-900/70 border border-white/10 rounded-2xl px-3.5 py-2.5 shadow-xl flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
-              <Home className="w-4 h-4" />
+      <main className="mx-auto min-h-screen w-full max-w-[480px] space-y-5 px-4 pb-24 pt-4 text-white">
+        {/* Area 1: saluto, icona anonima e lingua */}
+        <header className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3 shadow-xl">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-zinc-200">
+              <UserRound className="h-5 w-5" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <EditableElement id="home.header-title" label="Titolo header" className="rounded-lg">
-                <h1 className="text-sm font-semibold text-white tracking-tight truncate">
-                  {pass 
-                    ? `${pass.guestName}, ${t.tiles.benvenuto.toLowerCase()}` 
-                    : t.concierge.welcomeCity}
-                </h1>
-              </EditableElement>
+              <span className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Casa Aurora</span>
+              <h1 className="truncate text-base font-bold text-white">{language === 'it' ? 'Benvenuto' : language === 'en' ? 'Welcome' : language === 'de' ? 'Willkommen' : language === 'fr' ? 'Bienvenue' : 'Bienvenido'}{pass ? ` ${pass.guestName}` : ''}</h1>
             </div>
           </div>
-
-          {/* Selettore lingua nascosto in editor: l'host modifica solo l'italiano. */}
           {!isEditMode && (
-            <button 
-              onClick={() => setLanguageOpen(true)} 
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition active:scale-95 shrink-0 ml-2"
-              aria-label={t.concierge.changeLanguage}
-            >
-              <FlagIcon language={language} className="w-3.5 h-3.5 rounded-full object-cover" />
-              <span className="text-[11px] font-semibold uppercase text-zinc-300">{language}</span>
+            <button onClick={() => setLanguageOpen(true)} className="ml-2 flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 hover:bg-white/10" aria-label={t.concierge.changeLanguage}>
+              <FlagIcon language={language} className="h-4 w-4 rounded-full object-cover" />
+              <span className="text-[11px] font-bold uppercase text-zinc-300">{language}</span>
             </button>
           )}
         </header>
 
-        {/* Mandatory Check-in Document Banner */}
-        {pass && isCheckinDayOrLater && !pass.documentsUploaded && (
-          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex flex-col gap-2.5 shadow-xl">
-            <div className="space-y-1">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
-                <ShieldAlert className="w-3 h-3" /> {docBanner.requiredBadge}
-              </span>
-              <h3 className="text-xs font-bold text-white tracking-tight">
-                {docBanner.requiredTitle}
-              </h3>
-              <p className="text-[11px] text-zinc-300 leading-relaxed">
-                {docBanner.requiredDesc}
-              </p>
-            </div>
-            <button 
-              onClick={() => onNavigate('check_in')} 
-              className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-98 shadow-md border-0"
-            >
-              <span>{docBanner.requiredCta}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        {pass && pass.documentsUploaded && !isCheckinConfirmed && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 shadow-xl">
-            <Clock3 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <h3 className="text-xs font-bold text-white">
-                {docBanner.reviewTitle}
-              </h3>
-              <p className="text-[11px] text-zinc-300 leading-relaxed">
-                {docBanner.reviewDesc}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Departure Reminder Nudge (in editor visibile sempre per la modifica) */}
-        {(isCheckoutDay || isEditMode) && (
-          <EditableElement id="home.nudge-checkout" label="Promemoria Check-out" className="rounded-xl">
-          <button 
-            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-900/80 border border-white/10 text-left transition active:scale-98"
-            onClick={() => setSheet('luggage')}
-          >
-            <Clock3 className="h-4 w-4 text-amber-300 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <strong className="block text-xs font-semibold text-white truncate">
-                {t.concierge.nudge.checkoutTitle} {APARTMENT_INFO.checkOutLimit}
-              </strong>
-              <small className="block text-[11px] text-zinc-400 truncate">
-                {t.concierge.nudge.checkoutSub}
-              </small>
-            </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-zinc-400" />
-          </button>
-          </EditableElement>
-        )}
-
-        {/* 2. Stay Info & Status Widget: Card utente con forma di tessera, alta trasparenza e apriporta integrato */}
-        {pass && (
-          <EditableElement id="home.guest-card" label="Tessera Ospite" className="rounded-3xl">
-          <GuestCardBackground>
-          <div 
-            className="relative w-full aspect-[1.38/1] rounded-3xl border border-white/10 overflow-hidden p-5 sm:p-6 shadow-2xl flex flex-col justify-between bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500"
-            style={{
-              backgroundImage: `linear-gradient(135deg, rgba(9, 13, 19, 0.62), rgba(9, 13, 19, 0.72)), url(${media.view || '/uploads/valtellina.jpg'})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          >
-            {/* Sheen */}
-            <div className="absolute inset-0 bg-radial-gradient from-white/5 to-transparent pointer-events-none" />
-
-            {/* Top Row: General info */}
-            <div className="flex items-center justify-between z-10">
-              <EditableElement id="home.card-label" label="Etichetta tessera" className="rounded-lg">
-                <span className="text-xs font-mono font-bold tracking-widest text-zinc-300/80 uppercase">
-                  {cardTranslations[language]?.cardLabel || "TESSERA OSPITE"}
+        {/* Area 2: banner check-in rosso → revisione arancione → confermato verde */}
+        {pass && (() => {
+          const status = isCheckinApproved ? 'approved' : pass.documentsUploaded ? 'review' : 'required';
+          const daysRemaining = Math.max(0, Math.ceil((new Date(`${pass.checkInDate}T00:00:00`).getTime() - new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T00:00:00`).getTime()) / (24 * 60 * 60 * 1000)));
+          const statusStyle = status === 'approved'
+            ? 'border-emerald-400/35 bg-emerald-500/15 text-emerald-100'
+            : status === 'review'
+              ? 'border-amber-400/35 bg-amber-500/15 text-amber-100'
+              : 'border-rose-400/35 bg-rose-500/15 text-rose-100';
+          const statusTitle = status === 'approved'
+            ? (language === 'it' ? 'Check-in confermato' : 'Check-in confirmed')
+            : status === 'review'
+              ? docBanner.reviewTitle
+              : (language === 'it' ? 'Completa il check-in' : 'Complete your check-in');
+          const statusDescription = status === 'approved'
+            ? (language === 'it' ? 'I tuoi documenti sono stati verificati. Le informazioni del soggiorno sono qui sotto.' : 'Your documents have been verified. Stay details are below.')
+            : status === 'review'
+              ? docBanner.reviewDesc
+              : `${language === 'it' ? 'Mancano' : 'In'} ${daysRemaining} ${language === 'it' ? (daysRemaining === 1 ? 'giorno' : 'giorni') : 'days'} ${language === 'it' ? 'al check-in.' : 'until check-in.'} ${docBanner.requiredDesc}`;
+          return (
+            <button type="button" onClick={() => onNavigate('check_in')} className={`w-full rounded-2xl border p-4 text-left shadow-lg transition active:scale-[0.99] ${statusStyle}`} aria-label={statusTitle}>
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/10">
+                  {status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> : status === 'review' ? <Clock3 className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
                 </span>
-              </EditableElement>
-              <span className="text-xs font-black tracking-widest text-white/95 uppercase font-mono bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10">APT. AURORA</span>
-            </div>
-
-            {/* Middle Row: Guest Name, Booking Code, and Dates Side-By-Side */}
-            <div className="grid grid-cols-2 gap-3 z-10 py-1">
-              {/* Left Side: Name and Ref */}
-              <div className="space-y-1.5 text-left min-w-0">
-                <div className="min-w-0">
-                  <EditableElement id="home.card-holder-label" label="Etichetta titolare" className="rounded-lg">
-                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
-                      {cardTranslations[language]?.holder || "TITOLARE"}
-                    </p>
-                  </EditableElement>
-                  <div className="text-sm sm:text-base font-black text-white uppercase tracking-tight truncate drop-shadow-md">
-                    {pass.guestName} {pass.guestSurname}
-                  </div>
-                </div>
-                {pass.bookingRef && (
-                  <div>
-                    <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
-                      {cardTranslations[language]?.booking || "PRENOTAZIONE"}
-                    </p>
-                    <div className="text-xs sm:text-sm font-mono font-black text-white/90 tracking-wider drop-shadow-md">
-                      {pass.bookingRef}
-                    </div>
-                  </div>
-                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-extrabold">{statusTitle}</span>
+                  <span className="mt-1 block text-xs leading-relaxed opacity-80">{statusDescription}</span>
+                </span>
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 opacity-70" />
               </div>
+              {status === 'required' && <span className="mt-3 inline-flex rounded-lg bg-rose-500 px-3 py-2 text-xs font-bold text-white">{docBanner.requiredCta}</span>}
+            </button>
+          );
+        })()}
 
-              {/* Right Side: Stay Dates */}
-              <div className="space-y-1 text-right shrink-0">
-                <EditableElement id="home.card-validity-label" label="Etichetta soggiorno" className="rounded-lg">
-                  <p className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">
-                    {cardTranslations[language]?.validity || "PERIODO DI SOGGIORNO"}
-                  </p>
-                </EditableElement>
-                <div className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md font-mono">
-                  <div>{formatPassDate(pass.checkInDate)} (<CheckinTime />)</div>
-                  <div className="text-zinc-400 font-medium my-0.5">
-                    {cardTranslations[language]?.to || "al"}
-                  </div>
-                  <div>{formatPassDate(pass.checkOutDate)} ({pass.checkOutTime ?? '10:00'})</div>
+        {/* Soggiorno, ritratto e quattro azioni: disponibili dopo la conferma host */}
+        {pass && (isCheckinApproved || (isEditMode && pass.documentsUploaded)) && (
+          <section className="space-y-4 animate-in fade-in duration-300">
+            <div className="rounded-3xl border border-white/10 bg-zinc-900/75 p-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => { if (stayGuests.length > 1) setSelectedGuestIndex((index) => (index + 1) % stayGuests.length); setSheet('guest'); }} className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-300/50 bg-white/5 text-zinc-200" aria-label={stayGuests.length > 1 ? 'Seleziona ospite e consulta documento' : 'Consulta dati documento'}>
+                  {selectedGuest?.profileImage ? <img src={selectedGuest.profileImage} alt="Foto profilo documento" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{language === 'it' ? 'Ospite della prenotazione' : 'Guest details'}</span>
+                  <h2 className="truncate text-lg font-bold">{selectedGuest ? `${selectedGuest.name} ${selectedGuest.surname}` : `${pass.guestName} ${pass.guestSurname}`}</h2>
+                  <button type="button" onClick={() => setSheet('guest')} className="mt-0.5 text-xs text-zinc-400 underline underline-offset-2">{stayGuests.length > 1 ? (language === 'it' ? 'Seleziona ospite · dati documento' : 'Select guest · document details') : (language === 'it' ? 'Consulta dati documento' : 'View document details')}</button>
                 </div>
+                <span className="flex shrink-0 items-center gap-1 text-xs text-zinc-300"><Users className="h-4 w-4" />{pass.guestsCount || stayGuests.length || 1}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-3">
+                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-in' : 'Check-in'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkInDate)} · {pass.checkInTime || '14:00'}</strong></div>
+                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-out' : 'Check-out'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkOutDate)} · {pass.checkOutTime || APARTMENT_INFO.checkOutLimit}</strong></div>
               </div>
             </div>
 
-            {/* Bottom Row: Smart Lock Door Opener inside the card! */}
-            <div className="z-10 pt-1.5 w-full">
-              {!isStayActive ? (
-                <div className="w-full flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs sm:text-sm font-bold text-center">
-                  <ShieldAlert className="w-4 h-4 shrink-0 mr-1.5 animate-pulse" />
-                  <span>{t.concierge.keysNotActive}</span>
-                </div>
-              ) : (
-                <>
-                  <button
-                    className={`relative flex w-full items-center justify-between px-3.5 py-3 overflow-hidden font-black rounded-xl transition active:scale-[0.98] cursor-pointer shadow-md ${
-                      !isCheckinConfirmed
-                        ? 'bg-zinc-800/80 text-zinc-400 border border-white/5 hover:bg-zinc-800'
-                        : doorState === 'success'
-                        ? 'bg-emerald-300 text-zinc-950 shadow-md shadow-emerald-500/20'
-                        : doorState === 'error'
-                        ? 'bg-rose-500 text-white shadow-md'
-                        : 'bg-emerald-400 hover:bg-emerald-300 text-zinc-950 hover:shadow-md hover:shadow-emerald-500/20'
-                    }`}
-                    onPointerDown={isCheckinConfirmed ? startHold : handleDoorClick}
-                    onPointerUp={isCheckinConfirmed ? cancelHold : undefined}
-                    onPointerCancel={isCheckinConfirmed ? cancelHold : undefined}
-                    onPointerLeave={isCheckinConfirmed ? cancelHold : undefined}
-                    onPointerMove={isCheckinConfirmed ? (event) => {
-                      const rect = event.currentTarget.getBoundingClientRect();
-                      const inside =
-                        event.clientX >= rect.left &&
-                        event.clientX <= rect.right &&
-                        event.clientY >= rect.top &&
-                        event.clientY <= rect.bottom;
-                      if (!inside) cancelHold(event);
-                    } : undefined}
-                    disabled={doorState === 'opening'}
-                  >
-                    <span 
-                      className="absolute inset-0 bg-black/15 origin-left pointer-events-none transition-transform duration-75" 
-                      style={{ transform: `scaleX(${holdProgress})` }} 
-                    />
-                    <span className="flex items-center gap-2.5 relative z-10 text-xs sm:text-sm font-black">
-                      <KeyRound className="w-4 h-4" />
-                      {!isCheckinConfirmed 
-                        ? (language === 'it' ? 'In attesa di conferma check-in' : 'Check-in pending')
-                        : t.concierge.doorOpeningState[doorState]}
-                    </span>
-                    <ArrowUpRight className="w-4 h-4 relative z-10" />
-                  </button>
-                  {doorMessage && (
-                    <p className={`text-center text-[11px] font-bold pt-1 ${doorState === 'error' ? 'text-rose-400' : 'text-zinc-300'}`}>
-                      {doorMessage}
-                    </p>
-                  )}
-                </>
-              )}
+            {showCheckoutReminder && (
+              <button type="button" onClick={() => setSheet('checkout')} className="flex w-full items-center gap-3 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-3.5 text-left shadow-lg transition active:scale-[0.99]">
+                <span className="text-3xl" role="img" aria-label="Avanzamento checklist check-out">{checkoutMood}</span>
+                <span className="min-w-0 flex-1"><strong className="block text-sm text-white">{language === 'it' ? 'Check-out tra' : 'Check-out in'} {checkoutHours}{language === 'it' ? ' ore' : ' hours'} {checkoutMinutes}{language === 'it' ? ' min' : ' min'}</strong><span className="mt-0.5 block text-[11px] text-zinc-300">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate · apri checklist' : 'tasks done · open checklist'}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-rose-200" />
+              </button>
+            )}
+
+            <div className="grid grid-cols-4 gap-2">
+              <a href={APARTMENT_INFO.googleMapsUrl} target="_blank" rel="noreferrer" onClick={() => trackActivity(pass, 'maps_open')} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
+                <Navigation className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{language === 'it' ? 'Come arrivare' : 'Directions'}</span>
+              </a>
+              <button type="button" onClick={handleWifiClick} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
+                <Wifi className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">Wi-Fi</span>
+              </button>
+              <button type="button" onPointerDown={event => { if (!isCheckinConfirmed) handleDoorClick(); else startHold(event); }} onPointerUp={isCheckinConfirmed ? cancelHold : undefined} onPointerCancel={isCheckinConfirmed ? cancelHold : undefined} onPointerLeave={isCheckinConfirmed ? cancelHold : undefined} disabled={doorState === 'opening' || !isStayActive} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800 disabled:opacity-50" title={doorState === 'idle' ? (language === 'it' ? 'Tieni premuto per aprire' : 'Press and hold to unlock') : doorMessage}>
+                <DoorOpen className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{doorState === 'opening' ? (language === 'it' ? 'Apro…' : 'Opening…') : doorState === 'success' ? (language === 'it' ? 'Aperta' : 'Opened') : (language === 'it' ? 'Apri Porta' : 'Open door')}</span>
+              </button>
+              <button type="button" onClick={() => { onNavigate('regole'); trackActivity(pass, 'house_rules_view'); }} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
+                <BookOpen className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{language === 'it' ? 'Regole' : 'Rules'}</span>
+              </button>
             </div>
-          </div>
-          <GuestCardImageOverlay />
-          </GuestCardBackground>
-          </EditableElement>
+            {doorMessage && <p className={`text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-emerald-200'}`}>{doorMessage}</p>}
+          </section>
         )}
 
-        {/* 3. Quick Actions: 2x3 Grid layout for both pass and non-pass users */}
-        <section className="space-y-2">
-          <EditableElement id="home.section-quickactions" label="Titolo Azioni Rapide" className="rounded-lg">
-            <p className="text-[10px] font-mono tracking-widest text-[#86868b] uppercase pl-1">Azioni Rapide</p>
-          </EditableElement>
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Wi-Fi Action (Row 1, Col 1) */}
-            <EditableElement id="home.action-wifi" label="Card Wi-Fi" className="rounded-2xl">
-            <button 
-              onClick={isPublic ? undefined : handleWifiClick}
-              disabled={isPublic}
-              className={`flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all text-left cursor-pointer ${isPublic ? "opacity-40 cursor-not-allowed" : ""}`}
-              title={isPublic ? "Disabilitato senza pass" : "Copia password Wi-Fi"}
-            >
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                <EditableIcon id="home.action-wifi-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                <Wifi className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-semibold text-white tracking-tight truncate">
-                {isPublic ? t.tiles.wifi : (wifiCopied ? (language === 'it' ? 'Copiata!' : 'Copied!') : t.tiles.wifi)}
-              </span>
-            </button>
-            </EditableElement>
-
-            {/* Prenotazioni (Row 1, Col 2) */}
-            <EditableElement id="home.action-bookings" label="Prenotazioni" className="rounded-2xl">
-            <a
-              href="https://aurorainvaltellina.it"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
-            >
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                <EditableIcon id="home.action-bookings-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                <Calendar className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-semibold text-white tracking-tight truncate">
-                {t.tiles.prenota || (language === 'it' ? 'Prenotazioni' : 'Bookings')}
-              </span>
-            </a>
-            </EditableElement>
-
-            {/* Contatti (Row 2, Col 1) */}
-            <EditableElement id="home.action-contacts" label="Contatti WhatsApp" className="rounded-2xl">
-            <a 
-              href={`https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(isPublic ? 'Ciao Nino!' : `Ciao Nino, sono ${firstName}.`)}`} 
-              target="_blank" 
-              rel="noreferrer"
-              onClick={() => { if (!isPublic) trackActivity(pass, 'whatsapp_contact'); }}
-              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
-            >
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                <EditableIcon id="home.action-contacts-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                <MessageCircle className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.contatti}</span>
-            </a>
-            </EditableElement>
-
-            {/* Regole (Row 2, Col 2) */}
-            <EditableElement id="home.action-rules" label="Card Regole" className="rounded-2xl">
-            <button 
-              onClick={() => { setSheet('schedule'); if (!isPublic) trackActivity(pass, 'house_rules_view'); }}
-              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
-            >
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#30d158] shrink-0">
-                <EditableIcon id="home.action-rules-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                <Clock3 className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.regole}</span>
-            </button>
-            </EditableElement>
-
-            {/* Posizione (Row 3, Col 1) */}
-            <EditableElement id="home.action-location" label="Card Posizione" className="rounded-2xl">
-            <a
-              href={APARTMENT_INFO.googleMapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => { if (!isPublic) trackActivity(pass, 'maps_open'); }}
-              className="flex items-center gap-2.5 p-3 rounded-2xl bg-zinc-900/80 border border-white/10 hover:bg-zinc-800 hover:border-white/20 active:scale-95 transition-all cursor-pointer text-left"
-            >
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                <EditableIcon id="home.action-location-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                <MapPin className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-semibold text-white tracking-tight truncate">{t.tiles.posizione}</span>
-            </a>
-            </EditableElement>
-
-            {/* Emergenze (Row 3, Col 2 - RED) */}
-            <EditableElement id="home.action-emergency" label="Card Emergenza" className="rounded-2xl">
-            <button 
-              onClick={() => { onNavigate('emergenza'); if (!isPublic) trackActivity(pass, 'button_click', '[QuickAction] Emergenze'); }}
-              className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 hover:bg-rose-900/25 hover:border-rose-400 active:scale-95 transition-all cursor-pointer text-left"
-            >
-              <div className="w-7 h-7 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-400 shrink-0 animate-pulse">
-                <EditableIcon id="home.action-emergency-icon" className="w-7 h-7" imageClassName="w-4 h-4 object-contain">
-                  <ShieldAlert className="w-4 h-4" />
-                </EditableIcon>
-              </div>
-              <span className="text-xs font-bold text-rose-300 tracking-tight truncate">
-                {t.tiles.emergenza || (language === 'it' ? 'Emergenza' : 'Emergency')}
-              </span>
-            </button>
-            </EditableElement>
-          </div>
-        </section>
-
+        {/* Area 3: tile e informazioni utili; resta visibile anche prima del check-in */}
         {/* Photo Carousel temporarily hidden; keep component for easy reactivation. */}
 
 
 
-        {/* 4. Sezioni di Contenuto & Card Carousel */}
+        {/* Informazioni utili: casa, attività, ristoranti, spesa e servizi */}
         {/* SECTION 1: Guida Casa */}
-        <section className="space-y-3">
+        <section id="guest-guide-tiles" className="space-y-3">
           <EditableElement id="home.section-house" label="Titolo Guida Casa" className="rounded-lg">
             <h2 className="text-lg font-bold text-white tracking-tight">
               {guideSections.houseEssentials.title}
@@ -1236,17 +1058,6 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 5: Partenza & Check-out */}
-        <section className="space-y-3">
-          <EditableElement id="home.section-departure" label="Titolo Partenza" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.departure.title}
-            </h2>
-          </EditableElement>
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.departure.items.map(renderPhotoCard)}
-          </ScrollableTileRow>
-        </section>
 
       </main>
 
@@ -1280,8 +1091,64 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         </>
       )}
 
+      {/* Scheda dettagli ospite, dati documento e checklist check-out */}
+      {(sheet === 'guest' || sheet === 'checkout') && pass && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <section className="aurora-sheet max-h-[85vh] overflow-y-auto" onClick={event => event.stopPropagation()}>
+            <button className="sheet-close" onClick={() => setSheet(null)} aria-label={t.concierge.close}><X className="h-4 w-4" /></button>
+            {sheet === 'guest' && (
+              <>
+                <p className="aurora-eyebrow">{language === 'it' ? 'Dati ospiti' : 'Guest details'}</p>
+                {stayGuests.length > 1 && (
+                  <div className="my-3 flex flex-wrap gap-2">
+                    {stayGuests.map((guest, index) => (
+                      <button key={`${guest.name}-${index}`} type="button" onClick={() => setSelectedGuestIndex(index)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${selectedGuestIndex === index ? 'border-emerald-400 bg-emerald-400/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-300'}`}>
+                        {guest.name} {guest.surname}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <h2>{selectedGuest ? `${selectedGuest.name} ${selectedGuest.surname}` : `${pass.guestName} ${pass.guestSurname}`}</h2>
+                {selectedGuest?.profileImage && <img src={selectedGuest.profileImage} alt="Ritaglio profilo ospite" className="my-4 h-20 w-20 rounded-full border border-emerald-300/40 object-cover" />}
+                {selectedGuest ? (
+                  <div className="sheet-list mt-4">
+                    <span>{language === 'it' ? 'Numero ospiti' : 'Guests'} <b>{pass.guestsCount || stayGuests.length}</b></span>
+                    <span>{language === 'it' ? 'Data di nascita' : 'Date of birth'} <b>{selectedGuest.birthDate || '—'}</b></span>
+                    <span>{language === 'it' ? 'Luogo di nascita' : 'Place of birth'} <b>{selectedGuest.birthPlace || '—'}</b></span>
+                    <span>{language === 'it' ? 'Cittadinanza' : 'Citizenship'} <b>{selectedGuest.citizenship || selectedGuest.nationality || '—'}</b></span>
+                    <span>{language === 'it' ? 'Tipo documento' : 'Document type'} <b>{selectedGuest.documentType || '—'}</b></span>
+                    <span>{language === 'it' ? 'Numero documento' : 'Document number'} <b>{selectedGuest.documentNumber || '—'}</b></span>
+                    <span>{language === 'it' ? 'Ente di rilascio' : 'Issuing authority'} <b>{selectedGuest.issuePlace || '—'}</b></span>
+                    <span>{language === 'it' ? 'Scadenza' : 'Expiry date'} <b>{selectedGuest.expiryDate || '—'}</b></span>
+                  </div>
+                ) : <p className="mt-3 text-sm text-zinc-400">{language === 'it' ? 'I dati del documento non sono disponibili.' : 'Document details are not available.'}</p>}
+              </>
+            )}
+            {sheet === 'checkout' && (
+              <>
+                <p className="aurora-eyebrow">{language === 'it' ? 'Prima di partire' : 'Before you leave'}</p>
+                <h2>{language === 'it' ? 'Checklist check-out' : 'Check-out checklist'} <span role="img" aria-label="umore checklist">{checkoutMood}</span></h2>
+                <p className="mt-1 text-xs text-zinc-400">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate' : 'tasks complete'}</p>
+                <div className="mt-4 space-y-2">
+                  {checkoutList.map((item, index) => {
+                    const done = Boolean(checkoutItems[String(index)]);
+                    return (
+                      <button key={`${item.title}-${index}`} type="button" onClick={() => toggleCheckoutItem(index)} className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left ${done ? 'border-emerald-400/35 bg-emerald-500/10' : 'border-white/10 bg-white/[0.03]'}`}>
+                        {done ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" /> : <Square className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />}
+                        <span><strong className={`block text-xs ${done ? 'text-zinc-400 line-through' : 'text-white'}`}>{item.title}</strong><span className="mt-1 block text-[11px] leading-relaxed text-zinc-400">{item.desc}</span></span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-4 text-center text-3xl" role="img" aria-label="Progresso">{checkoutMood}</p>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+
       {/* Bottom Sheets (Wi-Fi, Schedule, Luggage) */}
-      {sheet && (
+      {sheet && sheet !== 'guest' && sheet !== 'checkout' && (
         <div className="sheet-backdrop" onClick={() => setSheet(null)}>
           <section className="aurora-sheet" onClick={(event) => event.stopPropagation()}>
             <button className="sheet-close" onClick={() => setSheet(null)} aria-label={t.concierge.close}>

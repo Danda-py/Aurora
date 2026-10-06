@@ -359,7 +359,7 @@
         </button>
       </div>
 
-      <!-- Card 3: Autonomous Email Sincronizzazione -->
+      <!-- Card 3: Prenotazioni Autonome (webhook iReservation) -->
       <div class="apple-card p-4 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 border border-[#0071e3]/20 text-[#0071e3] flex items-center justify-center shrink-0">
@@ -367,11 +367,11 @@
           </div>
           <div class="min-w-0">
             <span class="text-[10px] uppercase font-semibold text-[#86868b] tracking-wider block">Bed-and-Breakfast.it</span>
-            <span class="text-xs font-semibold text-white block truncate">Sincronizzazione Email</span>
-            <span id="emailOverviewStatus" class="text-[11px] text-[#86868b] block truncate font-mono">● Pronto</span>
+            <span class="text-xs font-semibold text-white block truncate">Prenotazioni Autonome</span>
+            <span class="text-[11px] text-[#86868b] block truncate font-mono">● Webhook iReservation attivo</span>
           </div>
         </div>
-        <button id="btnOpenIcalModal" type="button" onclick="document.querySelector('[data-tab=ical]').click()" class="btn-apple-secondary px-3 py-1.5 text-xs font-medium shrink-0 cursor-pointer">
+        <button id="btnOpenIcalModal" type="button" onclick="document.querySelector('[data-tab=channels]').click()" class="btn-apple-secondary px-3 py-1.5 text-xs font-medium shrink-0 cursor-pointer">
           Gestisci
         </button>
       </div>
@@ -744,101 +744,6 @@
         </div>
       </div>
 
-      <!-- Collapsible Section: IMAP Email Scraper & Logs -->
-      <div class="apple-card p-5 space-y-4">
-        <div class="flex items-center justify-between cursor-pointer" id="toggleEmailSection">
-          <div class="flex items-center gap-2">
-            <i data-lucide="mail" class="w-4 h-4 text-[#86868b]"></i>
-            <h4 class="text-xs font-semibold text-white tracking-tight">Integrazione Email IMAP (Bed-and-Breakfast.it) & Log</h4>
-          </div>
-          <button type="button" class="text-[#86868b] hover:text-white text-xs flex items-center gap-1">
-            <span id="toggleEmailSectionLabel">Mostra</span>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform" id="toggleEmailChevron"></i>
-          </button>
-        </div>
-
-        <div id="emailSectionContent" class="hidden space-y-4 pt-2 border-t border-white/[0.06]">
-          <form id="formEmailConfig" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="md:col-span-2">
-                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Server IMAP Host</label>
-                <input type="text" id="inputImapHost" placeholder="Es. imap.gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Porta IMAP</label>
-                <input type="number" id="inputImapPort" placeholder="993" value="993" class="w-full text-xs p-3 rounded-xl font-mono" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Email / Utente IMAP</label>
-                <input type="email" id="inputImapUser" placeholder="Es. nome@gmail.com" class="w-full text-xs p-3 rounded-xl font-mono" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Password / Password App</label>
-                <input type="password" id="inputImapPass" placeholder="••••••••" class="w-full text-xs p-3 rounded-xl font-mono" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[#86868b] mb-1.5">Intervallo Polling (minuti)</label>
-                <input type="number" min="1" max="1440" id="inputImapInterval" value="2" class="w-full text-xs p-3 rounded-xl" />
-              </div>
-              <div class="md:col-span-3">
-                <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
-                  <input type="checkbox" id="checkboxImapSecure" checked class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
-                  <div class="text-xs">
-                    <span class="font-semibold text-white block">Connessione Sicura SSL/TLS (Consigliato)</span>
-                    <span class="text-[#86868b]">Usa crittografia SSL/TLS sicura per la porta IMAP (porta 993).</span>
-                  </div>
-                </label>
-              </div>
-              <div class="md:col-span-3">
-                <label class="flex items-center gap-3 cursor-pointer p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition">
-                  <input type="checkbox" id="checkboxImapEnabled" class="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30" />
-                  <div class="text-xs">
-                    <span class="font-semibold text-white block">Abilita Polling in Background</span>
-                    <span class="text-[#86868b]">Controlla la casella di posta per importare automaticamente le prenotazioni ricevute via email.</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-              <button type="button" id="btnForceEmailSync" class="btn-apple-secondary w-full sm:w-auto px-4 py-2.5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer">
-                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                <span>Sincronizza Email Ora</span>
-              </button>
-              <button type="submit" class="btn-apple-primary w-full sm:w-auto px-5 py-2.5 text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
-                <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                <span>Salva Configurazione Email</span>
-              </button>
-            </div>
-          </form>
-
-          <div id="emailFeedbackBox" class="hidden p-3.5 rounded-xl text-xs font-mono"></div>
-
-          <!-- Log Attività -->
-          <div class="pt-3 border-t border-white/[0.06]">
-            <div class="flex items-center justify-between mb-2">
-              <h5 class="text-xs font-semibold text-white">Log Attività Email</h5>
-              <button type="button" id="btnRefreshEmailLogs" class="p-1 rounded hover:bg-white/[0.08] text-[#86868b] hover:text-white" title="Ricarica Log">
-                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-[11px] text-left border-collapse">
-                <thead>
-                  <tr class="border-b border-white/[0.08] text-[#86868b]">
-                    <th class="py-2 font-medium w-[130px]">Data e Ora</th>
-                    <th class="py-2 font-medium w-[90px]">Stato</th>
-                    <th class="py-2 font-medium">Mittente / Dettaglio</th>
-                  </tr>
-                </thead>
-                <tbody id="emailLogsTableBody" class="divide-y divide-white/[0.04]">
-                  <tr><td colspan="3" class="py-4 text-center text-[#86868b]">Caricamento log...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- ============================================================ -->
@@ -1167,7 +1072,7 @@
 
             <div class="sm:col-span-2">
               <label class="block text-xs font-medium text-[#86868b] mb-1.5">Long-Lived Access Token (Token di lunga durata da HA)</label>
-              <input type="password" id="inputHassToken" placeholder="•••••••••••••••• (Crea in Home Assistant ➔ Profilo ➔ Token di lunga durata)" class="w-full text-xs p-3 rounded-xl font-mono" />
+              <input type="password" id="inputHassToken" autocomplete="off" placeholder="•••••••••••••••• (Crea in Home Assistant ➔ Profilo ➔ Token di lunga durata)" class="w-full text-xs p-3 rounded-xl font-mono" />
             </div>
           </div>
         </div>

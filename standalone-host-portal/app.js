@@ -392,8 +392,6 @@ function setupTabs() {
       fetchPasses();
     } else if (targetTab === 'channels' || targetTab === 'ical') {
       fetchChannels();
-      fetchEmailConfig();
-      fetchEmailLogs();
     } else if (targetTab === 'property') {
       fetchPropertyConfig();
     } else if (targetTab === 'hass') {
@@ -455,8 +453,7 @@ async function checkHealthAndBootstrap() {
       // Bootstrap initial lists in background
       Promise.all([
         fetchPasses(),
-        fetchSonoffConfig(),
-        fetchEmailConfig()
+        fetchSonoffConfig()
         // loadCmsData() - removed CMS functionality
       ]).catch(console.warn);
     } else {
@@ -574,24 +571,6 @@ function setupEventListeners() {
         showToast('Lista pass aggiornata', 'success');
       }, 400);
     });
-  }
-
-  // Email Config Form Submit
-  const formEmailConfig = document.getElementById('formEmailConfig');
-  if (formEmailConfig) {
-    formEmailConfig.addEventListener('submit', handleSaveEmailConfig);
-  }
-
-  // Email Force Sync Button
-  const btnForceEmailSync = document.getElementById('btnForceEmailSync');
-  if (btnForceEmailSync) {
-    btnForceEmailSync.addEventListener('click', handleForceEmailSync);
-  }
-
-  // Refresh Email Logs Button
-  const btnRefreshEmailLogs = document.getElementById('btnRefreshEmailLogs');
-  if (btnRefreshEmailLogs) {
-    btnRefreshEmailLogs.addEventListener('click', fetchEmailLogs);
   }
 
   // Home Assistant Trigger Buttons
@@ -734,27 +713,6 @@ function setupEventListeners() {
     inputSearchReservations.addEventListener('input', (e) => {
       currentSearchFilter = e.target.value;
       renderAutonomousReservations();
-    });
-  }
-
-  // Accordion for IMAP Email Section in Channels Tab
-  const toggleEmailSection = document.getElementById('toggleEmailSection');
-  const emailSectionContent = document.getElementById('emailSectionContent');
-  const toggleEmailSectionLabel = document.getElementById('toggleEmailSectionLabel');
-  const toggleEmailChevron = document.getElementById('toggleEmailChevron');
-
-  if (toggleEmailSection && emailSectionContent) {
-    toggleEmailSection.addEventListener('click', () => {
-      const isHidden = emailSectionContent.classList.contains('hidden');
-      if (isHidden) {
-        emailSectionContent.classList.remove('hidden');
-        if (toggleEmailSectionLabel) toggleEmailSectionLabel.textContent = 'Nascondi';
-        if (toggleEmailChevron) toggleEmailChevron.style.transform = 'rotate(180deg)';
-      } else {
-        emailSectionContent.classList.add('hidden');
-        if (toggleEmailSectionLabel) toggleEmailSectionLabel.textContent = 'Mostra';
-        if (toggleEmailChevron) toggleEmailChevron.style.transform = 'rotate(0deg)';
-      }
     });
   }
 
@@ -2200,196 +2158,6 @@ function handleDetectCurrentGps() {
 window.handleToggleChannel = handleToggleChannel;
 window.handleDeleteChannel = handleDeleteChannel;
 
-// ============================================================
-// EMAIL SYNCHRONIZATION & IMAP CONFIG
-// ============================================================
-async function fetchEmailConfig() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/email/config`);
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.success && data.config) {
-      const cfg = data.config;
-      const inputImapHost = document.getElementById('inputImapHost');
-      const inputImapPort = document.getElementById('inputImapPort');
-      const inputImapUser = document.getElementById('inputImapUser');
-      const inputImapPass = document.getElementById('inputImapPass');
-      const inputImapInterval = document.getElementById('inputImapInterval');
-      const checkboxImapSecure = document.getElementById('checkboxImapSecure');
-      const checkboxImapEnabled = document.getElementById('checkboxImapEnabled');
-      
-      const emailOverviewStatus = document.getElementById('emailOverviewStatus');
-      const emailStatusBadge = document.getElementById('emailStatusBadge');
-
-      if (inputImapHost && cfg.host) inputImapHost.value = cfg.host;
-      if (inputImapPort && cfg.port) inputImapPort.value = cfg.port;
-      if (inputImapUser && cfg.user) inputImapUser.value = cfg.user;
-      if (inputImapPass && cfg.pass) inputImapPass.value = cfg.pass;
-      if (inputImapInterval && cfg.intervalMs) inputImapInterval.value = Math.round(cfg.intervalMs / 60000);
-      if (checkboxImapSecure) checkboxImapSecure.checked = Boolean(cfg.secure);
-      if (checkboxImapEnabled) checkboxImapEnabled.checked = Boolean(cfg.enabled);
-
-      if (emailOverviewStatus) {
-        emailOverviewStatus.textContent = cfg.enabled ? '● Sincronizzazione Attiva' : '● In Attesa';
-        emailOverviewStatus.className = cfg.enabled ? 'text-[11px] text-[#30d158] block truncate font-mono' : 'text-[11px] text-[#86868b] block truncate font-mono';
-      }
-      if (emailStatusBadge) {
-        emailStatusBadge.textContent = cfg.enabled ? 'Sincronizzazione Attiva' : 'Configurazione Pronta';
-        emailStatusBadge.className = cfg.enabled 
-          ? 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/25'
-          : 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-mono bg-white/5 text-[#86868b] border border-white/10';
-      }
-    }
-  } catch (err) {
-    console.warn('Email config fetch notice:', err);
-  }
-}
-
-async function handleSaveEmailConfig(e) {
-  if (e) e.preventDefault();
-
-  const host = document.getElementById('inputImapHost')?.value.trim();
-  const port = parseInt(document.getElementById('inputImapPort')?.value || '993', 10);
-  const user = document.getElementById('inputImapUser')?.value.trim();
-  const pass = document.getElementById('inputImapPass')?.value;
-  const intervalMins = parseInt(document.getElementById('inputImapInterval')?.value || '2', 10);
-  const secure = document.getElementById('checkboxImapSecure')?.checked || false;
-  const enabled = document.getElementById('checkboxImapEnabled')?.checked || false;
-
-  showToast('Salvataggio configurazione email...', 'loading');
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/email/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        host,
-        port,
-        user,
-        pass,
-        intervalMs: intervalMins * 60 * 1000,
-        secure,
-        enabled
-      })
-    });
-
-    if (res.ok) {
-      showToast('Configurazione Email (IMAP) salvata con successo!', 'success');
-      fetchEmailConfig();
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (err) {
-    showToast(`Errore: ${err.message}`, 'error');
-  }
-}
-
-async function handleForceEmailSync() {
-  const btn = document.getElementById('btnForceEmailSync');
-  const feedback = document.getElementById('emailFeedbackBox');
-  
-  showToast('Sincronizzazione email in corso...', 'loading');
-  if (btn) btn.disabled = true;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/email/sync-now`, { method: 'POST' });
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      showToast('Sincronizzazione completata con successo!', 'success');
-      if (feedback) {
-        feedback.className = 'p-3.5 rounded-xl text-xs font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 block';
-        feedback.textContent = `${data.message} (Totale pass attivi: ${data.totalPasses || activePasses.length})`;
-      }
-      fetchPasses();
-      fetchEmailLogs();
-    } else {
-      throw new Error(data.error || 'Errore durante la sincronizzazione');
-    }
-  } catch (err) {
-    showToast(`Errore sincronizzazione: ${err.message}`, 'error');
-    if (feedback) {
-      feedback.className = 'p-3.5 rounded-xl text-xs font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20 block';
-      feedback.textContent = `Errore: ${err.message}`;
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-async function fetchEmailLogs() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/email/logs`);
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.success && Array.isArray(data.logs)) {
-      const tbody = document.getElementById('emailLogsTableBody');
-      if (!tbody) return;
-      
-      if (data.logs.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="py-8 text-center text-[#86868b]">Nessun log registrato nel sistema. Invia una mail di prova dal provider per testare l'integrazione.</td>
-          </tr>
-        `;
-        return;
-      }
-      
-      tbody.innerHTML = data.logs.map(log => {
-        const date = new Date(log.timestamp).toLocaleString('it-IT', { hour12: false });
-        let statusBadge = '';
-        if (log.status === 'success') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20">Successo</span>';
-        } else if (log.status === 'warning') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#ff9f0a]/10 text-[#ff9f0a] border border-[#ff9f0a]/20">Avviso</span>';
-        } else if (log.status === 'error') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#ff453a]/10 text-[#ff453a] border border-[#ff453a]/20">Errore</span>';
-        } else {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#86868b]/10 text-[#86868b] border border-[#86868b]/20">Ignorato</span>';
-        }
-        
-        const detailsJson = log.details ? JSON.stringify(log.details, null, 2).replace(/"/g, '&quot;') : '';
-        const detailsButton = log.details 
-          ? `<button class="p-1 text-[#0071e3] hover:text-[#0077ed] transition" onclick="toggleLogDetails('${log.id}')" title="Vedi dati grezzi"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>`
-          : '-';
-          
-        return `
-          <tr class="hover:bg-white/[0.02] transition font-sans">
-            <td class="py-3 font-mono text-[#86868b]">${date}</td>
-            <td class="py-3">${statusBadge}</td>
-            <td class="py-3 font-medium text-white truncate max-w-[220px]" title="${log.sender}\n${log.subject}">
-              <div class="truncate text-[11px] text-[#86868b] font-mono">${log.sender}</div>
-              <div class="truncate text-[10px] text-white">${log.subject}</div>
-            </td>
-            <td class="py-3 text-white pr-2 font-sans">${log.message}</td>
-            <td class="py-3 text-right">${detailsButton}</td>
-          </tr>
-          ${log.details ? `
-          <tr id="details-${log.id}" class="hidden bg-black/20">
-            <td colspan="5" class="p-4">
-              <pre class="text-[10px] text-[#86868b] font-mono bg-white/[0.02] p-3 rounded-xl overflow-x-auto border border-white/5 max-w-full whitespace-pre-wrap text-left">${detailsJson}</pre>
-            </td>
-          </tr>
-          ` : ''}
-        `;
-      }).join('');
-      
-      renderIcons();
-    }
-  } catch (err) {
-    console.error('Errore recupero log email:', err);
-  }
-}
-
-// Global helper to toggle logs collapse
-window.toggleLogDetails = function(logId) {
-  const row = document.getElementById(`details-${logId}`);
-  if (row) {
-    row.classList.toggle('hidden');
-  }
-};
-
-// ============================================================
 // HOME ASSISTANT INTEGRATION
 // ============================================================
 async function fetchSonoffConfig() {

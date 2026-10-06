@@ -722,9 +722,14 @@ export function createApp() {
         return;
       }
 
-      // Aggiorna i dati del pass
+      // Conserva solo il ritaglio profilo: elimina qualunque immagine integrale
+      // inviata per errore dal client prima di salvare i dati identificativi.
+      const sanitizedDocuments = documentsData.map((document: NonNullable<GuestPass['documentsData']>[number]) => {
+        const { documentImage: _documentImage, imageData: _imageData, ...safeDocument } = document as typeof document & { documentImage?: string; imageData?: string };
+        return safeDocument;
+      });
       pass.documentsUploaded = true;
-      pass.documentsData = documentsData;
+      pass.documentsData = sanitizedDocuments;
 
       // Persisti i cambiamenti localmente e su Supabase
       persistPasses();
@@ -744,7 +749,13 @@ export function createApp() {
 
   apiRouter.post('/guest/ocr-scan', async (req, res) => {
     try {
-      const { dataUrl, docType } = req.body;
+      const { dataUrl, docType, token, guestToken } = req.body;
+      const submittedToken = req.get('x-guest-token') || guestToken || token;
+      const hostSession = getHostSession(req);
+      if (!hostSession && !findPassByToken(submittedToken)) {
+        res.status(401).json({ success: false, error: 'Link guest non valido.' });
+        return;
+      }
       if (!dataUrl) {
         res.status(400).json({ success: false, error: 'Dati immagine mancanti.' });
         return;

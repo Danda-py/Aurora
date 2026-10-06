@@ -145,6 +145,31 @@ export const VideoWelcomeBook: React.FC<Props> = ({
     });
   }, []);
 
+  // Aggiorna in modo leggero lo stato host del check-in dopo l'invio dei documenti.
+  // L'ospite vede il banner verde e le azioni appena la conferma viene registrata.
+  useEffect(() => {
+    if (isEditMode || !pass?.documentsUploaded || pass.checkInConfirmed) return;
+    let cancelled = false;
+    const refreshPass = async () => {
+      try {
+        const response = await fetch(`/api/guest/pass?token=${encodeURIComponent(pass.token)}`, { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success && data.pass && !cancelled) {
+          setPass(data.pass as GuestPass);
+          localStorage.setItem('aurora_current_vip_pass_v1', JSON.stringify(data.pass));
+        }
+      } catch {
+        // Il prossimo intervallo riproverà; non interrompere la guida ospite.
+      }
+    };
+    const interval = window.setInterval(refreshPass, 10_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [pass?.id, pass?.token, pass?.documentsUploaded, pass?.checkInConfirmed, isEditMode]);
+
   // Intercept the browser/gesture back action so it navigates within the app
   // instead of leaving the site.
   useEffect(() => {
