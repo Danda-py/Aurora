@@ -140,7 +140,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
           tag: isIt ? 'Priorità Arrivo' : isEn ? 'Arrival Priority' : isDe ? 'Anreise-Info' : isFr ? 'Priorité Arrivée' : 'Prioridad Llegada',
           desc: isIt ? 'Indirizzo esatto, navigatore GPS, parcheggio e treni' : isEn ? 'Exact address, GPS navigation, parking & trains' : isDe ? 'Genaue Adresse, GPS, Parkplatz & Züge' : isFr ? 'Adresse exacte, GPS, parking et trains' : 'Dirección exacta, GPS, parking y trenes',
           icon: <MapPin className="h-5 w-5" />,
-          bgImage: media?.locationCover || '/uploads/location.jpg'
+          bgImage: '/uploads/map.jpg'
         },
         {
           page: 'check_in',
@@ -1136,8 +1136,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </div>
         </section>
 
-        {/* Photo Carousel (Moved below quick actions) */}
-        <PhotoCarousel media={media} language={language} />
+        {/* Photo Carousel temporarily hidden; keep component for easy reactivation. */}
 
 
 
