@@ -139,7 +139,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
 
   return {
     houseEssentials: {
-      title: isIt ? 'Guida & Arrivo' : isEn ? 'Arrival & Home Guide' : isDe ? 'Anreise & Hausführer' : isFr ? 'Arrivée & Guide' : 'Llegada y Guía',
+      title: isIt ? 'Servizi & Comfort' : isEn ? 'Home & Comfort' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Services & confort' : 'Servicios y comodidad',
       subtitle: isIt ? 'Tutto per iniziare il soggiorno' : isEn ? 'Everything to start your stay' : isDe ? 'Alles für den Start' : isFr ? 'Tout pour commencer' : 'Todo para comenzar',
       items: [
         {
@@ -971,7 +971,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             </h2>
           </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.houseEssentials.items.map(renderPhotoCard)}
+            {guideSections.houseEssentials.items
+              .filter(item => !['posizione', 'check_in', 'regole'].includes(item.page))
+              .map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 
