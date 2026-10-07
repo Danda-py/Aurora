@@ -90,6 +90,7 @@ const MEDIA_CATALOG = [
   { key: 'view', title: 'Vista Panorama & Montagne', desc: 'Vista panoramica sul monte Disgrazia, nel carosello e nelle card.', aspectRatio: '16:9', section: 'carousel' },
   { key: 'locationCover', title: 'Copertina Come Arrivare & Mappa', desc: 'Foto per orientamento, GPS e arrivo a Morbegno.', aspectRatio: '16:9', section: 'covers' },
   { key: 'checkInCover', title: 'Copertina Check-in & Smart Lock', desc: 'Foto per la procedura di accesso e chiave smart.', aspectRatio: '16:9', section: 'covers' },
+  { key: 'parkingCover', title: 'Foto parcheggio', desc: 'Carica nel CMS una foto del posto auto preciso.', aspectRatio: '16:9', section: 'covers' },
   { key: 'servicesCover', title: 'Copertina Servizi Casa & Comfort', desc: 'Dotazioni, riscaldamento ed elettrodomestici.', aspectRatio: '16:9', section: 'covers' },
   { key: 'rulesCover', title: 'Copertina Regole della Casa', desc: 'Orari di quiete e norme di rispetto del condominio.', aspectRatio: '16:9', section: 'covers' },
   { key: 'restaurantsCover', title: 'Copertina Crotti & Ristoranti', desc: 'Scheda enogastronomia tipica e pizzoccheri.', aspectRatio: '16:9', section: 'covers' },

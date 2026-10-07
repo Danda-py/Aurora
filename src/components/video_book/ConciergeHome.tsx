@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight,
   BookOpen,
@@ -67,6 +67,7 @@ const languages: { id: Language; label: string }[] = [
 
 interface GuideTileItem {
   page: WelcomePage;
+  id?: string;
   label: string;
   tag: string;
   desc: string;
@@ -106,7 +107,7 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4"
+        className="flex items-stretch gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4"
         onScroll={updateScrollState}
       >
         <div className="w-4 self-stretch shrink-0" />
@@ -139,7 +140,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
 
   return {
     houseEssentials: {
-      title: isIt ? 'Servizi & Comfort' : isEn ? 'Home & Comfort' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Services & confort' : 'Servicios y comodidad',
+      title: isIt ? 'Guida Casa' : isEn ? 'Home Guide' : isDe ? 'Hausführer' : isFr ? 'Guide de la maison' : 'Guía de la casa',
       subtitle: isIt ? 'Tutto per iniziare il soggiorno' : isEn ? 'Everything to start your stay' : isDe ? 'Alles für den Start' : isFr ? 'Tout pour commencer' : 'Todo para comenzar',
       items: [
         {
@@ -176,11 +177,20 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
         },
         {
           page: 'servizi',
-          label: isIt ? 'Servizi casa & Comfort' : isEn ? 'Home Amenities' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Équipements maison' : 'Servicios de la casa',
+          label: isIt ? 'Servizi & Comfort' : isEn ? 'Home & Comfort' : isDe ? 'Ausstattung & Komfort' : isFr ? 'Équipements maison' : 'Servicios de la casa',
           tag: isIt ? 'Dotazioni' : isEn ? 'Amenities' : isDe ? 'Ausstattung' : isFr ? 'Équipements' : 'Equipamiento',
           desc: isIt ? 'Riscaldamento, elettrodomestici, cucina e comfort' : isEn ? 'Heating, appliances, kitchen and comforts' : isDe ? 'Heizung, Geräte, Küche & Komfort' : isFr ? 'Chauffage, appareils, cuisine et confort' : 'Calefacción, electrodomésticos y cocina',
           icon: <Wrench className="h-5 w-5" />,
-          bgImage: media?.servicesCover || '/uploads/services.jpg'
+          bgImage: media?.kitchen || '/uploads/kitchen.jpg'
+        },
+        {
+          page: 'posizione',
+          id: 'parcheggio',
+          label: isIt ? 'Parcheggio privato' : isEn ? 'Private parking' : isDe ? 'Privatparkplatz' : isFr ? 'Parking privé' : 'Aparcamiento privado',
+          tag: isIt ? 'Posto riservato' : isEn ? 'Reserved space' : isDe ? 'Reservierter Stellplatz' : isFr ? 'Place réservée' : 'Plaza reservada',
+          desc: isIt ? 'Carica nel CMS la foto esatta del posto auto' : isEn ? 'Upload a photo of the exact parking space in the CMS' : isDe ? 'Laden Sie im CMS ein Foto des genauen Stellplatzes hoch' : isFr ? 'Ajoutez dans le CMS une photo précise de la place' : 'Sube en el CMS una foto exacta de la plaza de aparcamiento',
+          icon: <MapPin className="h-5 w-5" />,
+          bgImage: media?.parkingCover || '/uploads/location.jpg'
         },
         {
           page: 'regole',
@@ -193,7 +203,7 @@ const getLocalizedGuideSections = (lang: Language, media?: Record<string, string
       ]
     },
     exploreValtellina: {
-      title: isIt ? 'Vivere la Valtellina' : isEn ? 'Explore Valtellina' : isDe ? 'Valtellina erleben' : isFr ? 'Explorer la Valteline' : 'Vivir la Valtelina',
+      title: isIt ? 'Informazioni utili' : isEn ? 'Useful information' : isDe ? 'Nützliche Informationen' : isFr ? 'Informations utiles' : 'Información útil',
       subtitle: isIt ? 'Gusto, tradizioni e trasporti locali' : isEn ? 'Taste, traditions and local transport' : isDe ? 'Genuss, Tradition & Mobilität' : isFr ? 'Saveurs, traditions et transports' : 'Sabores, tradiciones y transporte',
       items: [
         {
@@ -348,15 +358,16 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
   const images = carouselKeys
     .map(key => {
       const url = media[key];
-      if (!url) return null;
+      if (!url || !url.startsWith('/uploads/')) return null;
 
       const titles = mediaTitles[key] || { it: 'Foto Carosello Extra', en: 'Extra Carousel Photo' };
       return {
+        key,
         url,
         title: language === 'it' ? titles.it : titles.en
       };
     })
-    .filter((img): img is { url: string; title: string } => img !== null && Boolean(img.url));
+    .filter((img): img is { key: string; url: string; title: string } => img !== null && Boolean(img.url));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -515,7 +526,7 @@ const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, la
             key={idx}
             className="w-full h-full snap-start shrink-0 relative"
           >
-            <CarouselSlideImage slideKey={carouselKeys[idx - (images.length > 1 ? 1 : 0)] ?? `slide-${idx}`} fallback={img.url} alt={img.title} />
+            <CarouselSlideImage slideKey={img.key} fallback={img.url} alt={img.title} />
             {/* Dark vignette to overlay title */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 right-4 z-20 text-left">
@@ -582,9 +593,17 @@ const cardTranslations: Record<Language, { cardLabel: string; holder: string; bo
 };
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock, isEditMode = false }) => {
-  const media = DEFAULT_MEDIA_MAP;
-  // Override immagini CMS (es. foto delle storie locali sostituite dall'host).
   const { images: cmsImages } = useEditMode();
+  const media = useMemo(() => {
+    const overrides: Record<string, string> = {};
+    for (const [key, savedValue] of Object.entries(cmsImages)) {
+      const mediaKey = key.startsWith('home.media-') ? key.slice('home.media-'.length) : key;
+      if (mediaKey in DEFAULT_MEDIA_MAP && typeof savedValue === 'string') {
+        overrides[mediaKey] = savedValue;
+      }
+    }
+    return { ...DEFAULT_MEDIA_MAP, ...overrides };
+  }, [cmsImages]);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [selectedGuestIndex, setSelectedGuestIndex] = useState(0);
@@ -821,27 +840,30 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     };
   }, [sheet]);
 
-  const renderPhotoCard = (item: GuideTileItem) => (
-    <EditableElement key={item.page} id={`home.tile-${item.page}`} label={item.label} className="rounded-3xl shrink-0 snap-start">
-    <button
-      onClick={() => onNavigate(item.page)}
-      className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
-      aria-label={item.label}
-    >
-      <TileImage page={item.page} fallback={item.bgImage} alt={item.label} />
-      {/* Dark gradient for text readability without obscuring photo */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
-        <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
-          {item.label}
-        </strong>
-        <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
-          {item.desc}
-        </p>
-      </div>
-    </button>
-    </EditableElement>
-  );
+  const renderPhotoCard = (item: GuideTileItem) => {
+    const tileId = item.id || item.page;
+    return (
+      <EditableElement
+        key={tileId}
+        id={`home.tile-${tileId}`}
+        label={tileId === 'parcheggio' ? 'Foto parcheggio · carica/sostituisci dal CMS' : item.label}
+        className="w-[240px] sm:w-[270px] flex-none rounded-3xl snap-start"
+      >
+        <button
+          onClick={() => onNavigate(item.page)}
+          className="relative w-[240px] sm:w-[270px] flex-none aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
+          aria-label={item.label}
+        >
+          <TileImage page={tileId} fallback={item.bgImage} alt={item.label} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
+            <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">{item.label}</strong>
+            <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">{item.desc}</p>
+          </div>
+        </button>
+      </EditableElement>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-black text-white selection:bg-emerald-500/25 selection:text-emerald-200">
@@ -957,25 +979,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </section>
         )}
 
-        {/* Area 3: tile e informazioni utili; resta visibile anche prima del check-in */}
-        {/* Photo Carousel temporarily hidden; keep component for easy reactivation. */}
-
-
-
-        {/* Informazioni utili: casa, attività, ristoranti, spesa e servizi */}
-        {/* SECTION 1: Guida Casa */}
-        <section id="guest-guide-tiles" className="space-y-3">
-          <EditableElement id="home.section-house" label="Titolo Guida Casa" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.houseEssentials.title}
-            </h2>
-          </EditableElement>
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.houseEssentials.items
-              .filter(item => !['posizione', 'check_in', 'regole'].includes(item.page))
-              .map(renderPhotoCard)}
-          </ScrollableTileRow>
-        </section>
+        {/* Carosello della casa: solo foto locali della proprietà. */}
+        <PhotoCarousel media={media} language={language} />
 
         {/* SECTION 2: Idee per oggi */}
         <section className="space-y-3">
@@ -1036,15 +1041,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </ScrollableTileRow>
         </section>
 
-        {/* SECTION 3: Esplora Valtellina */}
-        <section className="space-y-3">
-          <EditableElement id="home.section-explore" label="Titolo Esplora" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.exploreValtellina.title}
-            </h2>
+        {/* Servizi, parcheggio e territorio allineati nella stessa riga. */}
+        <section id="guest-guide-tiles" className="space-y-3">
+          <EditableElement id="home.section-explore" label="Titolo Informazioni utili" className="rounded-lg">
+            <h2 className="text-lg font-bold text-white tracking-tight">{guideSections.exploreValtellina.title}</h2>
           </EditableElement>
           <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.exploreValtellina.items.map(renderPhotoCard)}
+            {[
+              ...guideSections.houseEssentials.items.filter(item => item.page === 'servizi' || item.id === 'parcheggio'),
+              ...guideSections.exploreValtellina.items,
+            ].map(renderPhotoCard)}
           </ScrollableTileRow>
         </section>
 
@@ -1226,7 +1232,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 /** Immagine di un tile con override CMS (upload host) e overlay di sostituzione. */
 const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ page, fallback, alt }) => {
   const { images } = useEditMode();
-  const override = images[`home.tile-${page}`];
+  const savedOverride = images[`home.tile-${page}`];
+  const override = savedOverride && (savedOverride.startsWith('/uploads/') || savedOverride.startsWith('data:image/'))
+    ? savedOverride
+    : '';
   const cmsId = `home.tile-${page}`;
   return (
     <EditableImageOverlay id={cmsId} buttonPosition="center" triggerOnHover>
@@ -1318,7 +1327,10 @@ const GuestCardImageOverlay: React.FC = () => {
  */
 const CarouselSlideImage: React.FC<{ slideKey: string; fallback: string; alt: string }> = ({ slideKey, fallback, alt }) => {
   const { images } = useEditMode();
-  const override = images[`home.carousel-${slideKey}`];
+  const savedOverride = images[`home.carousel-${slideKey}`];
+  const override = savedOverride && (savedOverride.startsWith('/uploads/') || savedOverride.startsWith('data:image/'))
+    ? savedOverride
+    : '';
   return (
     <EditableImageOverlay
       id={`home.carousel-${slideKey}`}
