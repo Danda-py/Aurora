@@ -187,7 +187,7 @@ export const BOOK_DATA: Record<Language, {
       title: "WIFI",
       networkLabel: "NOME DELLA RETE (SSID)",
       passwordLabel: "PASSWORD WI-FI",
-      speedNotice: "Connessione Wi-Fi veloce fino a 500 Mbps • Streaming HD, navigazione e smart working",
+      speedNotice: "Connessione Wi-Fi veloce fino a 100 Mbps • Streaming HD, navigazione e smart working",
       troubleshootTitle: "Problemi di Connessione?",
       troubleshootText: "In caso di rallentamenti temporanei, provate a disattivare e riattivare il Wi-Fi sul vostro dispositivo o a riavviare la connessione dello smartphone."
     },
@@ -249,7 +249,7 @@ export const BOOK_DATA: Record<Language, {
       items: [
         { title: "LETTO MATRIMONIALE KING", desc: "Materasso ortopedico e lenzuola fresche" },
         { title: "DIVANO LETTO MATRIMONIALE", desc: "Comodo per 2 adulti o bambini" },
-        { title: "WI-FI FINO A 500 MBPS", desc: "Connessione veloce senza limiti" },
+        { title: "WI-FI FINO A 100 Mbps", desc: "Connessione veloce senza limiti" },
         { title: "RISCALDAMENTO & RAFFRESCAMENTO A PAVIMENTO", desc: "Climatizzazione radiante autonoma a pavimento" },
         { title: "SMART TV 50\" 4K", desc: "Netflix, Prime Video & Canali satellitari" },
         { title: "POSTAZIONE SMART WORKING", desc: "Tavolo, sedia confortevole e prese vicine" },
@@ -587,7 +587,7 @@ export const BOOK_DATA: Record<Language, {
       title: "WI-FI",
       networkLabel: "NETWORK NAME (SSID)",
       passwordLabel: "WI-FI PASSWORD",
-      speedNotice: "Fast Wi-Fi up to 500 Mbps • HD streaming, browsing, and remote work",
+      speedNotice: "Fast Wi-Fi up to 100 Mbps • HD streaming, browsing, and remote work",
       troubleshootTitle: "Having Connection Issues?",
       troubleshootText: "If the connection slows down temporarily, try toggling Wi-Fi off and back on on your device or restarting your smartphone network connection."
     },
@@ -649,7 +649,7 @@ export const BOOK_DATA: Record<Language, {
       items: [
         { title: "KING SIZE BED", desc: "Orthopedic mattress and crisp fresh linens" },
         { title: "DOUBLE SOFA BED", desc: "Comfortable for 2 additional guests" },
-        { title: "WI-FI UP TO 500 MBPS", desc: "Fast unlimited wireless connection" },
+        { title: "WI-FI UP TO 100 Mbps", desc: "Fast unlimited wireless connection" },
         { title: "UNDERFLOOR HEATING & COOLING", desc: "Radiant floor climate control system" },
         { title: "50\" 4K SMART TV", desc: "Netflix, Prime Video & satellite channels" },
         { title: "WORK DESK AREA", desc: "Comfortable table, chair and nearby power outlets" },
@@ -967,7 +967,7 @@ export const BOOK_DATA: Record<Language, {
       title: "WI-FI",
       networkLabel: "NOM DU RÉSEAU (SSID)",
       passwordLabel: "MOT DE PASSE WI-FI",
-      speedNotice: "Wi-Fi rapide jusqu'à 500 Mbps • Streaming HD, navigation et télétravail",
+      speedNotice: "Wi-Fi rapide jusqu'à 100 Mbps • Streaming HD, navigation et télétravail",
       troubleshootTitle: "Problème de connexion ?",
       troubleshootText: "En cas de ralentissement, désactivez puis réactivez le Wi-Fi sur votre appareil ou redémarrez la connexion de votre smartphone."
     },
@@ -1029,7 +1029,7 @@ export const BOOK_DATA: Record<Language, {
       items: [
         { title: "LIT KING SIZE", desc: "Matelas orthopédique et literie soignée" },
         { title: "CANAPÉ-LIT DOUBLE", desc: "Confortable pour 2 personnes" },
-        { title: "WI-FI JUSQU'À 500 MBPS", desc: "Connexion sans fil rapide et illimitée" },
+        { title: "WI-FI JUSQU'À 100 Mbps", desc: "Connexion sans fil rapide et illimitée" },
         { title: "CHAUFFAGE & RAFRAÎCHISSEMENT AU SOL", desc: "Climatisation par plancher rayonnant" },
         { title: "SMART TV 50\" 4K", desc: "Netflix, Prime Video et chaînes streaming" },
         { title: "ESPACE BUREAU", desc: "Table de travail et prises électriques" },
@@ -1347,7 +1347,7 @@ export const BOOK_DATA: Record<Language, {
       title: "WI-FI",
       networkLabel: "NOMBRE DE LA RED (SSID)",
       passwordLabel: "CONTRASEÑA WI-FI",
-      speedNotice: "Wi-Fi rápido hasta 500 Mbps • Streaming en HD, navegación y teletrabajo",
+      speedNotice: "Wi-Fi rápido hasta 100 Mbps • Streaming en HD, navegación y teletrabajo",
       troubleshootTitle: "¿Problemas de conexión?",
       troubleshootText: "En caso de lentitud, probad a desactivar y reactivar el Wi-Fi en vuestro dispositivo o reiniciad la conexión de red del móvil."
     },
@@ -1409,7 +1409,7 @@ export const BOOK_DATA: Record<Language, {
       items: [
         { title: "CAMA KING SIZE", desc: "Colchón ortopédico y ropa de cama limpia" },
         { title: "SOFÁ CAMA DOBLE", desc: "Cómodo para 2 huéspedes adicionales" },
-        { title: "WI-FI HASTA 500 MBPS", desc: "Conexión inalámbrica rápida e ilimitada" },
+        { title: "WI-FI HASTA 100 Mbps", desc: "Conexión inalámbrica rápida e ilimitada" },
         { title: "CALEFACCIÓN Y REFRIGERACIÓN POR SUELO RADIANTE", desc: "Climatización integral por suelo radiante" },
         { title: "SMART TV 50\" 4K", desc: "Netflix, Prime Video y canales vía satélite" },
         { title: "ESPACIO DE TRABAJO", desc: "Escritorio con enchufes para teletrabajo" },
@@ -1727,7 +1727,7 @@ export const BOOK_DATA: Record<Language, {
       title: "WI-FI",
       networkLabel: "NETZWERKNAME (SSID)",
       passwordLabel: "WLAN-PASSWORT",
-      speedNotice: "Schnelles WLAN bis zu 500 Mbit/s • HD-Streaming, Surfen und Homeoffice",
+      speedNotice: "Schnelles WLAN bis zu 100 Mbps • HD-Streaming, Surfen und Homeoffice",
       troubleshootTitle: "Verbindungsprobleme?",
       troubleshootText: "Schalten Sie bei Verbindungsabbrüchen kurz das WLAN am Gerät aus und wieder ein oder starten Sie die Netzwerkverbindung Ihres Smartphones neu."
     },
@@ -1789,7 +1789,7 @@ export const BOOK_DATA: Record<Language, {
       items: [
         { title: "KINGSIZE-BETT", desc: "Orthopädische Matratze und hochwertige Bettwäsche" },
         { title: "DOPPELSCHLAFSOFA", desc: "Bequemer Schlafplatz für 2 weitere Gäste" },
-        { title: "WLAN BIS ZU 500 MBIT/S", desc: "Schnelles unbegrenztes Highspeed-Internet" },
+        { title: "WLAN BIS ZU 100 Mbps", desc: "Schnelles unbegrenztes Highspeed-Internet" },
         { title: "FUSSBODENHEIZUNG & -KÜHLUNG", desc: "Angenehme Flächenkühlung und -heizung über den Boden" },
         { title: "50\" 4K SMART-TV", desc: "Netflix, Prime Video und Satellitenprogramme" },
         { title: "ARBEITSPLATZ", desc: "Schreibtisch mit Steckdosen für Telearbeit" },

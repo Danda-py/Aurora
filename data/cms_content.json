@@ -76,7 +76,7 @@
     },
     "wifi": {
       "title": "WI-FI",
-      "speedNotice": "Schnelles WLAN bis zu 500 Mbit/s • HD-Streaming, Surfen und Homeoffice",
+      "speedNotice": "Schnelles WLAN bis zu 100 Mbps • HD-Streaming, Surfen und Homeoffice",
       "networkLabel": "NETZWERKNAME (SSID)",
       "passwordLabel": "WLAN-PASSWORT",
       "troubleshootText": "Schalten Sie bei Verbindungsabbrüchen kurz das WLAN am Gerät aus und wieder ein oder starten Sie die Netzwerkverbindung Ihres Smartphones neu.",
@@ -238,7 +238,7 @@
         },
         {
           "desc": "Schnelles unbegrenztes Highspeed-Internet",
-          "title": "WLAN BIS ZU 500 MBIT/S"
+          "title": "WLAN BIS ZU 100 Mbps"
         },
         {
           "desc": "Angenehme Flächenkühlung und -heizung über den Boden",
@@ -562,7 +562,7 @@
     },
     "wifi": {
       "title": "WI-FI",
-      "speedNotice": "Fast Wi-Fi up to 500 Mbps • HD streaming, browsing, and remote work",
+      "speedNotice": "Fast Wi-Fi up to 100 Mbps • HD streaming, browsing, and remote work",
       "networkLabel": "NETWORK NAME (SSID)",
       "passwordLabel": "WI-FI PASSWORD",
       "troubleshootText": "If the connection slows down temporarily, try toggling Wi-Fi off and back on on your device or restarting your smartphone network connection.",
@@ -724,7 +724,7 @@
         },
         {
           "desc": "Fast unlimited wireless connection",
-          "title": "WI-FI UP TO 500 MBPS"
+          "title": "WI-FI UP TO 100 Mbps"
         },
         {
           "desc": "Radiant floor climate control system",
@@ -1041,7 +1041,7 @@
     },
     "wifi": {
       "title": "WI-FI",
-      "speedNotice": "Wi-Fi rápido hasta 500 Mbps • Streaming en HD, navegación y teletrabajo",
+      "speedNotice": "Wi-Fi rápido hasta 100 Mbps • Streaming en HD, navegación y teletrabajo",
       "networkLabel": "NOMBRE DE LA RED (SSID)",
       "passwordLabel": "CONTRASEÑA WI-FI",
       "troubleshootText": "En caso de lentitud, probad a desactivar y reactivar el Wi-Fi en vuestro dispositivo o reiniciad la conexión de red del móvil.",
@@ -1203,7 +1203,7 @@
         },
         {
           "desc": "Conexión inalámbrica rápida e ilimitada",
-          "title": "WI-FI HASTA 500 MBPS"
+          "title": "WI-FI HASTA 100 Mbps"
         },
         {
           "desc": "Climatización integral por suelo radiante",
@@ -1520,7 +1520,7 @@
     },
     "wifi": {
       "title": "WI-FI",
-      "speedNotice": "Wi-Fi rapide jusqu'à 500 Mbps • Streaming HD, navigation et télétravail",
+      "speedNotice": "Wi-Fi rapide jusqu'à 100 Mbps • Streaming HD, navigation et télétravail",
       "networkLabel": "NOM DU RÉSEAU (SSID)",
       "passwordLabel": "MOT DE PASSE WI-FI",
       "troubleshootText": "En cas de ralentissement, désactivez puis réactivez le Wi-Fi sur votre appareil ou redémarrez la connexion de votre smartphone.",
@@ -1682,7 +1682,7 @@
         },
         {
           "desc": "Connexion sans fil rapide et illimitée",
-          "title": "WI-FI JUSQU'À 500 MBPS"
+          "title": "WI-FI JUSQU'À 100 Mbps"
         },
         {
           "desc": "Climatisation par plancher rayonnant",
@@ -1988,7 +1988,7 @@
     },
     "wifi": {
       "title": "WIFI",
-      "speedNotice": "Connessione Wi-Fi veloce fino a 500 Mbps • Streaming HD, navigazione e smart working",
+      "speedNotice": "Connessione Wi-Fi veloce fino a 100 Mbps • Streaming HD, navigazione e smart working",
       "networkLabel": "NOME DELLA RETE (SSID)",
       "passwordLabel": "PASSWORD WI-FI",
       "troubleshootText": "In caso di rallentamenti temporanei, provate a disattivare e riattivare il Wi-Fi sul vostro dispositivo o a riavviare la connessione dello smartphone.",
@@ -2150,7 +2150,7 @@
         },
         {
           "desc": "Connessione veloce senza limiti",
-          "title": "WI-FI FINO A 500 MBPS"
+          "title": "WI-FI FINO A 100 Mbps"
         },
         {
           "desc": "Climatizzazione radiante autonoma a pavimento",
