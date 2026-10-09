@@ -911,6 +911,35 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           );
         })()}
 
+        {/* Tessera soggiorno: visibile a ogni ospite con pass valido, anche prima
+            dell'approvazione del check-in, così i dati personali (date, codice
+            prenotazione, numero ospiti) restano privati e consultabili.
+            Le quattro azioni (apri porta / Wi-Fi / documenti) restano invece bloccate
+            fino a documenti inviati + conferma host (isCheckinApproved). */}
+        {pass && !isCheckinApproved && (
+          <section className="space-y-4 animate-in fade-in duration-300">
+            <div className="rounded-3xl border border-white/10 bg-zinc-900/75 p-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-300">
+                  <UserRound className="h-6 w-6" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{language === 'it' ? 'La tua prenotazione' : 'Your booking'}</span>
+                  <h2 className="truncate text-lg font-bold">{`${pass.guestName} ${pass.guestSurname}`.trim()}</h2>
+                  <span className="mt-0.5 block text-xs text-zinc-400">{pass.bookingRef || '—'} · {pass.guestsCount || 1} {language === 'it' ? ((pass.guestsCount || 1) === 1 ? 'ospite' : 'ospiti') : ((pass.guestsCount || 1) === 1 ? 'guest' : 'guests')}</span>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-3">
+                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-in' : 'Check-in'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkInDate)} · {pass.checkInTime || '14:00'}</strong></div>
+                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-out' : 'Check-out'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkOutDate)} · {pass.checkOutTime || APARTMENT_INFO.checkOutLimit}</strong></div>
+              </div>
+              <button type="button" onClick={() => onNavigate('check_in')} className="mt-3 w-full rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-black transition active:scale-[0.98]">
+                {language === 'it' ? 'Completa il check-in per sbloccare porta e Wi-Fi' : 'Complete check-in to unlock door and Wi-Fi'}
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Soggiorno, ritratto e quattro azioni: disponibili dopo la conferma host */}
         {pass && (isCheckinApproved || (isEditMode && pass.documentsUploaded)) && (
           <section className="space-y-4 animate-in fade-in duration-300">
