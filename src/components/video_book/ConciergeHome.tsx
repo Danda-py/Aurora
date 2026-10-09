@@ -584,8 +584,6 @@ const cardTranslations: Record<Language, { cardLabel: string; holder: string; bo
 
 export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onNavigate, pass, onOpenSmartLock, isEditMode = false }) => {
   const media = DEFAULT_MEDIA_MAP;
-  // Override immagini CMS (es. foto delle storie locali sostituite dall'host).
-  const { images: cmsImages } = useEditMode();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [selectedGuestIndex, setSelectedGuestIndex] = useState(0);
@@ -691,27 +689,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     });
   };
 
-  const localStories = [
-    { 
-      title: 'Sentiero Valtellina', 
-      meta: t.gridMenu.descriptions.attivita,
-      image: '/uploads/sentiero.jpg',
-      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sentiero+Valtellina+Morbegno'
-    },
-    { 
-      title: 'Centro storico', 
-      meta: 'Morbegno',
-      image: '/uploads/centro.jpg',
-      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+storico+di+Morbegno'
-    },
-    { 
-      title: 'Costiera dei Cèch', 
-      meta: t.gridMenu.footerValtellina,
-      image: '/uploads/costiera.jpg',
-      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Costiera+dei+Cech+Morbegno'
-    }
-  ];
-
+  
   useEffect(() => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       const beta = Math.max(-8, Math.min(8, event.beta || 0));
@@ -961,8 +939,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           </section>
         )}
 
-        {/* Soggiorno, ritratto e quattro azioni: disponibili dopo la conferma host */}
-        {pass && (isCheckinApproved || (isEditMode && pass.documentsUploaded)) && (
+        {/* Soggiorno, ritratto e barra azioni: sempre visibili a chi ha un pass;
+            le azioni (Wi-Fi/apriporta) restano disabilitate finché il check-in
+            completo non è approvato invece che sparire dal layout. */}
+        {pass && (
           <section className="space-y-4 animate-in fade-in duration-300">
             <div className="rounded-3xl border border-white/10 bg-zinc-900/75 p-4 shadow-xl">
               <div className="flex items-center gap-3">
@@ -996,7 +976,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <button type="button" onClick={handleWifiClick} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
                 <Wifi className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">Wi-Fi</span>
               </button>
-              <button type="button" onPointerDown={event => { if (!isCheckinConfirmed) handleDoorClick(); else startHold(event); }} onPointerUp={isCheckinConfirmed ? cancelHold : undefined} onPointerCancel={isCheckinConfirmed ? cancelHold : undefined} onPointerLeave={isCheckinConfirmed ? cancelHold : undefined} disabled={doorState === 'opening' || !isStayActive} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800 disabled:opacity-50" title={doorState === 'idle' ? (language === 'it' ? 'Tieni premuto per aprire' : 'Press and hold to unlock') : doorMessage}>
+              <button type="button" onPointerDown={event => { if (!isCheckinConfirmed) handleDoorClick(); else startHold(event); }} onPointerUp={isCheckinConfirmed ? cancelHold : undefined} onPointerCancel={isCheckinConfirmed ? cancelHold : undefined} onPointerLeave={isCheckinConfirmed ? cancelHold : undefined} disabled={doorState === 'opening' || !isStayActive || !isCheckinApproved} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800 disabled:opacity-50" title={doorState === 'idle' ? (language === 'it' ? 'Tieni premuto per aprire' : 'Press and hold to unlock') : doorMessage}>
                 <DoorOpen className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{doorState === 'opening' ? (language === 'it' ? 'Apro…' : 'Opening…') : doorState === 'success' ? (language === 'it' ? 'Aperta' : 'Opened') : (language === 'it' ? 'Apri Porta' : 'Open door')}</span>
               </button>
               <button type="button" onClick={() => { onNavigate('regole'); trackActivity(pass, 'house_rules_view'); }} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
@@ -1012,77 +992,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
 
 
-        {/* Informazioni utili: casa, attività, ristoranti, spesa e servizi */}
-        {/* SECTION 1: Guida Casa */}
-        <section id="guest-guide-tiles" className="space-y-3">
-          <EditableElement id="home.section-house" label="Titolo Guida Casa" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.houseEssentials.title}
-            </h2>
-          </EditableElement>
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.houseEssentials.items.map(renderPhotoCard)}
-          </ScrollableTileRow>
-        </section>
-
-        {/* SECTION 2: Idee per oggi */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <EditableElement id="home.section-activities" label="Titolo Attività" className="rounded-lg">
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                {t.tiles.attivita}
-              </h2>
-            </EditableElement>
-            <EditableElement id="home.link-vedi-tutto" label="Vedi tutte le attività" className="rounded-lg">
-              <button 
-                onClick={() => onNavigate('attivita')} 
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
-              >
-                {t.actions.backToMenu === 'MENU' ? 'Vedi tutto' : 'See all'} <ChevronRight className="inline h-3.5 w-3.5" />
-              </button>
-            </EditableElement>
-          </div>
-          
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {localStories.map((story, storyIdx) => (
-              <EditableElement
-                key={story.title}
-                id={`home.story-${storyIdx}`}
-                label={story.title}
-                className="rounded-3xl shrink-0 snap-start"
-              >
-                <a
-                  className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start block"
-                  href={story.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <EditableImageOverlay
-                    id={`home.story-${storyIdx}-img`}
-                    buttonPosition="center"
-                    triggerOnHover
-                  >
-                    <img 
-                      src={cmsImages[`home.story-${storyIdx}-img`] || story.image} 
-                      alt={story.title} 
-                      loading="lazy" 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                    />
-                  </EditableImageOverlay>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-                  <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
-                    <strong className="text-sm sm:text-base font-bold text-white tracking-tight truncate drop-shadow-md">
-                      {story.title}
-                    </strong>
-                    <p className="text-[11px] text-white/70 line-clamp-1 leading-snug">
-                      {story.meta}
-                    </p>
-                  </div>
-                </a>
-              </EditableElement>
-            ))}
-          </ScrollableTileRow>
-        </section>
+        {/* Informazioni utili: attività, ristoranti, spesa e servizi.
+            Sezioni "Guida & Arrivo" e "Idee per oggi" rimosse per richiesta host:
+            restano Esplora Valtellina, Supporto & Sicurezza (e Services sotto). */}
 
         {/* SECTION 3: Esplora Valtellina */}
         <section className="space-y-3">

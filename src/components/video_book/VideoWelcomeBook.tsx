@@ -145,10 +145,13 @@ export const VideoWelcomeBook: React.FC<Props> = ({
     });
   }, []);
 
-  // Aggiorna in modo leggero lo stato host del check-in dopo l'invio dei documenti.
-  // L'ospite vede il banner verde e le azioni appena la conferma viene registrata.
+  // Aggiorna in modo leggero lo stato host del check-in: finché il check-in NON è
+  // confermato l'ospite resta in ascolto (polling leggero) così vede il banner/le
+  // azioni aggiornarsi appena l'host conferma, anche se ne era già a conoscenza
+  // prima dell'upload documenti. Solo quando checkInConfirmed è true il polling si
+  // spegne, evitando richieste inutili a soggiorno completamente approvato.
   useEffect(() => {
-    if (isEditMode || !pass?.documentsUploaded || pass.checkInConfirmed) return;
+    if (isEditMode || !pass?.token || pass.checkInConfirmed) return;
     let cancelled = false;
     const refreshPass = async () => {
       try {
@@ -163,6 +166,8 @@ export const VideoWelcomeBook: React.FC<Props> = ({
         // Il prossimo intervallo riproverà; non interrompere la guida ospite.
       }
     };
+    // Primo controllo subito, poi ogni 10 secondi finché non arriva la conferma.
+    refreshPass();
     const interval = window.setInterval(refreshPass, 10_000);
     return () => {
       cancelled = true;
