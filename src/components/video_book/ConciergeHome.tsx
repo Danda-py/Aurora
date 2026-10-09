@@ -5,6 +5,7 @@ import {
   Check,
   CheckSquare,
   CheckCircle2,
+  CircleCheckBig,
   DoorOpen,
   Navigation,
   Square,
@@ -877,28 +878,48 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
         {/* Area 2: banner check-in rosso → revisione arancione → confermato verde */}
         {pass && (() => {
-          const status = isCheckinApproved ? 'approved' : pass.documentsUploaded ? 'review' : 'required';
+          // 4 stati: 'approved' (documenti + conferma) → verde; 'confirmed' (l'host
+          // ha CONFERMATO il check-in ma i documenti non sono ancora stati inviati)
+          // → verde/ambra; 'review' (documenti inviati, attesa verifica) → ambra;
+          // 'required' (manca tutto) → rosso. Prima lo stato 'confirmed' non
+          // esisteva: se l'host confermava l'arrivo prima dell'upload dei
+          // documenti, il banner restava rosso come se niente fosse successo.
+          const status = isCheckinApproved
+            ? 'approved'
+            : pass.checkInConfirmed
+              ? 'confirmed'
+              : pass.documentsUploaded
+                ? 'review'
+                : 'required';
           const daysRemaining = Math.max(0, Math.ceil((new Date(`${pass.checkInDate}T00:00:00`).getTime() - new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T00:00:00`).getTime()) / (24 * 60 * 60 * 1000)));
           const statusStyle = status === 'approved'
             ? 'border-emerald-400/35 bg-emerald-500/15 text-emerald-100'
-            : status === 'review'
-              ? 'border-amber-400/35 bg-amber-500/15 text-amber-100'
-              : 'border-rose-400/35 bg-rose-500/15 text-rose-100';
+            : status === 'confirmed'
+              ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-50'
+              : status === 'review'
+                ? 'border-amber-400/35 bg-amber-500/15 text-amber-100'
+                : 'border-rose-400/35 bg-rose-500/15 text-rose-100';
           const statusTitle = status === 'approved'
             ? (language === 'it' ? 'Check-in confermato' : 'Check-in confirmed')
-            : status === 'review'
-              ? docBanner.reviewTitle
-              : (language === 'it' ? 'Completa il check-in' : 'Complete your check-in');
+            : status === 'confirmed'
+              ? (language === 'it' ? 'Check-in confermato dall\'host' : 'Check-in confirmed by your host')
+              : status === 'review'
+                ? docBanner.reviewTitle
+                : (language === 'it' ? 'Completa il check-in' : 'Complete your check-in');
           const statusDescription = status === 'approved'
             ? (language === 'it' ? 'I tuoi documenti sono stati verificati. Le informazioni del soggiorno sono qui sotto.' : 'Your documents have been verified. Stay details are below.')
-            : status === 'review'
-              ? docBanner.reviewDesc
-              : `${language === 'it' ? 'Mancano' : 'In'} ${daysRemaining} ${language === 'it' ? (daysRemaining === 1 ? 'giorno' : 'giorni') : 'days'} ${language === 'it' ? 'al check-in.' : 'until check-in.'} ${docBanner.requiredDesc}`;
+            : status === 'confirmed'
+              ? (language === 'it'
+                ? 'Il tuo arrivo è stato registrato! Per completare è richiesta la registrazione dei documenti di tutti gli ospiti (obbligatoria per legge): servirà anche per abilitare apriporta e Wi-Fi.'
+                : 'Your arrival has been registered! To complete check-in, all guests must register their documents (required by Italian law): this also enables door unlocking and Wi-Fi.')
+              : status === 'review'
+                ? docBanner.reviewDesc
+                : `${language === 'it' ? 'Mancano' : 'In'} ${daysRemaining} ${language === 'it' ? (daysRemaining === 1 ? 'giorno' : 'giorni') : 'days'} ${language === 'it' ? 'al check-in.' : 'until check-in.'} ${docBanner.requiredDesc}`;
           return (
             <button type="button" onClick={() => onNavigate('check_in')} className={`w-full rounded-2xl border p-4 text-left shadow-lg transition active:scale-[0.99] ${statusStyle}`} aria-label={statusTitle}>
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/10">
-                  {status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> : status === 'review' ? <Clock3 className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
+                  {status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> : status === 'confirmed' ? <CircleCheckBig className="h-5 w-5" /> : status === 'review' ? <Clock3 className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-extrabold">{statusTitle}</span>
