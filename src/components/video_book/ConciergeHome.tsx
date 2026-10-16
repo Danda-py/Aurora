@@ -950,7 +950,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     }
   };
 
-  const HOLD_DURATION_MS = 1200;
+  const HOLD_DURATION_MS = 2000;
 
   const cancelHoldEarly = (event?: React.PointerEvent<HTMLButtonElement>) => {
     const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
@@ -1280,7 +1280,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                     : holdProgress > 0
                     ? 'border-emerald-400 bg-zinc-800 scale-[0.96]'
                     : 'border-white/10 bg-zinc-900/75 hover:border-emerald-400/40 hover:bg-zinc-800'
-                } ${!isStayActive || !isCheckinApproved ? 'opacity-60' : ''}`}title={doorState === 'idle' ? language === 'it' ? 'Tieni premuto 1,2 secondi per inviare la richiesta di apertura' : 'Hold for 1.2 seconds to send the unlock request' : doorMessage} aria-label={language === 'it' ? 'Tieni premuto 1,2 secondi per aprire la porta' : 'Hold for 1.2 seconds to unlock the door'}
+                } ${!isStayActive || !isCheckinApproved ? 'opacity-60' : ''}`}title={doorState === 'idle' ? language === 'it' ? 'Tieni premuto 2 secondi per inviare la richiesta di apertura' : 'Hold for 1.2 seconds to send the unlock request' : doorMessage} aria-label={language === 'it' ? 'Tieni premuto 1,2 secondi per aprire la porta' : 'Hold for 2 seconds to unlock the door'}
               >
                 {holdProgress > 0 && (
                   <span
