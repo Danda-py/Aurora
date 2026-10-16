@@ -1387,6 +1387,11 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
       }
 
       if (result.success) {
+        if (pass) {
+          pass.checkOutCompletedAt = new Date().toISOString();
+          persistPasses();
+          await upsertPass(pass);
+        }
         res.json({ success: true, message: result.message, provider: (result as any).provider });
       } else {
         res.status(500).json({ success: false, error: result.error });

@@ -21,6 +21,7 @@ export type ActivityAction =
   | 'smart_lock_open_attempt'
   | 'smart_lock_open_success'
   | 'smart_lock_open_error'
+  | 'checkout_completed'
   | 'document_upload'
   | 'button_click';
 

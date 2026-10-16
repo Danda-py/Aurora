@@ -30,7 +30,9 @@ import {
   ShoppingBag,
   KeyRound,
   Info,
-  Calendar
+  Calendar,
+  Star,
+  LoaderCircle
 } from 'lucide-react';
 import { Language, WelcomePage, GuestPass } from '../../types';
 import { APARTMENT_INFO } from '../../data/apartmentData';
@@ -692,6 +694,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [showWifiQr, setShowWifiQr] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const { homeSections: cmsHomeSections, showPhotoCarousel, carouselImages, texts: cmsTexts } = useEditMode();
+  const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(pass?.checkOutCompletedAt ? 'success' : 'idle');
+  const [checkoutMessage, setCheckoutMessage] = useState('');
+  const [checkoutCompletion, setCheckoutCompletion] = useState({ passId: pass?.id, completedAt: pass?.checkOutCompletedAt || '' });
+  const checkoutPersistedAt = pass?.checkOutCompletedAt || (checkoutCompletion.passId === pass?.id ? checkoutCompletion.completedAt : '');
   const [wifiVerified, setWifiVerified] = useState(false);
   const [wifiMessage, setWifiMessage] = useState('');
   const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
@@ -773,7 +779,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     return new Date(year, month - 1, day, hour, minute || 0);
   })() : null;
   const checkoutMsRemaining = checkoutAt ? checkoutAt.getTime() - now.getTime() : Infinity;
-  const showCheckoutReminder = Boolean(pass && pass.checkInConfirmed && checkoutMsRemaining >= 0 && checkoutMsRemaining <= 24 * 60 * 60 * 1000);
+  const checkoutCompletedAt = (checkoutPersistedAt || pass?.checkOutCompletedAt) ? new Date(checkoutPersistedAt || pass!.checkOutCompletedAt!).getTime() : null;
+  const checkoutReviewWindow = Boolean(checkoutCompletedAt && checkoutCompletedAt <= now.getTime() + 5 * 60 * 1000 && checkoutCompletedAt >= now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const showCheckoutReminder = Boolean(pass && pass.checkInConfirmed && (
+    (checkoutMsRemaining >= 0 && checkoutMsRemaining <= 24 * 60 * 60 * 1000) || checkoutReviewWindow || checkoutStatus === 'success'
+  ));
   const checkoutList = BOOK_DATA[language].checkOut.checklist;
   const checkoutDoneCount = checkoutList.filter((_, index) => checkoutItems[String(index)]).length;
   const checkoutMood = checkoutDoneCount === checkoutList.length ? '😄' : checkoutDoneCount >= checkoutList.length * 0.67 ? '🙂' : checkoutDoneCount >= checkoutList.length * 0.34 ? '😐' : checkoutDoneCount > 0 ? '🙁' : '😢';
@@ -786,6 +796,9 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   }, []);
 
   useEffect(() => {
+    setCheckoutStatus(pass?.checkOutCompletedAt ? 'success' : 'idle');
+    setCheckoutCompletion({ passId: pass?.id, completedAt: pass?.checkOutCompletedAt || '' });
+    setCheckoutMessage('');
     if (!pass) {
       setCheckoutItems({});
       return;
@@ -795,7 +808,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     } catch {
       setCheckoutItems({});
     }
-  }, [pass?.id]);
+  }, [pass?.id, pass?.checkOutCompletedAt]);
 
   const toggleCheckoutItem = (index: number) => {
     setCheckoutItems(current => {
@@ -804,6 +817,56 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       return updated;
     });
   };
+
+  const runCheckout = async () => {
+    if (!pass || checkoutStatus === 'loading' || checkoutStatus === 'success') return;
+    setCheckoutStatus('loading');
+    setCheckoutMessage('');
+    try {
+      const response = await fetch('/api/hass/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestToken: pass.token })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Checkout non riuscito');
+      const completedAt = new Date().toISOString();
+      setCheckoutCompletion({ passId: pass.id, completedAt });
+      setCheckoutStatus('success');
+      setCheckoutMessage(language === 'it' ? 'Partenza registrata: tutte le luci sono state spente.' : 'Departure recorded: all lights have been turned off.');
+      trackActivity(pass, 'checkout_completed');
+    } catch (error: any) {
+      setCheckoutStatus('error');
+      setCheckoutMessage(error?.message || (language === 'it' ? 'Errore durante il check-out.' : 'Checkout failed.'));
+    }
+  };
+
+  const bookingSource = `${pass?.channelSource || ''} ${pass?.bookingSource || ''}`.toLowerCase();
+  const bookingPlatform = bookingSource.includes('airbnb')
+    ? 'Airbnb'
+    : bookingSource.includes('booking')
+      ? 'Booking.com'
+      : bookingSource.includes('vrbo')
+        ? 'Vrbo'
+        : bookingSource.includes('expedia')
+          ? 'Expedia'
+          : bookingSource.includes('bed') || bookingSource.includes('b&b')
+            ? 'Bed-and-Breakfast.it'
+            : language === 'it' ? 'Sito della struttura' : 'Property website';
+  const bookingReviewUrl = bookingSource.includes('airbnb')
+    ? 'https://www.airbnb.com/trips'
+    : bookingSource.includes('booking')
+      ? 'https://www.booking.com/signin.html'
+      : bookingSource.includes('vrbo')
+        ? 'https://www.vrbo.com/trips'
+        : bookingSource.includes('expedia')
+          ? 'https://www.expedia.com/trips'
+          : APARTMENT_INFO.reviewUrl;
+
+  const reviewLinks = [
+    { label: 'Google', href: APARTMENT_INFO.googleReviewUrl },
+    { label: bookingPlatform, href: bookingReviewUrl },
+  ];
 
   
   useEffect(() => {
@@ -1198,6 +1261,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             mentre le funzioni protette rimangono bloccate fino alla conferma dei documenti. */}
         {pass && (
           <section className="space-y-4 animate-in fade-in duration-300">
+            <style>{`@keyframes aurora-checkout-orbit{0%,100%{transform:scale(.85);opacity:.35}50%{transform:scale(1.12);opacity:.75}}@keyframes aurora-checkout-star{0%,100%{transform:translateY(0) scale(1);opacity:.78}50%{transform:translateY(-2px) scale(1.16);opacity:1}}@keyframes aurora-checkout-flight{from{stroke-dashoffset:28}to{stroke-dashoffset:0}}@keyframes aurora-checkout-twinkle{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}.checkout-orbit{animation:aurora-checkout-orbit 3.2s ease-in-out infinite}.checkout-star{animation:aurora-checkout-star 1.8s ease-in-out infinite}.checkout-flight-path{animation:aurora-checkout-flight 2.4s ease-in-out infinite alternate}.checkout-flight-star{transform-box:fill-box;transform-origin:center;animation:aurora-checkout-twinkle 1.8s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.checkout-orbit,.checkout-star,.checkout-flight-path,.checkout-flight-star{animation:none}}`}</style>
             <div className="rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/[0.10] via-zinc-900/90 to-zinc-950 p-4 shadow-xl shadow-emerald-950/20">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
@@ -1246,10 +1310,33 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
             )}
 
             {showCheckoutReminder && (
-              <button type="button" onClick={() => setSheet('checkout')} className="flex w-full items-center gap-3 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-3.5 text-left shadow-lg transition active:scale-[0.99]">
-                <span className="text-3xl" role="img" aria-label="Avanzamento checklist check-out">{checkoutMood}</span>
-                <span className="min-w-0 flex-1"><strong className="block text-sm text-white">{language === 'it' ? 'Check-out tra' : 'Check-out in'} {checkoutHours}{language === 'it' ? ' ore' : ' hours'} {checkoutMinutes}{language === 'it' ? ' min' : ' min'}</strong><span className="mt-0.5 block text-[11px] text-zinc-300">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate · apri checklist' : 'tasks done · open checklist'}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-rose-200" />
-              </button>
+              <div className="relative overflow-hidden rounded-2xl border border-rose-400/30 bg-gradient-to-r from-rose-500/15 via-zinc-900/95 to-amber-500/10 p-3.5 text-left shadow-lg">
+                <span className="absolute -right-4 -top-7 h-20 w-20 rounded-full border border-amber-300/15 checkout-orbit" aria-hidden="true" />
+                <svg className="pointer-events-none absolute right-3 top-2 h-11 w-16 text-amber-200/30" viewBox="0 0 64 40" fill="none" aria-hidden="true">
+                  <path className="checkout-flight-path" d="M4 32C18 7 38 6 58 14" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" />
+                  <path d="m55 9 4 5-6 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path className="checkout-flight-star" d="m35 4 1.5 4.5L41 10l-4.5 1.5L35 16l-1.5-4.5L29 10l4.5-1.5L35 4Z" fill="currentColor" />
+                </svg>
+                <button type="button" onClick={() => setSheet('checkout')} className="relative flex w-full items-center gap-3 text-left transition active:scale-[0.99]">
+                  <span className="text-3xl" role="img" aria-label="Avanzamento checklist check-out">{checkoutMood}</span>
+                  <span className="min-w-0 flex-1"><strong className="block text-sm text-white">{checkoutStatus === 'success' ? (language === 'it' ? 'Check-out completato' : 'Check-out complete') : <>{language === 'it' ? 'Check-out tra' : 'Check-out in'} {checkoutHours}{language === 'it' ? ' ore' : ' hours'} {checkoutMinutes} min</>}</strong><span className="mt-0.5 block text-[11px] text-zinc-300">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate · apri checklist' : 'tasks done · open checklist'}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-rose-200" />
+                </button>
+                <div className="relative mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+                  <span className="flex items-center gap-1" aria-label="Valuta il soggiorno: cinque stelle">
+                    {[1, 2, 3, 4, 5].map(star => <Star key={star} className="h-3.5 w-3.5 fill-amber-300 text-amber-300 checkout-star" style={{ animationDelay: `${star * 120}ms` }} />)}
+                  </span>
+                  <div className="flex gap-2">
+                    {reviewLinks.map(link => <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" onClick={() => trackActivity(pass, 'booking_link_open', link.label)} className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.07] px-2.5 py-1.5 text-[10px] font-semibold text-white transition hover:bg-white/[0.13]"><Star className="h-3 w-3 fill-amber-300 text-amber-300" />{link.label}</a>)}
+                  </div>
+                </div>
+                <div className="relative mt-2 flex items-center gap-2">
+                  <button type="button" onClick={() => void runCheckout()} disabled={checkoutStatus === 'loading' || checkoutStatus === 'success'} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition ${checkoutStatus === 'success' ? 'bg-emerald-600 text-white' : checkoutStatus === 'error' ? 'bg-rose-700 text-white' : 'bg-rose-500 text-white hover:bg-rose-400'} disabled:cursor-not-allowed`}>
+                    {checkoutStatus === 'loading' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : checkoutStatus === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <LogOut className="h-4 w-4" />}
+                    {checkoutStatus === 'loading' ? (language === 'it' ? 'Attivazione…' : 'Activating…') : checkoutStatus === 'success' ? (language === 'it' ? 'Partenza registrata' : 'Departure recorded') : language === 'it' ? 'Esegui check-out · spegni luci' : 'Check out · turn off lights'}
+                  </button>
+                </div>
+                {checkoutMessage && <p className={`relative mt-2 text-center text-[11px] ${checkoutStatus === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}>{checkoutMessage}</p>}
+              </div>
             )}
 
             <div className="grid grid-cols-4 gap-2">

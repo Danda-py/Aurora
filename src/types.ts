@@ -98,6 +98,7 @@ export interface GuestPass {
   checkInTime?: string; // e.g. "14:00"
   checkOutDate: string; // YYYY-MM-DD
   checkOutTime?: string; // e.g. "10:00"
+  checkOutCompletedAt?: string; // ISO timestamp when the guest confirms departure
   pinCode: string; // 4-digit code e.g. "2741"
   notes?: string;
   bookingRef?: string;

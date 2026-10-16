@@ -1051,6 +1051,7 @@ function filterAndRenderPasses(filterQuery) {
               <span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#86868b] text-[10px] border border-white/[0.08]">
                 ${bookingSource}
               </span>
+              ${pass.checkOutCompletedAt ? '<span class="px-2 py-0.5 rounded-full bg-[#30d158]/10 text-[#30d158] text-[10px] border border-[#30d158]/20">Check-out completato</span>' : ''}
             </div>
             <div class="flex items-center gap-3 text-xs text-[#86868b] flex-wrap">
               <span>Dal <strong>${checkInDate}</strong> al <strong>${checkOutDate}</strong></span>
@@ -1275,6 +1276,7 @@ function renderAutonomousReservations() {
               ${guests} ${guests === 1 ? 'ospite' : 'ospiti'}
             </span>
             ${pass.bookingRef ? `<span class="text-[10px] font-mono text-[#86868b] bg-[#1c1c1e] px-2 py-0.5 rounded-md border border-white/[0.06]">Rif: ${escapeHtml(pass.bookingRef)}</span>` : ''}
+            ${pass.checkOutCompletedAt ? '<span class="px-2 py-0.5 rounded-full bg-[#30d158]/10 text-[#30d158] text-[10px] border border-[#30d158]/20">Check-out completato</span>' : ''}
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#86868b] font-mono pt-1">
@@ -1353,6 +1355,7 @@ const ACTIVITY_ACTION_LABELS = {
   smart_lock_open_attempt: { label: 'Tentativo apertura porta', icon: 'key' },
   smart_lock_open_success: { label: 'Porta aperta con successo', icon: 'unlock' },
   smart_lock_open_error: { label: 'Errore apertura porta', icon: 'alert-circle' },
+  checkout_completed: { label: 'Check-out completato e luci spente', icon: 'log-out' },
   document_upload: { label: 'Caricamento documenti', icon: 'file-check' },
   button_click: { label: 'Click', icon: 'mouse-pointer-click' }
 };
