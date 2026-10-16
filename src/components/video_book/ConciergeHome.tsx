@@ -963,7 +963,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       showDoorFeedbackBanner(
         'hint',
         language === 'it' ? 'Pressione non completata' : 'Hold not completed',
-        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        language === 'it' ? 'Tieni premuto per 2 secondi senza sollevare il dito.' : 'Keep holding for 2 seconds without lifting your finger.',
         1800
       );
     }
@@ -979,7 +979,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       showDoorFeedbackBanner(
         'hint',
         language === 'it' ? 'Pressione non completata' : 'Hold not completed',
-        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        language === 'it' ? 'Tieni premuto per 2 secondi senza sollevare il dito.' : 'Keep holding for 2 seconds without lifting your finger.',
         1800
       );
     }
@@ -1280,7 +1280,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                     : holdProgress > 0
                     ? 'border-emerald-400 bg-zinc-800 scale-[0.96]'
                     : 'border-white/10 bg-zinc-900/75 hover:border-emerald-400/40 hover:bg-zinc-800'
-                } ${!isStayActive || !isCheckinApproved ? 'opacity-60' : ''}`}title={doorState === 'idle' ? language === 'it' ? 'Tieni premuto 2 secondi per inviare la richiesta di apertura' : 'Hold for 1.2 seconds to send the unlock request' : doorMessage} aria-label={language === 'it' ? 'Tieni premuto 1,2 secondi per aprire la porta' : 'Hold for 2 seconds to unlock the door'}
+                } ${!isStayActive || !isCheckinApproved ? 'opacity-60' : ''}`}title={doorState === 'idle' ? language === 'it' ? 'Tieni premuto 2 secondi per inviare la richiesta di apertura' : 'Hold for 2 seconds to send the unlock request' : doorMessage} aria-label={language === 'it' ? 'Tieni premuto 2 secondi per aprire la porta' : 'Hold for 2 seconds to unlock the door'}
               >
                 {holdProgress > 0 && (
                   <span
@@ -1303,8 +1303,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                     : holdProgress > 0
                     ? `${Math.ceil(holdProgress * 100)}%`
                     : language === 'it'
-                    ? 'Tieni premuto 1,2 sec'
-                    : 'Hold for 1.2 sec'}
+                    ? 'Tieni premuto 2 sec'
+                    : 'Hold for 2 sec'}
                 </span>
               </button>
               <button type="button" onClick={() => { onNavigate('regole'); trackActivity(pass, 'house_rules_view'); }} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
