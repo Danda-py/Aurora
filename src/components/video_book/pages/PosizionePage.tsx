@@ -5,7 +5,7 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { MapPin, Navigation, Copy, Check, Train, Car, Plane } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { PageEditable } from '../cmsPageHelpers';
+import { PageEditable, CustomBlocksRenderer } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -148,6 +148,8 @@ export const PosizionePage: React.FC<Props> = ({ language, onBackToMenu, onSelec
           </div>
           </div>
         </PageEditable>
+
+        <CustomBlocksRenderer pageKey="posizione" />
 
       </div>
     </div>

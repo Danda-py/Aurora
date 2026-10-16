@@ -10,10 +10,11 @@ export type {
   CMSAction,
 } from './CMSContext';
 export { VisualCMSBuilder } from './VisualCMSBuilder';
+export { CMSSidePanel } from './CMSSidePanel';
 export { EditableGuidePage } from './EditableGuidePage';
 export { EditableBlockWrapper } from './EditableBlockWrapper';
 export { InlineEditableText } from './InlineEditableText';
 export { InlineTimePicker } from './InlineTimePicker';
 export { BuilderTopToolbar } from './BuilderTopToolbar';
-export { iPhone18Frame } from './iPhone18Frame';
+export { IPhone18Frame } from './iPhone18Frame';
 export { FloatingTextToolbar } from './FloatingTextToolbar';

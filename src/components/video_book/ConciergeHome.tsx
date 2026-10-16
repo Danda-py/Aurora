@@ -40,6 +40,7 @@ import { EditableElement } from '../visual-cms/EditableElement';
 import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
 import { EditableIcon } from '../visual-cms/EditableIcon';
 import { useEditMode } from '../visual-cms/EditModeContext';
+import { CustomBlocksRenderer } from './cmsPageHelpers';
 import { InlineTimePicker } from '../visual-cms/InlineTimePicker';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { BOOK_DATA } from '../../data/multilingualBookData';
@@ -73,6 +74,8 @@ interface GuideTileItem {
   desc: string;
   icon: React.ReactNode;
   bgImage: string;
+  /** Identificatore CMS per permettere immagini uniche anche con pagine duplicate. */
+  cmsId?: string;
 }
 
 interface ScrollableTileRowProps {
@@ -335,15 +338,12 @@ const mediaTitles: Record<string, { it: string; en: string }> = {
   checkOutCover: { it: 'Check-out & Partenza', en: 'Check-out & Departure' }
 };
 
-const PhotoCarousel: React.FC<{ media: any; language: Language }> = ({ media, language }) => {
-  // 1. Core fixed spaces keys (always included in the carousel, falling back to defaults if not customized)
-  const coreKeys = ['heroLiving', 'bedroom', 'kitchen', 'bathroom', 'balcony', 'view'];
-
-  // 2. Extra keys uploaded by the host specifically for the carousel (keys starting with "carousel_img_")
-  const extraKeys = Object.keys(media || {}).filter(key => key.startsWith('carousel_img_'));
-
-  // 3. Merge all keys
-  const carouselKeys = [...coreKeys, ...extraKeys];
+const PhotoCarousel: React.FC<{ media: any; language: Language; selectedImages?: string[] }> = ({ media, language, selectedImages }) => {
+  // Quando l'host seleziona esplicitamente le immagini nel CMS, rispetta l'elenco
+  // in ordine; altrimenti usa l'elenco storico per preservare i contenuti esistenti.
+  const defaultKeys = ['heroLiving', 'bedroom', 'kitchen', 'bathroom', 'balcony', 'view'];
+  const extraKeys = Object.keys(media || {}).filter((key) => key.startsWith('carousel_img_'));
+  const carouselKeys = selectedImages ?? [...defaultKeys, ...extraKeys];
 
   // 4. Map keys to image objects with localized titles
   const images = carouselKeys
@@ -599,25 +599,48 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [wifiCopied, setWifiCopied] = useState(false);
   const [showWifiQr, setShowWifiQr] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const { homeSections: cmsHomeSections, showPhotoCarousel, carouselImages } = useEditMode();
+  const [wifiVerified, setWifiVerified] = useState(false);
+  const [wifiMessage, setWifiMessage] = useState('');
   const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [doorMessage, setDoorMessage] = useState('');
+  const [doorBanner, setDoorBanner] = useState<{
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint';
+    title: string;
+    detail: string;
+  } | null>(null);
   const [holdProgress, setHoldProgress] = useState(0);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartedAt = React.useRef(0);
+  const bannerTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showDoorFeedbackBanner = (
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint',
+    title: string,
+    detail: string,
+    durationMs = 2000
+  ) => {
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    setDoorBanner({ type, title, detail });
+    bannerTimerRef.current = setTimeout(() => {
+      setDoorBanner(null);
+    }, durationMs);
+  };
 
   const handleDoorClick = () => {
-    if (!isCheckinConfirmed) {
-      const msg = {
-        it: "L'apriporta digitale sarà abilitato non appena l'host Nino avrà verificato i tuoi documenti e confermato il check-in.",
-        en: "The digital key will be enabled as soon as host Nino has verified your documents and confirmed the check-in.",
-        de: "Der digitale Türöffner wird aktiviert, sobald Gastgeber Nino Ihre Dokumente überprüft und den Check-in bestätigt hat.",
-        fr: "La clé digitale sera activée dès que l'hôte Nino aura vérifié vos documents et enregistré l'arrivée.",
-        es: "La llave digital se habilitará tan pronto como el anfitrión Nino haya verificado sus documentos y confirmado el registro."
-      }[language] || "Check-in non confermato dall'host.";
-      setAlertMessage(msg);
-      setTimeout(() => setAlertMessage(null), 5500);
-    }
+    const waitingForDocuments = !pass?.documentsUploaded;
+    const title = language === 'it'
+      ? waitingForDocuments ? 'Completa prima il check-in' : 'Apertura non disponibile'
+      : waitingForDocuments ? 'Complete check-in first' : 'Unlock not available';
+    const detail = language === 'it'
+      ? waitingForDocuments
+        ? 'L’apriporta sarà abilitato dopo l’invio dei documenti e la conferma dell’host.'
+        : 'L’apriporta richiede una prenotazione attiva e il check-in completo confermato dall’host.'
+      : waitingForDocuments
+        ? 'Door access is enabled after submitting documents and host confirmation.'
+        : 'Door access requires an active booking and host-confirmed check-in.';
+    showDoorFeedbackBanner('not_connected', title, detail, 2200);
   };
 
   const handleWifiClick = () => {
@@ -726,15 +749,25 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 
   const runDoorOpen = async () => {
     if (!pass) return;
-    const wifiCheck = await checkCasaAuroraWifi();
-
     setDoorState('opening');
-    if (!wifiCheck.verified) {
-      setDoorMessage(language === 'it' ? "Wi-Fi non rilevato. Invio tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
-    } else {
-      setDoorMessage(t.concierge.doorMessage.sending);
-    }
+    setDoorMessage(t.concierge.doorMessage.sending);
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
+
+    let wifiCheck: Awaited<ReturnType<typeof checkCasaAuroraWifi>>;
+    try {
+      wifiCheck = await checkCasaAuroraWifi();
+      setWifiVerified(wifiCheck.verified);
+      setWifiMessage(wifiCheck.message);
+    } catch {
+      wifiCheck = {
+        verified: false,
+        status: 'error',
+        ssid: 'Casa_Aurora',
+        reason: 'proximity_check_failed',
+        message: language === 'it' ? 'Verifica connessione/posizione non riuscita.' : 'Could not verify network or location.',
+      };
+    }
+
     try {
       const res = await fetch('/api/hass/unlock', {
         method: 'POST',
@@ -756,36 +789,120 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       if (res.ok && data.success) {
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         setDoorState('success');
-        setDoorMessage(t.concierge.doorMessage.unlocked);
+        const msg = language === 'it' ? 'Richiesta inviata a Home Assistant.' : 'Request sent to Home Assistant.';
+        setDoorMessage(msg);
+        showDoorFeedbackBanner(
+          'success',
+          language === 'it' ? 'Comando inviato' : 'Unlock command sent',
+          language === 'it' ? 'Home Assistant ha accettato la richiesta. Verifica l’apertura fisica della porta.' : 'Home Assistant accepted the request. Check that the door physically unlocked.',
+          2000
+        );
         trackActivity(pass, 'smart_lock_open_success');
       } else {
-        throw new Error(data.error || 'Impossibile completare lo sblocco');
+        const errText = data.error || 'Impossibile completare lo sblocco';
+        const proximity = data.proximity;
+        if (typeof proximity?.distanceMeters === 'number') {
+          setWifiVerified(false);
+          setWifiMessage(proximity.reason || errText);
+        }
+        const isTooFar =
+          (typeof proximity?.distanceMeters === 'number' &&
+            proximity.distanceMeters > (proximity.geofenceRadiusMeters ?? 65)) ||
+          /troppo lontano|a \d+ metri|distanza/i.test(errText);
+        const isNotConnected = Boolean(
+          data.wifiBlocked || data.proximityBlocked ||
+          /wifi|wi-fi|conness|prossimit|gps|posizione/i.test(errText)
+        );
+        setDoorState('error');
+        setDoorMessage(errText);
+        if (isTooFar) {
+          showDoorFeedbackBanner(
+            'too_far',
+            language === 'it' ? 'Troppo lontano' : 'Too far away',
+            errText,
+            2200
+          );
+        } else if (isNotConnected) {
+          showDoorFeedbackBanner(
+            'not_connected',
+            language === 'it' ? 'Non connesso al Wi-Fi' : 'Not connected to Wi-Fi',
+            errText,
+            2200
+          );
+        } else {
+          showDoorFeedbackBanner(
+            'error',
+            language === 'it' ? 'Errore apertura porta' : 'Door unlock error',
+            errText,
+            2200
+          );
+        }
+        trackActivity(pass, 'smart_lock_open_error', errText);
       }
-    } catch (err: any) {
-      setDoorState('error');
-      setDoorMessage(err.message || 'Errore di connessione. Riprova.');
-      trackActivity(pass, 'smart_lock_open_error', err?.message);
+    } catch (err: any) {          setDoorState('error');
+          const errMsg = err?.message || 'Errore di connessione. Riprova.';
+      setDoorMessage(errMsg);
+      showDoorFeedbackBanner(
+        'error',
+        language === 'it' ? 'Errore di connessione' : 'Connection error',
+        errMsg,
+        2200
+      );
+      trackActivity(pass, 'smart_lock_open_error', errMsg);
     } finally {
       window.setTimeout(() => {
         setDoorState('idle');
         setDoorMessage('');
-      }, 4500);
+      }, 2200);
+    }
+  };
+
+  const HOLD_DURATION_MS = 1200;
+
+  const cancelHoldEarly = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (elapsed >= HOLD_DURATION_MS) {
+      finishHold(event);
+      return;
+    }
+    cancelHold(event);
+    if (elapsed > 0 && doorState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
+    }
+  };
+
+  const finishHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (!elapsed) return;
+    cancelHold(event);
+    if (elapsed >= HOLD_DURATION_MS && doorState === 'idle') {
+      void runDoorOpen();
+    } else if (doorState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
     }
   };
 
   const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (doorState !== 'idle') return;
+    if (doorState !== 'idle' || holdStartedAt.current > 0) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     holdStartedAt.current = Date.now();
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(15);
     holdTimer.current = setInterval(() => {
-      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1300);
+      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / HOLD_DURATION_MS);
       setHoldProgress(progress);
-      if (progress >= 1) {
-        cancelHold();
-        void runDoorOpen();
-      }
-    }, 30);
+      if (progress >= 1) finishHold();
+    }, 25);
   };
 
   useEffect(() => cancelHold, []);
@@ -800,14 +917,16 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     };
   }, [sheet]);
 
-  const renderPhotoCard = (item: GuideTileItem) => (
-    <EditableElement key={item.page} id={`home.tile-${item.page}`} label={item.label} className="rounded-3xl shrink-0 snap-start">
+  const renderPhotoCard = (item: GuideTileItem) => {
+    const cmsId = item.cmsId || item.page;
+    return (
+    <EditableElement key={cmsId} id={`home.tile-${cmsId}`} label={item.label} className="rounded-3xl shrink-0 snap-start">
     <button
       onClick={() => onNavigate(item.page)}
       className="relative flex-shrink-0 w-[240px] sm:w-[270px] aspect-[16/10] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 group cursor-pointer shadow-xl transition-all duration-300 active:scale-[0.96] text-left snap-start"
       aria-label={item.label}
     >
-      <TileImage page={item.page} fallback={item.bgImage} alt={item.label} />
+      <TileImage page={item.page} cmsId={cmsId} fallback={item.bgImage} alt={item.label} />
       {/* Dark gradient for text readability without obscuring photo */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1 z-10 pointer-events-none">
@@ -820,11 +939,59 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       </div>
     </button>
     </EditableElement>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-black text-white selection:bg-emerald-500/25 selection:text-emerald-200">
       
+      {/* Banner rapido stato Apertura Porta (1.5 - 2 sec) */}
+      {doorBanner && (
+        <div
+          className={`fixed top-4 left-4 right-4 z-[80] mx-auto max-w-[440px] flex items-center gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-3 duration-200 ${
+            doorBanner.type === 'success'
+              ? 'border-emerald-400/60 bg-emerald-950/95 text-emerald-100'
+              : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+              ? 'border-amber-400/60 bg-amber-950/95 text-amber-100'
+              : doorBanner.type === 'hint'
+              ? 'border-sky-400/60 bg-sky-950/95 text-sky-100'
+              : 'border-rose-400/60 bg-rose-950/95 text-rose-100'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              doorBanner.type === 'success'
+                ? 'bg-emerald-500 text-black'
+                : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+              ? 'bg-amber-500 text-black'
+              : doorBanner.type === 'hint'
+              ? 'bg-sky-500 text-black'
+              : 'bg-rose-500 text-white'
+            }`}
+          >
+            {doorBanner.type === 'success' ? (
+              <CheckCircle2 className="h-6 w-6" />
+            ) : doorBanner.type === 'not_connected' ? (
+              <Wifi className="h-5 w-5" />
+            ) : doorBanner.type === 'too_far' ? (
+              <MapPin className="h-5 w-5" />
+            ) : doorBanner.type === 'hint' ? (
+              <span className="text-lg font-black">!</span>
+            ) : (
+              <ShieldAlert className="h-5 w-5" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <strong className="block text-sm font-extrabold tracking-tight">
+              {doorBanner.title}
+            </strong>
+            <span className="block text-xs opacity-90 leading-snug mt-0.5">
+              {doorBanner.detail}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Avviso stato azioni accessibili */}
       {alertMessage && (
         <div className="fixed top-4 left-4 right-4 z-50 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-zinc-900/95 p-4 text-xs font-bold text-amber-100 shadow-2xl">
@@ -976,49 +1143,104 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
               <button type="button" onClick={handleWifiClick} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
                 <Wifi className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">Wi-Fi</span>
               </button>
-              <button type="button" onPointerDown={event => { if (!isCheckinConfirmed) handleDoorClick(); else startHold(event); }} onPointerUp={isCheckinConfirmed ? cancelHold : undefined} onPointerCancel={isCheckinConfirmed ? cancelHold : undefined} onPointerLeave={isCheckinConfirmed ? cancelHold : undefined} disabled={doorState === 'opening' || !isStayActive || !isCheckinApproved} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800 disabled:opacity-50" title={doorState === 'idle' ? (language === 'it' ? 'Tieni premuto per aprire' : 'Press and hold to unlock') : doorMessage}>
-                <DoorOpen className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{doorState === 'opening' ? (language === 'it' ? 'Apro…' : 'Opening…') : doorState === 'success' ? (language === 'it' ? 'Aperta' : 'Opened') : (language === 'it' ? 'Apri Porta' : 'Open door')}</span>
+              <button
+                type="button"
+                onPointerDown={(event) => {
+                  if (!isCheckinConfirmed || !isCheckinApproved || !isStayActive) {
+                    handleDoorClick();
+                  } else {
+                    startHold(event);
+                  }
+                }}
+                onPointerUp={finishHold}
+                onPointerCancel={cancelHold}
+                onPointerLeave={cancelHoldEarly}
+                disabled={doorState === 'opening'}
+                className={`relative overflow-hidden flex min-w-0 flex-col items-center gap-2 rounded-2xl border p-3 text-center transition select-none touch-none cursor-pointer ${
+                  doorState === 'success'
+                    ? 'border-emerald-400 bg-emerald-500/25 text-emerald-100'
+                    : doorState === 'error'
+                    ? 'border-rose-400 bg-rose-500/25 text-rose-100'
+                    : holdProgress > 0
+                    ? 'border-emerald-400 bg-zinc-800 scale-[0.96]'
+                    : 'border-white/10 bg-zinc-900/75 hover:border-emerald-400/40 hover:bg-zinc-800'
+                } ${!isStayActive || !isCheckinApproved ? 'opacity-60' : ''}`}title={doorState === 'idle' ? language === 'it' ? 'Tieni premuto 1,2 secondi per inviare la richiesta di apertura' : 'Hold for 1.2 seconds to send the unlock request' : doorMessage} aria-label={language === 'it' ? 'Tieni premuto 1,2 secondi per aprire la porta' : 'Hold for 1.2 seconds to unlock the door'}
+              >
+                {holdProgress > 0 && (
+                  <span
+                    className="absolute inset-y-0 left-0 bg-emerald-400/25 pointer-events-none transition-none"
+                    style={{ width: `${holdProgress * 100}%` }}
+                  />
+                )}
+                <DoorOpen className="relative z-10 h-5 w-5 text-emerald-300" />
+                <span className="relative z-10 text-[10px] font-semibold leading-tight">
+                  {doorState === 'opening'
+                    ? language === 'it'
+                      ? 'Apro…'
+                      : 'Opening…'
+                    : doorState === 'success'
+                    ? language === 'it'
+                    ? 'Comando inviato'
+                    : 'Command sent'
+                    : doorState === 'error'
+                    ? language === 'it' ? 'Riprova' : 'Try again'
+                    : holdProgress > 0
+                    ? `${Math.ceil(holdProgress * 100)}%`
+                    : language === 'it'
+                    ? 'Tieni premuto 1,2 sec'
+                    : 'Hold for 1.2 sec'}
+                </span>
               </button>
               <button type="button" onClick={() => { onNavigate('regole'); trackActivity(pass, 'house_rules_view'); }} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/75 p-3 text-center transition hover:border-emerald-400/40 hover:bg-zinc-800">
                 <BookOpen className="h-5 w-5 text-emerald-300" /><span className="text-[10px] font-semibold leading-tight">{language === 'it' ? 'Regole' : 'Rules'}</span>
               </button>
             </div>
-            {doorMessage && <p className={`text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-emerald-200'}`}>{doorMessage}</p>}
+            {doorMessage && <p role="status" aria-live="polite" className={`text-center text-xs ${doorState === 'error' ? 'text-rose-300' : 'text-emerald-200'}`}>{doorMessage}</p>}
           </section>
         )}
 
-        {/* Area 3: tile e informazioni utili; resta visibile anche prima del check-in */}
-        {/* Photo Carousel temporarily hidden; keep component for easy reactivation. */}
+        {/* Area 3: Carosello Foto opzionale (attivabile dal CMS) */}
+        {showPhotoCarousel && <PhotoCarousel media={media} language={language} selectedImages={carouselImages} />}
 
+        {/* Sezioni della Home gestite dal Visual CMS (o localizzate per altre lingue) */}
+        {(language === 'it'
+          ? cmsHomeSections.filter((s) => s.visible)
+          : [
+              { id: 'houseEssentials', ...guideSections.houseEssentials, visible: true },
+              { id: 'exploreValtellina', ...guideSections.exploreValtellina, visible: true },
+              { id: 'supportSecurity', ...guideSections.supportSecurity, visible: true },
+              { id: 'departure', ...guideSections.departure, visible: true },
+            ]
+        ).map((section) => (
+          <section key={section.id} className="space-y-3">
+            <EditableElement id={`home.section-${section.id}`} label={section.title} className="rounded-lg">
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-tight">
+                  {section.title}
+                </h2>
+                {section.subtitle && (
+                  <p className="text-xs text-white/55 mt-0.5">{section.subtitle}</p>
+                )}
+              </div>
+            </EditableElement>
+            <ScrollableTileRow hintLabel="Scorri per altro">
+              {section.items.map((it: any) =>
+                renderPhotoCard({
+                  page: it.page,
+                  label: it.label,
+                  tag: it.tag || '',
+                  desc: it.desc,
+                  icon: it.icon || <Info className="h-5 w-5" />,
+                  bgImage: it.bgImage,
+                  cmsId: it.id,
+                })
+              )}
+            </ScrollableTileRow>
+          </section>
+        ))}
 
-
-        {/* Informazioni utili: attività, ristoranti, spesa e servizi.
-            Sezioni "Guida & Arrivo" e "Idee per oggi" rimosse per richiesta host:
-            restano Esplora Valtellina, Supporto & Sicurezza (e Services sotto). */}
-
-        {/* SECTION 3: Esplora Valtellina */}
-        <section className="space-y-3">
-          <EditableElement id="home.section-explore" label="Titolo Esplora" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.exploreValtellina.title}
-            </h2>
-          </EditableElement>
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.exploreValtellina.items.map(renderPhotoCard)}
-          </ScrollableTileRow>
-        </section>
-
-        {/* SECTION 4: Supporto & Sicurezza */}
-        <section className="space-y-3">
-          <EditableElement id="home.section-support" label="Titolo Supporto" className="rounded-lg">
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              {guideSections.supportSecurity.title}
-            </h2>
-          </EditableElement>
-          <ScrollableTileRow hintLabel="Scorri per altro">
-            {guideSections.supportSecurity.items.map(renderPhotoCard)}
-          </ScrollableTileRow>
-        </section>
+        {/* Blocchi personalizzati liberi aggiunti alla Home */}
+        <CustomBlocksRenderer pageKey="grid_menu" />
 
 
       </main>
@@ -1184,10 +1406,11 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
 // ============================================================
 
 /** Immagine di un tile con override CMS (upload host) e overlay di sostituzione. */
-const TileImage: React.FC<{ page: string; fallback: string; alt: string }> = ({ page, fallback, alt }) => {
+const TileImage: React.FC<{ page: string; cmsId?: string; fallback: string; alt: string }> = ({ page, cmsId: tileId, fallback, alt }) => {
   const { images } = useEditMode();
-  const override = images[`home.tile-${page}`];
-  const cmsId = `home.tile-${page}`;
+  const cmsId = `home.tile-${tileId || page}`;
+  // Compatibilità con le foto sovrascritte prima del CMS per-card.
+  const override = images[cmsId] || images[`home.tile-${page}`];
   return (
     <EditableImageOverlay id={cmsId} buttonPosition="center" triggerOnHover>
       <img
@@ -1278,10 +1501,12 @@ const GuestCardImageOverlay: React.FC = () => {
  */
 const CarouselSlideImage: React.FC<{ slideKey: string; fallback: string; alt: string }> = ({ slideKey, fallback, alt }) => {
   const { images } = useEditMode();
-  const override = images[`home.carousel-${slideKey}`];
+  const carouselId = `home.carousel-${slideKey}`;
+  const legacyTileId = `home.tile-${slideKey}`;
+  const override = images[carouselId] || images[legacyTileId];
   return (
     <EditableImageOverlay
-      id={`home.carousel-${slideKey}`}
+      id={carouselId}
       buttonPosition="center"
       triggerOnHover
     >

@@ -25,6 +25,7 @@ import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { checkCasaAuroraWifi } from '../../../services/wifiDetectionService';
 import { DocumentUploadForm } from '../../vip/DocumentUploadForm';
 import { trackActivity } from '../../../services/activityTrackingService';
+import { PageEditable, CustomBlocksRenderer } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -49,6 +50,28 @@ export const CheckinPage: React.FC<Props> = ({
 
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [doorBanner, setDoorBanner] = useState<{
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint';
+    title: string;
+    detail: string;
+  } | null>(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdStartedAt = React.useRef(0);
+  const bannerTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showDoorFeedbackBanner = (
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint',
+    title: string,
+    detail: string,
+    durationMs = 2000
+  ) => {
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    setDoorBanner({ type, title, detail });
+    bannerTimerRef.current = setTimeout(() => {
+      setDoorBanner(null);
+    }, durationMs);
+  };
   
   // Real Wi-Fi Network Detection State
   const [wifiChecking, setWifiChecking] = useState<boolean>(true);
@@ -96,15 +119,23 @@ export const CheckinPage: React.FC<Props> = ({
   };
 
   const handleOpenDoor = async () => {
-    const wifiCheck = await checkCasaAuroraWifi();
-    setWifiVerified(wifiCheck.verified);
-    setWifiMessage(wifiCheck.message);
-
     setOpeningState('opening');
-    if (!wifiCheck.verified) {
-      setStatusMessage(language === 'it' ? "Wi-Fi non rilevato. Invio comando tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
-    } else {
-      setStatusMessage(t.concierge.doorMessage.sending);
+    setStatusMessage(t.concierge.doorMessage.sending);
+    triggerHaptic();
+
+    let wifiCheck: Awaited<ReturnType<typeof checkCasaAuroraWifi>>;
+    try {
+      wifiCheck = await checkCasaAuroraWifi();
+      setWifiVerified(wifiCheck.verified);
+      setWifiMessage(wifiCheck.message);
+    } catch {
+      wifiCheck = {
+        verified: false,
+        status: 'error',
+        ssid: 'Casa_Aurora',
+        reason: 'proximity_check_failed',
+        message: language === 'it' ? 'Verifica connessione/posizione non riuscita.' : 'Could not verify network or location.',
+      };
     }
 
     try {
@@ -131,28 +162,169 @@ export const CheckinPage: React.FC<Props> = ({
         triggerHaptic();
         setOpeningState('success');
         setStatusMessage(t.concierge.doorMessage.unlocked);
+        showDoorFeedbackBanner(
+          'success',
+          language === 'it' ? 'Comando inviato' : 'Unlock command sent',
+          language === 'it' ? 'Home Assistant ha accettato la richiesta. Se la porta non scatta, riprova o contatta l’host.' : 'Home Assistant accepted the request. If the door did not unlock, retry or contact your host.',
+          2000
+        );
         trackActivity(pass, 'smart_lock_open_success');
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
-        }, 6000);
+        }, 2500);
       } else {
-        throw new Error(data.error || 'Impossibile completare lo sblocco');
+        const errText = data.error || 'Impossibile completare lo sblocco';
+        const proximity = data.proximity;
+        const isTooFar =
+          (typeof proximity?.distanceMeters === 'number' &&
+            proximity.distanceMeters > (proximity.geofenceRadiusMeters ?? 65)) ||
+          /troppo lontano|a \d+ metri|distanza/i.test(errText);
+        const isNotConnected = Boolean(
+          data.wifiBlocked || data.proximityBlocked ||
+          /wifi|wi-fi|conness|prossimit|gps|posizione/i.test(errText)
+        );
+        setOpeningState('error');
+        setStatusMessage(errText);
+        showDoorFeedbackBanner(
+          isTooFar ? 'too_far' : isNotConnected ? 'not_connected' : 'error',
+          isTooFar
+            ? language === 'it' ? 'Troppo lontano' : 'Too far away'
+            : isNotConnected
+            ? language === 'it' ? 'Non connesso al Wi-Fi' : 'Not connected to Wi-Fi'
+            : language === 'it' ? 'Errore apertura porta' : 'Door unlock error',
+          errText,
+          2200
+        );
+        trackActivity(pass, 'smart_lock_open_error', errText);
+        setTimeout(() => {
+          setOpeningState('idle');
+        }, 2500);
       }
     } catch (err: any) {
       setOpeningState('error');
-      setStatusMessage(err.message || 'Errore di comunicazione. Verifica che Home Assistant sia online.');
+      const errMsg = err.message || 'Errore di comunicazione. Verifica che Home Assistant sia online.';
+      setStatusMessage(errMsg);
+      showDoorFeedbackBanner(
+        'error',
+        language === 'it' ? 'Errore di connessione' : 'Connection error',
+        errMsg,
+        2200
+      );
       trackActivity(pass, 'smart_lock_open_error', err?.message);
       setTimeout(() => {
         setOpeningState('idle');
-      }, 6000);
+      }, 2500);
     }
   };
+
+  const cancelHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    if (event && event.currentTarget && event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (holdTimer.current) clearInterval(holdTimer.current);
+    holdTimer.current = null;
+    holdStartedAt.current = 0;
+    setHoldProgress(0);
+  };
+
+  const HOLD_DURATION_MS = 1200;
+
+  const cancelHoldEarly = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (elapsed >= HOLD_DURATION_MS) {
+      finishHold(event);
+      return;
+    }
+    cancelHold(event);
+    if (elapsed > 0 && openingState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
+    }
+  };
+
+  const finishHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (!elapsed) return;
+    cancelHold(event);
+    if (elapsed >= HOLD_DURATION_MS && openingState === 'idle') {
+      void handleOpenDoor();
+    } else if (openingState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
+    }
+  };
+
+  const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (openingState !== 'idle' || (pass !== null && !pass.checkInConfirmed) || holdStartedAt.current > 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    holdStartedAt.current = Date.now();
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(15);
+    holdTimer.current = setInterval(() => {
+      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / HOLD_DURATION_MS);
+      setHoldProgress(progress);
+      if (progress >= 1) finishHold();
+    }, 25);
+  };
+
+  useEffect(() => cancelHold, []);
 
   const cleanBadge = (c.badge || '').replace(/:+/g, '').trim();
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
+      {/* Banner rapido stato Apertura Porta (1.5 - 2 sec) */}
+      {doorBanner && (
+        <div
+          className={`fixed top-4 left-4 right-4 z-[80] mx-auto max-w-[440px] flex items-center gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-3 duration-200 ${
+            doorBanner.type === 'success'
+              ? 'border-emerald-400/60 bg-emerald-950/95 text-emerald-100'
+              : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+              ? 'border-amber-400/60 bg-amber-950/95 text-amber-100'
+              : doorBanner.type === 'hint'
+              ? 'border-sky-400/60 bg-sky-950/95 text-sky-100'
+              : 'border-rose-400/60 bg-rose-950/95 text-rose-100'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              doorBanner.type === 'success'
+                ? 'bg-emerald-500 text-black'
+                : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+                ? 'bg-amber-500 text-black'
+                : doorBanner.type === 'hint'
+                ? 'bg-sky-500 text-black'
+                : 'bg-rose-500 text-white'
+            }`}
+          >
+            {doorBanner.type === 'success' ? (
+              <CheckCircle2 className="h-6 w-6" />
+            ) : doorBanner.type === 'not_connected' ? (
+              <Wifi className="h-5 w-5" />
+            ) : (
+              <AlertCircle className="h-5 w-5" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <strong className="block text-sm font-extrabold tracking-tight">
+              {doorBanner.title}
+            </strong>
+            <span className="block text-xs opacity-90 leading-snug mt-0.5">
+              {doorBanner.detail}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="aurora-subpage-shell">
         
         {/* Sleek Apple-inspired Navigation Header */}
@@ -343,14 +515,29 @@ export const CheckinPage: React.FC<Props> = ({
               </div>
             )}
 
-            {/* Apple-Grade Compact Horizontal Action Button */}
+            {/* Apple-Grade Compact Horizontal Hold-to-Open Action Button */}
             <div>
               <button
                 id="btn-open-door-checkin"
                 type="button"
-                onClick={handleOpenDoor}
-                disabled={!pass.checkInConfirmed || openingState === 'opening' || wifiChecking || !wifiVerified}
-                className={`group relative w-full overflow-hidden rounded-xl py-3 px-4 font-semibold tracking-tight transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none active:scale-[0.98] ${
+                onPointerDown={(event) => {
+                  if (!pass.checkInConfirmed) {
+                    showDoorFeedbackBanner(
+                      'not_connected',
+                      language === 'it' ? 'Check-in non confermato' : 'Check-in not confirmed',
+                      language === 'it' ? 'L’host deve confermare il check-in prima di abilitare l’apertura.' : 'Your host must confirm check-in before unlocking is enabled.',
+                      2000
+                    );
+                    return;
+                  }
+                  startHold(event);
+                }}
+                aria-label={language === 'it' ? 'Tieni premuto 1,2 secondi per aprire la porta' : 'Hold for 1.2 seconds to unlock the door'}
+                onPointerUp={finishHold}
+                onPointerCancel={cancelHold}
+                onPointerLeave={cancelHoldEarly}
+                disabled={openingState === 'opening'}
+                className={`group relative w-full overflow-hidden rounded-xl py-3.5 px-4 font-semibold tracking-tight transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none touch-none ${
                   !pass.checkInConfirmed
                     ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
                     : openingState === 'opening'
@@ -359,12 +546,18 @@ export const CheckinPage: React.FC<Props> = ({
                     ? 'bg-[#62e6bd] text-[#07110d] shadow-[0_8px_25px_rgba(98,230,189,0.4)]'
                     : openingState === 'error'
                     ? 'bg-rose-500 text-white shadow-[0_8px_25px_rgba(244,63,94,0.3)]'
-                    : wifiVerified
-                    ? 'bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] shadow-[0_10px_30px_rgba(98,230,189,0.25)] hover:shadow-[0_12px_35px_rgba(98,230,189,0.35)]'
-                    : 'bg-white/[0.06] text-white/30 border border-white/5 cursor-not-allowed'
+                    : holdProgress > 0
+                    ? 'bg-[#4ddbb0] text-[#07110d] scale-[0.98]'
+                    : 'bg-[#62e6bd] hover:bg-[#93f4d4] text-[#07110d] shadow-[0_10px_30px_rgba(98,230,189,0.25)] hover:shadow-[0_12px_35px_rgba(98,230,189,0.35)]'
                 }`}
               >
-                {!pass.checkInConfirmed ? (
+                {holdProgress > 0 && (
+                  <span
+                    className="absolute inset-y-0 left-0 bg-black/20 pointer-events-none"
+                    style={{ width: `${holdProgress * 100}%` }}
+                  />
+                )}
+                {pass && !pass.checkInConfirmed ? (
                   <>
                     <Lock className="w-4 h-4 text-white/30" />
                     <span className="text-xs sm:text-sm font-semibold text-white/40">{t.checkInPage.pendingHostConfirmation}</span>
@@ -377,34 +570,26 @@ export const CheckinPage: React.FC<Props> = ({
                 ) : openingState === 'success' ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-[#07110d]" />
-                    <span className="text-xs sm:text-sm font-bold text-[#07110d] tracking-tight">{t.concierge.doorOpeningState.success}</span>
+                    <span className="text-xs sm:text-sm font-bold text-[#07110d] tracking-tight">{language === 'it' ? 'Comando inviato' : 'Command sent'}</span>
                   </>
                 ) : openingState === 'error' ? (
                   <>
                     <AlertCircle className="w-4 h-4 text-white" />
                     <span className="text-xs sm:text-sm font-bold text-white">{t.concierge.doorOpeningState.error}</span>
                   </>
-                ) : wifiChecking ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-white/50" />
-                    <span className="text-xs sm:text-sm font-semibold text-white/50">{wifiMsgs.verifying}</span>
-                  </>
-                ) : wifiVerified ? (
-                  <>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#07110d]/10 text-[#07110d] group-hover:scale-110 transition-transform duration-200">
-                      <Unlock className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-bold tracking-tight text-[#07110d]">
-                      {wifiMsgs.openBtn}
-                    </span>
-                  </>
                 ) : (
                   <>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-white/5 text-white/30">
-                      <Lock className="w-3.5 h-3.5" />
+                    <div className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center bg-[#07110d]/15 text-[#07110d] group-hover:scale-110 transition-transform duration-200">
+                      <Unlock className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-xs sm:text-sm font-semibold tracking-tight text-white/40">
-                      {wifiMsgs.wifiRequiredBtn}
+                    <span className="relative z-10 text-xs sm:text-sm font-bold tracking-tight text-[#07110d]">
+                      {holdProgress > 0
+                        ? language === 'it'
+                          ? `Tieni premuto… ${Math.ceil(holdProgress * 100)}%`
+                          : `Hold… ${Math.ceil(holdProgress * 100)}%`
+                        : language === 'it'
+                        ? 'Tieni premuto 1,2 sec per Aprire la Porta'
+                        : 'Hold for 1.2 sec to Unlock Door'}
                     </span>
                   </>
                 )}
@@ -413,12 +598,14 @@ export const CheckinPage: React.FC<Props> = ({
               {/* Status Output */}
               <div className="mt-2 text-center min-h-[16px]">
                 {statusMessage ? (
-                  <p className="text-[11px] font-semibold text-[#62e6bd] tracking-tight">
+                  <p                  role="status"
+                  aria-live="polite"
+                  className="text-[11px] font-semibold text-[#62e6bd] tracking-tight">
                     {statusMessage}
                   </p>
                 ) : (
                   <p className="text-[11px] text-white/50 font-normal tracking-tight">
-                    {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : wifiMsgs.pressToUnlockNotice}
+                    {!pass.checkInConfirmed ? t.checkInPage.pendingHostConfirmationDesc : 'Tieni premuto 1,2 sec per inviare la richiesta di apertura.'}
                   </p>
                 )}
               </div>
@@ -455,6 +642,7 @@ export const CheckinPage: React.FC<Props> = ({
         )}
 
         {/* SECTION 2: In-Person Welcome & Keys */}
+        <PageEditable id="page.check_in.welcome-keys" label="Accoglienza e Chiavi">
         <div className="aurora-glass-card space-y-4">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#62e6bd]/40 ring-2 ring-[#62e6bd]/15 shadow-md shrink-0 bg-white/10">
@@ -530,8 +718,10 @@ export const CheckinPage: React.FC<Props> = ({
             </a>
           </div>
         </div>
+        </PageEditable>
 
         {/* SECTION 3: Parcheggio Privato */}
+        <PageEditable id="page.check_in.parking" label="Parcheggio Privato">
         <div className="aurora-glass-card space-y-3">
           <div className="flex items-center gap-3">
             <div className="aurora-icon-box">
@@ -558,6 +748,9 @@ export const CheckinPage: React.FC<Props> = ({
             </span>
           </div>
         </div>
+        </PageEditable>
+
+        <CustomBlocksRenderer pageKey="check_in" />
 
       </div>
     </div>

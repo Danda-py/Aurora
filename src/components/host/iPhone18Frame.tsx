@@ -5,7 +5,7 @@ interface iPhone18FrameProps {
   className?: string;
 }
 
-export const iPhone18Frame = ({ 
+export const IPhone18Frame = ({
   children, 
   className = '' 
 }: iPhone18FrameProps) => {

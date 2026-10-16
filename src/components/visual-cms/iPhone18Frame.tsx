@@ -11,7 +11,7 @@ interface iPhone18FrameProps {
  * Frame iPhone 18 con proporzioni autentiche, Dynamic Island e safe areas.
  * Lo schermo interno è un viewport 390x844 (logico) scalabile.
  */
-export const iPhone18Frame: React.FC<iPhone18FrameProps> = ({ children, className = '', scale = 1 }) => {
+export const IPhone18Frame: React.FC<iPhone18FrameProps> = ({ children, className = '', scale = 1 }) => {
   const W = 390;
   const H = 844;
 

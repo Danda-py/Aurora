@@ -10,7 +10,7 @@ import { VisualCMSBuilder } from '../components/visual-cms';
 export const VisualCMSPage: React.FC = () => {
   return (
     <div className="min-h-[100dvh] w-full bg-[#0b0f14] flex flex-col items-center justify-start py-6 px-3 select-none">
-      <header className="w-full max-w-2xl flex items-center justify-between gap-3 mb-2">
+      <header className="w-full max-w-6xl flex items-center justify-between gap-3 mb-2 px-3 sm:px-6">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-300">
             <SparklesIcon />

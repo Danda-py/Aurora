@@ -4,8 +4,9 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall, ShieldCheck } from 'lucide-react';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,11 +16,12 @@ interface Props {
 
 export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const r = BOOK_DATA[language].rules;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
 
-  const rulesList = [
+  const defaultRulesList = [
     {
       num: 1,
       title: r.r1Title,
@@ -63,6 +65,18 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
       color: 'bg-blue-500/15 border-blue-500/25 text-blue-300'
     }
   ];
+
+  const cmsRules = subpageItems['regole'];
+  const rulesList =
+    language === 'it' && cmsRules !== undefined
+      ? cmsRules.map((it, idx) => ({
+          num: idx + 1,
+          title: it.title,
+          desc: it.desc,
+          icon: defaultRulesList[idx]?.icon ?? <ShieldCheck className="w-4 h-4 text-emerald-400" />,
+          color: defaultRulesList[idx]?.color ?? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
+        }))
+      : defaultRulesList;
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -120,6 +134,8 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
             </PageEditable>
           ))}
         </div>
+
+        <CustomBlocksRenderer pageKey="regole" />
 
       </div>
     </div>

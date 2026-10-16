@@ -1,5 +1,5 @@
 import React from 'react';
-import { iPhone18Frame } from './iPhone18Frame';
+import { IPhone18Frame } from './iPhone18Frame';
 
 interface iPhone18LiveCanvasProps {
   className?: string;
@@ -9,7 +9,7 @@ export const iPhone18LiveCanvas = ({ className = '' }: iPhone18LiveCanvasProps) 
   return (
     <div className={`min-h-[80vh] px-4 ${className}`}>
       <div className="flex-1 mt-4 relative">
-        <iPhone18Frame>
+        <IPhone18Frame>
           {/* Static content placeholder - in a real app, this would be your actual content */}
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-center p-4">
             <div>
@@ -32,7 +32,7 @@ export const iPhone18LiveCanvas = ({ className = '' }: iPhone18LiveCanvasProps) 
               </div>
             </div>
           </div>
-        </iPhone18Frame>
+        </IPhone18Frame>
       </div>
 
       {/* Status indicator */}

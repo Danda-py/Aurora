@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { CheckCircle2, Info } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,9 +16,15 @@ interface Props {
 
 export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const am = BOOK_DATA[language].amenities;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsAmenities = subpageItems['servizi'];
+  const itemsList =
+    language === 'it' && cmsAmenities !== undefined
+      ? cmsAmenities.map((it) => ({ title: it.title, desc: it.desc }))
+      : am.items;
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -47,7 +54,7 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
 
         {/* Grid of amenities */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {am.items.map((item, idx) => (
+          {itemsList.map((item, idx) => (
             <PageEditable key={idx} id={`page.servizi.item-${idx}`} label={item.title}>
               <div
                 className="aurora-item-card items-center"
@@ -75,6 +82,8 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
             <span className="text-xs text-white/70 leading-relaxed">{am.notice}</span>
           </div>
         </PageEditable>
+
+        <CustomBlocksRenderer pageKey="servizi" />
 
       </div>
     </div>

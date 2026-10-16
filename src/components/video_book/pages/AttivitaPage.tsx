@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,9 +16,20 @@ interface Props {
 
 export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const act = BOOK_DATA[language].activities;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsHighlights = subpageItems['attivita'];
+  const highlightsList =
+    language === 'it' && cmsHighlights !== undefined
+      ? cmsHighlights.map((it) => ({
+          tag: it.tag || it.subtitle || 'Esperienza',
+          title: it.title,
+          desc: it.desc,
+          mapsUrl: it.mapsUrl || '',
+        }))
+      : act.highlights;
 
   const categoryIcons = [
     <Bike key="bike" className="w-5 h-5 text-[#62e6bd] shrink-0" />,
@@ -59,7 +71,7 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             <h3 className="text-base font-bold text-white tracking-tight">{labels.nearby}</h3>
           </div>
 
-          {act.highlights.map((item, index) => (
+          {highlightsList.map((item, index) => (
             <PageEditable key={index} id={`page.attivita.highlight-${index}`} label={item.title}>
               <div
                 className="aurora-glass-card space-y-3"
@@ -114,6 +126,8 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             ))}
           </div>
         </div>
+
+        <CustomBlocksRenderer pageKey="attivita" />
 
       </div>
     </div>

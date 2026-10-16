@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Wifi, Copy, Check, QrCode, Zap, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -149,6 +149,8 @@ export const WifiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLang
             </p>
           </div>
         </PageEditable>
+
+        <CustomBlocksRenderer pageKey="wifi" />
 
       </div>
     </div>

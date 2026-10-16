@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Sparkles, Bed, Utensils, Tv, Mountain, Heart, Key, ShieldCheck, Info } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { PageEditable, EditableHeroBanner, EditableImage } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, EditableImage, CustomBlocksRenderer } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -218,6 +218,8 @@ export const BenvenutoPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </div>
           </div>
         </div>
+
+        <CustomBlocksRenderer pageKey="benvenuto" />
 
       </div>
     </div>

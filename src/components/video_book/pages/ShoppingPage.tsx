@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,9 +16,21 @@ interface Props {
 
 export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const sh = BOOK_DATA[language].shopping;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsShops = subpageItems['shopping'];
+  const shopsList =
+    language === 'it' && cmsShops !== undefined
+      ? cmsShops.map((it) => ({
+          title: it.title,
+          time: it.time || it.address || '',
+          hours: it.hours || it.phone || '',
+          desc: it.desc,
+          mapsUrl: it.mapsUrl || '',
+        }))
+      : sh.shops;
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -47,7 +60,7 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
 
         {/* Shopping List */}
         <div className="space-y-3">
-          {sh.shops.map((shop, idx) => (
+          {shopsList.map((shop, idx) => (
             <PageEditable key={idx} id={`page.shopping.shop-${idx}`} label={shop.title}>
               <div
                 className="aurora-glass-card space-y-3"
@@ -92,6 +105,8 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             </PageEditable>
           ))}
         </div>
+
+        <CustomBlocksRenderer pageKey="shopping" />
 
       </div>
     </div>

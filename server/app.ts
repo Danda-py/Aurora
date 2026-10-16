@@ -1284,8 +1284,9 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         
         res.status(403).json({
           success: false,
-          wifiBlocked: true,
+          wifiBlocked: proximity.reason?.toLowerCase().includes('wi-fi') || proximity.reason?.toLowerCase().includes('wifi') || !proximity.distanceMeters,
           proximityBlocked: true,
+          tooFar: typeof proximity.distanceMeters === 'number' && proximity.distanceMeters > (proximity.geofenceRadiusMeters || 65),
           error: errorMsg,
           proximity
         });
@@ -1341,7 +1342,8 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         res.status(isWifiBlocked ? 403 : 500).json({
           success: false,
           error: result.error || 'Impossibile completare lo sblocco',
-          wifiBlocked: isWifiBlocked
+          wifiBlocked: isWifiBlocked,
+          proximity
         });
       }
     } catch (err: any) {
@@ -1547,7 +1549,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         return;
       }
       // Validazione della forma: solo le collection note, chiavi semplici.
-      const allowed = ['styles', 'texts', 'images', 'times', 'links'] as const;
+      const allowed = ['styles', 'texts', 'images', 'times', 'links', 'customBlocks'] as const;
       const clean: Record<string, unknown> = { version: 1 };
       for (const k of allowed) {
         const section = (doc as any)[k] ?? {};
@@ -1562,6 +1564,18 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
           }
         }
         clean[k] = section;
+      }
+      if (Array.isArray((doc as any).homeSections)) {
+        clean.homeSections = (doc as any).homeSections;
+      }
+      if (typeof (doc as any).showPhotoCarousel === 'boolean') {
+        clean.showPhotoCarousel = (doc as any).showPhotoCarousel;
+      }
+      if (Array.isArray((doc as any).carouselImages) && (doc as any).carouselImages.every((key: unknown) => typeof key === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(key))) {
+        clean.carouselImages = (doc as any).carouselImages;
+      }
+      if ((doc as any).subpageItems && typeof (doc as any).subpageItems === 'object' && !Array.isArray((doc as any).subpageItems)) {
+        clean.subpageItems = (doc as any).subpageItems;
       }
       await saveDocument(CMS_EDITS_KEY, clean);
       res.json({ success: true, message: 'Modifiche della guida salvate.' });

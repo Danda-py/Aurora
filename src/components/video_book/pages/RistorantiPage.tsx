@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Bike, Sparkles } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,14 +16,26 @@ interface Props {
 
 export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const res = BOOK_DATA[language].restaurants;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const orderedRestaurants = [...res.recommended].sort((first, second) => {
-    const firstMinutes = Number(first.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
-    const secondMinutes = Number(second.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
-    return firstMinutes - secondMinutes;
-  });
+  const cmsRestaurants = subpageItems['ristoranti'];
+  const orderedRestaurants =
+    language === 'it' && cmsRestaurants !== undefined
+      ? cmsRestaurants.map((it) => ({
+          name: it.title,
+          time: it.time || '',
+          address: it.address || it.time || '',
+          phone: it.phone || '',
+          desc: it.desc,
+          mapsUrl: it.mapsUrl || '',
+        }))
+      : [...res.recommended].sort((first, second) => {
+          const firstMinutes = Number(first.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
+          const secondMinutes = Number(second.time.match(/(\d+) min in auto/)?.[1] ?? Number.MAX_SAFE_INTEGER);
+          return firstMinutes - secondMinutes;
+        });
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -139,6 +152,8 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
           </div>
           </div>
         </PageEditable>
+
+        <CustomBlocksRenderer pageKey="ristoranti" />
 
       </div>
     </div>

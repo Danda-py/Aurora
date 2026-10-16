@@ -6,7 +6,8 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building, Droplet, Church } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -16,16 +17,26 @@ interface Props {
 
 export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const inf = BOOK_DATA[language].info;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
   const pharmacyService = t.infoPage.pharmacyService;
 
-  const services = inf.services.map((service) => /farmacia|pharmacy|apotheke|pharmacie/i.test(service.title)
-    ? { ...service, ...pharmacyService, mapsUrl: pharmacyUrl }
-    : service
-  );
+  const cmsServices = subpageItems['informazioni'];
+  const services =
+    language === 'it' && cmsServices !== undefined
+      ? cmsServices.map((it) => ({
+          title: it.title,
+          desc: it.desc,
+          mapsUrl: it.mapsUrl || '',
+        }))
+      : inf.services.map((service) =>
+          /farmacia|pharmacy|apotheke|pharmacie/i.test(service.title)
+            ? { ...service, ...pharmacyService, mapsUrl: pharmacyUrl }
+            : service
+        );
 
   const getServiceIcon = (title: string) => {
     const lower = title.toLowerCase();
@@ -148,6 +159,8 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
             <span className="font-mono font-bold text-[#62e6bd]">{APARTMENT_INFO.cinCode}</span>
           </div>
         </div>
+
+        <CustomBlocksRenderer pageKey="informazioni" />
 
       </div>
     </div>

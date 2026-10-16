@@ -21,12 +21,31 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
 
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [doorBanner, setDoorBanner] = useState<{
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint';
+    title: string;
+    detail: string;
+  } | null>(null);
   const [wifiChecking, setWifiChecking] = useState<boolean>(true);
   const [wifiVerified, setWifiVerified] = useState<boolean>(false);
   const [wifiMessage, setWifiMessage] = useState<string>('');
   const [holdProgress, setHoldProgress] = useState(0);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartedAt = useRef(0);
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showDoorFeedbackBanner = (
+    type: 'success' | 'error' | 'not_connected' | 'too_far' | 'hint',
+    title: string,
+    detail: string,
+    durationMs = 2000
+  ) => {
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    setDoorBanner({ type, title, detail });
+    bannerTimerRef.current = setTimeout(() => {
+      setDoorBanner(null);
+    }, durationMs);
+  };
 
   const runWifiCheck = async () => {
     setWifiChecking(true);
@@ -63,16 +82,23 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
   };
 
   const handleOpenDoor = async () => {
-    const wifiCheck = await checkCasaAuroraWifi();
-    setWifiVerified(wifiCheck.verified);
-    setWifiMessage(wifiCheck.message);
-
     setOpeningState('opening');
-    if ('vibrate' in navigator) navigator.vibrate([18, 35, 18]);
-    if (!wifiCheck.verified) {
-      setStatusMessage(language === 'it' ? "Wi-Fi non rilevato. Invio tramite rete mobile..." : "Wi-Fi not detected. Unlocking via mobile network fallback...");
-    } else {
-      setStatusMessage(t.concierge.doorMessage.sending);
+    setStatusMessage(t.concierge.doorMessage.sending);
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([18, 35, 18]);
+
+    let wifiCheck: Awaited<ReturnType<typeof checkCasaAuroraWifi>>;
+    try {
+      wifiCheck = await checkCasaAuroraWifi();
+      setWifiVerified(wifiCheck.verified);
+      setWifiMessage(wifiCheck.message);
+    } catch {
+      wifiCheck = {
+        verified: false,
+        status: 'error',
+        ssid: 'Casa_Aurora',
+        reason: 'proximity_check_failed',
+        message: language === 'it' ? 'Verifica connessione/posizione non riuscita.' : 'Could not verify network or location.',
+      };
     }
 
     try {
@@ -96,26 +122,65 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
 
       const data = await res.json();
       if (res.ok && data.success) {
-        if ('vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([45, 35, 45, 35, 120]);
         triggerHaptic();
         setOpeningState('success');
-        setStatusMessage(data.message || t.concierge.doorMessage.unlocked);
+        setStatusMessage(language === 'it' ? 'Richiesta inviata a Home Assistant.' : 'Request sent to Home Assistant.');
+        showDoorFeedbackBanner(
+          'success',
+          language === 'it' ? 'Comando inviato' : 'Unlock command sent',
+          language === 'it' ? 'Home Assistant ha accettato la richiesta. Se la porta non scatta, riprova o contatta l’host.' : 'Home Assistant accepted the request. If the door did not unlock, retry or contact your host.',
+          2000
+        );
         trackActivity(pass, 'smart_lock_open_success');
         setTimeout(() => {
           setOpeningState('idle');
           setStatusMessage('');
-        }, 5000);
+        }, 2500);
       } else {
-        throw new Error(data.error || 'Impossibile completare lo sblocco');
+        const errText = data.error || 'Impossibile completare lo sblocco';
+        const proximity = data.proximity;
+        const isTooFar =
+          (typeof proximity?.distanceMeters === 'number' &&
+            proximity.distanceMeters > (proximity.geofenceRadiusMeters ?? 65)) ||
+          /troppo lontano|a \d+ metri|distanza/i.test(errText);
+        const isNotConnected = Boolean(
+          data.wifiBlocked || data.proximityBlocked ||
+          /wifi|wi-fi|conness|prossimit|gps|posizione/i.test(errText)
+        );
+        setOpeningState('error');
+        setStatusMessage(errText);
+        showDoorFeedbackBanner(
+          isTooFar ? 'too_far' : isNotConnected ? 'not_connected' : 'error',
+          isTooFar
+            ? language === 'it' ? 'Troppo lontano' : 'Too far away'
+            : isNotConnected
+            ? language === 'it' ? 'Non connesso al Wi-Fi' : 'Not connected to Wi-Fi'
+            : language === 'it' ? 'Errore apertura porta' : 'Door unlock error',
+          errText,
+          2200
+        );
+        trackActivity(pass, 'smart_lock_open_error', errText);
+        setTimeout(() => {
+          setOpeningState('idle');
+          setStatusMessage('');
+        }, 2500);
       }
     } catch (err: any) {
       setOpeningState('error');
-      setStatusMessage(err.message || 'Errore di connessione. Riprova.');
+      const errMsg = err.message || 'Errore di connessione. Riprova.';
+      setStatusMessage(errMsg);
+      showDoorFeedbackBanner(
+        'error',
+        language === 'it' ? 'Errore di connessione' : 'Connection error',
+        errMsg,
+        2200
+      );
       trackActivity(pass, 'smart_lock_open_error', err?.message);
       setTimeout(() => {
         setOpeningState('idle');
         setStatusMessage('');
-      }, 5000);
+      }, 2500);
     }
   };
 
@@ -129,25 +194,97 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
     setHoldProgress(0);
   };
 
+  const HOLD_DURATION_MS = 1200;
+
+  const cancelHoldEarly = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (elapsed >= HOLD_DURATION_MS) {
+      finishHold(event);
+      return;
+    }
+    cancelHold(event);
+    if (elapsed > 0 && openingState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
+    }
+  };
+
+  const finishHold = (event?: React.PointerEvent<HTMLButtonElement>) => {
+    const elapsed = holdStartedAt.current > 0 ? Date.now() - holdStartedAt.current : 0;
+    if (!elapsed) return;
+    cancelHold(event);
+    if (elapsed >= HOLD_DURATION_MS && openingState === 'idle') {
+      void handleOpenDoor();
+    } else if (openingState === 'idle') {
+      showDoorFeedbackBanner(
+        'hint',
+        language === 'it' ? 'Pressione non completata' : 'Hold not completed',
+        language === 'it' ? 'Tieni premuto per 1,2 secondi senza sollevare il dito.' : 'Keep holding for 1.2 seconds without lifting your finger.',
+        1800
+      );
+    }
+  };
+
   const startHold = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (openingState !== 'idle' || wifiChecking) return;
+    if (openingState !== 'idle' || (pass !== null && !keysReady) || holdStartedAt.current > 0) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     holdStartedAt.current = Date.now();
     holdTimer.current = setInterval(() => {
-      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / 1500);
+      const progress = Math.min(1, (Date.now() - holdStartedAt.current) / HOLD_DURATION_MS);
       setHoldProgress(progress);
-      if (progress >= 1) {
-        cancelHold();
-        void handleOpenDoor();
-      }
-    }, 30);
+      if (progress >= 1) finishHold();
+    }, 25);
   };
 
   useEffect(() => cancelHold, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-2xl animate-fade-in font-sans">
+      {doorBanner && (
+        <div
+          className={`fixed top-4 left-4 right-4 z-[90] mx-auto max-w-[420px] flex items-center gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-3 duration-200 ${
+            doorBanner.type === 'success'
+              ? 'border-emerald-400/60 bg-emerald-950/95 text-emerald-100'
+              : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+              ? 'border-amber-400/60 bg-amber-950/95 text-amber-100'
+              : doorBanner.type === 'hint'
+              ? 'border-sky-400/60 bg-sky-950/95 text-sky-100'
+              : 'border-rose-400/60 bg-rose-950/95 text-rose-100'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              doorBanner.type === 'success'
+                ? 'bg-emerald-500 text-black'
+                : doorBanner.type === 'too_far' || doorBanner.type === 'not_connected'
+                ? 'bg-amber-500 text-black'
+                : doorBanner.type === 'hint'
+                ? 'bg-sky-500 text-black'
+                : 'bg-rose-500 text-white'
+            }`}
+          >
+            {doorBanner.type === 'success' ? (                  <CheckCircle2 className="h-6 w-6" />
+            ) : doorBanner.type === 'hint' ? (
+              <span className="text-lg font-black">!</span>
+            ) : (
+              <AlertCircle className="h-5 w-5" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <strong className="block text-sm font-extrabold tracking-tight">
+              {doorBanner.title}
+            </strong>
+            <span className="block text-xs opacity-90 leading-snug mt-0.5">
+              {doorBanner.detail}
+            </span>
+          </div>
+        </div>
+      )}
       <div className="relative w-full max-w-sm rounded-[2.25rem] bg-gradient-to-b from-[#1c1c1e] to-[#121214] border border-white/[0.1] text-neutral-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] overflow-hidden">
         
         {/* Subtle Ambient Apple Light */}
@@ -248,9 +385,9 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
           <div className="pt-2 pb-2">
             <button
               onPointerDown={pass && !keysReady ? undefined : startHold}
-              onPointerUp={pass && !keysReady ? undefined : cancelHold}
+              onPointerUp={pass && !keysReady ? undefined : finishHold}
               onPointerCancel={pass && !keysReady ? undefined : cancelHold}
-              onPointerLeave={pass && !keysReady ? undefined : cancelHold}
+              onPointerLeave={pass && !keysReady ? undefined : cancelHoldEarly}
               onPointerMove={(event) => {
                 if (pass && !keysReady) return;
                 const rect = event.currentTarget.getBoundingClientRect();
@@ -261,19 +398,17 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                   event.clientY <= rect.bottom;
                 if (!inside) cancelHold(event);
               }}
-              disabled={openingState === 'opening' || wifiChecking || (pass !== null && !keysReady)}
+              disabled={openingState === 'opening' || (pass !== null && !keysReady)}
               className={`group relative w-full py-3 px-4 rounded-xl font-bold tracking-tight transition-all duration-200 cursor-pointer flex items-center gap-3 select-none active:scale-[0.98] ${
                 pass && !keysReady
                   ? 'bg-white/[0.04] text-white/30 border border-white/5 cursor-not-allowed'
                   : openingState === 'opening'
                   ? 'bg-neutral-800 text-neutral-300 border border-white/10 cursor-wait shadow-inner justify-center'
-                  : openingState === 'success'
+                  :                  openingState === 'success'
                   ? 'bg-[#30d158] text-neutral-950 shadow-[0_8px_25px_rgba(48,209,88,0.4)]'
                   : openingState === 'error'
                   ? 'bg-rose-500 text-white shadow-[0_8px_25px_rgba(244,63,94,0.3)]'
-                  : !wifiChecking
-                  ? 'bg-white text-neutral-950 hover:bg-neutral-100 shadow-[0_6px_20px_rgba(255,255,255,0.12)]'
-                  : 'bg-neutral-800/80 text-neutral-500 border border-white/5 cursor-not-allowed'
+                  : 'bg-white text-neutral-950 hover:bg-neutral-100 shadow-[0_6px_20px_rgba(255,255,255,0.12)]'
               }`}
             >
               {pass && !keysReady ? (
@@ -303,8 +438,8 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                     <>
                       <CheckCircle2 className="w-5 h-5 text-neutral-950 animate-scale-up shrink-0" />
                       <div className="text-left min-w-0 flex-1">
-                        <span className="text-xs sm:text-sm font-bold text-neutral-950 tracking-tight block truncate">{s.doorUnlocked}</span>
-                        <span className="text-[10px] font-normal text-neutral-900 block truncate">{s.pushDoorToEnter}</span>
+                      <span className="text-xs sm:text-sm font-bold text-neutral-950 tracking-tight block truncate">{language === 'it' ? 'Comando inviato' : 'Command sent'}</span>
+                      <span className="text-[10px] font-normal text-neutral-900 block truncate">{language === 'it' ? 'Controlla che la porta si sia sbloccata.' : 'Check that the door unlocked.'}</span>
                       </div>
                     </>
                   )}
@@ -325,14 +460,16 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
                         wifiVerified ? 'bg-neutral-950/10 text-neutral-950 group-hover:scale-105' : 'bg-white/5 text-neutral-500'
                       }`}>
                         <span className="absolute inset-[-3px] rounded-full border-2 border-emerald-400/80" style={{ clipPath: `inset(${100 - holdProgress * 100}% 0 0 0)` }} />
-                        {wifiVerified ? <Unlock className="w-4 h-4 text-neutral-950" /> : <Lock className="w-4 h-4" />}
+                        {wifiVerified ? <Unlock className="w-4 h-4 text-neutral-950" /> : <Unlock className="w-4 h-4 text-neutral-950" />}
                       </div>
                       <div className="text-left flex-1 min-w-0">
                         <span className={`text-xs sm:text-sm font-bold tracking-tight block truncate ${wifiVerified ? 'text-neutral-950' : 'text-neutral-400'}`}>
-                          {wifiChecking ? t.checkInPage.wifi.checkingConnection.toUpperCase() : s.pressToOpen}
+                          {holdProgress > 0
+                            ? language === 'it' ? `Tieni premuto… ${Math.ceil(holdProgress * 100)}%` : `Hold… ${Math.ceil(holdProgress * 100)}%`
+                            : language === 'it' ? 'Tieni premuto 1,2 sec per aprire' : 'Hold for 1.2 sec to unlock'}
                         </span>
                         <span className={`text-[10px] font-normal tracking-tight block truncate ${wifiVerified ? 'text-neutral-700' : 'text-neutral-500'}`}>
-                          {wifiChecking ? s.waitAMoment : s.verifiedByServer}
+                          {wifiMessage || (language === 'it' ? 'La connessione viene verificata al rilascio.' : 'Connection is verified on release.')}
                         </span>
                       </div>
                     </>
@@ -343,7 +480,7 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
 
             {/* Status Feedback Output */}
             {statusMessage && (
-              <p className="mt-3 text-center text-xs font-medium text-emerald-400 tracking-tight animate-fade-in">
+              <p role="status" aria-live="polite" className="mt-3 text-center text-xs font-medium text-emerald-400 tracking-tight animate-fade-in">
                 {statusMessage}
               </p>
             )}

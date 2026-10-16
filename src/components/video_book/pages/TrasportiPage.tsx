@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -14,9 +15,22 @@ interface Props {
 }
 
 export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
+  const { subpageItems } = useEditMode();
   const tr = BOOK_DATA[language].transport;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsTransport = subpageItems['trasporti'];
+  const transportItems =
+    language === 'it' && cmsTransport !== undefined
+      ? cmsTransport.map((it) => ({
+          title: it.title,
+          subtitle: it.subtitle || it.tag || '',
+          time: it.time || '',
+          desc: it.desc,
+          mapsUrl: it.mapsUrl,
+          phone: it.phone,
+        }))
+      : tr.items;
 
   const getTransportIcon = (title: string, subtitle: string = '') => {
     const text = (title + ' ' + subtitle).toLowerCase();
@@ -60,7 +74,7 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
 
         {/* Transport options list */}
         <div className="space-y-3">
-          {tr.items.map((item, idx) => (
+          {transportItems.map((item, idx) => (
             <PageEditable key={idx} id={`page.trasporti.item-${idx}`} label={item.title}>
               <div
                 className="aurora-glass-card space-y-3"
@@ -110,6 +124,8 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
             </PageEditable>
           ))}
         </div>
+
+        <CustomBlocksRenderer pageKey="trasporti" />
 
       </div>
     </div>

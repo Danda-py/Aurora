@@ -5,7 +5,8 @@ import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Coffee, Sparkles } from 'lucide-react';
-import { PageEditable, EditableHeroBanner } from '../cmsPageHelpers';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -15,9 +16,21 @@ interface Props {
 
 export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage }) => {
   
+  const { subpageItems } = useEditMode();
   const bars = BOOK_DATA[language].bars;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsBars = subpageItems['bar_club'];
+  const barsList =
+    language === 'it' && cmsBars !== undefined
+      ? cmsBars.map((it) => ({
+          name: it.title,
+          address: it.address || it.time || '',
+          phone: it.phone || it.hours || '',
+          desc: it.desc,
+          mapsUrl: it.mapsUrl || '',
+        }))
+      : bars.recommended.filter((bar) => !/poletti/i.test(bar.name));
 
   return (
     <div className="aurora-concierge min-h-screen text-white">
@@ -52,7 +65,7 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
             <h3 className="text-base font-bold text-white tracking-tight">{labels.historicBars}</h3>
           </div>
 
-          {bars.recommended.filter((bar) => !/poletti/i.test(bar.name)).map((b, idx) => (
+          {barsList.map((b, idx) => (
             <PageEditable key={idx} id={`page.bar_club.bar-${idx}`} label={b.name}>
               <div
                 className="aurora-glass-card space-y-3"
@@ -107,6 +120,8 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
             </div>
           </div>
         </PageEditable>
+
+        <CustomBlocksRenderer pageKey="bar_club" />
 
       </div>
     </div>

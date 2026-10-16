@@ -6,6 +6,8 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, LogOut, CheckCircle } from 'lucide-react';
+import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -60,10 +62,16 @@ const CHECKOUT_BUTTON_TRANSLATIONS: Record<Language, {
 
 export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelectLanguage, pass }: Props) => {
   
+  const { subpageItems } = useEditMode();
   const co = BOOK_DATA[language].checkOut;
   const reviewCopy = BOOK_DATA[language].contacts;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
+  const cmsChecklist = subpageItems['check_out'];
+  const checklistItems =
+    language === 'it' && cmsChecklist !== undefined
+      ? cmsChecklist.map((it) => ({ title: it.title, desc: it.desc }))
+      : (co.checklist as Array<{ title: string; desc: string }>);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [checkoutMessage, setCheckoutMessage] = useState<string>('');
@@ -111,20 +119,17 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
         />
 
         {/* Hero Banner */}
-        <div className="aurora-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
-            alt="Check-out e Fine Soggiorno"
-          />
-          <div className="aurora-hero-banner-overlay">
+        <EditableHeroBanner
+          page="check_out"
+          img="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
+          alt="Check-out e Fine Soggiorno"
+          eyebrow={
             <span className="aurora-eyebrow text-[#62e6bd] flex items-center gap-1.5">
               {co.title}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
-              {co.title}
-            </h1>
-          </div>
-        </div>
+          }
+          title={co.title}
+        />
 
         {/* Checkout Time Banner */}
         <div className="text-center py-2 space-y-2">
@@ -147,7 +152,7 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
           </div>
 
           <div className="space-y-2">
-            {(co.checklist as Array<{ title: string; desc: string }>).map((item: { title: string; desc: string }, idx: number) => {
+            {checklistItems.map((item: { title: string; desc: string }, idx: number) => {
               const isDone = !!checkedItems[idx];
               return (
                 <button
@@ -288,6 +293,8 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             </a>
           </div>
         </div>
+
+        <CustomBlocksRenderer pageKey="check_out" />
 
       </div>
     </div>

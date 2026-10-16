@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Phone, MessageSquare, Mail, Copy, Check, MessageCircle } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
-import { PageEditable } from '../cmsPageHelpers';
+import { PageEditable, CustomBlocksRenderer } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -195,6 +195,8 @@ export const ContattiPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
             {c.copied}
           </div>
         )}
+
+        <CustomBlocksRenderer pageKey="contatti" />
 
       </div>
     </div>

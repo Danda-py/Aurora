@@ -195,6 +195,8 @@ export async function triggerHomeAssistantOn(params?: {
     };
   }
 
+  let restApiError: HassTriggerResult | null = null;
+
   // 3. Primary execution path: Authenticated REST API (direct, reliable, unaffected by local_only webhook flags)
   if (hasRestApi) {
     const cleanBaseUrl = config.haUrl.trim().replace(/\/+$/, '');
@@ -207,67 +209,96 @@ export async function triggerHomeAssistantOn(params?: {
       };
     }
 
-    try {
-      // Resolve entity ID, replacing legacy placeholder 'switch.portone' with real Aurora door entity
-      let entityId = (config.entityId || '').trim();
-      if (!entityId || entityId === 'switch.portone') {
-        entityId = 'automation.porta_aurora';
-      }
+    {
+      try {
+        // Resolve entity ID, replacing legacy placeholder 'switch.portone' with real Aurora door entity
+        let entityId = (config.entityId || '').trim();
+        if (!entityId || entityId === 'switch.portone') {
+          entityId = 'automation.porta_aurora';
+        }
 
-      let domain = 'switch';
-      let onAction = 'turn_on';
-      let isSwitch = false;
+        let domain = 'switch';
+        let onAction = 'turn_on';
+        let isSwitch = false;
 
-      if (entityId.startsWith('automation.')) {
-        domain = 'automation';
-        onAction = 'trigger';
-        isSwitch = false;
-      } else if (entityId.startsWith('button.')) {
-        domain = 'button';
-        onAction = 'press';
-        isSwitch = false;
-      } else if (entityId.startsWith('lock.')) {
-        domain = 'lock';
-        onAction = 'unlock';
-        isSwitch = false;
-      } else if (entityId.startsWith('switch.')) {
-        domain = 'switch';
-        onAction = 'turn_on';
-        isSwitch = true;
-      } else if (config.service && config.service.includes('.')) {
-        const parts = config.service.split('.');
-        domain = parts[0];
-        onAction = parts[1];
-        isSwitch = domain === 'switch';
-      }
+        if (entityId.startsWith('automation.')) {
+          domain = 'automation';
+          onAction = 'trigger';
+          isSwitch = false;
+        } else if (entityId.startsWith('button.')) {
+          domain = 'button';
+          onAction = 'press';
+          isSwitch = false;
+        } else if (entityId.startsWith('lock.')) {
+          domain = 'lock';
+          onAction = 'unlock';
+          isSwitch = false;
+        } else if (entityId.startsWith('switch.')) {
+          domain = 'switch';
+          onAction = 'turn_on';
+          isSwitch = true;
+        } else if (config.service && config.service.includes('.')) {
+          const parts = config.service.split('.');
+          domain = parts[0];
+          onAction = parts[1];
+          isSwitch = domain === 'switch';
+        }
 
-      const apiUrl = `${cleanBaseUrl}/api/services/${domain}/${onAction}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const apiUrl = `${cleanBaseUrl}/api/services/${domain}/${onAction}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.accessToken.trim()}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'Aurora-Valtellina-SmartLock/2.0'
-        },
-        body: JSON.stringify({ entity_id: entityId }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.accessToken.trim()}`,
+            'Content-Type': 'application/json',
+            'User-Agent': 'Aurora-Valtellina-SmartLock/2.0'
+          },
+          body: JSON.stringify({ entity_id: entityId }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-      const latencyMs = Date.now() - startTime;
-      const responseJson = await res.json().catch(() => null);
+        const latencyMs = Date.now() - startTime;
+        const responseJson = await res.json().catch(() => null);
 
-      if (!res.ok) {
+        if (res.ok) {
+          if (isSwitch) {
+            setTimeout(async () => {
+              try {
+                const offUrl = `${cleanBaseUrl}/api/services/switch/turn_off`;
+                await fetch(offUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${config.accessToken.trim()}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ entity_id: entityId })
+                });
+              } catch (e) {
+                console.warn('Auto turn_off pulse error (non-critical):', e);
+              }
+            }, 10000);
+          }
+
+          return {
+            success: true,
+            httpStatus: res.status,
+            latencyMs,
+            message: `Comando inviato con successo a Home Assistant (${entityId} ➔ ${domain}.${onAction})! Elettroserratura attivata.`,
+            details: responseJson,
+            targetEndpoint: apiUrl
+          };
+        }
+
         let errDetail = `HTTP ${res.status}: ${res.statusText}`;
         if (res.status === 401 || res.status === 403) {
           errDetail = 'Access Token non valido o scaduto (HTTP 401/403). Genera un nuovo Long-Lived Access Token in Home Assistant.';
         } else if (res.status === 404) {
           errDetail = `Entità "${entityId}" o servizio "${domain}.${onAction}" non trovato in Home Assistant (HTTP 404).`;
         }
-        return {
+        restApiError = {
           success: false,
           httpStatus: res.status,
           latencyMs,
@@ -275,50 +306,33 @@ export async function triggerHomeAssistantOn(params?: {
           details: responseJson,
           targetEndpoint: apiUrl
         };
+      } catch (err: any) {
+        const latencyMs = Date.now() - startTime;
+        const isTimeout = err.name === 'AbortError';
+        restApiError = {
+          success: false,
+          latencyMs,
+          error: isTimeout
+            ? 'Timeout: Home Assistant REST API non ha risposto entro 8 secondi. Controlla la connessione.'
+            : `Errore di rete REST API: ${err.message || 'Impossibile connettersi a Home Assistant'}`,
+          targetEndpoint: cleanBaseUrl
+        };
       }
-
-      // If the target is the Aurora automation or a Sonoff relay switch, trigger hardware inching pulse
-      if (isSwitch) {
-        setTimeout(async () => {
-          try {
-            const offUrl = `${cleanBaseUrl}/api/services/switch/turn_off`;
-            await fetch(offUrl, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${config.accessToken.trim()}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ entity_id: entityId })
-            });
-          } catch (e) {
-            console.warn('Auto turn_off pulse error (non-critical):', e);
-          }
-        }, 10000);
-      }
-
-      return {
-        success: true,
-        httpStatus: res.status,
-        latencyMs,
-        message: `Comando inviato con successo a Home Assistant (${entityId} ➔ ${domain}.${onAction})! Elettroserratura attivata.`,
-        details: responseJson,
-        targetEndpoint: apiUrl
-      };
-    } catch (err: any) {
-      const latencyMs = Date.now() - startTime;
-      const isTimeout = err.name === 'AbortError';
-      return {
-        success: false,
-        latencyMs,
-        error: isTimeout
-          ? 'Timeout: Home Assistant REST API non ha risposto entro 8 secondi. Controlla la connessione.'
-          : `Errore di rete REST API: ${err.message || 'Impossibile connettersi a Home Assistant'}`,
-        targetEndpoint: cleanBaseUrl
-      };
     }
   }
 
-  // 4. Fallback Webhook-only Mode (when no REST API token is provided)
+  if (!hasWebhook && restApiError) {
+    return restApiError;
+  }
+
+  // 4. Webhook-only mode (REST API either not configured or failed).
+  if (!hasWebhook && restApiError) return restApiError;
+  if (!hasWebhook) {
+    return {
+      success: false,
+      error: 'Home Assistant non configurato. Seleziona Webhook o REST API e completa la configurazione nel Portale Host.'
+    };
+  }
   const targetUrl = config.webhookUrl.trim();
   if (isLocalLanAddress(targetUrl)) {
     return {

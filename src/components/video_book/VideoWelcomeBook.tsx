@@ -22,7 +22,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ContattiPage } from './pages/ContattiPage';
 import { SmartLockModal } from '../vip/SmartLockModal';
 import { ExpiredPassScreen } from '../vip/ExpiredPassScreen';
-import { MOCK_EDITOR_PASS } from '../visual-cms/EditModeContext';
+import { MOCK_EDITOR_PASS, useEditMode } from '../visual-cms/EditModeContext';
 import { Key } from 'lucide-react';
 import { APARTMENT_INFO } from '../../data/apartmentData';
 
@@ -40,6 +40,14 @@ export const VideoWelcomeBook: React.FC<Props> = ({
   editorPass = 'mock',
 }: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
+  const { activePage, setActivePage } = useEditMode();
+
+  // Sincronizza la navigazione tra il pannello laterale del CMS e la PWA
+  useEffect(() => {
+    if (isEditMode && activePage && activePage !== currentPage) {
+      setCurrentPage(activePage);
+    }
+  }, [isEditMode, activePage]);
   const [editorMockPass] = useState<GuestPass | null>(() =>
     isEditMode && editorPass === 'mock' ? MOCK_EDITOR_PASS : null,
   );
@@ -217,6 +225,11 @@ export const VideoWelcomeBook: React.FC<Props> = ({
   };
 
   const handleBackToMenu = () => {
+    if (isEditMode) {
+      setActivePage('grid_menu');
+      setCurrentPage('grid_menu');
+      return;
+    }
     if (typeof window !== 'undefined' && window.history.state?.page && window.history.state.page !== 'grid_menu') {
       window.history.back();
       return;
@@ -226,7 +239,9 @@ export const VideoWelcomeBook: React.FC<Props> = ({
 
   const handleNavigate = (page: WelcomePage) => {
     homeScrollPosition.current = window.scrollY;
-    if (typeof window !== 'undefined') {
+    if (isEditMode) {
+      setActivePage(page);
+    } else if (typeof window !== 'undefined') {
       window.history.pushState({ page }, '');
     }
     setCurrentPage(page);
