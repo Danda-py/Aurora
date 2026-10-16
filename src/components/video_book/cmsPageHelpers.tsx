@@ -2,7 +2,68 @@ import React from 'react';
 import { EditableElement } from '../visual-cms/EditableElement';
 import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
 import { useEditMode, CMSCustomBlock } from '../visual-cms/EditModeContext';
+import { Language } from '../../types';
 import { Sparkles, ExternalLink } from 'lucide-react';
+
+export type DoorBannerKind = 'success' | 'error' | 'not_connected' | 'too_far' | 'hint';
+
+type DoorBannerMessage = {
+  id: string;
+  label: string;
+  fallback: Partial<Record<Language, string>>;
+};
+
+const DOOR_BANNER_COPY: DoorBannerMessage[] = [
+  { id: 'message.door.success.title', label: 'Apertura · titolo conferma', fallback: { it: 'Comando inviato', en: 'Unlock command sent' } },
+  { id: 'message.door.success.detail', label: 'Apertura · dettaglio conferma', fallback: { it: 'Home Assistant ha accettato la richiesta. Verifica l’apertura fisica della porta.', en: 'Home Assistant accepted the request. Check that the door physically unlocked.' } },
+  { id: 'message.door.too_far.title', label: 'Apertura · titolo fuori zona', fallback: { it: 'Troppo lontano', en: 'Too far away' } },
+  { id: 'message.door.too_far.detail', label: 'Apertura · dettaglio fuori zona', fallback: { it: 'Avvicinati all’ingresso o connettiti al Wi-Fi autorizzato.', en: 'Move closer to the entrance or connect to the authorized Wi-Fi.' } },
+  { id: 'message.door.not_connected.title', label: 'Apertura · titolo connessione', fallback: { it: 'Non connesso al Wi-Fi', en: 'Not connected to Wi-Fi' } },
+  { id: 'message.door.not_connected.detail', label: 'Apertura · dettaglio connessione', fallback: { it: 'Connettiti al Wi-Fi della struttura oppure attiva la posizione.', en: 'Connect to the property Wi-Fi or enable location access.' } },
+  { id: 'message.door.error.title', label: 'Apertura · titolo errore', fallback: { it: 'Errore apertura porta', en: 'Door unlock error' } },
+  { id: 'message.door.error.detail', label: 'Apertura · dettaglio errore', fallback: { it: 'Richiesta non riuscita. Riprova o contatta l’host.', en: 'The request failed. Try again or contact your host.' } },
+  { id: 'message.door.hold.title', label: 'Apertura · titolo pressione breve', fallback: { it: 'Pressione non completata', en: 'Hold not completed' } },
+  { id: 'message.door.hold.detail', label: 'Apertura · dettaglio pressione breve', fallback: { it: 'Tieni premuto per 1,2 secondi senza sollevare il dito.', en: 'Keep holding for 1.2 seconds without lifting your finger.' } },
+  { id: 'message.door.checkin.title', label: 'Apertura · titolo check-in richiesto', fallback: { it: 'Check-in non confermato', en: 'Check-in not confirmed' } },
+  { id: 'message.door.checkin.detail', label: 'Apertura · dettaglio check-in richiesto', fallback: { it: 'L’host deve confermare il check-in prima di abilitare l’apertura.', en: 'Your host must confirm check-in before unlocking is enabled.' } },
+];
+
+export function getDoorBannerCopyFields(): DoorBannerMessage[] {
+  return DOOR_BANNER_COPY;
+}
+
+export function resolveCmsText(
+  texts: Record<string, Record<string, string>>,
+  id: string,
+  language: string,
+  fallback: string,
+): string {
+  return texts[id]?.[language] ?? fallback;
+}
+
+const DOOR_BANNER_COPY_BY_KIND: Record<DoorBannerKind | 'checkin', readonly [string, string]> = {
+  success: ['message.door.success.title', 'message.door.success.detail'],
+  error: ['message.door.error.title', 'message.door.error.detail'],
+  not_connected: ['message.door.not_connected.title', 'message.door.not_connected.detail'],
+  too_far: ['message.door.too_far.title', 'message.door.too_far.detail'],
+  hint: ['message.door.hold.title', 'message.door.hold.detail'],
+  checkin: ['message.door.checkin.title', 'message.door.checkin.detail'],
+};
+
+export function resolveDoorBannerCopy(
+  texts: Record<string, Record<string, string>>,
+  language: Language,
+  kind: DoorBannerKind,
+  originalTitle: string,
+  originalDetail: string,
+) {
+  const messageKind = kind === 'not_connected' && /check-in/i.test(originalTitle) ? 'checkin' : kind;
+  const [titleId, detailId] = DOOR_BANNER_COPY_BY_KIND[messageKind];
+  return {
+    title: resolveCmsText(texts, titleId, language, originalTitle),
+    detail: resolveCmsText(texts, detailId, language, originalDetail),
+  };
+}
 
 /** Sorgente immagine con override CMS (upload host) o fallback. */
 export const useCmsImage = (id: string, fallback: string): string => {

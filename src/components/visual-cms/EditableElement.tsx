@@ -54,7 +54,8 @@ function collectTextNodes(root: HTMLElement | null): HTMLElement[] {
     acceptNode: (node) => {
       const el = node as HTMLElement;
       if (el.closest('[data-cms-control]')) return NodeFilter.FILTER_REJECT;
-      if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_REJECT;
+      // Keep traversing generic layout wrappers (div/section/etc.); reject only CMS controls.
+      if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_SKIP;
       const hasDirectText = Array.from(el.childNodes).some(
         (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
       );
@@ -255,6 +256,7 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
     <div
       ref={wrapRef}
       data-editable-id={id}
+      data-editable-label={label}
       className={`relative ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -267,29 +269,9 @@ export const EditableElement: React.FC<EditableElementProps> = ({ id, label, chi
         <div className="absolute inset-0 pointer-events-none ring-2 ring-sky-400/70 rounded-[inherit] z-30" />
       )}
 
-      {/* Bounding box di selezione con maniglie */}
+      {/* Evidenziazione discreta, senza maniglie per evitare che sembri un editor estetico */}
       {isSelected && (
-        <>
-          <div className="absolute inset-0 pointer-events-none ring-2 ring-sky-500 rounded-[inherit] z-30 shadow-[0_0_0_4px_rgba(14,165,233,0.15)]" />
-          {(
-            [
-              '-top-[5px] -left-[5px]',
-              '-top-[5px] -right-[5px]',
-              '-bottom-[5px] -left-[5px]',
-              '-bottom-[5px] -right-[5px]',
-            ] as const
-          ).map((pos) => (
-            <span
-              key={pos}
-              className={`absolute ${pos} w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-[3px] z-40 shadow-sm pointer-events-none`}
-            />
-          ))}
-          {label && (
-            <span className="absolute -top-2 left-2 -translate-y-full bg-sky-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md z-40 shadow-md pointer-events-none">
-              {label}
-            </span>
-          )}
-        </>
+        <div className="absolute inset-0 pointer-events-none ring-2 ring-sky-500/80 rounded-[inherit] z-30 shadow-[0_0_0_3px_rgba(14,165,233,0.12)]" />
       )}
     </div>
   );

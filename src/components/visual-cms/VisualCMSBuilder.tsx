@@ -3,7 +3,6 @@ import { CMSProvider, useCMS } from './CMSContext';
 import { EditModeProvider, useEditMode } from './EditModeContext';
 import { IPhone18Frame } from './iPhone18Frame';
 import { BuilderTopToolbar } from './BuilderTopToolbar';
-import { FloatingTextToolbar } from './FloatingTextToolbar';
 import { CMSSidePanel } from './CMSSidePanel';
 import { VideoWelcomeBook } from '../video_book/VideoWelcomeBook';
 
@@ -74,9 +73,6 @@ const BuilderShell: React.FC<{ className: string }> = ({ className }) => {
           </IPhone18Frame>
         </div>
       </div>
-
-      {/* Toolbar di formattazione rapida sopra l'elemento selezionato */}
-      <FloatingTextToolbar containerRef={screenRef} />
 
       <BuilderLanguageBridge onLanguageChange={setLanguage} />
     </div>

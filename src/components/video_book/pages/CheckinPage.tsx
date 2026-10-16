@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Language, GuestPass } from '../../../types';
+import { useEditMode } from '../../visual-cms/EditModeContext';
 import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
@@ -25,7 +26,7 @@ import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { checkCasaAuroraWifi } from '../../../services/wifiDetectionService';
 import { DocumentUploadForm } from '../../vip/DocumentUploadForm';
 import { trackActivity } from '../../../services/activityTrackingService';
-import { PageEditable, CustomBlocksRenderer } from '../cmsPageHelpers';
+import { PageEditable, CustomBlocksRenderer, resolveDoorBannerCopy } from '../cmsPageHelpers';
 
 interface Props {
   language: Language;
@@ -47,6 +48,7 @@ export const CheckinPage: React.FC<Props> = ({
   const c = BOOK_DATA[language].checkIn;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const wifiMsgs = t.checkInPage.wifi;
+  const { texts: cmsTexts } = useEditMode();
 
   const [openingState, setOpeningState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -67,7 +69,8 @@ export const CheckinPage: React.FC<Props> = ({
     durationMs = 2000
   ) => {
     if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-    setDoorBanner({ type, title, detail });
+    const resolved = resolveDoorBannerCopy(cmsTexts, language, type, title, detail);
+    setDoorBanner({ type, ...resolved });
     bannerTimerRef.current = setTimeout(() => {
       setDoorBanner(null);
     }, durationMs);

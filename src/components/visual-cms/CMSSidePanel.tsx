@@ -1,5 +1,11 @@
 import React, { useState, useRef } from 'react';
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Italic,
+  Underline,
   LayoutGrid,
   FileText,
   Sliders,
@@ -38,8 +44,12 @@ import {
   CMSSubpageItem,
   CMSCustomBlock,
 } from './EditModeContext';
-import { WelcomePage } from '../../types';
+import { Language, WelcomePage } from '../../types';
+import { TextStyle } from './CMSContext';
 import { BOOK_DATA } from '../../data/multilingualBookData';
+import { getDoorBannerCopyFields } from '../video_book/cmsPageHelpers';
+
+const DOOR_BANNER_COPY = getDoorBannerCopyFields();
 
 export const PAGE_DEFINITIONS: Array<{
   id: WelcomePage;
@@ -234,7 +244,7 @@ export function getDefaultSubpageItems(page: WelcomePage): CMSSubpageItem[] {
   }
 }
 
-type SideTab = 'pages' | 'home_sections' | 'subpage_editor' | 'selected_element';
+type SideTab = 'pages' | 'home_sections' | 'subpage_editor' | 'messages' | 'selected_element';
 
 export const CMSSidePanel: React.FC<{
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -259,6 +269,9 @@ export const CMSSidePanel: React.FC<{
     texts,
     updateText,
     resetText,
+    styles,
+    updateStyle,
+    resetStyle,
     images,
     updateImage,
     links,
@@ -557,7 +570,7 @@ export const CMSSidePanel: React.FC<{
       </div>
 
       {/* Navigation Tabs del pannello */}
-      <div className="grid grid-cols-4 gap-1 p-1.5 bg-zinc-950/40 border-b border-white/10 text-[11px] font-bold">
+      <div className="grid grid-cols-5 gap-1 p-1.5 bg-zinc-950/40 border-b border-white/10 text-[11px] font-bold">
         <button
           type="button"
           onClick={() => setTab('pages')}
@@ -598,6 +611,19 @@ export const CMSSidePanel: React.FC<{
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Sottosezioni</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab('messages')}
+          className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl cursor-pointer transition ${
+            tab === 'messages'
+              ? 'bg-emerald-400 text-black shadow'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Messaggi</span>
         </button>
 
         <button
@@ -1553,6 +1579,51 @@ export const CMSSidePanel: React.FC<{
         {/* ===============================================================
             TAB 4: ISPETTORE ELEMENTO SELEZIONATO NELL'IPHONE
            =============================================================== */}
+        {tab === 'messages' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-3">
+              <h3 className="text-sm font-bold text-white">Banner e messaggi</h3>
+              <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+                Modifica i testi mostrati nei feedback rapidi della porta. Le modifiche sono salvate per la lingua selezionata.
+              </p>
+            </div>
+            {DOOR_BANNER_COPY.map((message) => {
+              const fallback = message.fallback[currentLanguage as Language] ?? message.fallback.it;
+              const value = texts[message.id]?.[currentLanguage] ?? fallback;
+              return (
+                <label key={message.id} className="block space-y-1.5">
+                  <span className="text-[10px] font-mono text-white/55">{message.label}</span>
+                  {message.id.endsWith('.detail') ? (
+                    <textarea
+                      rows={3}
+                      value={value}
+                      onChange={(event) => updateText(message.id, currentLanguage, event.target.value)}
+                      className="w-full rounded-xl border border-white/15 bg-zinc-950 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(event) => updateText(message.id, currentLanguage, event.target.value)}
+                      className="w-full rounded-xl border border-white/15 bg-zinc-950 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"
+                    />
+                  )}
+                  {texts[message.id]?.[currentLanguage] !== undefined && (
+                    <button
+                      type="button"
+                      onClick={() => resetText(message.id)}
+                      className="flex items-center gap-1 text-[10px] text-rose-300 hover:text-rose-200"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Ripristina testo predefinito
+                    </button>
+                  )}
+                </label>
+              );
+            })}
+            <p className="text-[10px] text-white/40">La modifica vale per la lingua selezionata; usa “Ripristina testo predefinito” per annullarla.</p>
+          </div>
+        )}
+
         {tab === 'selected_element' && (
           <SelectedElementInspector
             containerRef={containerRef}
@@ -1561,6 +1632,9 @@ export const CMSSidePanel: React.FC<{
             texts={texts}
             updateText={updateText}
             resetText={resetText}
+            styles={styles}
+            updateStyle={updateStyle}
+            resetStyle={resetStyle}
             images={images}
             updateImage={updateImage}
             links={links}
@@ -1587,6 +1661,9 @@ const SelectedElementInspector: React.FC<{
   texts: Record<string, Record<string, string>>;
   updateText: (id: string, lang: string, text: string) => void;
   resetText: (id: string) => void;
+  styles: Record<string, TextStyle>;
+  updateStyle: (id: string, patch: Partial<TextStyle>) => void;
+  resetStyle: (id: string) => void;
   images: Record<string, string>;
   updateImage: (id: string, url: string) => void;
   links: Record<string, string>;
@@ -1600,6 +1677,9 @@ const SelectedElementInspector: React.FC<{
   texts,
   updateText,
   resetText,
+  styles,
+  updateStyle,
+  resetStyle,
   images,
   updateImage,
   links,
@@ -1607,7 +1687,8 @@ const SelectedElementInspector: React.FC<{
   currentLanguage,
   pickImageFile,
 }) => {
-  const [domFields, setDomFields] = useState<Array<{ key: string; value: string; tag: string }>>([]);
+  const [domFields, setDomFields] = useState<Array<{ key: string; value: string; tag: string; label: string }>>([]);
+  const textStyle = styles[selectedElementId ?? ''];
   const [imageIds, setImageIds] = useState<string[]>([]);
   const [hasAnchor, setHasAnchor] = useState(false);
   const [anchorHref, setAnchorHref] = useState('');
@@ -1630,20 +1711,21 @@ const SelectedElementInspector: React.FC<{
     }
 
     // Raccogli i nodi di testo come in EditableElement
-    const TEXTY = /^(H[1-6]|P|SPAN|STRONG|EM|SMALL|LABEL|A)$/i;
+    const TEXTY = /^(H[1-6]|P|SPAN|STRONG|EM|SMALL|LABEL|A|BUTTON)$/i;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
       acceptNode: (node) => {
         const el = node as HTMLElement;
         if (el.closest('[data-cms-control]')) return NodeFilter.FILTER_REJECT;
-        if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_REJECT;
+        // Skip layout wrappers but collect each readable text node within them.
+        if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_SKIP;
         const hasDirectText = Array.from(el.childNodes).some(
-          (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
+          (child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim(),
         );
         return hasDirectText ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
       },
     });
 
-    const fields: Array<{ key: string; value: string; tag: string }> = [];
+    const fields: Array<{ key: string; value: string; tag: string; label: string }> = [];
     let idx = 0;
     let current = walker.nextNode();
     while (current) {
@@ -1653,10 +1735,14 @@ const SelectedElementInspector: React.FC<{
         idx === 0 && texts[selectedElementId]?.[currentLanguage] !== undefined
           ? texts[selectedElementId][currentLanguage]
           : texts[key]?.[currentLanguage];
+      const value = saved !== undefined ? saved : el.innerText;
+      const nearbyLabel = el.getAttribute('aria-label') || el.getAttribute('title');
+      const label = nearbyLabel || value.replace(/\s+/g, ' ').trim().slice(0, 38) || `Testo ${idx + 1}`;
       fields.push({
         key,
-        value: saved !== undefined ? saved : el.innerText,
+        value,
         tag: el.tagName.toLowerCase(),
+        label,
       });
       idx++;
       current = walker.nextNode();
@@ -1703,14 +1789,15 @@ const SelectedElementInspector: React.FC<{
       `[data-editable-id="${selectedElementId}"]`,
     ) as HTMLElement | null;
     if (!root) return;
-    const TEXTY = /^(H[1-6]|P|SPAN|STRONG|EM|SMALL|LABEL|A)$/i;
+    const TEXTY = /^(H[1-6]|P|SPAN|STRONG|EM|SMALL|LABEL|A|BUTTON)$/i;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
       acceptNode: (node) => {
         const el = node as HTMLElement;
         if (el.closest('[data-cms-control]')) return NodeFilter.FILTER_REJECT;
-        if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_REJECT;
+        // Skip layout wrappers but collect each readable text node within them.
+        if (!TEXTY.test(el.tagName)) return NodeFilter.FILTER_SKIP;
         const hasDirectText = Array.from(el.childNodes).some(
-          (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
+          (child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim(),
         );
         return hasDirectText ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
       },
@@ -1734,9 +1821,10 @@ const SelectedElementInspector: React.FC<{
           <span className="text-[10px] font-mono uppercase text-sky-300 block">
             Elemento Selezionato
           </span>
-          <strong className="text-xs font-mono text-white truncate block">
-            {selectedElementId}
+          <strong className="text-xs font-semibold text-white truncate block">
+            {containerRef.current?.querySelector(`[data-editable-id="${selectedElementId}"]`)?.getAttribute('data-editable-label') || selectedElementId.replace(/^[^.]+\./, '').replace(/[._-]+/g, ' ')}
           </strong>
+          <span className="text-[9px] font-mono text-white/35">{selectedElementId}</span>
         </div>
         <button
           type="button"
@@ -1765,8 +1853,8 @@ const SelectedElementInspector: React.FC<{
 
           {domFields.map((field, idx) => (
             <div key={field.key} className="space-y-1">
-              <label className="text-[10px] font-mono text-white/45 block">
-                Campo #{idx + 1} ({field.tag.toUpperCase()})
+              <label className="text-[10px] font-mono text-white/65 block">
+                {field.label} · {field.tag.toUpperCase()}
               </label>
               {field.value.length > 55 || field.tag === 'p' ? (
                 <textarea
@@ -1801,6 +1889,50 @@ const SelectedElementInspector: React.FC<{
           ))}
         </div>
       )}
+
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div>
+          <h4 className="text-[11px] font-bold text-white">Aspetto del testo</h4>
+          <p className="mt-0.5 text-[10px] text-white/45">Le modifiche si applicano ai testi di questo elemento.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="space-y-1 text-[10px] text-white/55">
+            Dimensione
+            <input
+              type="number"
+              min={8}
+              max={48}
+              value={textStyle?.fontSize ?? 14}
+              onChange={(event) => updateStyle(selectedElementId, { fontSize: Math.min(48, Math.max(8, Number(event.target.value) || 8)) })}
+              className="w-full rounded-lg border border-white/15 bg-zinc-950 px-2 py-1.5 text-xs text-white"
+            />
+          </label>
+          <label className="space-y-1 text-[10px] text-white/55">
+            Carattere
+            <select
+              value={textStyle?.fontFamily ?? 'system-ui, sans-serif'}
+              onChange={(event) => updateStyle(selectedElementId, { fontFamily: event.target.value })}
+              className="w-full rounded-lg border border-white/15 bg-zinc-950 px-2 py-1.5 text-xs text-white"
+            >
+              <option value="system-ui, sans-serif">System UI</option>
+              <option value="Inter, system-ui, sans-serif">Inter</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value={'"JetBrains Mono", monospace'}>JetBrains Mono</option>
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => updateStyle(selectedElementId, { bold: !textStyle?.bold })} aria-pressed={Boolean(textStyle?.bold)} title="Grassetto" className={`rounded-lg p-2 ${textStyle?.bold ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><Bold className="h-4 w-4" /></button>
+          <button type="button" onClick={() => updateStyle(selectedElementId, { italic: !textStyle?.italic })} aria-pressed={Boolean(textStyle?.italic)} title="Corsivo" className={`rounded-lg p-2 ${textStyle?.italic ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><Italic className="h-4 w-4" /></button>
+          <button type="button" onClick={() => updateStyle(selectedElementId, { underline: !textStyle?.underline })} aria-pressed={Boolean(textStyle?.underline)} title="Sottolineato" className={`rounded-lg p-2 ${textStyle?.underline ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><Underline className="h-4 w-4" /></button>
+          <span className="mx-1 h-5 w-px bg-white/10" />
+          <button type="button" onClick={() => updateStyle(selectedElementId, { align: 'left' })} aria-label="Allinea a sinistra" aria-pressed={(textStyle?.align ?? 'left') === 'left'} className={`rounded-lg p-2 ${(textStyle?.align ?? 'left') === 'left' ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><AlignLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => updateStyle(selectedElementId, { align: 'center' })} aria-label="Centra" aria-pressed={textStyle?.align === 'center'} className={`rounded-lg p-2 ${textStyle?.align === 'center' ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><AlignCenter className="h-4 w-4" /></button>
+          <button type="button" onClick={() => updateStyle(selectedElementId, { align: 'right' })} aria-label="Allinea a destra" aria-pressed={textStyle?.align === 'right'} className={`rounded-lg p-2 ${textStyle?.align === 'right' ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/70'}`}><AlignRight className="h-4 w-4" /></button>
+          <input type="color" aria-label="Colore del testo" value={textStyle?.color || '#ffffff'} onChange={(e) => updateStyle(selectedElementId, { color: e.target.value })} className="ml-auto h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+          <button type="button" onClick={() => resetStyle(selectedElementId)} title="Ripristina stile" className="rounded-lg bg-white/5 p-2 text-white/60 hover:text-white"><RotateCcw className="h-4 w-4" /></button>
+        </div>
+      </div>
 
       {/* Immagini associate all'elemento */}
       {imageIds.map((imgId) => (

@@ -5,6 +5,8 @@ import { checkCasaAuroraWifi } from '../../services/wifiDetectionService';
 import { isDigitalKeyActive } from '../../services/guestPassService';
 import { trackActivity } from '../../services/activityTrackingService';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
+import { useEditMode } from '../visual-cms/EditModeContext';
+import { resolveDoorBannerCopy } from '../video_book/cmsPageHelpers';
 
 interface Props {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface Props {
 export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, language = 'it' }) => {
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const s = t.smartLock;
+  const { texts: cmsTexts } = useEditMode();
   // Keys require BOTH documents submitted AND host confirmation - not confirmation alone.
   const keysReady = isDigitalKeyActive(pass);
 
@@ -41,7 +44,8 @@ export const SmartLockModal: React.FC<Props> = ({ isOpen, onClose, pass, languag
     durationMs = 2000
   ) => {
     if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-    setDoorBanner({ type, title, detail });
+    const resolved = resolveDoorBannerCopy(cmsTexts, language, type, title, detail);
+    setDoorBanner({ type, ...resolved });
     bannerTimerRef.current = setTimeout(() => {
       setDoorBanner(null);
     }, durationMs);

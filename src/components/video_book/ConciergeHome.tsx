@@ -40,7 +40,7 @@ import { EditableElement } from '../visual-cms/EditableElement';
 import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
 import { EditableIcon } from '../visual-cms/EditableIcon';
 import { useEditMode } from '../visual-cms/EditModeContext';
-import { CustomBlocksRenderer } from './cmsPageHelpers';
+import { CustomBlocksRenderer, resolveDoorBannerCopy } from './cmsPageHelpers';
 import { InlineTimePicker } from '../visual-cms/InlineTimePicker';
 import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { BOOK_DATA } from '../../data/multilingualBookData';
@@ -599,7 +599,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const [wifiCopied, setWifiCopied] = useState(false);
   const [showWifiQr, setShowWifiQr] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const { homeSections: cmsHomeSections, showPhotoCarousel, carouselImages } = useEditMode();
+  const { homeSections: cmsHomeSections, showPhotoCarousel, carouselImages, texts: cmsTexts } = useEditMode();
   const [wifiVerified, setWifiVerified] = useState(false);
   const [wifiMessage, setWifiMessage] = useState('');
   const [doorState, setDoorState] = useState<'idle' | 'opening' | 'success' | 'error'>('idle');
@@ -622,7 +622,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     durationMs = 2000
   ) => {
     if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-    setDoorBanner({ type, title, detail });
+    const resolved = resolveDoorBannerCopy(cmsTexts, language, type, title, detail);
+    setDoorBanner({ type, ...resolved });
     bannerTimerRef.current = setTimeout(() => {
       setDoorBanner(null);
     }, durationMs);
