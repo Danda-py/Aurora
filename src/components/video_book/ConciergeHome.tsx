@@ -21,6 +21,7 @@ import {
   Utensils,
   Wifi,
   X,
+  Ticket,
   ShieldAlert,
   Train,
   Wrench,
@@ -67,6 +68,97 @@ const languages: { id: Language; label: string }[] = [
   { id: 'es', label: 'Español' }
 ];
 
+const NO_PASS_COPY: Record<Language, { eyebrow: string; title: string; description: string; action: string; note: string; whatsappMessage: string }> = {
+  it: {
+    eyebrow: 'Accesso ospite',
+    title: 'Hai una prenotazione? Attiva la tua guida',
+    description: 'Per vedere i dettagli del soggiorno ti serve il link personale della prenotazione. Scrivi a Nino per riceverlo, poi aprilo su questo dispositivo e completa il check-in con i documenti di tutti gli ospiti.',
+    action: 'Richiedi il link a Nino',
+    note: 'Porta e Wi-Fi si attivano dopo l’invio dei documenti e la conferma dell’host.',
+    whatsappMessage: 'Ciao Nino, vorrei ricevere il link personale della mia prenotazione per Appartamento Aurora, così posso completare il check-in.'
+  },
+  en: {
+    eyebrow: 'Guest access',
+    title: 'Have a booking? Set up your guest guide',
+    description: 'You’ll need your personal booking link to view stay details. Message Nino to get it, open it on this device, then complete check-in by submitting every guest’s documents.',
+    action: 'Request your link from Nino',
+    note: 'Door access and Wi-Fi activate after document submission and host confirmation.',
+    whatsappMessage: 'Hi Nino, please send me the personal link for my Appartamento Aurora booking so I can complete check-in.'
+  },
+  de: {
+    eyebrow: 'Gastzugang',
+    title: 'Sie haben gebucht? Richten Sie Ihren Gästezugang ein',
+    description: 'Für die Aufenthaltsdetails benötigen Sie Ihren persönlichen Buchungslink. Schreiben Sie Nino, öffnen Sie den Link auf diesem Gerät und schließen Sie den Check-in mit den Dokumenten aller Gäste ab.',
+    action: 'Link bei Nino anfragen',
+    note: 'Türzugang und WLAN werden nach Übermittlung der Dokumente und Bestätigung durch den Gastgeber aktiviert.',
+    whatsappMessage: 'Hallo Nino, bitte sende mir den persönlichen Link für meine Buchung im Appartamento Aurora, damit ich den Check-in abschließen kann.'
+  },
+  fr: {
+    eyebrow: 'Accès voyageur',
+    title: 'Vous avez réservé ? Activez votre guide',
+    description: 'Le lien personnel de réservation est nécessaire pour consulter le séjour. Écrivez à Nino pour le recevoir, ouvrez-le sur cet appareil puis terminez le check-in avec les documents de tous les voyageurs.',
+    action: 'Demander le lien à Nino',
+    note: 'L’accès à la porte et au Wi-Fi sera activé après l’envoi des documents et la confirmation de l’hôte.',
+    whatsappMessage: 'Bonjour Nino, pouvez-vous m’envoyer le lien personnel de ma réservation à Appartamento Aurora afin que je termine le check-in ?'
+  },
+  es: {
+    eyebrow: 'Acceso de huésped',
+    title: '¿Tienes una reserva? Activa tu guía',
+    description: 'Necesitas el enlace personal de la reserva para consultar tu estancia. Escríbele a Nino para recibirlo, ábrelo en este dispositivo y completa el check-in con los documentos de todos los huéspedes.',
+    action: 'Pedir el enlace a Nino',
+    note: 'El acceso a la puerta y al Wi-Fi se activa después de enviar los documentos y recibir la confirmación del anfitrión.',
+    whatsappMessage: 'Hola Nino, ¿puedes enviarme el enlace personal de mi reserva en Appartamento Aurora para completar el check-in?'
+  }
+};
+
+const PASS_HOME_COPY: Record<Language, {
+  stay: string;
+  checkInComplete: string;
+  setupPending: string;
+  guestSingular: string;
+  guestPlural: string;
+  passPreparing: string;
+  documentsWaiting: string;
+  documentsSubmitted: string;
+  submitDocuments: string;
+}> = {
+  it: {
+    stay: 'Il tuo soggiorno', checkInComplete: 'Check-in completato', setupPending: 'Da completare',
+    guestSingular: 'ospite', guestPlural: 'ospiti', passPreparing: 'Il pass è in preparazione',
+    documentsWaiting: 'Il pass è collegato alla prenotazione. Completa il check-in inviando i documenti richiesti.',
+    documentsSubmitted: 'Documenti inviati. Il pass e le chiavi digitali si attiveranno dopo la conferma dell’host.',
+    submitDocuments: 'Invia i documenti',
+  },
+  en: {
+    stay: 'Your stay', checkInComplete: 'Check-in complete', setupPending: 'Setup pending',
+    guestSingular: 'guest', guestPlural: 'guests', passPreparing: 'Your pass is being prepared',
+    documentsWaiting: 'Your pass is linked to your booking. Complete check-in by submitting the required documents.',
+    documentsSubmitted: 'Documents submitted. Your pass and digital keys activate after host confirmation.',
+    submitDocuments: 'Submit documents',
+  },
+  de: {
+    stay: 'Ihr Aufenthalt', checkInComplete: 'Check-in abgeschlossen', setupPending: 'Noch abzuschließen',
+    guestSingular: 'Gast', guestPlural: 'Gäste', passPreparing: 'Ihr Pass wird vorbereitet',
+    documentsWaiting: 'Ihr Pass ist mit Ihrer Buchung verknüpft. Schließen Sie den Check-in ab, indem Sie die erforderlichen Dokumente senden.',
+    documentsSubmitted: 'Dokumente übermittelt. Pass und digitale Schlüssel werden nach der Bestätigung des Gastgebers aktiviert.',
+    submitDocuments: 'Dokumente senden',
+  },
+  fr: {
+    stay: 'Votre séjour', checkInComplete: 'Check-in terminé', setupPending: 'À compléter',
+    guestSingular: 'voyageur', guestPlural: 'voyageurs', passPreparing: 'Votre pass est en préparation',
+    documentsWaiting: 'Votre pass est lié à votre réservation. Terminez le check-in en envoyant les documents requis.',
+    documentsSubmitted: 'Documents envoyés. Le pass et les clés numériques seront activés après confirmation de l’hôte.',
+    submitDocuments: 'Envoyer les documents',
+  },
+  es: {
+    stay: 'Tu estancia', checkInComplete: 'Check-in completado', setupPending: 'Pendiente',
+    guestSingular: 'huésped', guestPlural: 'huéspedes', passPreparing: 'Tu pase está en preparación',
+    documentsWaiting: 'Tu pase está vinculado a la reserva. Completa el check-in enviando los documentos requeridos.',
+    documentsSubmitted: 'Documentos enviados. El pase y las llaves digitales se activarán cuando el anfitrión confirme.',
+    submitDocuments: 'Enviar documentos',
+  },
+};
+
 interface GuideTileItem {
   page: WelcomePage;
   label: string;
@@ -85,7 +177,6 @@ interface ScrollableTileRowProps {
 
 const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLabel }) => {
   const scrollerRef = React.useRef<HTMLDivElement>(null);
-  const isSingleTile = React.Children.count(children) === 1;
   const [canScroll, setCanScroll] = useState(false);
 
   const updateScrollState = () => {
@@ -111,7 +202,7 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className={`flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4 ${isSingleTile ? 'justify-center' : ''}`}
+        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4"
         onScroll={updateScrollState}
       >
         <div className="w-4 self-stretch shrink-0" />
@@ -1023,6 +1114,30 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           )}
         </header>
 
+        {!pass && (() => {
+          const copy = NO_PASS_COPY[language];
+          const whatsappUrl = `https://wa.me/${APARTMENT_INFO.hostWhatsApp}?text=${encodeURIComponent(copy.whatsappMessage)}`;
+          return (
+            <section className="overflow-hidden rounded-3xl border border-emerald-300/20 bg-gradient-to-br from-emerald-400/[0.12] via-zinc-900/90 to-zinc-950 p-5 shadow-xl shadow-emerald-950/20">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+                <Ticket className="h-4 w-4" /> {copy.eyebrow}
+              </div>
+              <h2 className="mt-3 text-lg font-bold leading-snug text-white">{copy.title}</h2>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-300">{copy.description}</p>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackActivity(pass, 'whatsapp_contact')}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-200 active:scale-[0.98]"
+              >
+                <MessageCircle className="h-4 w-4" /> {copy.action} <ArrowUpRight className="h-4 w-4" />
+              </a>
+              <p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-zinc-400">{copy.note}</p>
+            </section>
+          );
+        })()}
+
         {/* Area 2: banner check-in rosso → revisione arancione → confermato verde */}
         {pass && (() => {
           // 4 stati: 'approved' (documenti + conferma) → verde; 'confirmed' (l'host
@@ -1079,41 +1194,21 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
           );
         })()}
 
-        {/* Tessera soggiorno: visibile a ogni ospite con pass valido, anche prima
-            dell'approvazione del check-in, così i dati personali (date, codice
-            prenotazione, numero ospiti) restano privati e consultabili.
-            Le quattro azioni (apri porta / Wi-Fi / documenti) restano invece bloccate
-            fino a documenti inviati + conferma host (isCheckinApproved). */}
-        {pass && !isCheckinApproved && (
-          <section className="space-y-4 animate-in fade-in duration-300">
-            <div className="rounded-3xl border border-white/10 bg-zinc-900/75 p-4 shadow-xl">
-              <div className="flex items-center gap-3">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-300">
-                  <UserRound className="h-6 w-6" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{language === 'it' ? 'La tua prenotazione' : 'Your booking'}</span>
-                  <h2 className="truncate text-lg font-bold">{`${pass.guestName} ${pass.guestSurname}`.trim()}</h2>
-                  <span className="mt-0.5 block text-xs text-zinc-400">{pass.bookingRef || '—'} · {pass.guestsCount || 1} {language === 'it' ? ((pass.guestsCount || 1) === 1 ? 'ospite' : 'ospiti') : ((pass.guestsCount || 1) === 1 ? 'guest' : 'guests')}</span>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-3">
-                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-in' : 'Check-in'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkInDate)} · {pass.checkInTime || '14:00'}</strong></div>
-                <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-out' : 'Check-out'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkOutDate)} · {pass.checkOutTime || APARTMENT_INFO.checkOutLimit}</strong></div>
-              </div>
-              <button type="button" onClick={() => onNavigate('check_in')} className="mt-3 w-full rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-black transition active:scale-[0.98]">
-                {language === 'it' ? 'Completa il check-in per sbloccare porta e Wi-Fi' : 'Complete check-in to unlock door and Wi-Fi'}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {/* Soggiorno, ritratto e barra azioni: sempre visibili a chi ha un pass;
-            le azioni (Wi-Fi/apriporta) restano disabilitate finché il check-in
-            completo non è approvato invece che sparire dal layout. */}
+        {/* Riepilogo soggiorno e azioni: stato check-in e prossime azioni restano evidenti,
+            mentre le funzioni protette rimangono bloccate fino alla conferma dei documenti. */}
         {pass && (
           <section className="space-y-4 animate-in fade-in duration-300">
-            <div className="rounded-3xl border border-white/10 bg-zinc-900/75 p-4 shadow-xl">
+            <div className="rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/[0.10] via-zinc-900/90 to-zinc-950 p-4 shadow-xl shadow-emerald-950/20">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">{PASS_HOME_COPY[language].stay}</span>
+                  <span className="mt-1 block text-xs text-zinc-400">{formatPassDate(pass.checkInDate)} – {formatPassDate(pass.checkOutDate)}</span>
+                </div>
+                <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${isCheckinApproved ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-amber-300/25 bg-amber-300/10 text-amber-100'}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${isCheckinApproved ? 'bg-emerald-300' : 'bg-amber-300'}`} />
+                  {isCheckinApproved ? PASS_HOME_COPY[language].checkInComplete : PASS_HOME_COPY[language].setupPending}
+                </span>
+              </div>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => { if (stayGuests.length > 1) setSelectedGuestIndex((index) => (index + 1) % stayGuests.length); setSheet('guest'); }} className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-300/50 bg-white/5 text-zinc-200" aria-label={stayGuests.length > 1 ? 'Seleziona ospite e consulta documento' : 'Consulta dati documento'}>
                   {selectedGuest?.profileImage ? <img src={selectedGuest.profileImage} alt="Foto profilo documento" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}
@@ -1121,6 +1216,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <div className="min-w-0 flex-1">
                   <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{language === 'it' ? 'Ospite della prenotazione' : 'Guest details'}</span>
                   <h2 className="truncate text-lg font-bold">{selectedGuest ? `${selectedGuest.name} ${selectedGuest.surname}` : `${pass.guestName} ${pass.guestSurname}`}</h2>
+                  <span className="mt-0.5 block text-xs text-zinc-400">
+                    {pass.bookingRef || '—'} · {pass.guestsCount || stayGuests.length || 1}{' '}
+                    {(pass.guestsCount || stayGuests.length || 1) === 1 ? PASS_HOME_COPY[language].guestSingular : PASS_HOME_COPY[language].guestPlural}
+                  </span>
                   <button type="button" onClick={() => setSheet('guest')} className="mt-0.5 text-xs text-zinc-400 underline underline-offset-2">{stayGuests.length > 1 ? (language === 'it' ? 'Seleziona ospite · dati documento' : 'Select guest · document details') : (language === 'it' ? 'Consulta dati documento' : 'View document details')}</button>
                 </div>
                 <span className="flex shrink-0 items-center gap-1 text-xs text-zinc-300"><Users className="h-4 w-4" />{pass.guestsCount || stayGuests.length || 1}</span>
@@ -1130,6 +1229,21 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <div><span className="block text-[10px] uppercase tracking-wider text-zinc-500">{language === 'it' ? 'Check-out' : 'Check-out'}</span><strong className="mt-1 block text-sm">{formatPassDate(pass.checkOutDate)} · {pass.checkOutTime || APARTMENT_INFO.checkOutLimit}</strong></div>
               </div>
             </div>
+
+            {!isCheckinApproved && (
+              <div className="rounded-2xl border border-amber-400/20 bg-zinc-900/80 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-amber-200"><Clock3 className="h-4 w-4" /></span>
+                  <div className="min-w-0 flex-1">
+                    <strong className="block text-sm text-white">{PASS_HOME_COPY[language].passPreparing}</strong>
+                    <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                      {pass.documentsUploaded ? PASS_HOME_COPY[language].documentsSubmitted : PASS_HOME_COPY[language].documentsWaiting}
+                    </p>
+                    {!pass.documentsUploaded && <button type="button" onClick={() => onNavigate('check_in')} className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-300 px-3 py-2 text-xs font-bold text-zinc-950 transition hover:bg-amber-200">{PASS_HOME_COPY[language].submitDocuments}<ChevronRight className="h-3.5 w-3.5" /></button>}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {showCheckoutReminder && (
               <button type="button" onClick={() => setSheet('checkout')} className="flex w-full items-center gap-3 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-3.5 text-left shadow-lg transition active:scale-[0.99]">
