@@ -85,6 +85,7 @@ interface ScrollableTileRowProps {
 
 const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLabel }) => {
   const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const isSingleTile = React.Children.count(children) === 1;
   const [canScroll, setCanScroll] = useState(false);
 
   const updateScrollState = () => {
@@ -110,7 +111,7 @@ const ScrollableTileRow: React.FC<ScrollableTileRowProps> = ({ children, hintLab
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className="flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4"
+        className={`flex items-start gap-3.5 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x snap-mandatory -mx-4 scroll-pl-4 ${isSingleTile ? 'justify-center' : ''}`}
         onScroll={updateScrollState}
       >
         <div className="w-4 self-stretch shrink-0" />
