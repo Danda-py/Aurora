@@ -787,6 +787,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const checkoutList = BOOK_DATA[language].checkOut.checklist;
   const checkoutDoneCount = checkoutList.filter((_, index) => checkoutItems[String(index)]).length;
   const checkoutMood = checkoutDoneCount === checkoutList.length ? '😄' : checkoutDoneCount >= checkoutList.length * 0.67 ? '🙂' : checkoutDoneCount >= checkoutList.length * 0.34 ? '😐' : checkoutDoneCount > 0 ? '🙁' : '😢';
+  const checkoutStarCount = Math.min(checkoutList.length, 10);
+  const checkoutLitStars = checkoutList.length > checkoutStarCount
+    ? Math.ceil(checkoutDoneCount * checkoutStarCount / checkoutList.length)
+    : checkoutDoneCount;
   const checkoutHours = Math.max(0, Math.floor(checkoutMsRemaining / (60 * 60 * 1000)));
   const checkoutMinutes = Math.max(0, Math.floor((checkoutMsRemaining % (60 * 60 * 1000)) / (60 * 1000)));
 
@@ -1317,14 +1321,18 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                   <path d="m55 9 4 5-6 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <path className="checkout-flight-star" d="m35 4 1.5 4.5L41 10l-4.5 1.5L35 16l-1.5-4.5L29 10l4.5-1.5L35 4Z" fill="currentColor" />
                 </svg>
+                <div className="relative mb-2 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-1" role="img" aria-label={`${checkoutLitStars} ${language === 'it' ? 'stelle su' : 'of'} ${checkoutStarCount}`}>
+                    {Array.from({ length: checkoutStarCount }, (_, index) => (
+                      <Star key={index} className={`h-3.5 w-3.5 transition-colors duration-300 ${index < checkoutLitStars ? 'fill-amber-300 text-amber-300 checkout-star' : 'fill-transparent text-white/25'}`} style={index < checkoutLitStars ? { animationDelay: `${index * 70}ms` } : undefined} />
+                    ))}
+                  </div>
+                  <span className="shrink-0 text-3xl" role="img" aria-label="Avanzamento checklist check-out">{checkoutMood}</span>
+                </div>
                 <button type="button" onClick={() => setSheet('checkout')} className="relative flex w-full items-center gap-3 text-left transition active:scale-[0.99]">
-                  <span className="text-3xl" role="img" aria-label="Avanzamento checklist check-out">{checkoutMood}</span>
-                  <span className="min-w-0 flex-1"><strong className="block text-sm text-white">{checkoutStatus === 'success' ? (language === 'it' ? 'Check-out completato' : 'Check-out complete') : <>{language === 'it' ? 'Check-out tra' : 'Check-out in'} {checkoutHours}{language === 'it' ? ' ore' : ' hours'} {checkoutMinutes} min</>}</strong><span className="mt-0.5 block text-[11px] text-zinc-300">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate · apri checklist' : 'tasks done · open checklist'}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-rose-200" />
+                  <span className="min-w-0 flex-1"><strong className="block text-sm text-white">{checkoutStatus === 'success' ? (language === 'it' ? 'Check-out completato' : 'Check-out complete') : <>{language === 'it' ? 'Check-out tra' : 'Check-out in'} {checkoutHours}{language === 'it' ? ' ore' : ' hours'} {checkoutMinutes} min</>}</strong><span className="mt-0.5 block text-[11px] text-zinc-300">{checkoutDoneCount}/{checkoutList.length} {language === 'it' ? 'attività completate · apri checklist' : 'tasks done · open checklist'}</span><ChevronRight className="absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-200" /></span>
                 </button>
-                <div className="relative mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                  <span className="flex items-center gap-1" aria-label="Valuta il soggiorno: cinque stelle">
-                    {[1, 2, 3, 4, 5].map(star => <Star key={star} className="h-3.5 w-3.5 fill-amber-300 text-amber-300 checkout-star" style={{ animationDelay: `${star * 120}ms` }} />)}
-                  </span>
+                <div className="relative mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-white/10 pt-3">
                   <div className="flex gap-2">
                     {reviewLinks.map(link => <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" onClick={() => trackActivity(pass, 'booking_link_open', link.label)} className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.07] px-2.5 py-1.5 text-[10px] font-semibold text-white transition hover:bg-white/[0.13]"><Star className="h-3 w-3 fill-amber-300 text-amber-300" />{link.label}</a>)}
                   </div>
