@@ -139,6 +139,7 @@ let logsHydration: Promise<void> | null = null;
 let deletedRefsHydration: Promise<void> | null = null;
 
 let lastPassesHydrationTime = 0;
+let passesRevision = 0;
 let lastLogsHydrationTime = 0;
 let lastDeletedRefsHydrationTime = 0;
 
@@ -223,11 +224,12 @@ async function hydratePassesFromSupabase(force = false) {
   if (!force && passesHydration && (now - lastPassesHydrationTime < CACHE_TTL_MS)) {
     return passesHydration;
   }
+  const hydrationRevision = passesRevision;
   passesHydration = (async () => {
     if (!isSupabaseConfigured()) return;
     try {
       const remotePasses = await loadPasses();
-      if (remotePasses && remotePasses.length > 0) {
+      if (remotePasses && remotePasses.length > 0 && hydrationRevision === passesRevision) {
         serverPasses.splice(0, serverPasses.length, ...sortGuestPasses(remotePasses));
         lastPassesHydrationTime = Date.now();
       }
@@ -240,8 +242,11 @@ async function hydratePassesFromSupabase(force = false) {
 }
 
 function persistPasses() {
+  // Keep the local list authoritative after a write. An eager Supabase reload here
+  // can race the following upsert and replace fresh guest data with an older row.
+  passesRevision += 1;
+  lastPassesHydrationTime = Date.now();
   safeWriteFileSync(PASSES_REL_PATH, JSON.stringify(serverPasses, null, 2));
-  void hydratePassesFromSupabase(true);
 }
 
 async function hydrateDeletedRefsFromSupabase(force = false) {
