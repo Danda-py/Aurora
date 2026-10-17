@@ -765,6 +765,10 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
   const timing = pass ? getStayTiming(pass, now) : null;
   const isStayActive = timing ? timing.isActive : false;
   const isCheckinConfirmed = pass ? Boolean(pass.checkInConfirmed) : false;
+  const checkinBannerExpired = Boolean(
+    pass?.checkInConfirmedAt &&
+    now.getTime() >= Date.parse(pass.checkInConfirmedAt) + 30 * 60 * 1000
+  );
   // Digital keys (Smart Lock / Wi-Fi) require BOTH the host's check-in confirmation
   // AND the guest's documents to be submitted - confirming check-in alone is not enough.
   const isKeysReady = pass ? isDigitalKeyActive(pass) : false;
@@ -798,6 +802,15 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!pass?.checkInConfirmed || !pass.checkInConfirmedAt) return;
+    const expiresAt = Date.parse(pass.checkInConfirmedAt) + 30 * 60 * 1000;
+    const delay = expiresAt - Date.now();
+    if (delay <= 0) return;
+    const timer = window.setTimeout(() => setNow(new Date()), delay);
+    return () => window.clearTimeout(timer);
+  }, [pass?.id, pass?.checkInConfirmed, pass?.checkInConfirmedAt]);
 
   useEffect(() => {
     setCheckoutStatus(pass?.checkOutCompletedAt ? 'success' : 'idle');
@@ -1206,7 +1219,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         })()}
 
         {/* Area 2: banner check-in rosso → revisione arancione → confermato verde */}
-        {pass && (() => {
+        {pass && !(isCheckinConfirmed && checkinBannerExpired) && (() => {
           // 4 stati: 'approved' (documenti + conferma) → verde; 'confirmed' (l'host
           // ha CONFERMATO il check-in ma i documenti non sono ancora stati inviati)
           // → verde/ambra; 'review' (documenti inviati, attesa verifica) → ambra;

@@ -115,6 +115,7 @@ export interface GuestPass {
   firstUsedAt?: string;
   documentsUploaded?: boolean;
   checkInConfirmed?: boolean;
+  checkInConfirmedAt?: string;
   documentsData?: Array<{
     documentType: 'identita' | 'passaporto' | 'patente';
     documentNumber: string;

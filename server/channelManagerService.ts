@@ -230,6 +230,7 @@ export async function syncSingleChannel(channelId: string, passes: GuestPass[] =
           checkInDate: startDate,
           checkOutDate: endDate,
           checkInConfirmed: true, // pre-authorized for the booking stay
+          checkInConfirmedAt: new Date().toISOString(),
           active: true,
           bookingRef: finalBookingRef,
           channelSource: channel.name,
