@@ -2381,6 +2381,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         return;
       }
       pass.checkInConfirmed = Boolean(confirmed);
+      pass.checkInConfirmedAt = pass.checkInConfirmed ? new Date().toISOString() : undefined;
       persistPasses();
       if (isSupabaseConfigured()) {
         await upsertPass(pass);
