@@ -1618,6 +1618,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
       accessToken: maskedToken,
       hasToken: Boolean(token),
       entityId: config.entityId,
+      checkoutAreaId: config.checkoutAreaId,
       service: config.service,
       deviceName: config.deviceName,
       wifiSsidRequired: config.wifiSsidRequired,
@@ -1642,7 +1643,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
   });
 
   apiRouter.post('/hass/config', async (req, res) => {
-    const { mode, webhookUrl, haUrl, accessToken, entityId, service, deviceName, wifiSsidRequired, homePublicIp, lanGatewayIp, localWebhookUrl, enabled } = req.body;
+    const { mode, webhookUrl, haUrl, accessToken, entityId, checkoutAreaId, service, deviceName, wifiSsidRequired, homePublicIp, lanGatewayIp, localWebhookUrl, enabled } = req.body;
     const currentConfig = getHomeAssistantConfig();
     
     let resolvedToken = currentConfig.accessToken;
@@ -1656,6 +1657,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
       ...(haUrl !== undefined && { haUrl }),
       ...(resolvedToken !== undefined && { accessToken: resolvedToken }),
       ...(entityId && { entityId }),
+      ...(checkoutAreaId !== undefined && { checkoutAreaId: String(checkoutAreaId).trim() }),
       ...(service && { service }),
       ...(deviceName && { deviceName }),
       ...(wifiSsidRequired !== undefined && { wifiSsidRequired }),

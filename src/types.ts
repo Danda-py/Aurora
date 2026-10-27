@@ -140,6 +140,7 @@ export interface SmartLockConfig {
   webhookUrl: string; // Home Assistant or eWeLink Webhook
   apiBearerToken?: string;
   deviceEntityId?: string; // e.g. "lock.portone_principale"
+  checkoutAreaId?: string; // Home Assistant area used to scope checkout actions
   enabled: boolean;
   // Shelly specific
   shellyDeviceId?: string;

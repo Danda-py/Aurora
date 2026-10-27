@@ -850,7 +850,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
       const completedAt = new Date().toISOString();
       setCheckoutCompletion({ passId: pass.id, completedAt });
       setCheckoutStatus('success');
-      setCheckoutMessage(language === 'it' ? 'Partenza registrata: tutte le luci sono state spente.' : 'Departure recorded: all lights have been turned off.');
+      setCheckoutMessage(language === 'it' ? 'Partenza registrata: spente le luci dell’appartamento.' : 'Departure recorded: apartment lights have been turned off.');
       trackActivity(pass, 'checkout_completed');
     } catch (error: any) {
       setCheckoutStatus('error');
@@ -1353,7 +1353,7 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
                 <div className="relative mt-2 flex items-center gap-2">
                   <button type="button" onClick={() => void runCheckout()} disabled={checkoutStatus === 'loading' || checkoutStatus === 'success'} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition ${checkoutStatus === 'success' ? 'bg-emerald-600 text-white' : checkoutStatus === 'error' ? 'bg-rose-700 text-white' : 'bg-rose-500 text-white hover:bg-rose-400'} disabled:cursor-not-allowed`}>
                     {checkoutStatus === 'loading' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : checkoutStatus === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <LogOut className="h-4 w-4" />}
-                    {checkoutStatus === 'loading' ? (language === 'it' ? 'Attivazione…' : 'Activating…') : checkoutStatus === 'success' ? (language === 'it' ? 'Partenza registrata' : 'Departure recorded') : language === 'it' ? 'Esegui check-out · spegni luci' : 'Check out · turn off lights'}
+                    {checkoutStatus === 'loading' ? (language === 'it' ? 'Attivazione…' : 'Activating…') : checkoutStatus === 'success' ? (language === 'it' ? 'Partenza registrata' : 'Departure recorded') : language === 'it' ? 'Check-out · spegni luci appartamento' : 'Check out · turn off apartment lights'}
                   </button>
                 </div>
                 {checkoutMessage && <p className={`relative mt-2 text-center text-[11px] ${checkoutStatus === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}>{checkoutMessage}</p>}

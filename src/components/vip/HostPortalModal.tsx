@@ -223,15 +223,17 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
       fetch('/api/hass/config')
         .then(res => res.json())
         .then(data => {
-          if (data.success && data.config) {
+          const hassConfig = data.config || data;
+          if (hassConfig && typeof hassConfig === 'object') {
             setLockConfig(prev => ({
               ...prev,
-              enabled: data.config.enabled ?? true,
-              webhookUrl: data.config.webhookUrl || prev.webhookUrl || '',
-              apiBearerToken: data.config.hasAccessToken ? '••••••••' : (prev.apiBearerToken || ''),
-              deviceEntityId: data.config.entityId || 'automation.porta_aurora'
+              enabled: hassConfig.enabled ?? true,
+              webhookUrl: hassConfig.webhookUrl || prev.webhookUrl || '',
+              apiBearerToken: hassConfig.hasAccessToken || hassConfig.hasToken ? '••••••••' : (prev.apiBearerToken || ''),
+              deviceEntityId: hassConfig.entityId || 'automation.porta_aurora',
+              checkoutAreaId: hassConfig.checkoutAreaId || prev.checkoutAreaId || ''
             }));
-            setHomePublicIp(data.config.homePublicIp || '');
+            setHomePublicIp(hassConfig.homePublicIp || '');
           }
         })
         .catch(() => {});
@@ -502,6 +504,7 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
           webhookUrl: lockConfig.webhookUrl,
           ...(lockConfig.apiBearerToken && !lockConfig.apiBearerToken.includes('••••') && { accessToken: lockConfig.apiBearerToken }),
           entityId: lockConfig.deviceEntityId || 'automation.porta_aurora',
+          checkoutAreaId: lockConfig.checkoutAreaId || '',
           homePublicIp: homePublicIp.trim(),
           enabled: lockConfig.enabled
         })
@@ -1621,6 +1624,21 @@ export const HostPortalModal: React.FC<Props> = ({ isOpen, onClose, onSelectPass
                               className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
                             />
                           </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-mono text-gray-600 mb-1">
+                            Area ID Appartamento per il check-out (Home Assistant)
+                          </label>
+                          <input
+                            type="text"
+                            value={lockConfig.checkoutAreaId || ''}
+                            onChange={(e) => setLockConfig({ ...lockConfig, checkoutAreaId: e.target.value })}
+                            placeholder="Es. appartamento_aurora"
+                            className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 font-mono text-xs focus:outline-none"
+                          />
+                          <p className="mt-1 text-[11px] text-gray-500">
+                            Inserisci l’ID dell’area che contiene solo i dispositivi dell’appartamento. Senza questa impostazione il check-out non spegne nulla. Se usi un webhook, la relativa automazione deve usare questo area_id e non target globali.
+                          </p>
                         </div>
                       </>
                     )}

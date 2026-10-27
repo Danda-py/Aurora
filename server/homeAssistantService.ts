@@ -22,6 +22,7 @@ export interface HomeAssistantConfig {
   haUrl: string;            // e.g. https://xxxx.ui.nabu.casa or https://myha.duckdns.org:8123 or http://192.168.1.100:8123
   accessToken: string;      // Home Assistant Long-Lived Access Token
   entityId: string;         // e.g. switch.portone, button.apri_portone, switch.sonoff_portone
+  checkoutAreaId: string;   // Home Assistant area containing only the apartment devices
   service: string;          // e.g. switch.turn_on, button.press, homeassistant.turn_on
   
   deviceName: string;       // Friendly name, e.g. "Pulsante Portone Aurora"
@@ -51,6 +52,7 @@ let currentHassConfig: HomeAssistantConfig = {
   haUrl: savedConfig.haUrl ?? process.env.HASS_URL ?? '',
   accessToken: savedConfig.accessToken ?? process.env.HASS_TOKEN ?? '',
   entityId: savedConfig.entityId ?? process.env.HASS_ENTITY_ID ?? 'switch.portone',
+  checkoutAreaId: savedConfig.checkoutAreaId ?? '',
   service: savedConfig.service ?? process.env.HASS_SERVICE ?? 'switch.turn_on',
   deviceName: savedConfig.deviceName ?? process.env.HASS_DEVICE_NAME ?? 'Pulsante Portone Aurora',
   wifiSsidRequired: savedConfig.wifiSsidRequired ?? 'Casa_Aurora',
@@ -427,6 +429,14 @@ export async function triggerHomeAssistantCheckout(guestName: string): Promise<H
     };
   }
 
+  const checkoutAreaId = config.checkoutAreaId.trim();
+  if (!checkoutAreaId) {
+    return {
+      success: false,
+      error: 'Configura l’Area ID Home Assistant dell’appartamento prima di attivare lo scenario di check-out.'
+    };
+  }
+
   // A: Webhook scenario
   if (hasWebhook) {
     try {
@@ -435,14 +445,16 @@ export async function triggerHomeAssistantCheckout(guestName: string): Promise<H
         scenario: 'Check-out Effettuato',
         guestName,
         timestamp: new Date().toISOString(),
+        area_id: checkoutAreaId,
         commands: [
-          { service: 'light.turn_off', entity_id: 'all' },
-          { service: 'switch.turn_off', entity_id: 'all' },
-          { service: 'climate.set_temperature', entity_id: 'all', temperature: 7 }
+          { service: 'light.turn_off', area_id: checkoutAreaId },
+          { service: 'switch.turn_off', area_id: checkoutAreaId },
+          { service: 'climate.set_temperature', area_id: checkoutAreaId, temperature: 7 }
         ],
         details: {
-          lights: 'turn_off_all',
-          standby_appliances: 'turn_off_all',
+          target: 'apartment_area',
+          lights: 'turn_off_area',
+          standby_appliances: 'turn_off_area',
           climate_mode: 'Antigelo'
         }
       };
@@ -452,7 +464,7 @@ export async function triggerHomeAssistantCheckout(guestName: string): Promise<H
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        return { success: true, message: 'Scenario Check-out "Check-out Effettuato" inviato con successo via Webhook. Luci spente, Stand-by disattivati, Riscaldamento in Antigelo.' };
+        return { success: true, message: 'Richiesta Check-out inviata al webhook per la sola area dell’appartamento.' };
       }
       return { success: false, error: `HA Webhook returned HTTP ${res.status}` };
     } catch (err: any) {
@@ -463,50 +475,35 @@ export async function triggerHomeAssistantCheckout(guestName: string): Promise<H
   // B: REST API scenario
   const cleanBaseUrl = config.haUrl.trim().replace(/\/+$/, '');
   try {
-    // Fire event 'aurora_checkout' so HA can run any automation
-    const eventUrl = `${cleanBaseUrl}/api/events/aurora_checkout`;
-    try {
-      await fetch(eventUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.accessToken.trim()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ guestName, timestamp: new Date().toISOString() })
-      });
-    } catch {}
-
-    // Also call individual services to ensure the lights/appliances are turned off and climate set to Antigelo
-    // 1. Turn off all lights
+    // Restrict each Home Assistant service call to the apartment's configured area.
+    // Do not fire the legacy aurora_checkout event: existing automations may target the whole house.
     try {
       await fetch(`${cleanBaseUrl}/api/services/light/turn_off`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_id: 'all' })
+        body: JSON.stringify({ area_id: checkoutAreaId })
       });
     } catch {}
 
-    // 2. Turn off standby appliances (e.g. any configured switch group or entityId)
     try {
       await fetch(`${cleanBaseUrl}/api/services/switch/turn_off`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_id: 'all' })
+        body: JSON.stringify({ area_id: checkoutAreaId })
       });
     } catch {}
 
-    // 3. Set climate to Antigelo mode (7°C or hvac_off)
     try {
       await fetch(`${cleanBaseUrl}/api/services/climate/set_temperature`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${config.accessToken.trim()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_id: 'all', temperature: 7 })
+        body: JSON.stringify({ area_id: checkoutAreaId, temperature: 7 })
       });
     } catch {}
 
     return {
       success: true,
-      message: 'Scenario Check-out inviato. Luci spente, stand-by disattivati e clima in Antigelo (7°C).'
+      message: 'Scenario Check-out inviato solo all’appartamento. Luci spente, stand-by disattivati e clima in Antigelo (7°C).'
     };
   } catch (err: any) {
     return { success: false, error: `Errore REST API Checkout: ${err.message}` };

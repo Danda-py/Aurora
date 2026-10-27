@@ -28,35 +28,35 @@ const CHECKOUT_BUTTON_TRANSLATIONS: Record<Language, {
     loadingText: "Attivazione scenario...",
     successText: "Check-out effettuato!",
     errorText: "Errore durante il check-out",
-    subText: "Cliccando qui confermerai la tua partenza e attiverai l'automazione domotica dello scenario di spegnimento (luci, elettrodomestici in standby, riscaldamento in modalità antigelo)."
+    subText: "Cliccando qui confermerai la partenza e spegnerai luci ed elettrodomestici dell’appartamento, impostando il riscaldamento in modalità antigelo."
   },
   en: {
     buttonText: "Perform Check-out",
     loadingText: "Activating scenario...",
     successText: "Check-out completed!",
     errorText: "Error during check-out",
-    subText: "By clicking here you will confirm your departure and trigger the home automation scenario to turn off all lights, standby appliances, and set climate to frost protection."
+    subText: "By clicking here, you’ll confirm your departure and turn off the apartment’s lights and standby appliances, while setting its climate to frost protection."
   },
   de: {
     buttonText: "Check-out durchführen",
     loadingText: "Szenario wird aktiviert...",
     successText: "Check-out abgeschlossen!",
     errorText: "Fehler beim Check-out",
-    subText: "Mit dem Klick bestätigen Sie Ihre Abreise und aktivieren das Smart-Home-Szenario zum Ausschalten aller Lichter, Standby-Geräte und Einstellen der Heizung auf Frostschutz."
+    subText: "Mit dem Klick bestätigen Sie Ihre Abreise. Die Lichter und Standby-Geräte der Wohnung werden ausgeschaltet und die Heizung wird auf Frostschutz gestellt."
   },
   fr: {
     buttonText: "Effectuer le départ",
     loadingText: "Activation du scénario...",
     successText: "Départ effectué !",
     errorText: "Erreur lors du départ",
-    subText: "En cliquant ici, vous confirmerez votre départ et activerez le scénario domotique d'extinction (lumières, appareils en veille, chauffage en mode hors-gel)."
+    subText: "En cliquant ici, vous confirmerez votre départ. Les lumières et appareils en veille de l’appartement seront éteints et le chauffage passera en mode hors-gel."
   },
   es: {
     buttonText: "Realizar Check-out",
     loadingText: "Activando escenario...",
     successText: "¡Check-out completado!",
     errorText: "Error durante el check-out",
-    subText: "Al hacer clic aquí confirmarás tu salida y activarás el escenario domótico de apagado (luces, electrodomésticos en standby, calefacción en modo antihielo)."
+    subText: "Al hacer clic aquí confirmarás tu salida. Se apagarán las luces y los aparatos en espera del apartamento y la calefacción pasará al modo antihielo."
   }
 };
 
