@@ -63,11 +63,6 @@ export const BuilderTopToolbar: React.FC<{ className?: string }> = ({ className 
 
       {/* Stato di salvataggio + pulsante manuale (usa lo stato reale dell'editing) */}
       <div className="flex items-center gap-3">
-        {translationStatus === 'translating' && (
-          <span className="flex items-center gap-1 text-[11px] font-mono text-sky-300" title="Traduzione automatica in corso">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Traduzione…
-          </span>
-        )}
         {translationStatus === 'error' && (
           <span className="flex items-center gap-1 text-[11px] font-mono text-amber-300" title="Verifica GEMINI_API_KEY sul server e riprova modificando il testo">
             <AlertCircle className="w-3.5 h-3.5" /> Traduzione non riuscita

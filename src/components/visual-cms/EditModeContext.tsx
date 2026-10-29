@@ -577,7 +577,7 @@ export const EditModeProvider: React.FC<{
     await persist(0);
   }, [commit, persist]);
 
-  const enqueueTranslations = useCallback((entries: Record<string, string>) => {
+  const enqueueTranslations = useCallback((entries: Record<string, string>, delayMs = 900) => {
     if (!applyEdits || Object.keys(entries).length === 0) return;
     Object.assign(translationQueue.current, entries);
     if (translationTimer.current) clearTimeout(translationTimer.current);
@@ -594,7 +594,7 @@ export const EditModeProvider: React.FC<{
         let currentBatch: Record<string, string> = {};
         let currentLength = 0;
         for (const [key, value] of entries) {
-          if (Object.keys(currentBatch).length >= 70 || currentLength + value.length > 22000) {
+          if (Object.keys(currentBatch).length >= 35 || currentLength + value.length > 12000) {
             if (Object.keys(currentBatch).length) batches.push(currentBatch);
             currentBatch = {};
             currentLength = 0;
@@ -605,7 +605,7 @@ export const EditModeProvider: React.FC<{
         if (Object.keys(currentBatch).length) batches.push(currentBatch);
         const translations: Record<string, Record<string, string>> = {};
         let nextBatchIndex = 0;
-        const workerCount = Math.min(3, batches.length);
+        const workerCount = Math.min(5, batches.length);
         await Promise.all(Array.from({ length: workerCount }, async () => {
           while (nextBatchIndex < batches.length) {
             const batchIndex = nextBatchIndex++;
@@ -798,7 +798,7 @@ export const EditModeProvider: React.FC<{
         }
       }
     }
-    enqueueTranslations(entries);
+    enqueueTranslations(entries, 0);
   }, [enqueueTranslations]);
 
   const selectElement = useCallback((id: string | null) => {
