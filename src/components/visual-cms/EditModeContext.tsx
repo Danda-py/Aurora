@@ -594,7 +594,7 @@ export const EditModeProvider: React.FC<{
         let currentBatch: Record<string, string> = {};
         let currentLength = 0;
         for (const [key, value] of entries) {
-          if (Object.keys(currentBatch).length >= 40 || currentLength + value.length > 18000) {
+          if (Object.keys(currentBatch).length >= 70 || currentLength + value.length > 22000) {
             if (Object.keys(currentBatch).length) batches.push(currentBatch);
             currentBatch = {};
             currentLength = 0;
@@ -604,17 +604,22 @@ export const EditModeProvider: React.FC<{
         }
         if (Object.keys(currentBatch).length) batches.push(currentBatch);
         const translations: Record<string, Record<string, string>> = {};
-        for (const textBatch of batches) {
-          const response = await fetch('/api/cms/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ texts: textBatch }),
-          });
-          const data = await response.json();
-          if (!response.ok || !data.success) throw new Error(data.error || 'Traduzione non riuscita');
-          Object.assign(translations, data.translations);
-        }
+        let nextBatchIndex = 0;
+        const workerCount = Math.min(3, batches.length);
+        await Promise.all(Array.from({ length: workerCount }, async () => {
+          while (nextBatchIndex < batches.length) {
+            const batchIndex = nextBatchIndex++;
+            const response = await fetch('/api/cms/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ texts: batches[batchIndex] }),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Traduzione non riuscita');
+            Object.assign(translations, data.translations);
+          }
+        }));
 
         const nextTexts = { ...textsRef.current };
         const nextSubpageItems = { ...subpageItemsRef.current };

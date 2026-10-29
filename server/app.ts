@@ -1017,6 +1017,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
   }
 
   apiRouter.post('/aurora-ai/chat', async (req, res) => {
+    const requestStartedAt = Date.now();
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
     const rawImage = typeof req.body?.image === 'string' ? req.body.image : '';
     const imageMimeType = typeof req.body?.imageMimeType === 'string' ? req.body.imageMimeType : '';
@@ -1047,9 +1048,10 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
           .filter((message: unknown): message is { role: 'user' | 'model'; text: string } => {
             if (!message || typeof message !== 'object') return false;
             const item = message as { role?: unknown; text?: unknown };
-            return (item.role === 'user' || item.role === 'model') && typeof item.text === 'string' && item.text.length <= 1000;
+            return (item.role === 'user' || item.role === 'model') && typeof item.text === 'string';
           })
-          .slice(-10)
+          .slice(-6)
+          .map((message: { role: 'user' | 'model'; text: string }) => ({ ...message, text: message.text.slice(0, 700) }))
       : [];
 
     const personalizedInstructions = guestPass
@@ -1118,9 +1120,10 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         throw lastErr || new Error('Nessuna risposta dai modelli Gemini');
       }
 
+      console.info(`[Aurora AI] chat completed in ${Date.now() - requestStartedAt}ms (history=${history.length}, image=${hasImage})`);
       res.json({ success: true, answer });
     } catch (error) {
-      console.warn('Aurora AI Gemini request failed, using enriched knowledge fallback:', error);
+      console.warn(`[Aurora AI] Gemini failed after ${Date.now() - requestStartedAt}ms; using fallback:`, error);
       const fallback = getAuroraFallbackAnswer(question, guestPass);
       res.json({ success: true, answer: fallback });
     }
@@ -1596,6 +1599,7 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
   });
 
   apiRouter.post('/cms/translate', requireHost, async (req, res) => {
+    const requestStartedAt = Date.now();
     const inputTexts = req.body?.texts;
     if (!inputTexts || typeof inputTexts !== 'object' || Array.isArray(inputTexts)) {
       res.status(400).json({ success: false, error: 'Testi da tradurre non validi.' });
@@ -1643,9 +1647,10 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
         }
         if (Object.keys(clean).length) translations[key] = clean;
       }
+      console.info(`[CMS-TRANSLATE] Completed ${entries.length} strings in ${Date.now() - requestStartedAt}ms`);
       res.json({ success: true, translations });
     } catch (err: any) {
-      console.warn('[CMS-TRANSLATE] Traduzione non riuscita:', err?.message || err);
+      console.warn(`[CMS-TRANSLATE] Failed after ${Date.now() - requestStartedAt}ms:`, err?.message || err);
       res.status(502).json({ success: false, error: 'Traduzione automatica non riuscita. Riprova tra poco.' });
     }
   });

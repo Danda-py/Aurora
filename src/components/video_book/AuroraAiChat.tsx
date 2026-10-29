@@ -102,7 +102,7 @@ export const AuroraAiChat: React.FC<Props> = ({ isOpen, onClose, pass, language 
           guestToken: pass?.token,
           guestName: pass?.guestName,
           question: text,
-          history: messages.slice(1).map(m => ({ role: m.role, text: m.text || '' })),
+          history: messages.slice(1).slice(-6).map(m => ({ role: m.role, text: (m.text || '').slice(0, 700) })),
           image: imageToSend?.dataUrl,
           imageMimeType: imageToSend?.mimeType,
           language
