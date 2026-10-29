@@ -190,12 +190,12 @@ export function getDefaultSubpageItems(page: WelcomePage): CMSSubpageItem[] {
       }));
     case 'regole':
       return [
-        { id: 'rule-1', title: it.rules.r1Title, desc: it.rules.r1Desc },
-        { id: 'rule-2', title: it.rules.r2Title, desc: it.rules.r2Desc },
-        { id: 'rule-3', title: it.rules.r3Title, desc: it.rules.r3Desc },
-        { id: 'rule-4', title: it.rules.r4Title, desc: it.rules.r4Desc },
-        { id: 'rule-5', title: it.rules.r5Title, desc: it.rules.r5Desc },
-        { id: 'rule-6', title: it.rules.r6Title, desc: it.rules.r6Desc },
+        { id: 'rule-1', title: it.rules.r1Title, desc: it.rules.r1Desc, iconName: 'CigaretteOff' },
+        { id: 'rule-2', title: it.rules.r2Title, desc: it.rules.r2Desc, iconName: 'HeartHandshake' },
+        { id: 'rule-3', title: it.rules.r3Title, desc: it.rules.r3Desc, iconName: 'Volume2' },
+        { id: 'rule-4', title: it.rules.r4Title, desc: it.rules.r4Desc, iconName: 'UserX' },
+        { id: 'rule-5', title: it.rules.r5Title, desc: it.rules.r5Desc, iconName: 'Lock' },
+        { id: 'rule-6', title: it.rules.r6Title, desc: it.rules.r6Desc, iconName: 'PhoneCall' },
       ];
     case 'attivita':
       return it.activities.highlights.map((h, i) => ({
@@ -1320,6 +1320,35 @@ export const CMSSidePanel: React.FC<{
                                 className="w-full bg-zinc-950 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-400"
                               />
                             </div>
+
+                            {activePage === 'regole' && (
+                              <div>
+                                <label className="text-[10px] font-mono text-white/50 block mb-0.5">
+                                  Icona della regola
+                                </label>
+                                <select
+                                  value={item.iconName || ['CigaretteOff', 'HeartHandshake', 'Volume2', 'UserX', 'Lock', 'PhoneCall'][Number(item.id.match(/^rule-(\d+)$/)?.[1]) - 1] || 'ShieldCheck'}
+                                  onChange={(e) => handleUpdateSubItem(item.id, { iconName: e.target.value })}
+                                  className="w-full bg-zinc-950 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-400"
+                                >
+                                  <option value="CigaretteOff">Divieto di fumo</option>
+                                  <option value="HeartHandshake">Rispetto e cortesia</option>
+                                  <option value="Volume2">Silenzio</option>
+                                  <option value="UserX">No ospiti aggiuntivi</option>
+                                  <option value="Lock">Sicurezza e chiusura</option>
+                                  <option value="PhoneCall">Contattare l’host</option>
+                                  <option value="ShieldCheck">Regola generale</option>
+                                  <option value="House">Casa</option>
+                                  <option value="Trash2">Rifiuti</option>
+                                  <option value="PawPrint">Animali</option>
+                                  <option value="Baby">Bambini</option>
+                                  <option value="Flame">Fuoco e fiamme</option>
+                                </select>
+                                <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] text-emerald-300">
+                                  Anteprima: {item.iconName || ['CigaretteOff', 'HeartHandshake', 'Volume2', 'UserX', 'Lock', 'PhoneCall'][Number(item.id.match(/^rule-(\d+)$/)?.[1]) - 1] || 'ShieldCheck'}
+                                </span>
+                              </div>
+                            )}
 
                             {activePage !== 'regole' &&
                               activePage !== 'servizi' &&

@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Coffee, Sparkles } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const BarClubPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const bars = BOOK_DATA[language].bars;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsBars = subpageItems['bar_club'];
+  const cmsBars = subpageItems['bar_club']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const barsList =
-    language === 'it' && cmsBars !== undefined
+    cmsBars !== undefined && hasCMSSubpageTranslations(cmsBars, language)
       ? cmsBars.map((it) => ({
           name: it.title,
           address: it.address || it.time || '',

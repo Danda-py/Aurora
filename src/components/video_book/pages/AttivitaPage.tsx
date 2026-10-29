@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Bike, Mountain, Wine, Compass, Sparkles } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const AttivitaPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const act = BOOK_DATA[language].activities;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsHighlights = subpageItems['attivita'];
+  const cmsHighlights = subpageItems['attivita']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const highlightsList =
-    language === 'it' && cmsHighlights !== undefined
+    cmsHighlights !== undefined && hasCMSSubpageTranslations(cmsHighlights, language)
       ? cmsHighlights.map((it) => ({
           tag: it.tag || it.subtitle || 'Esperienza',
           title: it.title,

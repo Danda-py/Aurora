@@ -40,7 +40,7 @@ export const VideoWelcomeBook: React.FC<Props> = ({
   editorPass = 'mock',
 }: Props) => {
   const [currentPage, setCurrentPage] = useState<WelcomePage>('grid_menu');
-  const { activePage, setActivePage } = useEditMode();
+  const { activePage, setActivePage, setLanguage: setCmsLanguage } = useEditMode();
 
   // Sincronizza la navigazione tra il pannello laterale del CMS e la PWA
   useEffect(() => {
@@ -69,6 +69,10 @@ export const VideoWelcomeBook: React.FC<Props> = ({
     }
     return 'it';
   });
+
+  useEffect(() => {
+    setCmsLanguage(language);
+  }, [language, setCmsLanguage]);
 
   // Update URL when language changes
   useEffect(() => {

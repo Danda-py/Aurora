@@ -49,6 +49,7 @@ import { VIDEO_TRANSLATIONS } from '../../data/videoTranslations';
 import { BOOK_DATA } from '../../data/multilingualBookData';
 import { getStayTiming, isDigitalKeyActive } from '../../services/guestPassService';
 import { trackActivity } from '../../services/activityTrackingService';
+import { getLocalizedCMSHomeSections, hasCMSHomeTranslations } from '../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -1427,8 +1428,8 @@ export const ConciergeHome: React.FC<Props> = ({ language, onSelectLanguage, onN
         {showPhotoCarousel && <PhotoCarousel media={media} language={language} selectedImages={carouselImages} />}
 
         {/* Sezioni della Home gestite dal Visual CMS (o localizzate per altre lingue) */}
-        {(language === 'it'
-          ? cmsHomeSections.filter((s) => s.visible)
+        {(hasCMSHomeTranslations(cmsHomeSections, language)
+          ? getLocalizedCMSHomeSections(cmsHomeSections, language).filter((s) => s.visible)
           : [
               { id: 'houseEssentials', ...guideSections.houseEssentials, visible: true },
               { id: 'exploreValtellina', ...guideSections.exploreValtellina, visible: true },

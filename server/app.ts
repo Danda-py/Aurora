@@ -1595,6 +1595,61 @@ Non aggiungere markdown extra, non racchiudere in blocchi di codice se non il JS
     }
   });
 
+  apiRouter.post('/cms/translate', requireHost, async (req, res) => {
+    const inputTexts = req.body?.texts;
+    if (!inputTexts || typeof inputTexts !== 'object' || Array.isArray(inputTexts)) {
+      res.status(400).json({ success: false, error: 'Testi da tradurre non validi.' });
+      return;
+    }
+    const entries = Object.entries(inputTexts).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].trim().length > 0,
+    );
+    const totalLength = entries.reduce((sum, [, value]) => sum + value.length, 0);
+    if (entries.length === 0 || entries.length > 80 || totalLength > 24000 || entries.some(([key, value]) => key.length > 240 || value.length > 4000)) {
+      res.status(400).json({ success: false, error: 'La richiesta di traduzione supera i limiti consentiti.' });
+      return;
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      res.status(503).json({ success: false, error: 'Traduzioni automatiche non configurate: manca GEMINI_API_KEY.' });
+      return;
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const prompt = [
+        'Traduci i valori italiani in inglese (en), tedesco (de), francese (fr) e spagnolo (es).',
+        'Mantieni nomi propri, URL, numeri, orari e significato. Usa uno stile naturale e conciso per una guida turistica.',
+        'Restituisci esclusivamente JSON valido nella forma: {"translations":{"chiave":{"en":"...","de":"...","fr":"...","es":"..."}}}.',
+        'Non aggiungere, rimuovere o rinominare chiavi.',
+        JSON.stringify(Object.fromEntries(entries)),
+      ].join('\n\n');
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: { responseMimeType: 'application/json' },
+      });
+      const parsed = JSON.parse(response.text || '{}');
+      const translated = parsed?.translations;
+      if (!translated || typeof translated !== 'object' || Array.isArray(translated)) {
+        throw new Error('Risposta di traduzione non valida.');
+      }
+      const translations: Record<string, Record<string, string>> = {};
+      for (const [key] of entries) {
+        const row = translated[key];
+        if (!row || typeof row !== 'object') continue;
+        const clean: Record<string, string> = {};
+        for (const lang of ['en', 'de', 'fr', 'es']) {
+          if (typeof row[lang] === 'string' && row[lang].trim()) clean[lang] = row[lang].trim();
+        }
+        if (Object.keys(clean).length) translations[key] = clean;
+      }
+      res.json({ success: true, translations });
+    } catch (err: any) {
+      console.warn('[CMS-TRANSLATE] Traduzione non riuscita:', err?.message || err);
+      res.status(502).json({ success: false, error: 'Traduzione automatica non riuscita. Riprova tra poco.' });
+    }
+  });
+
   // Parser & Config Endpoints
   apiRouter.post('/parse-booking', (req, res) => {
     const rawText = req.body?.rawText || req.body?.text || req.body?.body || '';

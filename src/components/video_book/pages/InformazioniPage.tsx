@@ -7,7 +7,7 @@ import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Info, Trash2, Landmark, Fuel, Pill, Building, Droplet, Church } from 'lucide-react';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -24,9 +24,9 @@ export const InformazioniPage: React.FC<Props> = ({ language, onBackToMenu, onSe
   const pharmacyUrl = 'https://web.pharmaround.it/farmacie/morbegno?onlyOpen=true&distance=5';
   const pharmacyService = t.infoPage.pharmacyService;
 
-  const cmsServices = subpageItems['informazioni'];
+  const cmsServices = subpageItems['informazioni']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const services =
-    language === 'it' && cmsServices !== undefined
+    cmsServices !== undefined && hasCMSSubpageTranslations(cmsServices, language)
       ? cmsServices.map((it) => ({
           title: it.title,
           desc: it.desc,

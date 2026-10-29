@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, ShoppingBag, Clock } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const ShoppingPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const sh = BOOK_DATA[language].shopping;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsShops = subpageItems['shopping'];
+  const cmsShops = subpageItems['shopping']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const shopsList =
-    language === 'it' && cmsShops !== undefined
+    cmsShops !== undefined && hasCMSSubpageTranslations(cmsShops, language)
       ? cmsShops.map((it) => ({
           title: it.title,
           time: it.time || it.address || '',

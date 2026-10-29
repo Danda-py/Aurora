@@ -4,9 +4,14 @@ import { PageHeader } from '../PageHeader';
 import { BOOK_DATA } from '../../../data/multilingualBookData';
 import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
-import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall, ShieldCheck } from 'lucide-react';
+import { CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall, ShieldCheck, House, Trash2, PawPrint, Baby, Flame } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
+
+const RULE_ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: string }>> = {
+  CigaretteOff, HeartHandshake, Volume2, UserX, Lock, PhoneCall, ShieldCheck,
+  House, Trash2, PawPrint, Baby, Flame,
+};
 
 interface Props {
   language: Language;
@@ -24,6 +29,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
   const defaultRulesList = [
     {
       num: 1,
+      iconName: 'CigaretteOff',
       title: r.r1Title,
       desc: r.r1Desc,
       icon: <CigaretteOff className="w-4 h-4 text-rose-400" />,
@@ -31,6 +37,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     },
     {
       num: 2,
+      iconName: 'HeartHandshake',
       title: r.r2Title,
       desc: r.r2Desc,
       icon: <HeartHandshake className="w-4 h-4 text-neutral-300" />,
@@ -38,6 +45,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     },
     {
       num: 3,
+      iconName: 'Volume2',
       title: r.r3Title,
       desc: r.r3Desc,
       icon: <Volume2 className="w-4 h-4 text-indigo-400" />,
@@ -45,6 +53,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     },
     {
       num: 4,
+      iconName: 'UserX',
       title: r.r4Title,
       desc: r.r4Desc,
       icon: <UserX className="w-4 h-4 text-orange-400" />,
@@ -52,6 +61,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     },
     {
       num: 5,
+      iconName: 'Lock',
       title: r.r5Title,
       desc: r.r5Desc,
       icon: <Lock className="w-4 h-4 text-emerald-400" />,
@@ -59,6 +69,7 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     },
     {
       num: 6,
+      iconName: 'PhoneCall',
       title: r.r6Title,
       desc: r.r6Desc,
       icon: <PhoneCall className="w-4 h-4 text-blue-400" />,
@@ -66,15 +77,16 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
     }
   ];
 
-  const cmsRules = subpageItems['regole'];
+  const cmsRules = subpageItems['regole']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const rulesList =
-    language === 'it' && cmsRules !== undefined
-      ? cmsRules.map((it, idx) => ({
-          num: idx + 1,
+    cmsRules !== undefined && hasCMSSubpageTranslations(cmsRules, language)
+        ? cmsRules.map((it) => ({
+          num: Number(it.id.match(/^rule-(\d+)$/)?.[1]) || cmsRules.indexOf(it) + 1,
           title: it.title,
           desc: it.desc,
-          icon: defaultRulesList[idx]?.icon ?? <ShieldCheck className="w-4 h-4 text-emerald-400" />,
-          color: defaultRulesList[idx]?.color ?? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
+          iconName: it.iconName || defaultRulesList[Number(it.id.match(/^rule-(\d+)$/)?.[1]) - 1]?.iconName || 'ShieldCheck',
+          icon: defaultRulesList[Number(it.id.match(/^rule-(\d+)$/)?.[1]) - 1]?.icon ?? <ShieldCheck className="w-4 h-4 text-emerald-400" />,
+          color: defaultRulesList[Number(it.id.match(/^rule-(\d+)$/)?.[1]) - 1]?.color ?? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
         }))
       : defaultRulesList;
 
@@ -113,7 +125,10 @@ export const RegolePage: React.FC<Props> = ({ language, onBackToMenu, onSelectLa
               >
               {/* Rule icon pill */}
               <div className="aurora-icon-box mt-0.5">
-                {item.icon}
+                {(() => {
+                  const Icon = RULE_ICON_COMPONENTS[item.iconName];
+                  return Icon ? <Icon className="w-4 h-4" /> : item.icon;
+                })()}
               </div>
 
               {/* Content */}

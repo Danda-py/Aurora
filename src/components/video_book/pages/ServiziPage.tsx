@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { CheckCircle2, Info } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const ServiziPage: React.FC<Props> = ({ language, onBackToMenu, onSelectL
   const am = BOOK_DATA[language].amenities;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsAmenities = subpageItems['servizi'];
+  const cmsAmenities = subpageItems['servizi']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const itemsList =
-    language === 'it' && cmsAmenities !== undefined
+    cmsAmenities !== undefined && hasCMSSubpageTranslations(cmsAmenities, language)
       ? cmsAmenities.map((it) => ({ title: it.title, desc: it.desc }))
       : am.items;
 

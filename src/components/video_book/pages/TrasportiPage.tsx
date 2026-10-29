@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Train, Bus, Car, Plane } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -19,9 +19,9 @@ export const TrasportiPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const tr = BOOK_DATA[language].transport;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsTransport = subpageItems['trasporti'];
+  const cmsTransport = subpageItems['trasporti']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const transportItems =
-    language === 'it' && cmsTransport !== undefined
+    cmsTransport !== undefined && hasCMSSubpageTranslations(cmsTransport, language)
       ? cmsTransport.map((it) => ({
           title: it.title,
           subtitle: it.subtitle || it.tag || '',

@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { Phone, ShieldAlert, HeartPulse, MapPin, Building2, Pill, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const EmergenzaPage: React.FC<Props> = ({ language, onBackToMenu, onSelec
   const em = BOOK_DATA[language].emergency;
   const t = VIDEO_TRANSLATIONS[language] || VIDEO_TRANSLATIONS.it;
   const labels = VIDEO_PAGE_LABELS[language] || VIDEO_PAGE_LABELS.it;
-  const cmsEmergency = subpageItems['emergenza'];
+  const cmsEmergency = subpageItems['emergenza']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const emergencyItems =
-    language === 'it' && cmsEmergency !== undefined
+    cmsEmergency !== undefined && hasCMSSubpageTranslations(cmsEmergency, language)
       ? cmsEmergency.map((it) => ({
           title: it.title,
           subtitle: it.subtitle || it.desc || '',

@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { TextStyle } from './CMSContext';
-import { GuestPass, WelcomePage } from '../../types';
+import { GuestPass, Language, WelcomePage } from '../../types';
 
 /**
  * Mock pass NEUTRO per la modalità editor: nessun dato reale del cliente.
@@ -43,6 +43,7 @@ export interface CMSHomeTile {
   bgImage: string;
   hidden?: boolean;
   externalUrl?: string;
+  translations?: Partial<Record<Language, Partial<Record<'label' | 'tag' | 'desc', string>>>>;
 }
 
 /** Sezione orizzontale della Home (es. "Guida & Arrivo", "Vivere la Valtellina") */
@@ -52,6 +53,7 @@ export interface CMSHomeSection {
   subtitle?: string;
   visible: boolean;
   items: CMSHomeTile[];
+  translations?: Partial<Record<Language, Partial<Record<'title' | 'subtitle', string>>>>;
 }
 
 /** Blocco libero personalizzato aggiungibile in qualsiasi sottopagina o nella Home */
@@ -63,6 +65,7 @@ export interface CMSCustomBlock {
   imageUrl?: string;
   buttonLabel?: string;
   buttonUrl?: string;
+  translations?: Partial<Record<Language, Partial<Record<'badge' | 'title' | 'body' | 'buttonLabel', string>>>>;
 }
 
 /** Singola voce di una sottopagina (ristorante, regola, servizio, negozio, trasporto, ecc.) */
@@ -71,6 +74,8 @@ export interface CMSSubpageItem {
   title: string;
   subtitle?: string;
   tag?: string;
+  iconName?: string;
+  translations?: Partial<Record<Language, Partial<Record<'title' | 'desc' | 'subtitle' | 'tag', string>>>>;
   time?: string;
   hours?: string;
   address?: string;
@@ -80,6 +85,54 @@ export interface CMSSubpageItem {
   webUrl?: string;
   webLabel?: string;
   imageUrl?: string;
+}
+
+export function getLocalizedCMSSubpageItem(item: CMSSubpageItem, language: Language): CMSSubpageItem {
+  if (language === 'it') return item;
+  const translation = item.translations?.[language];
+  return translation ? { ...item, ...translation } : item;
+}
+
+export function hasCMSSubpageTranslations(items: CMSSubpageItem[], language: Language): boolean {
+  if (language === 'it') return true;
+  const textFields = ['title', 'desc', 'subtitle', 'tag'] as const;
+  return items.every((item) =>
+    textFields.every((field) => {
+      const source = item[field];
+      return typeof source !== 'string' || !source.trim() || Boolean(item.translations?.[language]?.[field]?.trim());
+    }),
+  );
+}
+
+export function getLocalizedCMSHomeSections(sections: CMSHomeSection[], language: Language): CMSHomeSection[] {
+  if (language === 'it') return sections;
+  return sections.map((section) => ({
+    ...section,
+    ...(section.translations?.[language] ?? {}),
+    items: section.items.map((item) => ({ ...item, ...(item.translations?.[language] ?? {}) })),
+  }));
+}
+
+export function hasCMSHomeTranslations(sections: CMSHomeSection[], language: Language): boolean {
+  if (language === 'it') return true;
+  return sections.every((section) => {
+    const sectionFields = ['title', 'subtitle'] as const;
+    const sectionReady = sectionFields.every((field) => {
+      const source = section[field];
+      return typeof source !== 'string' || !source.trim() || Boolean(section.translations?.[language]?.[field]?.trim());
+    });
+    return sectionReady && section.items.every((item) =>
+      (['label', 'tag', 'desc'] as const).every((field) => {
+        const source = item[field];
+        return typeof source !== 'string' || !source.trim() || Boolean(item.translations?.[language]?.[field]?.trim());
+      }),
+    );
+  });
+}
+
+export function getLocalizedCMSCustomBlock(block: CMSCustomBlock, language: Language): CMSCustomBlock {
+  if (language === 'it') return block;
+  return { ...block, ...(block.translations?.[language] ?? {}) };
 }
 
 export const DEFAULT_CAROUSEL_IMAGES = ['heroLiving', 'bedroom', 'kitchen', 'bathroom', 'balcony', 'view'];
@@ -360,6 +413,7 @@ interface EditModeContextValue {
   currentLanguage: string;
   setLanguage: (lang: string) => void;
   saveStatus: 'saved' | 'saving' | 'error';
+  translationStatus: 'idle' | 'translating' | 'error';
   saveNow: () => Promise<void>;
   previewVariant: 'pass' | 'no-pass';
   setPreviewVariant: (variant: 'pass' | 'no-pass') => void;
@@ -403,6 +457,7 @@ export const useEditMode = (): EditModeContextValue => {
       currentLanguage: 'it',
       setLanguage: () => {},
       saveStatus: 'saved' as const,
+      translationStatus: 'idle' as const,
       saveNow: async () => {},
       previewVariant: 'pass' as const,
       setPreviewVariant: () => {},
@@ -430,12 +485,24 @@ export const EditModeProvider: React.FC<{
   const [customBlocks, setCustomBlocks] = useState<Record<string, CMSCustomBlock[]>>({});
   const [currentLanguage, setCurrentLanguage] = useState(initialLanguage);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [translationStatus, setTranslationStatus] = useState<'idle' | 'translating' | 'error'>('idle');
   const [previewVariant, setPreviewVariant] = useState<'pass' | 'no-pass'>('pass');
 
   const persistenceRef = useRef<ReturnType<typeof createPersistence> | null>(null);
   if (!persistenceRef.current) persistenceRef.current = createPersistence();
   const docRef = useRef<CMSEditsDocument>(EMPTY_DOC);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const translationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const translationQueue = useRef<Record<string, string>>({});
+  const translationRequestId = useRef(0);
+  const textsRef = useRef(texts);
+  const subpageItemsRef = useRef(subpageItems);
+  const homeSectionsRef = useRef(homeSections);
+  const customBlocksRef = useRef(customBlocks);
+  textsRef.current = texts;
+  subpageItemsRef.current = subpageItems;
+  homeSectionsRef.current = homeSections;
+  customBlocksRef.current = customBlocks;
 
   useEffect(() => {
     let cancelled = false;
@@ -508,6 +575,179 @@ export const EditModeProvider: React.FC<{
     await persist(0);
   }, [commit, persist]);
 
+  const enqueueTranslations = useCallback((entries: Record<string, string>) => {
+    if (!applyEdits || Object.keys(entries).length === 0) return;
+    Object.assign(translationQueue.current, entries);
+    if (translationTimer.current) clearTimeout(translationTimer.current);
+    translationTimer.current = setTimeout(async () => {
+      translationTimer.current = null;
+      const batch = translationQueue.current;
+      translationQueue.current = {};
+      if (Object.keys(batch).length === 0) return;
+      const requestId = ++translationRequestId.current;
+      setTranslationStatus('translating');
+      try {
+        const entries = Object.entries(batch);
+        const batches: Record<string, string>[] = [];
+        let currentBatch: Record<string, string> = {};
+        let currentLength = 0;
+        for (const [key, value] of entries) {
+          if (Object.keys(currentBatch).length >= 40 || currentLength + value.length > 18000) {
+            if (Object.keys(currentBatch).length) batches.push(currentBatch);
+            currentBatch = {};
+            currentLength = 0;
+          }
+          currentBatch[key] = value;
+          currentLength += value.length;
+        }
+        if (Object.keys(currentBatch).length) batches.push(currentBatch);
+        const translations: Record<string, Record<string, string>> = {};
+        for (const textBatch of batches) {
+          const response = await fetch('/api/cms/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ texts: textBatch }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) throw new Error(data.error || 'Traduzione non riuscita');
+          Object.assign(translations, data.translations);
+        }
+
+        const nextTexts = { ...textsRef.current };
+        const nextSubpageItems = { ...subpageItemsRef.current };
+        const nextHomeSections = [...homeSectionsRef.current];
+        const nextCustomBlocks = { ...customBlocksRef.current };
+        let textsChanged = false;
+        let subpageItemsChanged = false;
+        let homeSectionsChanged = false;
+        let customBlocksChanged = false;
+
+        for (const [encodedKey, sourceText] of Object.entries(batch)) {
+          const translated = translations?.[encodedKey];
+          if (!translated) continue;
+          let keyParts: unknown[];
+          try {
+            keyParts = JSON.parse(encodedKey);
+          } catch {
+            continue;
+          }
+          if (keyParts[0] === 'text' && typeof keyParts[1] === 'string') {
+            const textId = keyParts[1];
+            if (nextTexts[textId]?.it !== sourceText) continue;
+            nextTexts[textId] = { ...nextTexts[textId] };
+            for (const lang of ['en', 'de', 'fr', 'es'] as const) {
+              if (translated[lang]) nextTexts[textId][lang] = translated[lang];
+            }
+            textsChanged = true;
+          } else if (
+            keyParts[0] === 'subpage' &&
+            typeof keyParts[1] === 'string' &&
+            typeof keyParts[2] === 'string' &&
+            typeof keyParts[3] === 'string'
+          ) {
+            const [, pageKey, itemId, field] = keyParts as [string, string, string, string];
+            if (!['title', 'desc', 'subtitle', 'tag'].includes(field)) continue;
+            const currentItems = nextSubpageItems[pageKey];
+            const itemIndex = currentItems?.findIndex((item) => item.id === itemId) ?? -1;
+            if (itemIndex < 0 || currentItems[itemIndex][field as 'title' | 'desc' | 'subtitle' | 'tag'] !== sourceText) continue;
+            const updatedItems = [...currentItems];
+            const currentItem = updatedItems[itemIndex];
+            const nextItemTranslations = { ...(currentItem.translations ?? {}) };
+            for (const lang of ['en', 'de', 'fr', 'es'] as const) {
+              if (!translated[lang]) continue;
+              nextItemTranslations[lang] = {
+                ...(nextItemTranslations[lang] ?? {}),
+                [field]: translated[lang],
+              };
+            }
+            updatedItems[itemIndex] = { ...currentItem, translations: nextItemTranslations };
+            nextSubpageItems[pageKey] = updatedItems;
+            subpageItemsChanged = true;
+          } else if (keyParts[0] === 'home-section' && typeof keyParts[1] === 'string' && typeof keyParts[2] === 'string') {
+            const [, sectionId, field] = keyParts as [string, string, string];
+            if (!['title', 'subtitle'].includes(field)) continue;
+            const sectionIndex = nextHomeSections.findIndex((section) => section.id === sectionId);
+            const section = nextHomeSections[sectionIndex];
+            if (!section || section[field as 'title' | 'subtitle'] !== sourceText) continue;
+            const sectionTranslations = { ...(section.translations ?? {}) };
+            for (const lang of ['en', 'de', 'fr', 'es'] as const) {
+              if (translated[lang]) sectionTranslations[lang] = { ...(sectionTranslations[lang] ?? {}), [field]: translated[lang] };
+            }
+            nextHomeSections[sectionIndex] = { ...section, translations: sectionTranslations };
+            homeSectionsChanged = true;
+          } else if (keyParts[0] === 'home-tile' && typeof keyParts[1] === 'string' && typeof keyParts[2] === 'string' && typeof keyParts[3] === 'string') {
+            const [, sectionId, tileId, field] = keyParts as [string, string, string, string];
+            if (!['label', 'tag', 'desc'].includes(field)) continue;
+            const sectionIndex = nextHomeSections.findIndex((section) => section.id === sectionId);
+            const section = nextHomeSections[sectionIndex];
+            const tileIndex = section?.items.findIndex((item) => item.id === tileId) ?? -1;
+            const tile = section?.items[tileIndex];
+            if (!section || !tile || tile[field as 'label' | 'tag' | 'desc'] !== sourceText) continue;
+            const tileTranslations = { ...(tile.translations ?? {}) };
+            for (const lang of ['en', 'de', 'fr', 'es'] as const) {
+              if (translated[lang]) tileTranslations[lang] = { ...(tileTranslations[lang] ?? {}), [field]: translated[lang] };
+            }
+            const updatedItems = [...section.items];
+            updatedItems[tileIndex] = { ...tile, translations: tileTranslations };
+            nextHomeSections[sectionIndex] = { ...section, items: updatedItems };
+            homeSectionsChanged = true;
+          } else if (keyParts[0] === 'custom' && typeof keyParts[1] === 'string' && typeof keyParts[2] === 'string' && typeof keyParts[3] === 'string') {
+            const [, pageKey, blockId, field] = keyParts as [string, string, string, string];
+            if (!['badge', 'title', 'body', 'buttonLabel'].includes(field)) continue;
+            const pageBlocks = nextCustomBlocks[pageKey];
+            const blockIndex = pageBlocks?.findIndex((block) => block.id === blockId) ?? -1;
+            const block = pageBlocks?.[blockIndex];
+            if (!block || block[field as 'badge' | 'title' | 'body' | 'buttonLabel'] !== sourceText) continue;
+            const blockTranslations = { ...(block.translations ?? {}) };
+            for (const lang of ['en', 'de', 'fr', 'es'] as const) {
+              if (translated[lang]) blockTranslations[lang] = { ...(blockTranslations[lang] ?? {}), [field]: translated[lang] };
+            }
+            const updatedBlocks = [...pageBlocks];
+            updatedBlocks[blockIndex] = { ...block, translations: blockTranslations };
+            nextCustomBlocks[pageKey] = updatedBlocks;
+            customBlocksChanged = true;
+          }
+        }
+
+        if (textsChanged) {
+          textsRef.current = nextTexts;
+          setTexts(nextTexts);
+        }
+        if (subpageItemsChanged) {
+          subpageItemsRef.current = nextSubpageItems;
+          setSubpageItems(nextSubpageItems);
+        }
+        if (homeSectionsChanged) {
+          homeSectionsRef.current = nextHomeSections;
+          setHomeSections(nextHomeSections);
+        }
+        if (customBlocksChanged) {
+          customBlocksRef.current = nextCustomBlocks;
+          setCustomBlocks(nextCustomBlocks);
+        }
+        if (textsChanged || subpageItemsChanged || homeSectionsChanged || customBlocksChanged) {
+          docRef.current = {
+            ...docRef.current,
+            ...(textsChanged ? { texts: nextTexts } : {}),
+            ...(subpageItemsChanged ? { subpageItems: nextSubpageItems } : {}),
+            ...(homeSectionsChanged ? { homeSections: nextHomeSections } : {}),
+            ...(customBlocksChanged ? { customBlocks: nextCustomBlocks } : {}),
+          };
+          persist(300);
+        }
+        if (requestId === translationRequestId.current && !translationTimer.current) {
+          setTranslationStatus('idle');
+        }
+      } catch (error) {
+        console.warn('[Visual CMS] Traduzione automatica non riuscita:', error);
+        if (requestId === translationRequestId.current && !translationTimer.current) {
+          setTranslationStatus('error');
+        }
+      }
+    }, 900);
+  }, [applyEdits, persist]);
+
   const selectElement = useCallback((id: string | null) => {
     setSelectedElementId(id);
   }, []);
@@ -573,28 +813,27 @@ export const EditModeProvider: React.FC<{
 
   const updateText = useCallback(
     (id: string, language: string, text: string, options?: { immediate?: boolean }) => {
-      setTexts((prev) => {
-        const next = { ...prev, [id]: { ...(prev[id] ?? {}), [language]: text } };
-        docRef.current = { ...docRef.current, texts: next };
-        return next;
-      });
+      const next = { ...textsRef.current, [id]: { ...(textsRef.current[id] ?? {}), [language]: text } };
+      textsRef.current = next;
+      setTexts(next);
+      docRef.current = { ...docRef.current, texts: next };
       persist(options?.immediate ? 0 : 600);
+      if (language === 'it' && text.trim()) {
+        enqueueTranslations({ [JSON.stringify(['text', id])]: text });
+      }
     },
-    [persist],
+    [enqueueTranslations, persist],
   );
 
   const resetText = useCallback(
     (id: string) => {
-      setTexts((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((k) => {
-          if (k === id || k.startsWith(`${id}#`)) {
-            delete next[k];
-          }
-        });
-        docRef.current = { ...docRef.current, texts: next };
-        return next;
+      const next = { ...textsRef.current };
+      Object.keys(next).forEach((key) => {
+        if (key === id || key.startsWith(`${id}#`)) delete next[key];
       });
+      textsRef.current = next;
+      setTexts(next);
+      docRef.current = { ...docRef.current, texts: next };
       persist(0);
     },
     [persist],
@@ -643,14 +882,57 @@ export const EditModeProvider: React.FC<{
 
   const updateHomeSections = useCallback(
     (sections: CMSHomeSection[]) => {
+      const previousSections = homeSectionsRef.current;
+      const entries: Record<string, string> = {};
+      for (const section of sections) {
+        const previousSection = previousSections.find((previous) => previous.id === section.id);
+        for (const field of ['title', 'subtitle'] as const) {
+          const value = section[field];
+          if (typeof value === 'string' && value.trim() && value !== previousSection?.[field]) {
+            entries[JSON.stringify(['home-section', section.id, field])] = value;
+          }
+        }
+        for (const item of section.items) {
+          const previousItem = previousSection?.items.find((previous) => previous.id === item.id);
+          for (const field of ['label', 'tag', 'desc'] as const) {
+            const value = item[field];
+            if (typeof value === 'string' && value.trim() && value !== previousItem?.[field]) {
+              entries[JSON.stringify(['home-tile', section.id, item.id, field])] = value;
+            }
+          }
+        }
+      }
+      if (Object.keys(entries).length > 0) {
+        for (const section of sections) {
+          for (const field of ['title', 'subtitle'] as const) {
+            const value = section[field];
+            if (typeof value !== 'string' || !value.trim()) continue;
+            if (!(['en', 'de', 'fr', 'es'] as const).every((lang) => section.translations?.[lang]?.[field]?.trim())) {
+              entries[JSON.stringify(['home-section', section.id, field])] = value;
+            }
+          }
+          for (const item of section.items) {
+            for (const field of ['label', 'tag', 'desc'] as const) {
+              const value = item[field];
+              if (typeof value !== 'string' || !value.trim()) continue;
+              if (!(['en', 'de', 'fr', 'es'] as const).every((lang) => item.translations?.[lang]?.[field]?.trim())) {
+                entries[JSON.stringify(['home-tile', section.id, item.id, field])] = value;
+              }
+            }
+          }
+        }
+      }
+      homeSectionsRef.current = sections;
       setHomeSections(sections);
       docRef.current = { ...docRef.current, homeSections: sections };
       persist(300);
+      enqueueTranslations(entries);
     },
-    [persist],
+    [enqueueTranslations, persist],
   );
 
   const resetHomeSections = useCallback(() => {
+    homeSectionsRef.current = DEFAULT_HOME_SECTIONS;
     setHomeSections(DEFAULT_HOME_SECTIONS);
     docRef.current = { ...docRef.current, homeSections: DEFAULT_HOME_SECTIONS };
     persist(0);
@@ -676,24 +958,48 @@ export const EditModeProvider: React.FC<{
 
   const updateSubpageItems = useCallback(
     (pageKey: string, items: CMSSubpageItem[]) => {
-      setSubpageItems((prev) => {
-        const next = { ...prev, [pageKey]: items };
-        docRef.current = { ...docRef.current, subpageItems: next };
-        return next;
-      });
+      const previousItems = subpageItemsRef.current[pageKey] ?? [];
+      const entries: Record<string, string> = {};
+      const textFields = ['title', 'desc', 'subtitle', 'tag'] as const;
+      for (const item of items) {
+        const previousItem = previousItems.find((previous) => previous.id === item.id);
+        for (const field of textFields) {
+          const value = item[field];
+          if (typeof value !== 'string' || !value.trim() || value === previousItem?.[field]) continue;
+          entries[JSON.stringify(['subpage', pageKey, item.id, field])] = value;
+        }
+      }
+      if (Object.keys(entries).length > 0) {
+        for (const item of items) {
+          for (const field of textFields) {
+            const value = item[field];
+            if (typeof value !== 'string' || !value.trim()) continue;
+            const hasAllTranslations = (['en', 'de', 'fr', 'es'] as const).every(
+              (lang) => item.translations?.[lang]?.[field]?.trim(),
+            );
+            if (!hasAllTranslations) {
+              entries[JSON.stringify(['subpage', pageKey, item.id, field])] = value;
+            }
+          }
+        }
+      }
+      const next = { ...subpageItemsRef.current, [pageKey]: items };
+      subpageItemsRef.current = next;
+      setSubpageItems(next);
+      docRef.current = { ...docRef.current, subpageItems: next };
       persist(300);
+      enqueueTranslations(entries);
     },
-    [persist],
+    [enqueueTranslations, persist],
   );
 
   const resetSubpageItems = useCallback(
     (pageKey: string) => {
-      setSubpageItems((prev) => {
-        const next = { ...prev };
-        delete next[pageKey];
-        docRef.current = { ...docRef.current, subpageItems: next };
-        return next;
-      });
+      const next = { ...subpageItemsRef.current };
+      delete next[pageKey];
+      subpageItemsRef.current = next;
+      setSubpageItems(next);
+      docRef.current = { ...docRef.current, subpageItems: next };
       persist(0);
     },
     [persist],
@@ -701,14 +1007,37 @@ export const EditModeProvider: React.FC<{
 
   const updateCustomBlocks = useCallback(
     (pageKey: string, blocks: CMSCustomBlock[]) => {
-      setCustomBlocks((prev) => {
-        const next = { ...prev, [pageKey]: blocks };
-        docRef.current = { ...docRef.current, customBlocks: next };
-        return next;
-      });
+      const previousBlocks = customBlocksRef.current[pageKey] ?? [];
+      const entries: Record<string, string> = {};
+      const fields = ['badge', 'title', 'body', 'buttonLabel'] as const;
+      for (const block of blocks) {
+        const previousBlock = previousBlocks.find((previous) => previous.id === block.id);
+        for (const field of fields) {
+          const value = block[field];
+          if (typeof value === 'string' && value.trim() && value !== previousBlock?.[field]) {
+            entries[JSON.stringify(['custom', pageKey, block.id, field])] = value;
+          }
+        }
+      }
+      if (Object.keys(entries).length > 0) {
+        for (const block of blocks) {
+          for (const field of fields) {
+            const value = block[field];
+            if (typeof value !== 'string' || !value.trim()) continue;
+            if (!(['en', 'de', 'fr', 'es'] as const).every((lang) => block.translations?.[lang]?.[field]?.trim())) {
+              entries[JSON.stringify(['custom', pageKey, block.id, field])] = value;
+            }
+          }
+        }
+      }
+      const next = { ...customBlocksRef.current, [pageKey]: blocks };
+      customBlocksRef.current = next;
+      setCustomBlocks(next);
+      docRef.current = { ...docRef.current, customBlocks: next };
       persist(300);
+      enqueueTranslations(entries);
     },
-    [persist],
+    [enqueueTranslations, persist],
   );
 
   const setLanguage = useCallback((lang: string) => {
@@ -749,6 +1078,7 @@ export const EditModeProvider: React.FC<{
       currentLanguage,
       setLanguage,
       saveStatus,
+      translationStatus,
       saveNow,
       previewVariant,
       setPreviewVariant,
@@ -785,6 +1115,7 @@ export const EditModeProvider: React.FC<{
       currentLanguage,
       setLanguage,
       saveStatus,
+      translationStatus,
       saveNow,
       previewVariant,
       setPreviewVariant,

@@ -6,7 +6,7 @@ import { VIDEO_TRANSLATIONS } from '../../../data/videoTranslations';
 import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { MapPin, Phone, Bike, Sparkles } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -20,9 +20,9 @@ export const RistorantiPage: React.FC<Props> = ({ language, onBackToMenu, onSele
   const res = BOOK_DATA[language].restaurants;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsRestaurants = subpageItems['ristoranti'];
+  const cmsRestaurants = subpageItems['ristoranti']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const orderedRestaurants =
-    language === 'it' && cmsRestaurants !== undefined
+    cmsRestaurants !== undefined && hasCMSSubpageTranslations(cmsRestaurants, language)
       ? cmsRestaurants.map((it) => ({
           name: it.title,
           time: it.time || '',

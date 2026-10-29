@@ -7,7 +7,7 @@ import { VIDEO_PAGE_LABELS } from '../../../data/videoPageLabels';
 import { APARTMENT_INFO } from '../../../data/apartmentData';
 import { Clock, CheckSquare, Square, Heart, Star, LogOut, CheckCircle } from 'lucide-react';
 import { PageEditable, EditableHeroBanner, CustomBlocksRenderer } from '../cmsPageHelpers';
-import { useEditMode } from '../../visual-cms/EditModeContext';
+import { getLocalizedCMSSubpageItem, hasCMSSubpageTranslations, useEditMode } from '../../visual-cms/EditModeContext';
 
 interface Props {
   language: Language;
@@ -67,9 +67,9 @@ export const CheckoutPage: React.FC<Props> = ({ language, onBackToMenu, onSelect
   const reviewCopy = BOOK_DATA[language].contacts;
   const t = VIDEO_TRANSLATIONS[language];
   const labels = VIDEO_PAGE_LABELS[language];
-  const cmsChecklist = subpageItems['check_out'];
+  const cmsChecklist = subpageItems['check_out']?.map((item) => getLocalizedCMSSubpageItem(item, language));
   const checklistItems =
-    language === 'it' && cmsChecklist !== undefined
+    cmsChecklist !== undefined && hasCMSSubpageTranslations(cmsChecklist, language)
       ? cmsChecklist.map((it) => ({ title: it.title, desc: it.desc }))
       : (co.checklist as Array<{ title: string; desc: string }>);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});

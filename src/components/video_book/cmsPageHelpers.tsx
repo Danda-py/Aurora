@@ -1,7 +1,7 @@
 import React from 'react';
 import { EditableElement } from '../visual-cms/EditableElement';
 import { EditableImageOverlay } from '../visual-cms/EditableImageOverlay';
-import { useEditMode, CMSCustomBlock } from '../visual-cms/EditModeContext';
+import { getLocalizedCMSCustomBlock, useEditMode, CMSCustomBlock } from '../visual-cms/EditModeContext';
 import { Language } from '../../types';
 import { Sparkles, ExternalLink } from 'lucide-react';
 
@@ -132,8 +132,10 @@ export const PageEditable: React.FC<{
  * (o per la Home se pageKey="grid_menu").
  */
 export const CustomBlocksRenderer: React.FC<{ pageKey: string }> = ({ pageKey }) => {
-  const { customBlocks } = useEditMode();
-  const blocks: CMSCustomBlock[] = customBlocks[pageKey] ?? [];
+  const { customBlocks, currentLanguage } = useEditMode();
+  const blocks: CMSCustomBlock[] = (customBlocks[pageKey] ?? []).map((block) =>
+    getLocalizedCMSCustomBlock(block, currentLanguage as Language),
+  );
   if (blocks.length === 0) return null;
 
   return (
