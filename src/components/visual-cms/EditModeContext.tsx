@@ -414,6 +414,7 @@ interface EditModeContextValue {
   setLanguage: (lang: string) => void;
   saveStatus: 'saved' | 'saving' | 'error';
   translationStatus: 'idle' | 'translating' | 'error';
+  translateAll: () => void;
   saveNow: () => Promise<void>;
   previewVariant: 'pass' | 'no-pass';
   setPreviewVariant: (variant: 'pass' | 'no-pass') => void;
@@ -458,6 +459,7 @@ export const useEditMode = (): EditModeContextValue => {
       setLanguage: () => {},
       saveStatus: 'saved' as const,
       translationStatus: 'idle' as const,
+      translateAll: () => {},
       saveNow: async () => {},
       previewVariant: 'pass' as const,
       setPreviewVariant: () => {},
@@ -747,6 +749,52 @@ export const EditModeProvider: React.FC<{
       }
     }, 900);
   }, [applyEdits, persist]);
+
+  const translateAll = useCallback(() => {
+    const entries: Record<string, string> = {};
+    for (const [id, localized] of Object.entries(textsRef.current)) {
+      if (typeof localized.it === 'string' && localized.it.trim()) {
+        entries[JSON.stringify(['text', id])] = localized.it;
+      }
+    }
+    for (const [pageKey, items] of Object.entries(subpageItemsRef.current)) {
+      for (const item of items) {
+        for (const field of ['title', 'desc', 'subtitle', 'tag'] as const) {
+          const value = item[field];
+          if (typeof value === 'string' && value.trim()) {
+            entries[JSON.stringify(['subpage', pageKey, item.id, field])] = value;
+          }
+        }
+      }
+    }
+    for (const section of homeSectionsRef.current) {
+      for (const field of ['title', 'subtitle'] as const) {
+        const value = section[field];
+        if (typeof value === 'string' && value.trim()) {
+          entries[JSON.stringify(['home-section', section.id, field])] = value;
+        }
+      }
+      for (const item of section.items) {
+        for (const field of ['label', 'tag', 'desc'] as const) {
+          const value = item[field];
+          if (typeof value === 'string' && value.trim()) {
+            entries[JSON.stringify(['home-tile', section.id, item.id, field])] = value;
+          }
+        }
+      }
+    }
+    for (const [pageKey, blocks] of Object.entries(customBlocksRef.current)) {
+      for (const block of blocks) {
+        for (const field of ['badge', 'title', 'body', 'buttonLabel'] as const) {
+          const value = block[field];
+          if (typeof value === 'string' && value.trim()) {
+            entries[JSON.stringify(['custom', pageKey, block.id, field])] = value;
+          }
+        }
+      }
+    }
+    enqueueTranslations(entries);
+  }, [enqueueTranslations]);
 
   const selectElement = useCallback((id: string | null) => {
     setSelectedElementId(id);
@@ -1079,6 +1127,7 @@ export const EditModeProvider: React.FC<{
       setLanguage,
       saveStatus,
       translationStatus,
+      translateAll,
       saveNow,
       previewVariant,
       setPreviewVariant,
@@ -1116,6 +1165,7 @@ export const EditModeProvider: React.FC<{
       setLanguage,
       saveStatus,
       translationStatus,
+      translateAll,
       saveNow,
       previewVariant,
       setPreviewVariant,

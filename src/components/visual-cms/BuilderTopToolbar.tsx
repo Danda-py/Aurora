@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Loader2, AlertCircle, Save, Ticket, Lock, Globe } from 'lucide-react';
+import { Check, Loader2, AlertCircle, Save, Ticket, Lock, Globe, Languages } from 'lucide-react';
 import { useCMS } from './CMSContext';
 import { useEditMode } from './EditModeContext';
 
@@ -12,6 +12,7 @@ export const BuilderTopToolbar: React.FC<{ className?: string }> = ({ className 
   const {
     saveStatus: editSaveStatus,
     translationStatus,
+    translateAll,
     saveNow,
     setLanguage: setEditLanguage,
     previewVariant,
@@ -72,6 +73,16 @@ export const BuilderTopToolbar: React.FC<{ className?: string }> = ({ className 
             <AlertCircle className="w-3.5 h-3.5" /> Traduzione non riuscita
           </span>
         )}
+        <button
+          type="button"
+          onClick={translateAll}
+          disabled={translationStatus === 'translating'}
+          title="Traduci tutti i testi CMS italiani in inglese, tedesco, francese e spagnolo"
+          className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-sky-400/30 bg-sky-500/15 px-3 py-2 text-[11px] font-bold text-sky-200 transition hover:bg-sky-500/25 disabled:cursor-wait disabled:opacity-50"
+        >
+          {translationStatus === 'translating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
+          <span>{translationStatus === 'translating' ? 'Traduzione…' : 'Traduci tutto'}</span>
+        </button>
         <div className="flex items-center gap-1.5 text-[11px] font-mono">
           {editSaveStatus === 'saved' && (
             <span className="flex items-center gap-1 text-emerald-400">

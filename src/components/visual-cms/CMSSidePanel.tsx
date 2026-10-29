@@ -36,6 +36,18 @@ import {
   Check,
   Edit3,
   Layers,
+  CigaretteOff,
+  HeartHandshake,
+  Volume2,
+  UserX,
+  Lock,
+  PhoneCall,
+  ShieldCheck,
+  House,
+  Trash2,
+  PawPrint,
+  Baby,
+  Flame,
 } from 'lucide-react';
 import {
   useEditMode,
@@ -50,6 +62,21 @@ import { BOOK_DATA } from '../../data/multilingualBookData';
 import { getDoorBannerCopyFields } from '../video_book/cmsPageHelpers';
 
 const DOOR_BANNER_COPY = getDoorBannerCopyFields();
+
+const RULE_ICON_OPTIONS = [
+  { name: 'CigaretteOff', label: 'No fumo', Icon: CigaretteOff },
+  { name: 'HeartHandshake', label: 'Rispetto', Icon: HeartHandshake },
+  { name: 'Volume2', label: 'Silenzio', Icon: Volume2 },
+  { name: 'UserX', label: 'No ospiti extra', Icon: UserX },
+  { name: 'Lock', label: 'Sicurezza', Icon: Lock },
+  { name: 'PhoneCall', label: 'Telefono', Icon: PhoneCall },
+  { name: 'ShieldCheck', label: 'Regola', Icon: ShieldCheck },
+  { name: 'House', label: 'Casa', Icon: House },
+  { name: 'Trash2', label: 'Rifiuti', Icon: Trash2 },
+  { name: 'PawPrint', label: 'Animali', Icon: PawPrint },
+  { name: 'Baby', label: 'Bambini', Icon: Baby },
+  { name: 'Flame', label: 'Fiamme', Icon: Flame },
+];
 
 export const PAGE_DEFINITIONS: Array<{
   id: WelcomePage;
@@ -535,7 +562,7 @@ export const CMSSidePanel: React.FC<{
   return (
     <aside
       data-cms-sidepanel
-      className="w-full lg:w-[460px] xl:w-[500px] shrink-0 bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[840px]"
+      className="w-full lg:w-[460px] xl:w-[500px] shrink-0 bg-zinc-900/95 lg:bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[min(76dvh,840px)] lg:max-h-[840px]"
     >
       {/* Top Bar: Selettore rapido della pagina attiva */}
       <div className="p-3.5 border-b border-white/10 bg-zinc-950/60 space-y-2.5">
@@ -1323,30 +1350,29 @@ export const CMSSidePanel: React.FC<{
 
                             {activePage === 'regole' && (
                               <div>
-                                <label className="text-[10px] font-mono text-white/50 block mb-0.5">
-                                  Icona della regola
-                                </label>
-                                <select
-                                  value={item.iconName || ['CigaretteOff', 'HeartHandshake', 'Volume2', 'UserX', 'Lock', 'PhoneCall'][Number(item.id.match(/^rule-(\d+)$/)?.[1]) - 1] || 'ShieldCheck'}
-                                  onChange={(e) => handleUpdateSubItem(item.id, { iconName: e.target.value })}
-                                  className="w-full bg-zinc-950 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-400"
-                                >
-                                  <option value="CigaretteOff">Divieto di fumo</option>
-                                  <option value="HeartHandshake">Rispetto e cortesia</option>
-                                  <option value="Volume2">Silenzio</option>
-                                  <option value="UserX">No ospiti aggiuntivi</option>
-                                  <option value="Lock">Sicurezza e chiusura</option>
-                                  <option value="PhoneCall">Contattare l’host</option>
-                                  <option value="ShieldCheck">Regola generale</option>
-                                  <option value="House">Casa</option>
-                                  <option value="Trash2">Rifiuti</option>
-                                  <option value="PawPrint">Animali</option>
-                                  <option value="Baby">Bambini</option>
-                                  <option value="Flame">Fuoco e fiamme</option>
-                                </select>
-                                <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] text-emerald-300">
-                                  Anteprima: {item.iconName || ['CigaretteOff', 'HeartHandshake', 'Volume2', 'UserX', 'Lock', 'PhoneCall'][Number(item.id.match(/^rule-(\d+)$/)?.[1]) - 1] || 'ShieldCheck'}
+                                <span className="text-[10px] font-mono text-white/60 block mb-1.5">
+                                  Scegli icona · tocca un simbolo
                                 </span>
+                                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                                  {RULE_ICON_OPTIONS.map(({ name, label, Icon }) => {
+                                    const defaultIcon = ['CigaretteOff', 'HeartHandshake', 'Volume2', 'UserX', 'Lock', 'PhoneCall'][Number(item.id.match(/^rule-(\d+)$/)?.[1]) - 1] || 'ShieldCheck';
+                                    const selected = (item.iconName || defaultIcon) === name;
+                                    return (
+                                      <button
+                                        key={name}
+                                        type="button"
+                                        title={label}
+                                        aria-label={`Imposta icona: ${label}`}
+                                        aria-pressed={selected}
+                                        onClick={() => handleUpdateSubItem(item.id, { iconName: name })}
+                                        className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border p-1.5 text-[9px] transition active:scale-95 ${selected ? 'border-emerald-300 bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/50' : 'border-white/10 bg-white/[0.03] text-white/60 hover:border-white/25 hover:bg-white/[0.08]'}`}
+                                      >
+                                        <Icon className="h-4 w-4" aria-hidden="true" />
+                                        <span className="max-w-full truncate">{label}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             )}
 
